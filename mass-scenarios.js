@@ -8,6 +8,22 @@ function buildScenario(requested){
     throw new RangeError('Server count must be an integer from 0 to 5.');
   }
   const options={...requested,serverCount,servers:serverCount>0,incense:serverCount>0&&requested.incense,bothKinds:requested.deacon&&requested.bothKinds};
+  // Optional elements; defaults reproduce the original baseline celebration.
+  Object.assign(options,{
+    gloria:requested.gloria??true,
+    creed:requested.creed??true,
+    secondReading:requested.secondReading??true,
+    introductory:['A','C','sprinkling'].includes(requested.introductory)?requested.introductory:'A',
+    music:requested.music==='said'?'said':'sung',
+    solemnBlessing:!!requested.solemnBlessing,
+    giftsProcession:requested.giftsProcession??true,
+    eucharisticPrayer:['I','II','III','IV'].includes(requested.eucharisticPrayer)?requested.eucharisticPrayer:'II',
+    bells:{
+      start:!!requested.bells?.start,
+      epiclesis:serverCount>0&&(requested.bells?.epiclesis??true),
+      elevation:serverCount>0&&(requested.bells?.elevation??true)
+    }
+  });
   const visible=new Set(Object.keys(ACTORS));
   if(!options.deacon)visible.delete('D');
   if(!options.servers)SERVER_ROLES.forEach(a=>visible.delete(a));
@@ -310,6 +326,8 @@ function buildScenario(requested){
     }
   }
 
+  applyOptionalElements(steps,options,initialProps,find);
+
   for(const s of steps){
     for(const field of ['mv','acts','orans']){
       for(const role of Object.keys(s[field]||{}))if(!visible.has(role))delete s[field][role];
@@ -320,7 +338,12 @@ function buildScenario(requested){
       if(bad)throw new Error(`Unassigned ${name} in ${s.title}: ${bad.by}`);
     }
   }
-  const filtered=steps.filter(s=>options.incense||![2,20].includes(s.key));
+  const removed=new Set(options.incense?[]:[2,20]);
+  if(!options.gloria)removed.add(7);
+  if(!options.creed)removed.add(15);
+  if(!options.secondReading)removed.add(11);
+  if(options.introductory!=='A')removed.add(6);
+  const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
   const assignments=team.map(role=>{
@@ -330,4 +353,125 @@ function buildScenario(requested){
     return 'Server '+(team.indexOf(role)+1)+': processional candle.';
   });
   return {options,visible,assignments,team};
+}
+
+// Optional elements chosen for a particular celebration (used by the game and the 3D setup).
+function applyOptionalElements(steps,options,initialProps,find){
+  const byKey=key=>steps.find(s=>s.key===key);
+  const team=new Set(options.serverCount>0?[[],['S'],['S','X'],['S','C1','C2'],['S','X','C1','C2'],['S','X','C1','C2','T']][options.serverCount]:[]);
+  const hasS=team.has('S');
+
+  if(!options.secondReading){
+    // The psalmist returns during the acclamation; the lector is already seated.
+    const acclamation=byKey(12);
+    delete acclamation.mv.L;
+    acclamation.mv.Ps=M([[250,296],[380,300],[380,322]],0,.2);
+  }
+
+  const penitential=byKey(5);
+  if(options.introductory==='C'){
+    penitential.title='Penitential Act (invocations)';
+    penitential.text='The Priest invites the faithful to the Penitential Act and a brief silence follows. A minister or the Priest then sings or says invocations addressed to Christ, each answered by "Lord, have mercy" or "Christ, have mercy". The absolution follows. Because the invocations already include the Kyrie, it is not repeated.';
+    penitential.ref='Order of Mass 4–6 (form C); GIRM 51–52';
+    penitential.say=[['P','(invites all to acknowledge their sins)',.04,.18],['ppl','(brief silence)',.18,.28],
+      [options.deacon?'D':'P','(invocation to Christ) … Lord, have mercy.',.3,.42],['ppl','Lord, have mercy.',.42,.5],
+      [options.deacon?'D':'P','(invocation) … Christ, have mercy.',.5,.6],['ppl','Christ, have mercy.',.6,.68],
+      [options.deacon?'D':'P','(invocation) … Lord, have mercy.',.68,.76],['ppl','Lord, have mercy.',.76,.84],
+      ['P','May almighty God have mercy on us…',.85,.94],['ppl','Amen.',.94,1]];
+  }else if(options.introductory==='sprinkling'){
+    penitential.title='Blessing and Sprinkling of Water';
+    penitential.dur=22;
+    penitential.text='On Sundays, especially in Easter Time, the blessing and sprinkling of water may replace the Penitential Act. The Priest blesses the water, then goes through the church sprinkling the ministers and the people while an antiphon such as "Asperges me" or "Vidi aquam" is sung. Returning to the chair he says the concluding prayer. The Kyrie is omitted.';
+    penitential.ref='Roman Missal, Appendix II; GIRM 51';
+    const aisle=(x,a,b)=>M([[x+125,90],[x+125,262],[x,300],[x,650],[x,300],[x+125,262],[x+125,90]],a,b);
+    penitential.mv={P:[aisle(500,.3,.82),M([CHAIR],.82,.86)]};
+    penitential.acts={P:[['blesses the water',.1,.28],['sprinkles himself, the ministers and the people',.3,.82]]};
+    if(hasS){
+      penitential.mv.S=[M([[850,140]],0,.07),M([[540,72]],.1,.22),aisle(520,.3,.82),M([[540,72]],.82,.86),M([[850,140]],.87,.94),M([HOME.S],.95,1)];
+      penitential.props={ewer:[{by:'S',t:.07},{at:[850,144],a:.94,b:.95}]};
+      penitential.acts.S=[['carries the holy-water vessel',.08,.94]];
+    }
+    if(options.deacon){
+      penitential.mv.D=[aisle(480,.3,.82),M([DCHAIR],.82,.86)];
+      penitential.acts.D=[['accompanies the Priest',.3,.82]];
+    }
+    penitential.say=[['P','(invites all to pray that God will bless this water)',.03,.1],['P','(prayer of blessing over the water)',.12,.27],['ppl','Amen.',.27,.3],
+      ['ppl','♪ Asperges me… / Vidi aquam… ♪',.3,.82],['P','May almighty God cleanse us of our sins…',.86,.96],['ppl','Amen.',.96,1]];
+  }
+
+  if(options.music==='said'){
+    // GIRM 48 and 87: antiphons are recited when there is no singing; GIRM 63c: the Alleluia may be omitted if not sung.
+    byKey(0).say=[['ppl','(the Entrance Antiphon is recited)',.75,1]];
+    byKey(1).say=[];
+    byKey(2).say=[];
+    byKey(12).say=[];
+    for(const key of [17,18])byKey(key).say=[];
+    byKey(35).say=byKey(35).say.map(line=>line[1].includes('Communion Chant')?['ppl','(the Communion Antiphon is recited)',...line.slice(2)]:line);
+    byKey(39).say=byKey(39).say.filter(line=>!line[1].includes('hymn'));
+    byKey(40).say=[];
+    for(const step of steps){
+      step.say=(step.say||[]).map(([who,text,...rest])=>[who,text.replace(/♪\s*/g,'').replace(/\s*♪/g,'').trim(),...rest]);
+    }
+    byKey(12).text+=' At a said Mass the Alleluia, if not sung, may be omitted.';
+  }
+
+  if(options.bells.start)byKey(0).bell=[[0,.06]];
+  if(!options.bells.epiclesis)byKey(25).bell=[];
+  if(!options.bells.elevation){
+    for(const key of [26,27]){
+      const step=byKey(key);
+      step.bell=[];
+      if(step.acts?.S)step.acts.S=step.acts.S.filter(([text])=>!text.includes('rings the bell'));
+    }
+  }
+
+  if(options.solemnBlessing){
+    const blessing=byKey(38);
+    blessing.title='Greeting & Solemn Blessing';
+    blessing.dur=14;
+    blessing.say=[['P','The Lord be with you.',.02,.1],['ppl','And with your spirit.',.1,.17],
+      [options.deacon?'D':'P','Bow down for the blessing.',.18,.25],
+      ['P','(first invocation of the Solemn Blessing)',.26,.38],['ppl','Amen.',.38,.42],
+      ['P','(second invocation)',.42,.52],['ppl','Amen.',.52,.56],
+      ['P','(third invocation)',.56,.66],['ppl','Amen.',.66,.7],
+      ['P','And may the blessing of almighty God, the Father, and the Son, ✠ and the Holy Spirit, come down on you and remain with you for ever.',.71,.9],['ppl','Amen.',.9,1]];
+    blessing.orans={P:[[.26,.7]]};
+    blessing.acts={P:[['extends hands over the people',.26,.7],['blesses the people ✠',.71,.9]]};
+    blessing.text='The Priest greets the people. The Deacon, or the Priest himself, invites all to bow down for the blessing. With hands extended over the people the Priest says the invocations of the Solemn Blessing, each answered "Amen", and then blesses them.';
+    blessing.ref='Order of Mass 143; GIRM 167, 185';
+  }
+
+  if(!options.giftsProcession){
+    // GIRM 73 and 118: without a procession the bread and wine wait on the credence.
+    initialProps.bread={at:[872,152]};
+    initialProps.wine={at:[892,150]};
+    const gifts=byKey(18);
+    const bearer=hasS?'S':options.deacon?'D':'P';
+    gifts.title='Bringing the Gifts to the Altar';
+    gifts.mv={P:M([ALT_P],.05,.3)};
+    if(options.deacon)gifts.mv.D=M([ALT_D],.05,.3);
+    if(bearer==='S')gifts.mv.S=[M([[850,140]],0,.12),M([[640,150]],.2,.45),M([[850,100]],.62,.8),M([HOME.S],.82,.95)];
+    else gifts.mv[bearer]=[M([[625,90],[850,140]],.05,.3),M([[625,122],bearer==='D'?ALT_D:ALT_P],.36,.6)];
+    const pick=bearer==='S'?.12:.3;
+    gifts.props={bread:[{by:bearer,t:pick},{at:[500,160],a:.48,b:.54}],wine:[{by:bearer,t:pick},{at:[600,165],a:.5,b:.56}]};
+    gifts.acts={[bearer]:[['brings the bread and wine from the credence',pick,.56]]};
+    gifts.text='With no procession of the faithful, the bread and wine are brought from the credence table to the altar'+(bearer==='S'?' by a server and received by the Priest.':bearer==='D'?' by the Deacon.':' by the Priest.');
+    gifts.ref='GIRM 73, 118, 139–140';
+    const offering=byKey(19);
+    delete offering.mv.P;
+    delete offering.mv.D;
+    if(offering.props?.bread)offering.props.bread=[];
+  }
+
+  const prayer=options.eucharisticPrayer;
+  for(const key of [23,24,25,26,27,28,29,30]){
+    const step=byKey(key);
+    if(step&&prayer!=='II'&&!/EP /.test(step.ref))step.ref+=' (EP '+prayer+')';
+    if(step)step.eucharisticPrayer=prayer;
+  }
+  if(prayer==='IV'){
+    byKey(23).text+=' Eucharistic Prayer IV has its own unchangeable Preface.';
+  }else if(prayer==='I'){
+    byKey(25).text+=' In the Roman Canon (EP I) the corresponding prayer begins "Be pleased, O God…" before the Institution narrative.';
+  }
 }

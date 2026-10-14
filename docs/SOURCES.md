@@ -58,3 +58,20 @@ relevance only, not trust or safety; neither was installed:
 `DECISIONS.md` distinguishes user requirements from implementation choices.
 `DIRECTOR.md` describes runtime direction, and `director-script.json` is a
 machine-readable export of the baseline rite, movement and prop cues.
+
+## Holy Mass simulator game
+
+Liturgical questions for `mass-game.html` were checked through the Magisterium
+AI service (magisterium.com search and chat) against the General Instruction of
+the Roman Missal. The paragraphs used include GIRM 40, 46-90 (structure and
+options), 93-111 (ministries; 105 sacristan, 106 master of ceremonies), 117-123
+(preparations and entrance), 141-143, 150 (bells by local custom), 155,
+158-169, 172-186 (the deacon), 194-198 (the lector), 274-277 (genuflections,
+bows and incensation), 279, 284-285, 304-308, 316, 337-340 (vestments) and
+365, plus Roman Missal Appendix II (blessing and sprinkling of water). The
+Ceremonial of Bishops 34-36 (master of ceremonies) could not be retrieved, so
+the M.C. role rests on GIRM 106 and is marked as a judgement call. Each choice
+is listed with its source in `GAME-DECISIONS.md`.
+
+Game sounds are synthesised at runtime with the Web Audio API; no recorded
+samples are included.
