@@ -42,7 +42,10 @@ Recorded from the user's requests in the development session on 14 October
   slight timing/speed differences and two quiet echoes.
 - The first congregation clips mixed six voices. After listening, the user found
   that too many, so new generation defaults to four (two male, two female),
-  configurable with `--group-size`.
+  configurable with `--group-size`. Regeneration is tracked in issue #1.
+- Audio files were first named by a 20-character content hash. At the user's
+  request they now have readable names in Mass order, per language folder, with
+  an 8-character fingerprint, plus a CSV index to support later translation.
 - Kokoro has no native Latin model here. Latin phonemization with English-trained
   voices is explicitly marked experimental; pronunciation has not been certified.
 - AI speech is synthesized, not a recording of clergy or a congregation. No

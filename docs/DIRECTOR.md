@@ -45,16 +45,19 @@ the rite. Roles are P (Priest), D (Deacon), X (cross), C1/C2 (candles), T
 ## Audio pipeline
 
 `prepare-audio.cjs` gathers unique role/text combinations across scenarios,
-cleans the English captions and includes available Latin translations.
-`generate-audio.py` synthesizes them locally, deduplicates by content hash,
+cleans the English captions and includes available Latin translations. Each job
+records its steps, English source and readable filename
+(`audio/<language>/<first step>-<role>-<text slug>-<8-char fingerprint>.mp3`,
+naming in `audio-names.cjs`).
+`generate-audio.py` synthesizes them locally, skips clips already present,
 mixes several voices (default four, `--group-size`) for congregation clips, encodes MP3s and writes a browser-safe
 JavaScript manifest plus JSON. File-based playback uses the JS manifest rather
 than requiring `fetch()` access to a local JSON file.
 
-`snapshot-audio.cjs` can publish a partial manifest of recordings already
-generated. Coverage is shown in the UI; missing clips produce a status message,
-not a silent live-voice fallback. The generator's final manifest supersedes the
-snapshot when generation completes.
+`snapshot-audio.cjs` writes the manifest and `audio/index.csv` (translation
+index) from recordings already generated. Coverage is shown in the UI; missing clips produce a status message,
+not a silent live-voice fallback. Run it after the generator finishes too, so
+the index is current.
 
 ## Limits to preserve
 

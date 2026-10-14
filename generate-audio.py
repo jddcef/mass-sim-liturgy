@@ -1,6 +1,5 @@
 """Generate once; static clips require no speech engine at playback time."""
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -101,8 +100,11 @@ def main():
         if language == "la" and not args.experimental_latin:
             continue
         key = json.dumps([language, role, text], ensure_ascii=False, separators=(",", ":"))
-        filename = hashlib.sha256(key.encode()).hexdigest()[:20] + ".mp3"
-        destination = output / filename
+        destination = Path(job["file"])
+        if args.output != "audio":
+            destination = output / destination.relative_to("audio")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        filename = destination.name
         if not destination.exists():
             phoneme_language = "la" if language == "la" else "en-gb"
             if role == "ppl":
@@ -120,7 +122,7 @@ def main():
             with tempfile.TemporaryDirectory() as temporary:
                 wav = Path(temporary) / "clip.wav"
                 sf.write(wav, samples, rate, subtype="PCM_16")
-                pending = output / (filename + ".pending.mp3")
+                pending = destination.with_name(filename + ".pending.mp3")
                 subprocess.run(
                     ["ffmpeg", "-v", "error", "-y", "-i", str(wav), "-codec:a", "libmp3lame",
                      "-b:a", "96k", str(pending)], check=True
@@ -128,7 +130,7 @@ def main():
                 pending.replace(destination)
         if destination.stat().st_size < 500:
             raise ValueError(f"Incomplete clip: {destination}")
-        clips[key] = "audio/" + filename
+        clips[key] = job["file"]
         languages.add(language)
         print(f"{index + 1}/{len(jobs)} {language} {role}: {text[:55]}", flush=True)
     manifest = {

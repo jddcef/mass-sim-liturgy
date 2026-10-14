@@ -145,9 +145,17 @@ Latin uses Latin phonemes with English-trained voices and is explicitly
 The UI reports current audio coverage; missing clips are skipped with a status
 message, rather than silently switching to live synthesis.
 
-Generation can be resumed: completed clips are cached by role, language and
-spoken-text hash. Large model files and the generation environment are excluded
-from Git. Playback needs only the `audio` assets and manifest.
+Generation can be resumed: completed clips are skipped. Large model files and
+the generation environment are excluded from Git. Playback needs only the
+`audio` assets and manifest.
+
+Clips have readable names, grouped by language and sorted in Mass order:
+`audio/en/05-people-and-with-your-spirit-40b93bf5.mp3` is step 5 (first use),
+spoken by the people. The final 8 characters are a fingerprint of the exact
+wording, so a changed text gets a new file. `audio/index.csv` lists every
+planned clip with its steps, step title, English source text, spoken text and
+whether it has been recorded; it opens in a spreadsheet and is a convenient
+starting point for translation work.
 
 To generate or complete the pack:
 
@@ -160,8 +168,9 @@ To generate or complete the pack:
    Omit the Latin flag for English-only generation. Add `--group-size N` (2-6)
    to change the number of congregation voices; delete existing `ppl` clips if
    they should be regenerated at the new size.
-5. If generation is still running, `node snapshot-audio.cjs` makes a manifest of
-   completed clips. Successful full generation writes its final manifest.
+5. Run `node snapshot-audio.cjs` to write the manifest and `audio/index.csv`
+   from the clips that exist, including while generation is still running.
+   It also renames clips from the earlier hash-only naming scheme.
 
 Use an environment outside this repository for model downloads and Python
 dependencies. See `docs/SOURCES.md` for upstream licenses and attribution.

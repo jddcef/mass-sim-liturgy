@@ -1,502 +1,1144 @@
 [
   {
     "language": "en",
-    "role": "P",
-    "text": "In the name of the Father, and of the Son, and of the Holy Spirit."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "In nomine Patris, et Filii, et Spiritus Sancti."
+    "role": "ppl",
+    "text": "Amen.",
+    "english": "Amen.",
+    "steps": [
+      4,
+      6,
+      9,
+      17,
+      23,
+      31,
+      33,
+      36,
+      38,
+      39
+    ],
+    "title": "Sign of the Cross",
+    "file": "audio/en/04-people-amen-60d0df16.mp3"
   },
   {
     "language": "en",
-    "role": "ppl",
-    "text": "Amen."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Amen."
-  },
-  {
-    "language": "en",
     "role": "P",
-    "text": "The Lord be with you."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Dominus vobiscum."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "And with your spirit."
+    "text": "In the name of the Father, and of the Son, and of the Holy Spirit.",
+    "english": "In the name of the Father, and of the Son, and of the Holy Spirit.",
+    "steps": [
+      4
+    ],
+    "title": "Sign of the Cross",
+    "file": "audio/en/04-priest-in-the-name-of-the-father-and-of-the-son-b91e2d1d.mp3"
   },
   {
     "language": "la",
     "role": "ppl",
-    "text": "Et cum spiritu tuo."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "I confess to almighty God"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "May almighty God have mercy on us"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Kyrie, eleison."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Kyrie, eleison."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Kyrie, eleison."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Kyrie, eleison."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Christe, eleison."
+    "text": "Amen.",
+    "english": "Amen.",
+    "steps": [
+      4,
+      6,
+      9,
+      17,
+      23,
+      31,
+      33,
+      36,
+      38
+    ],
+    "title": "Sign of the Cross",
+    "file": "audio/la/04-people-amen-b6163052.mp3"
   },
   {
     "language": "la",
     "role": "P",
-    "text": "Christe, eleison."
+    "text": "In nomine Patris, et Filii, et Spiritus Sancti.",
+    "english": "In the name of the Father, and of the Son, and of the Holy Spirit.",
+    "steps": [
+      4
+    ],
+    "title": "Sign of the Cross",
+    "file": "audio/la/04-priest-in-nomine-patris-et-filii-et-spiritus-sa-0212b5b5.mp3"
   },
   {
     "language": "en",
     "role": "ppl",
-    "text": "Christe, eleison."
+    "text": "And with your spirit.",
+    "english": "And with your spirit.",
+    "steps": [
+      5,
+      14,
+      24,
+      33,
+      39
+    ],
+    "title": "Greeting",
+    "file": "audio/en/05-people-and-with-your-spirit-40b93bf5.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The Lord be with you.",
+    "english": "The Lord be with you.",
+    "steps": [
+      5,
+      14,
+      24,
+      39
+    ],
+    "title": "Greeting",
+    "file": "audio/en/05-priest-the-lord-be-with-you-d5c639fe.mp3"
   },
   {
     "language": "la",
     "role": "ppl",
-    "text": "Christe, eleison."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Glory to God in the highest"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "and on earth peace to people of good will"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Let us pray."
+    "text": "Et cum spiritu tuo.",
+    "english": "And with your spirit.",
+    "steps": [
+      5,
+      14,
+      24,
+      33,
+      39
+    ],
+    "title": "Greeting",
+    "file": "audio/la/05-people-et-cum-spiritu-tuo-271d488b.mp3"
   },
   {
     "language": "la",
     "role": "P",
-    "text": "Oremus."
+    "text": "Dominus vobiscum.",
+    "english": "The Lord be with you.",
+    "steps": [
+      5,
+      14,
+      24,
+      39
+    ],
+    "title": "Greeting",
+    "file": "audio/la/05-priest-dominus-vobiscum-156510ae.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "I confess to almighty God",
+    "english": "I confess to almighty God",
+    "steps": [
+      6
+    ],
+    "title": "Penitential Act",
+    "file": "audio/en/06-people-i-confess-to-almighty-god-fee7f3e1.mp3"
   },
   {
     "language": "en",
     "role": "P",
-    "text": "A reading from the Book of"
+    "text": "May almighty God have mercy on us",
+    "english": "May almighty God have mercy on us",
+    "steps": [
+      6
+    ],
+    "title": "Penitential Act",
+    "file": "audio/en/06-priest-may-almighty-god-have-mercy-on-us-9a619a87.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Christe, eleison.",
+    "english": "Christe, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/en/07-people-christe-eleison-f9908054.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Kyrie, eleison.",
+    "english": "Kyrie, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/en/07-people-kyrie-eleison-fbec53c1.mp3"
   },
   {
     "language": "en",
     "role": "P",
-    "text": "The word of the Lord."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Verbum Domini."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Thanks be to God."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Deo gratias."
+    "text": "Christe, eleison.",
+    "english": "Christe, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/en/07-priest-christe-eleison-c92b1dd8.mp3"
   },
   {
     "language": "en",
     "role": "P",
-    "text": "A reading from the Letter of Saint Paul"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Alleluia"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "A reading from the holy Gospel according to N."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Glory to you, O Lord."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Gloria tibi, Domine."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "The Gospel of the Lord."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Praise to you, Lord Jesus Christ."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Laus tibi, Christe."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "I believe in one God"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "and by the Holy Spirit was incarnate of the Virgin Mary, and became man."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "and the life of the world to come. Amen."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Lord, hear our prayer."
+    "text": "Kyrie, eleison.",
+    "english": "Kyrie, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/en/07-priest-kyrie-eleison-688c5c35.mp3"
   },
   {
     "language": "la",
     "role": "ppl",
-    "text": "Te rogamus, audi nos."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Blessed are you, Lord God of all creation"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "By the mystery of this water and wine"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Blessed are you fruit of the vine"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Blessed be God for ever."
+    "text": "Christe, eleison.",
+    "english": "Christe, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/la/07-people-christe-eleison-565840ce.mp3"
   },
   {
     "language": "la",
     "role": "ppl",
-    "text": "Benedictus Deus in saecula."
+    "text": "Kyrie, eleison.",
+    "english": "Kyrie, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/la/07-people-kyrie-eleison-e2a29003.mp3"
   },
   {
-    "language": "en",
+    "language": "la",
     "role": "P",
-    "text": "Wash me, O Lord, from my iniquity"
+    "text": "Christe, eleison.",
+    "english": "Christe, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/la/07-priest-christe-eleison-c872450c.mp3"
   },
   {
-    "language": "en",
+    "language": "la",
     "role": "P",
-    "text": "Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father."
+    "text": "Kyrie, eleison.",
+    "english": "Kyrie, eleison.",
+    "steps": [
+      7
+    ],
+    "title": "Kyrie",
+    "file": "audio/la/07-priest-kyrie-eleison-c935c08b.mp3"
   },
   {
     "language": "en",
     "role": "ppl",
-    "text": "May the Lord accept the sacrifice at your hands"
+    "text": "and on earth peace to people of good will",
+    "english": "and on earth peace to people of good will",
+    "steps": [
+      8
+    ],
+    "title": "Gloria",
+    "file": "audio/en/08-people-and-on-earth-peace-to-people-of-good-wil-ffb1bbe3.mp3"
   },
   {
     "language": "en",
     "role": "P",
-    "text": "Lift up your hearts."
+    "text": "Glory to God in the highest",
+    "english": "Glory to God in the highest",
+    "steps": [
+      8
+    ],
+    "title": "Gloria",
+    "file": "audio/en/08-priest-glory-to-god-in-the-highest-c1b2216f.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Let us pray.",
+    "english": "Let us pray.",
+    "steps": [
+      9,
+      38
+    ],
+    "title": "Collect",
+    "file": "audio/en/09-priest-let-us-pray-9f074a92.mp3"
   },
   {
     "language": "la",
     "role": "P",
-    "text": "Sursum corda."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "We lift them up to the Lord."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Habemus ad Dominum."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Let us give thanks to the Lord our God."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Gratias agamus Domino Deo nostro."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "It is right and just."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Dignum et iustum est."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Holy, Holy, Holy Lord God of hosts Hosanna in the highest."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Sanctus, Sanctus, Sanctus Dominus Deus Sabaoth. Hosanna in excelsis."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "TAKE THIS, ALL OF YOU, AND EAT OF IT, FOR THIS IS MY BODY, WHICH WILL BE GIVEN UP FOR YOU."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "TAKE THIS, ALL OF YOU, AND DRINK FROM IT, FOR THIS IS THE CHALICE OF MY BLOOD DO THIS IN MEMORY OF ME."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "The mystery of faith."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Mysterium fidei."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "We proclaim your Death, O Lord, and profess your Resurrection until you come again."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Mortem tuam annuntiamus, Domine, et tuam resurrectionem confitemur, donec venias."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Through him, and with him, and in him, O God, almighty Father, in the unity of the Holy Spirit, all glory and honor is yours, for ever and ever."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "At the Savior's command and formed by divine teaching, we dare to say:"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Our Father, who art in heaven, hallowed be thy name"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Deliver us, Lord, we pray, from every evil"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "For the kingdom, the power and the glory are yours now and for ever."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Lord Jesus Christ, who said to your Apostles: Peace I leave you"
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "The peace of the Lord be with you always."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Pax Domini sit semper vobiscum."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Let us offer each other the sign of peace."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Offerte vobis pacem."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "May this mingling of the Body and Blood"
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Lamb of God, you take away the sins of the world grant us peace."
-  },
-  {
-    "language": "la",
-    "role": "ppl",
-    "text": "Agnus Dei, qui tollis peccata mundi, dona nobis pacem."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb."
-  },
-  {
-    "language": "en",
-    "role": "ppl",
-    "text": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "May the Body of Christ keep me safe for eternal life."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "The Body of Christ."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Corpus Christi."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "May almighty God bless you, the Father, and the Son, and the Holy Spirit."
-  },
-  {
-    "language": "en",
-    "role": "P",
-    "text": "Go forth, the Mass is ended."
-  },
-  {
-    "language": "la",
-    "role": "P",
-    "text": "Ite, missa est."
-  },
-  {
-    "language": "en",
-    "role": "D",
-    "text": "The Lord be with you."
-  },
-  {
-    "language": "la",
-    "role": "D",
-    "text": "Dominus vobiscum."
-  },
-  {
-    "language": "en",
-    "role": "D",
-    "text": "A reading from the holy Gospel according to N."
-  },
-  {
-    "language": "en",
-    "role": "D",
-    "text": "The Gospel of the Lord."
-  },
-  {
-    "language": "la",
-    "role": "D",
-    "text": "Verbum Domini."
-  },
-  {
-    "language": "en",
-    "role": "D",
-    "text": "Let us offer each other the sign of peace."
-  },
-  {
-    "language": "la",
-    "role": "D",
-    "text": "Offerte vobis pacem."
-  },
-  {
-    "language": "en",
-    "role": "D",
-    "text": "Go forth, the Mass is ended."
-  },
-  {
-    "language": "la",
-    "role": "D",
-    "text": "Ite, missa est."
+    "text": "Oremus.",
+    "english": "Let us pray.",
+    "steps": [
+      9,
+      38
+    ],
+    "title": "Collect",
+    "file": "audio/la/09-priest-oremus-8d91e027.mp3"
   },
   {
     "language": "en",
     "role": "L",
-    "text": "A reading from the Book of"
+    "text": "A reading from the Book of",
+    "english": "A reading from the Book of",
+    "steps": [
+      10
+    ],
+    "title": "First Reading",
+    "file": "audio/en/10-lector-a-reading-from-the-book-of-1c531032.mp3"
   },
   {
     "language": "en",
     "role": "L",
-    "text": "The word of the Lord."
+    "text": "The word of the Lord.",
+    "english": "The word of the Lord.",
+    "steps": [
+      10,
+      12
+    ],
+    "title": "First Reading",
+    "file": "audio/en/10-lector-the-word-of-the-lord-43d6a080.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Thanks be to God.",
+    "english": "Thanks be to God.",
+    "steps": [
+      10,
+      12,
+      40
+    ],
+    "title": "First Reading",
+    "file": "audio/en/10-people-thanks-be-to-god-dbf79063.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "A reading from the Book of",
+    "english": "A reading from the Book of",
+    "steps": [
+      10
+    ],
+    "title": "First Reading",
+    "file": "audio/en/10-priest-a-reading-from-the-book-of-0416b6cf.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The word of the Lord.",
+    "english": "The word of the Lord.",
+    "steps": [
+      10,
+      12
+    ],
+    "title": "First Reading",
+    "file": "audio/en/10-priest-the-word-of-the-lord-513ac59a.mp3"
   },
   {
     "language": "la",
     "role": "L",
-    "text": "Verbum Domini."
+    "text": "Verbum Domini.",
+    "english": "The word of the Lord.",
+    "steps": [
+      10,
+      12
+    ],
+    "title": "First Reading",
+    "file": "audio/la/10-lector-verbum-domini-a1e663fe.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Deo gratias.",
+    "english": "Thanks be to God.",
+    "steps": [
+      10,
+      12,
+      40
+    ],
+    "title": "First Reading",
+    "file": "audio/la/10-people-deo-gratias-fdc07397.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Verbum Domini.",
+    "english": "The word of the Lord.",
+    "steps": [
+      10,
+      12,
+      14
+    ],
+    "title": "First Reading",
+    "file": "audio/la/10-priest-verbum-domini-a8f555e3.mp3"
   },
   {
     "language": "en",
     "role": "L",
-    "text": "A reading from the Letter of Saint Paul"
+    "text": "A reading from the Letter of Saint Paul",
+    "english": "A reading from the Letter of Saint Paul",
+    "steps": [
+      12
+    ],
+    "title": "Second Reading",
+    "file": "audio/en/12-lector-a-reading-from-the-letter-of-saint-paul-73f7dc41.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "A reading from the Letter of Saint Paul",
+    "english": "A reading from the Letter of Saint Paul",
+    "steps": [
+      12
+    ],
+    "title": "Second Reading",
+    "file": "audio/en/12-priest-a-reading-from-the-letter-of-saint-paul-67170a09.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Alleluia",
+    "english": "Alleluia",
+    "steps": [
+      13
+    ],
+    "title": "Gospel Acclamation & Blessing of the Deacon",
+    "file": "audio/en/13-people-alleluia-2c06ae1f.mp3"
   },
   {
     "language": "en",
     "role": "D",
-    "text": "The Blood of Christ."
+    "text": "A reading from the holy Gospel according to N.",
+    "english": "A reading from the holy Gospel according to N.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-deacon-a-reading-from-the-holy-gospel-according-74927253.mp3"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "The Gospel of the Lord.",
+    "english": "The Gospel of the Lord.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-deacon-the-gospel-of-the-lord-becc3169.mp3"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "The Lord be with you.",
+    "english": "The Lord be with you.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-deacon-the-lord-be-with-you-61167114.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Glory to you, O Lord.",
+    "english": "Glory to you, O Lord.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-people-glory-to-you-o-lord-db689293.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Praise to you, Lord Jesus Christ.",
+    "english": "Praise to you, Lord Jesus Christ.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-people-praise-to-you-lord-jesus-christ-ed1180ab.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "A reading from the holy Gospel according to N.",
+    "english": "A reading from the holy Gospel according to N.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-priest-a-reading-from-the-holy-gospel-according-20eb124c.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The Gospel of the Lord.",
+    "english": "The Gospel of the Lord.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/en/14-priest-the-gospel-of-the-lord-5f834598.mp3"
   },
   {
     "language": "la",
     "role": "D",
-    "text": "Sanguis Christi."
+    "text": "Dominus vobiscum.",
+    "english": "The Lord be with you.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/la/14-deacon-dominus-vobiscum-2ab22db3.mp3"
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Verbum Domini.",
+    "english": "The Gospel of the Lord.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/la/14-deacon-verbum-domini-7465b392.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Gloria tibi, Domine.",
+    "english": "Glory to you, O Lord.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/la/14-people-gloria-tibi-domine-c817356e.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Laus tibi, Christe.",
+    "english": "Praise to you, Lord Jesus Christ.",
+    "steps": [
+      14
+    ],
+    "title": "The Gospel",
+    "file": "audio/la/14-people-laus-tibi-christe-a5403df7.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "and by the Holy Spirit was incarnate of the Virgin Mary, and became man.",
+    "english": "and by the Holy Spirit was incarnate of the Virgin Mary, and became man.",
+    "steps": [
+      16
+    ],
+    "title": "Profession of Faith",
+    "file": "audio/en/16-people-and-by-the-holy-spirit-was-incarnate-of-db9209a6.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "and the life of the world to come. Amen.",
+    "english": "and the life of the world to come. Amen.",
+    "steps": [
+      16
+    ],
+    "title": "Profession of Faith",
+    "file": "audio/en/16-people-and-the-life-of-the-world-to-come-amen-3029c59b.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "I believe in one God",
+    "english": "I believe in one God",
+    "steps": [
+      16
+    ],
+    "title": "Profession of Faith",
+    "file": "audio/en/16-people-i-believe-in-one-god-ca59ba43.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Lord, hear our prayer.",
+    "english": "Lord, hear our prayer.",
+    "steps": [
+      17
+    ],
+    "title": "Universal Prayer (Prayer of the Faithful)",
+    "file": "audio/en/17-people-lord-hear-our-prayer-1c04bae1.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Te rogamus, audi nos.",
+    "english": "Lord, hear our prayer.",
+    "steps": [
+      17
+    ],
+    "title": "Universal Prayer (Prayer of the Faithful)",
+    "file": "audio/la/17-people-te-rogamus-audi-nos-14ceb220.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Blessed be God for ever.",
+    "english": "Blessed be God for ever.",
+    "steps": [
+      20
+    ],
+    "title": "Offering of the Bread and Wine",
+    "file": "audio/en/20-people-blessed-be-god-for-ever-4aeb6b77.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Blessed are you fruit of the vine",
+    "english": "Blessed are you fruit of the vine",
+    "steps": [
+      20
+    ],
+    "title": "Offering of the Bread and Wine",
+    "file": "audio/en/20-priest-blessed-are-you-fruit-of-the-vine-2cf4b847.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Blessed are you, Lord God of all creation",
+    "english": "Blessed are you, Lord God of all creation",
+    "steps": [
+      20
+    ],
+    "title": "Offering of the Bread and Wine",
+    "file": "audio/en/20-priest-blessed-are-you-lord-god-of-all-creation-949ca7f6.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "By the mystery of this water and wine",
+    "english": "By the mystery of this water and wine",
+    "steps": [
+      20
+    ],
+    "title": "Offering of the Bread and Wine",
+    "file": "audio/en/20-priest-by-the-mystery-of-this-water-and-wine-f05de68b.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Benedictus Deus in saecula.",
+    "english": "Blessed be God for ever.",
+    "steps": [
+      20
+    ],
+    "title": "Offering of the Bread and Wine",
+    "file": "audio/la/20-people-benedictus-deus-in-saecula-7bf9c890.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Wash me, O Lord, from my iniquity",
+    "english": "Wash me, O Lord, from my iniquity",
+    "steps": [
+      22
+    ],
+    "title": "Washing of Hands",
+    "file": "audio/en/22-priest-wash-me-o-lord-from-my-iniquity-e71368b0.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "May the Lord accept the sacrifice at your hands",
+    "english": "May the Lord accept the sacrifice at your hands",
+    "steps": [
+      23
+    ],
+    "title": "\"Pray, brethren\" & Prayer over the Offerings",
+    "file": "audio/en/23-people-may-the-lord-accept-the-sacrifice-at-you-c91cf352.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.",
+    "english": "Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.",
+    "steps": [
+      23
+    ],
+    "title": "\"Pray, brethren\" & Prayer over the Offerings",
+    "file": "audio/en/23-priest-pray-brethren-that-my-sacrifice-and-your-e016af61.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "It is right and just.",
+    "english": "It is right and just.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/en/24-people-it-is-right-and-just-7e50dc7b.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "We lift them up to the Lord.",
+    "english": "We lift them up to the Lord.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/en/24-people-we-lift-them-up-to-the-lord-070c2f37.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Let us give thanks to the Lord our God.",
+    "english": "Let us give thanks to the Lord our God.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/en/24-priest-let-us-give-thanks-to-the-lord-our-god-cc15980b.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Lift up your hearts.",
+    "english": "Lift up your hearts.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/en/24-priest-lift-up-your-hearts-c753e494.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Dignum et iustum est.",
+    "english": "It is right and just.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/la/24-people-dignum-et-iustum-est-f971ea2f.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Habemus ad Dominum.",
+    "english": "We lift them up to the Lord.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/la/24-people-habemus-ad-dominum-083a66fb.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Gratias agamus Domino Deo nostro.",
+    "english": "Let us give thanks to the Lord our God.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/la/24-priest-gratias-agamus-domino-deo-nostro-e527b6cd.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Sursum corda.",
+    "english": "Lift up your hearts.",
+    "steps": [
+      24
+    ],
+    "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+    "file": "audio/la/24-priest-sursum-corda-e60b8e15.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Holy, Holy, Holy Lord God of hosts Hosanna in the highest.",
+    "english": "Holy, Holy, Holy Lord God of hosts Hosanna in the highest.",
+    "steps": [
+      25
+    ],
+    "title": "Sanctus",
+    "file": "audio/en/25-people-holy-holy-holy-lord-god-of-hosts-hosanna-828a8578.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Sanctus, Sanctus, Sanctus Dominus Deus Sabaoth. Hosanna in excelsis.",
+    "english": "Holy, Holy, Holy Lord God of hosts Hosanna in the highest.",
+    "steps": [
+      25
+    ],
+    "title": "Sanctus",
+    "file": "audio/la/25-people-sanctus-sanctus-sanctus-dominus-deus-sab-9f7eb272.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "TAKE THIS, ALL OF YOU, AND EAT OF IT, FOR THIS IS MY BODY, WHICH WILL BE GIVEN UP FOR YOU.",
+    "english": "TAKE THIS, ALL OF YOU, AND EAT OF IT, FOR THIS IS MY BODY, WHICH WILL BE GIVEN UP FOR YOU.",
+    "steps": [
+      27
+    ],
+    "title": "Consecration: the Host",
+    "file": "audio/en/27-priest-take-this-all-of-you-and-eat-of-it-for-t-c3e8ac31.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "TAKE THIS, ALL OF YOU, AND DRINK FROM IT, FOR THIS IS THE CHALICE OF MY BLOOD DO THIS IN MEMORY OF ME.",
+    "english": "TAKE THIS, ALL OF YOU, AND DRINK FROM IT, FOR THIS IS THE CHALICE OF MY BLOOD DO THIS IN MEMORY OF ME.",
+    "steps": [
+      28
+    ],
+    "title": "Consecration: the Chalice",
+    "file": "audio/en/28-priest-take-this-all-of-you-and-drink-from-it-f-40e053b6.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "We proclaim your Death, O Lord, and profess your Resurrection until you come again.",
+    "english": "We proclaim your Death, O Lord, and profess your Resurrection until you come again.",
+    "steps": [
+      29
+    ],
+    "title": "The Mystery of Faith",
+    "file": "audio/en/29-people-we-proclaim-your-death-o-lord-and-profes-5bb957ae.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The mystery of faith.",
+    "english": "The mystery of faith.",
+    "steps": [
+      29
+    ],
+    "title": "The Mystery of Faith",
+    "file": "audio/en/29-priest-the-mystery-of-faith-c0a004f1.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Mortem tuam annuntiamus, Domine, et tuam resurrectionem confitemur, donec venias.",
+    "english": "We proclaim your Death, O Lord, and profess your Resurrection until you come again.",
+    "steps": [
+      29
+    ],
+    "title": "The Mystery of Faith",
+    "file": "audio/la/29-people-mortem-tuam-annuntiamus-domine-et-tuam-r-f702ffcd.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Mysterium fidei.",
+    "english": "The mystery of faith.",
+    "steps": [
+      29
+    ],
+    "title": "The Mystery of Faith",
+    "file": "audio/la/29-priest-mysterium-fidei-bbbb6410.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Through him, and with him, and in him, O God, almighty Father, in the unity of the Holy Spirit, all glory and honor is yours, for ever and ever.",
+    "english": "Through him, and with him, and in him, O God, almighty Father, in the unity of the Holy Spirit, all glory and honor is yours, for ever and ever.",
+    "steps": [
+      31
+    ],
+    "title": "Concluding Doxology",
+    "file": "audio/en/31-priest-through-him-and-with-him-and-in-him-o-go-dc15891b.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "For the kingdom, the power and the glory are yours now and for ever.",
+    "english": "For the kingdom, the power and the glory are yours now and for ever.",
+    "steps": [
+      32
+    ],
+    "title": "The Lord's Prayer",
+    "file": "audio/en/32-people-for-the-kingdom-the-power-and-the-glory-25256028.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Our Father, who art in heaven, hallowed be thy name",
+    "english": "Our Father, who art in heaven, hallowed be thy name",
+    "steps": [
+      32
+    ],
+    "title": "The Lord's Prayer",
+    "file": "audio/en/32-people-our-father-who-art-in-heaven-hallowed-be-1a75123b.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "At the Savior's command and formed by divine teaching, we dare to say:",
+    "english": "At the Savior's command and formed by divine teaching, we dare to say:",
+    "steps": [
+      32
+    ],
+    "title": "The Lord's Prayer",
+    "file": "audio/en/32-priest-at-the-savior-s-command-and-formed-by-di-c9e4cd0a.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Deliver us, Lord, we pray, from every evil",
+    "english": "Deliver us, Lord, we pray, from every evil",
+    "steps": [
+      32
+    ],
+    "title": "The Lord's Prayer",
+    "file": "audio/en/32-priest-deliver-us-lord-we-pray-from-every-evil-68904b68.mp3"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "Let us offer each other the sign of peace.",
+    "english": "Let us offer each other the sign of peace.",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/en/33-deacon-let-us-offer-each-other-the-sign-of-peac-11a62675.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Let us offer each other the sign of peace.",
+    "english": "Let us offer each other the sign of peace.",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/en/33-priest-let-us-offer-each-other-the-sign-of-peac-9abb23b1.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Lord Jesus Christ, who said to your Apostles: Peace I leave you",
+    "english": "Lord Jesus Christ, who said to your Apostles: Peace I leave you",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/en/33-priest-lord-jesus-christ-who-said-to-your-apost-107ec6a3.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The peace of the Lord be with you always.",
+    "english": "The peace of the Lord be with you always.",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/en/33-priest-the-peace-of-the-lord-be-with-you-always-44dc5384.mp3"
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Offerte vobis pacem.",
+    "english": "Let us offer each other the sign of peace.",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/la/33-deacon-offerte-vobis-pacem-f2d23b6d.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Offerte vobis pacem.",
+    "english": "Let us offer each other the sign of peace.",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/la/33-priest-offerte-vobis-pacem-a3305c88.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Pax Domini sit semper vobiscum.",
+    "english": "The peace of the Lord be with you always.",
+    "steps": [
+      33
+    ],
+    "title": "Rite of Peace",
+    "file": "audio/la/33-priest-pax-domini-sit-semper-vobiscum-b404aaf1.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Lamb of God, you take away the sins of the world grant us peace.",
+    "english": "Lamb of God, you take away the sins of the world grant us peace.",
+    "steps": [
+      34
+    ],
+    "title": "Fraction of the Bread — Agnus Dei",
+    "file": "audio/en/34-people-lamb-of-god-you-take-away-the-sins-of-th-ec20aa9d.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May this mingling of the Body and Blood",
+    "english": "May this mingling of the Body and Blood",
+    "steps": [
+      34
+    ],
+    "title": "Fraction of the Bread — Agnus Dei",
+    "file": "audio/en/34-priest-may-this-mingling-of-the-body-and-blood-02157b92.mp3"
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Agnus Dei, qui tollis peccata mundi, dona nobis pacem.",
+    "english": "Lamb of God, you take away the sins of the world grant us peace.",
+    "steps": [
+      34
+    ],
+    "title": "Fraction of the Bread — Agnus Dei",
+    "file": "audio/la/34-people-agnus-dei-qui-tollis-peccata-mundi-dona-c478c08c.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed.",
+    "english": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed.",
+    "steps": [
+      35
+    ],
+    "title": "\"Behold the Lamb of God\"",
+    "file": "audio/en/35-people-lord-i-am-not-worthy-that-you-should-ent-8d67d79e.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb.",
+    "english": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb.",
+    "steps": [
+      35
+    ],
+    "title": "\"Behold the Lamb of God\"",
+    "file": "audio/en/35-priest-behold-the-lamb-of-god-behold-him-who-ta-97514938.mp3"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "The Blood of Christ.",
+    "english": "The Blood of Christ.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/en/36-deacon-the-blood-of-christ-0fd599e8.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May the Body of Christ keep me safe for eternal life.",
+    "english": "May the Body of Christ keep me safe for eternal life.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/en/36-priest-may-the-body-of-christ-keep-me-safe-for-85af6584.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The Body of Christ.",
+    "english": "The Body of Christ.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/en/36-priest-the-body-of-christ-1d8c5d13.mp3"
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Sanguis Christi.",
+    "english": "The Blood of Christ.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/la/36-deacon-sanguis-christi-355f211c.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Corpus Christi.",
+    "english": "The Body of Christ.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/la/36-priest-corpus-christi-61a59e81.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May almighty God bless you, the Father, and the Son, and the Holy Spirit.",
+    "english": "May almighty God bless you, the Father, and the Son, and the Holy Spirit.",
+    "steps": [
+      39
+    ],
+    "title": "Greeting & Blessing",
+    "file": "audio/en/39-priest-may-almighty-god-bless-you-the-father-an-ad744f7a.mp3"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "Go forth, the Mass is ended.",
+    "english": "Go forth, the Mass is ended.",
+    "steps": [
+      40
+    ],
+    "title": "Dismissal & Veneration of the Altar",
+    "file": "audio/en/40-deacon-go-forth-the-mass-is-ended-52d9ee2f.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Go forth, the Mass is ended.",
+    "english": "Go forth, the Mass is ended.",
+    "steps": [
+      40
+    ],
+    "title": "Dismissal & Veneration of the Altar",
+    "file": "audio/en/40-priest-go-forth-the-mass-is-ended-444a85a2.mp3"
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Ite, missa est.",
+    "english": "Go forth, the Mass is ended.",
+    "steps": [
+      40
+    ],
+    "title": "Dismissal & Veneration of the Altar",
+    "file": "audio/la/40-deacon-ite-missa-est-e0a4daa7.mp3"
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Ite, missa est.",
+    "english": "Go forth, the Mass is ended.",
+    "steps": [
+      40
+    ],
+    "title": "Dismissal & Veneration of the Altar",
+    "file": "audio/la/40-priest-ite-missa-est-c97fbf41.mp3"
   }
 ]
