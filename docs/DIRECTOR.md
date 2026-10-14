@@ -47,7 +47,7 @@ the rite. Roles are P (Priest), D (Deacon), X (cross), C1/C2 (candles), T
 `prepare-audio.cjs` gathers unique role/text combinations across scenarios,
 cleans the English captions and includes available Latin translations.
 `generate-audio.py` synthesizes them locally, deduplicates by content hash,
-mixes six voices for congregation clips, encodes MP3s and writes a browser-safe
+mixes several voices (default four, `--group-size`) for congregation clips, encodes MP3s and writes a browser-safe
 JavaScript manifest plus JSON. File-based playback uses the JS manifest rather
 than requiring `fetch()` access to a local JSON file.
 

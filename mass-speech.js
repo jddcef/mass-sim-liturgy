@@ -231,7 +231,9 @@ function refreshSpeechStatus(){
     const unique=new Map(translated.map(c=>[JSON.stringify([c.role,c.text]),c]));
     const included=[...unique.values()].filter(c=>staticClip(c.text,c.role)).length;
     const experimental=pack.id==='la'&&window.MASS_STATIC_AUDIO?.latinExperimental;
-    $('speechStatus').textContent=included+' of '+unique.size+' spoken role/text combinations have static recordings. Congregation clips mix six distinct synthetic voices. '+
+    const groupSize=window.MASS_STATIC_AUDIO?.groupVoices?.length;
+    $('speechStatus').textContent=included+' of '+unique.size+' spoken role/text combinations have static recordings. '+
+      (groupSize?'Congregation clips mix '+groupSize+' distinct synthetic voices. ':'')+
       (experimental?'Latin pronunciation is experimental: Latin phonemes with English-trained voices. Review before training use.':'')+
       (!window.MASS_STATIC_AUDIO?' Audio manifest unavailable; generate the static pack first.':'');
     return;

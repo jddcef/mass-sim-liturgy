@@ -17,14 +17,16 @@ from kokoro_onnx import Kokoro
 
 
 VOICES = {"P": "bm_george", "D": "bm_lewis", "L": "bf_emma", "Ps": "bf_isabella"}
+# Ordered so any prefix stays balanced; --group-size picks the first N.
 GROUP = [
-    ("bm_george", 0.98, 0.0, -0.75),
-    ("bm_lewis", 1.02, 0.035, 0.65),
-    ("bf_emma", 1.00, 0.065, -0.35),
-    ("bf_isabella", 0.99, 0.095, 0.35),
-    ("af_sarah", 1.015, 0.045, -0.1),
-    ("am_michael", 0.985, 0.08, 0.85),
+    ("bm_george", 0.985, 0.0, -0.6),
+    ("bf_emma", 1.00, 0.04, 0.55),
+    ("am_michael", 1.015, 0.07, 0.25),
+    ("af_sarah", 0.995, 0.055, -0.2),
+    ("bm_lewis", 1.02, 0.035, 0.8),
+    ("bf_isabella", 0.99, 0.095, -0.8),
 ]
+DEFAULT_GROUP_SIZE = 4
 
 class ModelInputSession:
     """Normalize exported input types; kokoro-onnx 0.4.9 mis-types speed."""
@@ -75,7 +77,11 @@ def main():
     parser.add_argument("--output", default="audio")
     parser.add_argument("--experimental-latin", action="store_true",
                         help="Use Latin phonemes with English-trained voices; pronunciation needs review.")
+    parser.add_argument("--group-size", type=int, default=DEFAULT_GROUP_SIZE,
+                        choices=range(2, len(GROUP) + 1),
+                        help="Number of layered voices in congregation clips.")
     args = parser.parse_args()
+    group = GROUP[:args.group_size]
     if not shutil.which("ffmpeg"):
         raise RuntimeError("FFmpeg is required to encode static MP3 files")
     engine = Kokoro(args.model, args.voices)
@@ -101,7 +107,7 @@ def main():
             phoneme_language = "la" if language == "la" else "en-gb"
             if role == "ppl":
                 layers = []
-                for voice, speed, delay, pan in GROUP:
+                for voice, speed, delay, pan in group:
                     samples, rate = engine.create(text, voice=voice, speed=1, lang=phoneme_language)
                     samples = vary_speed(samples, speed)
                     layers.append((samples, delay, pan))
@@ -127,7 +133,7 @@ def main():
         print(f"{index + 1}/{len(jobs)} {language} {role}: {text[:55]}", flush=True)
     manifest = {
         "version": 1, "engine": "Kokoro-82M v1.0 (int8 ONNX)",
-        "voices": VOICES, "groupVoices": [voice for voice, *_ in GROUP],
+        "voices": VOICES, "groupVoices": [voice for voice, *_ in group],
         "languages": sorted(languages),
         "latinExperimental": args.experimental_latin and "la" in languages,
         "plannedClips": len(jobs),

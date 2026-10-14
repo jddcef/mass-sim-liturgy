@@ -133,7 +133,8 @@ language validation and speech scheduling with a simulated speech engine.
 
 Choose **Pre-generated AI recordings** as the audio source. These MP3 files play
 offline without installed system voices or API credentials. Individual characters
-have fixed synthetic voices. Congregation responses mix **six distinct voices**,
+have fixed synthetic voices. Congregation responses mix several distinct voices
+(four by default for new generation; the first published clips used six),
 small timing/speed differences, stereo placement and restrained echoes; they are
 not a recording of a real congregation and do not simulate singing.
 Use **Test congregation** to preview a response.
@@ -156,7 +157,9 @@ To generate or complete the pack:
    [model-files-v1.1 release](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1).
 3. Run `node prepare-audio.cjs audio/audio-jobs.json`.
 4. Run `python generate-audio.py --model <model-path> --voices <voices-path> --jobs audio/audio-jobs.json --experimental-latin`.
-   Omit the Latin flag for English-only generation.
+   Omit the Latin flag for English-only generation. Add `--group-size N` (2-6)
+   to change the number of congregation voices; delete existing `ppl` clips if
+   they should be regenerated at the new size.
 5. If generation is still running, `node snapshot-audio.cjs` makes a manifest of
    completed clips. Successful full generation writes its final manifest.
 

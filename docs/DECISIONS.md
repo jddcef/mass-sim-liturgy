@@ -38,8 +38,11 @@ Recorded from the user's requests in the development session on 14 October
 - Speech waits for each cue and skips stage directions or absent translations.
   Imported language packs do not translate the rubric UI.
 - Live browser speech uses only voices marked local. The static pack uses
-  four character voices and a six-voice stereo mix for the congregation, with
+  four character voices and a layered stereo mix for the congregation, with
   slight timing/speed differences and two quiet echoes.
+- The first congregation clips mixed six voices. After listening, the user found
+  that too many, so new generation defaults to four (two male, two female),
+  configurable with `--group-size`.
 - Kokoro has no native Latin model here. Latin phonemization with English-trained
   voices is explicitly marked experimental; pronunciation has not been certified.
 - AI speech is synthesized, not a recording of clergy or a congregation. No
