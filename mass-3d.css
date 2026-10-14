@@ -1,0 +1,57 @@
+:root { color-scheme: light; --paper:#f6f0e4; --ink:#332d26; --gold:#876125; }
+* { box-sizing:border-box; }
+body { margin:0; color:var(--ink); background:var(--paper); font:15px/1.5 system-ui, sans-serif; }
+header { height:78px; padding:12px 24px; background:#242b30; color:#fff5dc; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+header h1 { margin:0; font:26px Georgia, serif; }
+header span { font-size:12px; color:#d7c9b3; }
+header a { color:#edd8ac; font-size:13px; }
+#layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; height:calc(100dvh - 78px); }
+main { min-width:0; display:flex; flex-direction:column; }
+#viewport { position:relative; flex:1; min-height:360px; background:#cbd8de; overflow:hidden; }
+#viewport canvas { width:100%; height:100%; display:block; touch-action:none; }
+#cameraBar { position:absolute; top:12px; left:12px; right:12px; z-index:2; display:flex; align-items:center; flex-wrap:wrap; gap:10px; width:fit-content; padding:8px 12px; border-radius:8px; background:#faf5ebed; box-shadow:0 2px 12px #2222; font-size:13px; }
+select, button { font:inherit; color:var(--ink); border:1px solid #b5a58c; background:#fffaf1; border-radius:5px; padding:6px 8px; }
+button { cursor:pointer; }
+button:hover { background:#eadabe; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline:3px solid #4785a5; outline-offset:2px; }
+button:disabled { opacity:.45; cursor:default; }
+input[type=checkbox] { accent-color:#42735b; width:17px; height:17px; vertical-align:middle; }
+#sceneStatus { position:absolute; top:80px; left:16px; right:16px; padding:12px; background:#fff3d9; border-radius:6px; z-index:3; }
+#caption { position:absolute; bottom:48px; left:50%; transform:translateX(-50%); width:min(650px,90%); text-align:center; padding:10px 16px; border-radius:8px; background:#1e292ded; color:#fff7e4; pointer-events:none; }
+#caption:empty { display:none; }
+#trainingOverlay { position:absolute; top:85px; left:12px; right:12px; padding:10px; background:#253f32ed; color:#fff7e4; border-radius:6px; font-size:12px; pointer-events:none; }
+.field { display:grid; gap:4px; margin:9px 0; font-size:13px; }
+.field select { width:100%; min-width:0; }
+.field input[type=file] { width:100%; font-size:12px; }
+.coordinates { display:flex; gap:10px; margin:10px 0; }
+.coordinates label { flex:1; }
+.coordinates input { width:100%; padding:6px; }
+#hint { position:absolute; bottom:10px; left:12px; right:12px; text-align:center; font-size:11px; color:#fff; text-shadow:0 1px 3px #111; pointer-events:none; }
+#transport { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:12px; background:#ece3d3; border-top:1px solid #c8baa2; }
+#timeline { flex:1; min-width:90px; accent-color:#42735b; }
+#time { font-size:12px; font-variant-numeric:tabular-nums; }
+#stepHeading { padding:8px 16px 12px; }
+#part3d { text-transform:uppercase; letter-spacing:1px; font-size:11px; color:var(--gold); }
+#title3d { font:22px Georgia,serif; margin:2px 0; }
+aside { overflow:auto; border-left:1px solid #c8baa2; }
+section { padding:16px 20px; border-bottom:1px solid #d7cbb6; }
+section h2 { font:19px Georgia,serif; margin:0 0 10px; }
+section h2 small { font:12px system-ui,sans-serif; }
+section p { margin:8px 0; }
+.small { font-size:12px; color:#685e50; }
+.toggles { display:grid; gap:7px; }
+.toggles label { display:flex; align-items:center; gap:8px; }
+.toggles label:has(input:disabled) { opacity:.5; }
+#rubric3d { font:15px/1.55 Georgia,serif; color:#782f25; }
+#stepList { display:grid; gap:3px; max-height:300px; overflow:auto; }
+#stepList button { text-align:left; font-size:12px; border:0; background:transparent; padding:6px 8px; }
+#stepList button.active { background:#ded0b4; color:#482f0d; font-weight:600; }
+#stepList h3 { margin:10px 8px 3px; font-size:11px; color:var(--gold); text-transform:uppercase; }
+@media(max-width:900px) {
+  #layout { display:block; height:auto; }
+  #viewport { height:65dvh; min-height:380px; flex:none; }
+  aside { border-left:0; }
+  #transport { gap:5px; }
+  #transport button { font-size:12px; padding:6px; }
+  header { padding:10px 16px; }
+}

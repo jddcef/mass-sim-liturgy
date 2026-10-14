@@ -1,0 +1,177 @@
+# Mass animation
+
+Development decisions, sources and director documentation are in **`docs`**.
+`docs/director-script.json` preserves the complete baseline animation script.
+
+Open **mass-3d.html** in a modern browser for the interactive 3D version.
+Everything is local; no server, installation, account or internet connection is
+needed. Keep the JavaScript, stylesheet and `vendor` folder beside the HTML.
+WebGL must be enabled in the browser.
+
+Drag the scene to orbit, right-drag to pan and scroll to zoom. The camera menu
+provides church, altar, ambo, chair, congregation and overhead views, plus
+minister-follow views. Clicking a minister also follows them. Reset view restores
+the chosen camera. On touchscreens, use one finger to orbit and two to pan/zoom.
+**Follow the action** automatically tracks active gestures, speakers and moving
+ministers, frames the altar during elevations, and uses wider shots for the
+processions and Communion. Transitions are smoothed; choose a fixed view when
+you want full manual camera control.
+
+Use Play, Previous, Next, the timeline or the Order of Mass list to navigate.
+Space toggles playback and the arrow keys change steps when no form control has
+focus. Scenario changes pause playback and restart the current step.
+
+The setup controls change both the figures and their duties:
+
+- Without a deacon, the priest proclaims the Gospel, raises both vessels,
+  purifies the vessels and dismisses the people.
+- Without servers, the priest or deacon prepares the altar, the cross and
+  candles remain in place, and incense and bells are omitted.
+- Choose 0-5 servers. One handles the book, vessels and water; two adds a
+  cross-bearer; three uses a pair of candle-bearers instead of a cross-bearer;
+  four includes both cross and candles; five adds a separate incense server
+  (or an additional assistant when incense is off). For teams below five,
+  the general server also handles incense. The bell is omitted during
+  incensed elevations so one person is not given simultaneous duties.
+  This is an illustrative allocation, not a prescribed staffing rule.
+- Without a lay reader/psalmist, the priest proclaims the readings and leads
+  the Psalm.
+- Incense can be omitted independently when servers are present.
+- Communion under both kinds is optional; this illustration requires a deacon
+  to minister the chalice. Otherwise the priest distributes the Host alone.
+
+**mass-animation.html** retains the original animated floor-plan view. Both
+versions share the rite and movement data in `mass-rite.js`; the 3D version
+applies its scenario adaptations in `mass-scenarios.js`.
+
+This is an illustrative Sunday Mass in Ordinary Time, not a substitute for an
+approved Missal or ceremonial training. Rubrics are paraphrased, timings and
+gestures are schematic, and speech uses excerpts rather than a complete Missal. The original paragraph
+references require verification against the approved Missal and local norms.
+Postures, options and Communion practice vary with the applicable norms.
+
+The offline renderer uses Three.js 0.128.0 and its OrbitControls, distributed
+under the MIT license in `vendor/THREE-LICENSE.txt`.
+
+To check the scenario duties, timelines and sampled motion states, run
+`node mass-scenarios.test.cjs` from this folder.
+
+## Server training
+
+Enable **Train with one server**, then choose a member of the configured team.
+The camera follows that server and shows current and next duties. **Jump to next
+duty** pauses playback and takes you to the next movement, gesture or object
+handoff. Cues use the scenario's combined duties, including the omission of the
+bell when the same person is incensing the elevation. A zero-server setup
+disables training. Training cues are illustrative, not a complete checklist.
+
+## Editable church layout
+
+Choose the altar, ambo, celebrant/deacon chairs, credence table, servers' bench
+or tabernacle. Edit **X** (left-right, 100-900) and **Depth** (back-front, 35-260),
+then apply. Related nearby destinations, vessels, labels and cameras follow the
+furniture. Positions are restricted to the sanctuary; at least 100 layout units
+of centre clearance from the altar are required for other furniture.
+Movement paths are schematically deformed, not collision-aware route planning.
+The church shell, pews and nave remain fixed. Rotation and floor-height editing
+are not included.
+
+Choose a preset and apply it for a central/left ambo, mirrored/right ambo,
+compact chapel, broad sanctuary with side chair, or central tabernacle with
+side chair arrangement. These are illustrative furniture configurations in the
+same church shell, not measured architectural plans.
+
+Layouts are saved in this browser's local storage, subject to browser permission
+and file-URL storage behavior. Export/import a JSON file for a portable copy.
+**Default layout** restores the original arrangement without changing the
+original floor-plan animation.
+
+## Speech and languages
+
+Enable **Speak during playback** and choose voices independently for the Priest,
+Deacon, Lector, Psalmist and People. Only voices reported as local by your
+browser are offered; no external text-to-speech service is used. Installed voice
+availability differs between browsers and systems. The People voice is a single
+synthesized speaker, not a choir. Test the Priest's voice before playback.
+
+The timeline waits for each spoken cue to finish. Pause, seek, scenario changes
+and language changes cancel the current utterance; resuming may restart the
+current excerpt. Speech speed is separate from animation speed. Stage directions
+and chant labels are skipped; printed sung words are spoken rather than chanted.
+English speaks the existing abbreviated script. Latin is a partial pack of
+traditional responses, not a translation of the full script or a change of rite.
+Missing translations are explicitly indicated in captions and not spoken in
+English as a fallback. Most systems do not have a Latin voice: you can explicitly
+select another installed voice, but its Latin pronunciation may be unsuitable.
+
+Export a language template, replace its name, id, language tag and translations,
+then import it. Supply wording you are entitled to use and verify it against the
+approved liturgical text. The UI and training/rubric explanations stay in English.
+An imported pack uses this structure:
+
+```json
+{
+  "version": 1,
+  "id": "la-parish",
+  "name": "Parish Latin",
+  "lang": "la",
+  "texts": {
+    "The Lord be with you.": "Dominus vobiscum.",
+    "And with your spirit.": "Et cum spiritu tuo."
+  }
+}
+```
+
+Keys match the original English caption exactly. Empty translations are omitted.
+Packs are saved locally when storage is available. Export templates from relevant
+scenarios if you need wording from different staffing arrangements.
+
+Run `node mass-features.test.cjs` to check layout transforms, training cues,
+language validation and speech scheduling with a simulated speech engine.
+
+## Pre-generated AI audio
+
+Choose **Pre-generated AI recordings** as the audio source. These MP3 files play
+offline without installed system voices or API credentials. Individual characters
+have fixed synthetic voices. Congregation responses mix **six distinct voices**,
+small timing/speed differences, stereo placement and restrained echoes; they are
+not a recording of a real congregation and do not simulate singing.
+Use **Test congregation** to preview a response.
+
+The static pack covers the abbreviated English script and a partial Latin pack.
+Latin uses Latin phonemes with English-trained voices and is explicitly
+**experimental**. Review pronunciation before using it for training.
+The UI reports current audio coverage; missing clips are skipped with a status
+message, rather than silently switching to live synthesis.
+
+Generation can be resumed: completed clips are cached by role, language and
+spoken-text hash. Large model files and the generation environment are excluded
+from Git. Playback needs only the `audio` assets and manifest.
+
+To generate or complete the pack:
+
+1. Install Python 3.10+ and FFmpeg, then install `audio-requirements.txt` in an
+   isolated virtual environment.
+2. Download `kokoro-v1.0.int8.onnx` and `voices-v1.0.bin` from the official
+   [model-files-v1.1 release](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1).
+3. Run `node prepare-audio.cjs audio/audio-jobs.json`.
+4. Run `python generate-audio.py --model <model-path> --voices <voices-path> --jobs audio/audio-jobs.json --experimental-latin`.
+   Omit the Latin flag for English-only generation.
+5. If generation is still running, `node snapshot-audio.cjs` makes a manifest of
+   completed clips. Successful full generation writes its final manifest.
+
+Use an environment outside this repository for model downloads and Python
+dependencies. See `docs/SOURCES.md` for upstream licenses and attribution.
+
+## Repository checks
+
+```text
+node mass-scenarios.test.cjs
+node mass-features.test.cjs
+node mass-assets.test.cjs
+```
+
+GitHub Actions runs these checks on pushes and pull requests. After editing
+baseline direction data, run `node export-director.cjs` and commit the updated
+director export. No full liturgical text, account credentials or AI model weights
+are included in this repository.

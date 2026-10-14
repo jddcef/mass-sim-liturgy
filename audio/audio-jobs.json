@@ -1,0 +1,502 @@
+[
+  {
+    "language": "en",
+    "role": "P",
+    "text": "In the name of the Father, and of the Son, and of the Holy Spirit."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "In nomine Patris, et Filii, et Spiritus Sancti."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Amen."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Amen."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The Lord be with you."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Dominus vobiscum."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "And with your spirit."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Et cum spiritu tuo."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "I confess to almighty God"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May almighty God have mercy on us"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Kyrie, eleison."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Kyrie, eleison."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Kyrie, eleison."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Kyrie, eleison."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Christe, eleison."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Christe, eleison."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Christe, eleison."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Christe, eleison."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Glory to God in the highest"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "and on earth peace to people of good will"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Let us pray."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Oremus."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "A reading from the Book of"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The word of the Lord."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Verbum Domini."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Thanks be to God."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Deo gratias."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "A reading from the Letter of Saint Paul"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Alleluia"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "A reading from the holy Gospel according to N."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Glory to you, O Lord."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Gloria tibi, Domine."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The Gospel of the Lord."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Praise to you, Lord Jesus Christ."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Laus tibi, Christe."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "I believe in one God"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "and by the Holy Spirit was incarnate of the Virgin Mary, and became man."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "and the life of the world to come. Amen."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Lord, hear our prayer."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Te rogamus, audi nos."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Blessed are you, Lord God of all creation"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "By the mystery of this water and wine"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Blessed are you fruit of the vine"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Blessed be God for ever."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Benedictus Deus in saecula."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Wash me, O Lord, from my iniquity"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "May the Lord accept the sacrifice at your hands"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Lift up your hearts."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Sursum corda."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "We lift them up to the Lord."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Habemus ad Dominum."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Let us give thanks to the Lord our God."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Gratias agamus Domino Deo nostro."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "It is right and just."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Dignum et iustum est."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Holy, Holy, Holy Lord God of hosts Hosanna in the highest."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Sanctus, Sanctus, Sanctus Dominus Deus Sabaoth. Hosanna in excelsis."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "TAKE THIS, ALL OF YOU, AND EAT OF IT, FOR THIS IS MY BODY, WHICH WILL BE GIVEN UP FOR YOU."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "TAKE THIS, ALL OF YOU, AND DRINK FROM IT, FOR THIS IS THE CHALICE OF MY BLOOD DO THIS IN MEMORY OF ME."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The mystery of faith."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Mysterium fidei."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "We proclaim your Death, O Lord, and profess your Resurrection until you come again."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Mortem tuam annuntiamus, Domine, et tuam resurrectionem confitemur, donec venias."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Through him, and with him, and in him, O God, almighty Father, in the unity of the Holy Spirit, all glory and honor is yours, for ever and ever."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "At the Savior's command and formed by divine teaching, we dare to say:"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Our Father, who art in heaven, hallowed be thy name"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Deliver us, Lord, we pray, from every evil"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "For the kingdom, the power and the glory are yours now and for ever."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Lord Jesus Christ, who said to your Apostles: Peace I leave you"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The peace of the Lord be with you always."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Pax Domini sit semper vobiscum."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Let us offer each other the sign of peace."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Offerte vobis pacem."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May this mingling of the Body and Blood"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Lamb of God, you take away the sins of the world grant us peace."
+  },
+  {
+    "language": "la",
+    "role": "ppl",
+    "text": "Agnus Dei, qui tollis peccata mundi, dona nobis pacem."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb."
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May the Body of Christ keep me safe for eternal life."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "The Body of Christ."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Corpus Christi."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May almighty God bless you, the Father, and the Son, and the Holy Spirit."
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Go forth, the Mass is ended."
+  },
+  {
+    "language": "la",
+    "role": "P",
+    "text": "Ite, missa est."
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "The Lord be with you."
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Dominus vobiscum."
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "A reading from the holy Gospel according to N."
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "The Gospel of the Lord."
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Verbum Domini."
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "Let us offer each other the sign of peace."
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Offerte vobis pacem."
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "Go forth, the Mass is ended."
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Ite, missa est."
+  },
+  {
+    "language": "en",
+    "role": "L",
+    "text": "A reading from the Book of"
+  },
+  {
+    "language": "en",
+    "role": "L",
+    "text": "The word of the Lord."
+  },
+  {
+    "language": "la",
+    "role": "L",
+    "text": "Verbum Domini."
+  },
+  {
+    "language": "en",
+    "role": "L",
+    "text": "A reading from the Letter of Saint Paul"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "The Blood of Christ."
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Sanguis Christi."
+  }
+]

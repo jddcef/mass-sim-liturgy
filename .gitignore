@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+tts-env/
+node_modules/
+*.onnx
+voices-*.bin
+*.pending.mp3
+*.wav
+*.tmp
+.DS_Store
+Thumbs.db

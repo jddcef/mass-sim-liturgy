@@ -1,0 +1,4260 @@
+{
+  "version": 1,
+  "description": "Illustrative Sunday Mass in Ordinary Time; baseline with deacon and servers.",
+  "units": "Positions use the canonical 1000 x 830 floor plan; duration is animation seconds, not real liturgical timing.",
+  "referenceStatus": "Inherited references are not independently checked against an approved Missal.",
+  "roles": {
+    "P": {
+      "name": "Priest (celebrant), green chasuble",
+      "fill": "#2e7d4f",
+      "stroke": "#d4a72c",
+      "r": 13,
+      "txt": "#fff"
+    },
+    "D": {
+      "name": "Deacon, dalmatic",
+      "fill": "#5fae7c",
+      "stroke": "#2a5a3a",
+      "r": 12,
+      "txt": "#fff"
+    },
+    "X": {
+      "name": "Cross-bearer",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333"
+    },
+    "C1": {
+      "name": "Candle-bearer",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333",
+      "lab": "C"
+    },
+    "C2": {
+      "name": "Candle-bearer",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333",
+      "lab": "C"
+    },
+    "T": {
+      "name": "Thurifer (incense)",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333"
+    },
+    "S": {
+      "name": "Altar server (also rings the bell)",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333"
+    },
+    "L": {
+      "name": "Lector",
+      "fill": "#4f7fa8",
+      "stroke": "#244",
+      "r": 10,
+      "txt": "#fff"
+    },
+    "Ps": {
+      "name": "Psalmist / cantor",
+      "fill": "#7b68a6",
+      "stroke": "#334",
+      "r": 10,
+      "txt": "#fff"
+    },
+    "G1": {
+      "name": "Gift-bearer (one of the faithful)",
+      "fill": "#9aa86b",
+      "stroke": "#444",
+      "r": 9,
+      "txt": "#fff",
+      "lab": "G"
+    },
+    "G2": {
+      "name": "Gift-bearer (one of the faithful)",
+      "fill": "#9aa86b",
+      "stroke": "#444",
+      "r": 9,
+      "txt": "#fff",
+      "lab": "G"
+    }
+  },
+  "initialPositions": {
+    "P": [
+      500,
+      808
+    ],
+    "D": [
+      500,
+      782
+    ],
+    "X": [
+      500,
+      730
+    ],
+    "C1": [
+      470,
+      730
+    ],
+    "C2": [
+      530,
+      730
+    ],
+    "T": [
+      500,
+      700
+    ],
+    "S": [
+      805,
+      78
+    ],
+    "L": [
+      500,
+      756
+    ],
+    "Ps": [
+      380,
+      322
+    ],
+    "G1": [
+      600,
+      745
+    ],
+    "G2": [
+      640,
+      745
+    ]
+  },
+  "initialProps": {
+    "corporal": {
+      "at": [
+        866,
+        120
+      ]
+    },
+    "missal": {
+      "at": [
+        845,
+        120
+      ]
+    },
+    "chalice": {
+      "at": [
+        888,
+        128
+      ]
+    },
+    "ewer": {
+      "at": [
+        850,
+        144
+      ]
+    },
+    "bread": {
+      "at": [
+        612,
+        770
+      ]
+    },
+    "wine": {
+      "at": [
+        632,
+        770
+      ]
+    },
+    "gospels": {
+      "by": "D"
+    },
+    "cross": {
+      "by": "X"
+    },
+    "cand1": {
+      "by": "C1"
+    },
+    "cand2": {
+      "by": "C2"
+    },
+    "thurible": {
+      "by": "T"
+    }
+  },
+  "durationSeconds": 463,
+  "steps": [
+    {
+      "id": 0,
+      "startSeconds": 0,
+      "part": "Introductory Rites",
+      "title": "Entrance Procession",
+      "dur": 11,
+      "posture": "stand",
+      "text": "When the people are gathered, the Priest and ministers go to the altar while the Entrance Chant is sung. The thurifer goes first with a smoking thurible. Next comes a minister carrying the cross, between two ministers with lighted candles, then the lector. The Deacon carries the Book of the Gospels slightly raised, and the Priest comes last.",
+      "ref": "Order of Mass 1; GIRM 47–48, 119–121, 172",
+      "mv": {
+        "T": {
+          "p": [
+            [
+              500,
+              310
+            ],
+            [
+              740,
+              265
+            ]
+          ],
+          "a": 0,
+          "b": 0.55
+        },
+        "C2": {
+          "p": [
+            [
+              530,
+              310
+            ],
+            [
+              690,
+              265
+            ]
+          ],
+          "a": 0.04,
+          "b": 0.62
+        },
+        "X": {
+          "p": [
+            [
+              500,
+              310
+            ],
+            [
+              640,
+              265
+            ]
+          ],
+          "a": 0.04,
+          "b": 0.64
+        },
+        "C1": {
+          "p": [
+            [
+              470,
+              310
+            ],
+            [
+              360,
+              265
+            ]
+          ],
+          "a": 0.04,
+          "b": 0.62
+        },
+        "L": {
+          "p": [
+            [
+              500,
+              310
+            ],
+            [
+              420,
+              262
+            ]
+          ],
+          "a": 0.1,
+          "b": 0.72
+        },
+        "D": {
+          "p": [
+            [
+              500,
+              310
+            ],
+            [
+              470,
+              250
+            ]
+          ],
+          "a": 0.13,
+          "b": 0.8
+        },
+        "P": {
+          "p": [
+            [
+              500,
+              310
+            ],
+            [
+              530,
+              250
+            ]
+          ],
+          "a": 0.16,
+          "b": 0.86
+        }
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Entrance Chant ♪",
+          0.03,
+          1
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "startSeconds": 11,
+      "part": "Introductory Rites",
+      "title": "Reverence to the Altar",
+      "dur": 11,
+      "posture": "stand",
+      "text": "At the altar the Priest, the Deacon and the ministers make a profound bow. The cross bearing the figure of Christ crucified is set up near the altar, and the candles are placed by it. The Deacon lays the Book of the Gospels on the altar. Then the Priest and Deacon venerate the altar with a kiss.",
+      "ref": "Order of Mass 1; GIRM 49, 117, 122–123, 173",
+      "mv": {
+        "X": [
+          {
+            "p": [
+              [
+                670,
+                142
+              ]
+            ],
+            "a": 0.15,
+            "b": 0.33
+          },
+          {
+            "p": [
+              [
+                705,
+                100
+              ],
+              [
+                640,
+                55
+              ]
+            ],
+            "a": 0.45,
+            "b": 0.72
+          }
+        ],
+        "C1": [
+          {
+            "p": [
+              [
+                392,
+                152
+              ]
+            ],
+            "a": 0.15,
+            "b": 0.33
+          },
+          {
+            "p": [
+              [
+                392,
+                92
+              ],
+              [
+                680,
+                55
+              ]
+            ],
+            "a": 0.45,
+            "b": 0.8
+          }
+        ],
+        "C2": [
+          {
+            "p": [
+              [
+                612,
+                152
+              ]
+            ],
+            "a": 0.15,
+            "b": 0.33
+          },
+          {
+            "p": [
+              [
+                720,
+                90
+              ],
+              [
+                720,
+                55
+              ]
+            ],
+            "a": 0.45,
+            "b": 0.75
+          }
+        ],
+        "T": {
+          "p": [
+            [
+              640,
+              215
+            ]
+          ],
+          "a": 0.2,
+          "b": 0.4
+        },
+        "L": {
+          "p": [
+            [
+              420,
+              296
+            ],
+            [
+              420,
+              322
+            ]
+          ],
+          "a": 0.25,
+          "b": 0.5
+        },
+        "D": [
+          {
+            "p": [
+              [
+                490,
+                214
+              ]
+            ],
+            "a": 0.22,
+            "b": 0.34
+          },
+          {
+            "p": [
+              [
+                375,
+                214
+              ],
+              [
+                375,
+                122
+              ],
+              [
+                452,
+                122
+              ]
+            ],
+            "a": 0.5,
+            "b": 0.8
+          }
+        ],
+        "P": {
+          "p": [
+            [
+              625,
+              240
+            ],
+            [
+              625,
+              122
+            ],
+            [
+              500,
+              122
+            ]
+          ],
+          "a": 0.42,
+          "b": 0.8
+        }
+      },
+      "props": {
+        "cross": [
+          {
+            "at": [
+              670,
+              126
+            ],
+            "a": 0.33,
+            "b": 0.38
+          }
+        ],
+        "cand1": [
+          {
+            "at": [
+              388,
+              140
+            ],
+            "a": 0.33,
+            "b": 0.38
+          }
+        ],
+        "cand2": [
+          {
+            "at": [
+              612,
+              140
+            ],
+            "a": 0.33,
+            "b": 0.38
+          }
+        ],
+        "gospels": [
+          {
+            "at": [
+              500,
+              176
+            ],
+            "a": 0.35,
+            "b": 0.42
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "profound bow",
+            0,
+            0.2
+          ],
+          [
+            "kisses the altar",
+            0.82,
+            1
+          ]
+        ],
+        "D": [
+          [
+            "profound bow",
+            0,
+            0.2
+          ],
+          [
+            "lays the Book on the altar",
+            0.34,
+            0.44
+          ],
+          [
+            "kisses the altar",
+            0.82,
+            1
+          ]
+        ],
+        "L": [
+          [
+            "profound bow",
+            0,
+            0.2
+          ]
+        ],
+        "X": [
+          [
+            "sets up the cross",
+            0.33,
+            0.42
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Entrance Chant ♪",
+          0,
+          1
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "startSeconds": 22,
+      "part": "Introductory Rites",
+      "title": "Incensing the Cross and Altar",
+      "dur": 11,
+      "posture": "stand",
+      "text": "If incense is used, the Priest puts some into the thurible and blesses it with the Sign of the Cross, saying nothing. He incenses the cross, then walks around the altar incensing it.",
+      "ref": "GIRM 49, 123, 276–277",
+      "mv": {
+        "T": {
+          "p": [
+            [
+              628,
+              150
+            ]
+          ],
+          "a": 0,
+          "b": 0.14
+        },
+        "P": [
+          {
+            "p": [
+              [
+                640,
+                110
+              ]
+            ],
+            "a": 0.16,
+            "b": 0.26
+          },
+          {
+            "p": [
+              [
+                625,
+                215
+              ],
+              [
+                375,
+                215
+              ],
+              [
+                375,
+                108
+              ],
+              [
+                500,
+                122
+              ]
+            ],
+            "a": 0.34,
+            "b": 0.9
+          }
+        ]
+      },
+      "props": {
+        "thurible": [
+          {
+            "by": "P",
+            "t": 0.15
+          },
+          {
+            "by": "T",
+            "t": 0.94
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "puts incense in the thurible",
+            0,
+            0.15
+          ],
+          [
+            "incenses the cross",
+            0.18,
+            0.32
+          ],
+          [
+            "incenses the altar",
+            0.35,
+            0.9
+          ]
+        ]
+      },
+      "smoke": [
+        [
+          "T",
+          0,
+          0.15
+        ],
+        [
+          "P",
+          0.15,
+          0.94
+        ],
+        [
+          "T",
+          0.94,
+          1
+        ]
+      ],
+      "say": [
+        [
+          "ppl",
+          "♪ Entrance Chant ♪",
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "startSeconds": 33,
+      "part": "Introductory Rites",
+      "title": "Sign of the Cross",
+      "dur": 8,
+      "posture": "stand",
+      "text": "The Priest goes to the chair. When the Entrance Chant has ended, the Priest and the faithful, all standing, make the Sign of the Cross. The Priest, facing the people, says the words and the people answer \"Amen.\"",
+      "ref": "Order of Mass 1; GIRM 50, 124",
+      "mv": {
+        "P": {
+          "p": [
+            [
+              560,
+              90
+            ],
+            [
+              500,
+              58
+            ]
+          ],
+          "a": 0,
+          "b": 0.35
+        },
+        "D": {
+          "p": [
+            [
+              440,
+              90
+            ],
+            [
+              450,
+              62
+            ]
+          ],
+          "a": 0,
+          "b": 0.35
+        },
+        "T": {
+          "p": [
+            [
+              760,
+              55
+            ]
+          ],
+          "a": 0,
+          "b": 0.4
+        }
+      },
+      "say": [
+        [
+          "P",
+          "In the name of the Father, and of the Son, and of the Holy Spirit.",
+          0.4,
+          0.76
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.78,
+          1
+        ]
+      ],
+      "acts": {
+        "P": [
+          [
+            "signs himself ✠",
+            0.4,
+            0.76
+          ]
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "startSeconds": 41,
+      "part": "Introductory Rites",
+      "title": "Greeting",
+      "dur": 7,
+      "posture": "stand",
+      "text": "The Priest extends his hands and greets the people, using one of the formulas given. The people reply.",
+      "ref": "Order of Mass 2; GIRM 50, 124",
+      "orans": {
+        "P": [
+          [
+            0.08,
+            0.45
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "The Lord be with you.",
+          0.08,
+          0.45
+        ],
+        [
+          "ppl",
+          "And with your spirit.",
+          0.5,
+          0.92
+        ]
+      ]
+    },
+    {
+      "id": 5,
+      "startSeconds": 48,
+      "part": "Introductory Rites",
+      "title": "Penitential Act",
+      "dur": 11,
+      "posture": "stand",
+      "text": "The Priest invites the faithful to the Penitential Act, and a brief silence follows. All then make a common confession. The Priest gives the absolution, which lacks the efficacy of the Sacrament of Penance.",
+      "ref": "Order of Mass 4–6; GIRM 51",
+      "say": [
+        [
+          "P",
+          "(invites all to acknowledge their sins)",
+          0.04,
+          0.25
+        ],
+        [
+          "ppl",
+          "(brief silence)",
+          0.27,
+          0.4
+        ],
+        [
+          "ppl",
+          "I confess to almighty God… (all strike the breast)",
+          0.43,
+          0.72
+        ],
+        [
+          "P",
+          "May almighty God have mercy on us…",
+          0.74,
+          0.9
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.91,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 6,
+      "startSeconds": 59,
+      "part": "Introductory Rites",
+      "title": "Kyrie",
+      "dur": 8,
+      "posture": "stand",
+      "text": "The Kyrie invocations follow, unless they were already part of the Penitential Act.",
+      "ref": "Order of Mass 7; GIRM 52",
+      "say": [
+        [
+          "P",
+          "Kyrie, eleison.",
+          0.05,
+          0.2
+        ],
+        [
+          "ppl",
+          "Kyrie, eleison.",
+          0.2,
+          0.35
+        ],
+        [
+          "P",
+          "Christe, eleison.",
+          0.37,
+          0.52
+        ],
+        [
+          "ppl",
+          "Christe, eleison.",
+          0.52,
+          0.67
+        ],
+        [
+          "P",
+          "Kyrie, eleison.",
+          0.69,
+          0.83
+        ],
+        [
+          "ppl",
+          "Kyrie, eleison.",
+          0.83,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 7,
+      "startSeconds": 67,
+      "part": "Introductory Rites",
+      "title": "Gloria",
+      "dur": 8,
+      "posture": "stand",
+      "text": "When it is prescribed, the Gloria is then sung or said. This applies to Sundays outside Advent and Lent, to solemnities and to feasts. The Priest or a cantor may begin it, or all may begin it together.",
+      "ref": "Order of Mass 8; GIRM 53",
+      "say": [
+        [
+          "P",
+          "Glory to God in the highest…",
+          0.03,
+          0.22
+        ],
+        [
+          "ppl",
+          "♪ …and on earth peace to people of good will… ♪",
+          0.24,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 8,
+      "startSeconds": 75,
+      "part": "Introductory Rites",
+      "title": "Collect",
+      "dur": 11,
+      "posture": "stand",
+      "text": "With hands joined, the Priest says \"Let us pray,\" and all pray in silence for a while. Then the Priest extends his hands and says the Collect. At its end the people acclaim \"Amen.\" A server may hold the Missal.",
+      "ref": "Order of Mass 9; GIRM 54, 127",
+      "mv": {
+        "S": [
+          {
+            "p": [
+              [
+                850,
+                100
+              ]
+            ],
+            "a": 0,
+            "b": 0.08
+          },
+          {
+            "p": [
+              [
+                540,
+                82
+              ]
+            ],
+            "a": 0.12,
+            "b": 0.3
+          },
+          {
+            "p": [
+              [
+                850,
+                100
+              ]
+            ],
+            "a": 0.88,
+            "b": 0.96
+          },
+          {
+            "p": [
+              [
+                805,
+                78
+              ]
+            ],
+            "a": 0.96,
+            "b": 1
+          }
+        ]
+      },
+      "props": {
+        "missal": [
+          {
+            "by": "S",
+            "t": 0.09
+          },
+          {
+            "at": [
+              845,
+              120
+            ],
+            "a": 0.95,
+            "b": 0.97
+          }
+        ]
+      },
+      "orans": {
+        "P": [
+          [
+            0.4,
+            0.82
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "Let us pray.",
+          0.05,
+          0.2
+        ],
+        [
+          "ppl",
+          "(silent prayer)",
+          0.22,
+          0.38
+        ],
+        [
+          "P",
+          "(the Collect of the day) …through our Lord Jesus Christ…",
+          0.4,
+          0.82
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.84,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 9,
+      "startSeconds": 86,
+      "part": "Liturgy of the Word",
+      "title": "First Reading",
+      "dur": 11,
+      "posture": "sit",
+      "text": "The lector goes to the ambo and reads the First Reading while all sit and listen. At the end the lector acclaims \"The word of the Lord,\" and all reply. A brief silence for meditation may follow.",
+      "ref": "Order of Mass 11–12; GIRM 56, 128",
+      "mv": {
+        "L": {
+          "p": [
+            [
+              420,
+              296
+            ],
+            [
+              255,
+              290
+            ],
+            [
+              255,
+              222
+            ],
+            [
+              200,
+              222
+            ]
+          ],
+          "a": 0,
+          "b": 0.25
+        }
+      },
+      "say": [
+        [
+          "L",
+          "A reading from the Book of…",
+          0.28,
+          0.42
+        ],
+        [
+          "L",
+          "(proclaims the reading)",
+          0.43,
+          0.74
+        ],
+        [
+          "L",
+          "The word of the Lord.",
+          0.76,
+          0.87
+        ],
+        [
+          "ppl",
+          "Thanks be to God.",
+          0.87,
+          0.97
+        ]
+      ]
+    },
+    {
+      "id": 10,
+      "startSeconds": 97,
+      "part": "Liturgy of the Word",
+      "title": "Responsorial Psalm",
+      "dur": 10,
+      "posture": "sit",
+      "text": "The psalmist or cantor sings or says the Psalm at the ambo, and the people make the response.",
+      "ref": "Order of Mass 13; GIRM 61, 129",
+      "mv": {
+        "L": {
+          "p": [
+            [
+              255,
+              222
+            ],
+            [
+              275,
+              300
+            ],
+            [
+              420,
+              300
+            ],
+            [
+              420,
+              322
+            ]
+          ],
+          "a": 0,
+          "b": 0.25
+        },
+        "Ps": {
+          "p": [
+            [
+              380,
+              300
+            ],
+            [
+              250,
+              296
+            ],
+            [
+              245,
+              222
+            ],
+            [
+              200,
+              222
+            ]
+          ],
+          "a": 0.15,
+          "b": 0.42
+        }
+      },
+      "say": [
+        [
+          "Ps",
+          "♪ (verse of the Psalm) ♪",
+          0.44,
+          0.6
+        ],
+        [
+          "ppl",
+          "♪ (Response) ♪",
+          0.6,
+          0.74
+        ],
+        [
+          "Ps",
+          "♪ (verse) ♪",
+          0.75,
+          0.87
+        ],
+        [
+          "ppl",
+          "♪ (Response) ♪",
+          0.87,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 11,
+      "startSeconds": 107,
+      "part": "Liturgy of the Word",
+      "title": "Second Reading",
+      "dur": 10,
+      "posture": "sit",
+      "text": "If there is a Second Reading, a lector reads it from the ambo as before, ending with the same acclamation.",
+      "ref": "Order of Mass 14; GIRM 130",
+      "mv": {
+        "Ps": {
+          "p": [
+            [
+              250,
+              296
+            ],
+            [
+              380,
+              300
+            ],
+            [
+              380,
+              322
+            ]
+          ],
+          "a": 0,
+          "b": 0.25
+        },
+        "L": {
+          "p": [
+            [
+              420,
+              296
+            ],
+            [
+              265,
+              286
+            ],
+            [
+              255,
+              222
+            ],
+            [
+              200,
+              222
+            ]
+          ],
+          "a": 0.12,
+          "b": 0.38
+        }
+      },
+      "say": [
+        [
+          "L",
+          "A reading from the Letter of Saint Paul…",
+          0.4,
+          0.52
+        ],
+        [
+          "L",
+          "(proclaims the reading)",
+          0.53,
+          0.78
+        ],
+        [
+          "L",
+          "The word of the Lord.",
+          0.8,
+          0.9
+        ],
+        [
+          "ppl",
+          "Thanks be to God.",
+          0.9,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 12,
+      "startSeconds": 117,
+      "part": "Liturgy of the Word",
+      "title": "Gospel Acclamation & Blessing of the Deacon",
+      "dur": 13,
+      "posture": "stand",
+      "text": "All rise and sing the Alleluia, or the chant the season requires. If incense is used, the Priest puts some into the thurible. The Deacon bows profoundly before the Priest and asks for the blessing in a low voice; the Priest blesses him in a low voice. The Deacon takes the Book of the Gospels from the altar. Preceded by the thurifer and the candle-bearers, he carries it to the ambo.",
+      "ref": "Order of Mass 14–15; GIRM 62, 131–133, 175",
+      "mv": {
+        "L": {
+          "p": [
+            [
+              255,
+              222
+            ],
+            [
+              275,
+              300
+            ],
+            [
+              420,
+              300
+            ],
+            [
+              420,
+              322
+            ]
+          ],
+          "a": 0,
+          "b": 0.2
+        },
+        "T": [
+          {
+            "p": [
+              [
+                545,
+                82
+              ]
+            ],
+            "a": 0.04,
+            "b": 0.18
+          },
+          {
+            "p": [
+              [
+                620,
+                230
+              ],
+              [
+                200,
+                282
+              ]
+            ],
+            "a": 0.48,
+            "b": 0.88
+          }
+        ],
+        "D": [
+          {
+            "p": [
+              [
+                478,
+                84
+              ]
+            ],
+            "a": 0.2,
+            "b": 0.3
+          },
+          {
+            "p": [
+              [
+                380,
+                100
+              ],
+              [
+                380,
+                212
+              ],
+              [
+                482,
+                214
+              ]
+            ],
+            "a": 0.43,
+            "b": 0.6
+          },
+          {
+            "p": [
+              [
+                300,
+                236
+              ],
+              [
+                200,
+                222
+              ]
+            ],
+            "a": 0.66,
+            "b": 0.9
+          }
+        ],
+        "C1": {
+          "p": [
+            [
+              680,
+              90
+            ],
+            [
+              360,
+              240
+            ],
+            [
+              160,
+              240
+            ]
+          ],
+          "a": 0.35,
+          "b": 0.86
+        },
+        "C2": {
+          "p": [
+            [
+              720,
+              90
+            ],
+            [
+              380,
+              252
+            ],
+            [
+              240,
+              248
+            ]
+          ],
+          "a": 0.38,
+          "b": 0.88
+        }
+      },
+      "props": {
+        "gospels": [
+          {
+            "by": "D",
+            "t": 0.6
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "puts incense in the thurible",
+            0.07,
+            0.2
+          ],
+          [
+            "blesses the Deacon (low voice)",
+            0.3,
+            0.43
+          ]
+        ],
+        "D": [
+          [
+            "bows: \"Your blessing, Father\"",
+            0.3,
+            0.43
+          ],
+          [
+            "takes up the Book",
+            0.58,
+            0.65
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Alleluia ♪",
+          0,
+          1
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 13,
+      "startSeconds": 130,
+      "part": "Liturgy of the Word",
+      "title": "The Gospel",
+      "dur": 13,
+      "posture": "stand",
+      "text": "At the ambo the Deacon greets the people with hands joined. As he announces the Gospel he signs the book with his thumb, then signs himself on the forehead, lips and breast, and all do the same. He incenses the book and proclaims the Gospel. At the end he kisses the book, saying a prayer quietly.",
+      "ref": "Order of Mass 15–16; GIRM 60, 134, 175",
+      "props": {
+        "thurible": [
+          {
+            "by": "D",
+            "t": 0.44
+          },
+          {
+            "by": "T",
+            "t": 0.53
+          }
+        ]
+      },
+      "acts": {
+        "D": [
+          [
+            "signs book, forehead, lips, breast",
+            0.24,
+            0.37
+          ],
+          [
+            "incenses the Book",
+            0.44,
+            0.53
+          ],
+          [
+            "kisses the Book",
+            0.9,
+            1
+          ]
+        ],
+        "P": [
+          [
+            "turns toward the ambo",
+            0,
+            1
+          ]
+        ]
+      },
+      "smoke": [
+        [
+          "T",
+          0,
+          0.44
+        ],
+        [
+          "D",
+          0.44,
+          0.53
+        ],
+        [
+          "T",
+          0.53,
+          1
+        ]
+      ],
+      "say": [
+        [
+          "D",
+          "The Lord be with you.",
+          0,
+          0.12
+        ],
+        [
+          "ppl",
+          "And with your spirit.",
+          0.12,
+          0.22
+        ],
+        [
+          "D",
+          "A reading from the holy Gospel according to N.",
+          0.22,
+          0.34
+        ],
+        [
+          "ppl",
+          "Glory to you, O Lord.  (✠ ✠ ✠)",
+          0.34,
+          0.44
+        ],
+        [
+          "D",
+          "(proclaims the Gospel)",
+          0.53,
+          0.8
+        ],
+        [
+          "D",
+          "The Gospel of the Lord.",
+          0.8,
+          0.9
+        ],
+        [
+          "ppl",
+          "Praise to you, Lord Jesus Christ.",
+          0.9,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 14,
+      "startSeconds": 143,
+      "part": "Liturgy of the Word",
+      "title": "Homily",
+      "dur": 11,
+      "posture": "sit",
+      "text": "The Book of the Gospels is taken to the credence table or another fitting place. The Priest gives the Homily at the chair or the ambo; a Deacon may give it instead. A brief period of silence is then fitting.",
+      "ref": "Order of Mass 17; GIRM 65–66, 136, 175",
+      "mv": {
+        "D": [
+          {
+            "p": [
+              [
+                300,
+                252
+              ],
+              [
+                620,
+                252
+              ],
+              [
+                830,
+                165
+              ]
+            ],
+            "a": 0,
+            "b": 0.35
+          },
+          {
+            "p": [
+              [
+                700,
+                95
+              ],
+              [
+                450,
+                62
+              ]
+            ],
+            "a": 0.42,
+            "b": 0.62
+          }
+        ],
+        "C1": {
+          "p": [
+            [
+              360,
+              240
+            ],
+            [
+              680,
+              90
+            ],
+            [
+              680,
+              55
+            ]
+          ],
+          "a": 0,
+          "b": 0.45
+        },
+        "C2": {
+          "p": [
+            [
+              380,
+              250
+            ],
+            [
+              720,
+              90
+            ],
+            [
+              720,
+              55
+            ]
+          ],
+          "a": 0.02,
+          "b": 0.47
+        },
+        "T": {
+          "p": [
+            [
+              620,
+              260
+            ],
+            [
+              760,
+              90
+            ],
+            [
+              760,
+              55
+            ]
+          ],
+          "a": 0,
+          "b": 0.45
+        }
+      },
+      "props": {
+        "gospels": [
+          {
+            "at": [
+              868,
+              146
+            ],
+            "a": 0.35,
+            "b": 0.4
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "preaches from the chair",
+            0.3,
+            0.86
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(Homily)",
+          0.3,
+          0.86
+        ],
+        [
+          "ppl",
+          "(silence)",
+          0.88,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 15,
+      "startSeconds": 154,
+      "part": "Liturgy of the Word",
+      "title": "Profession of Faith",
+      "dur": 11,
+      "posture": "stand",
+      "text": "On Sundays and solemnities the Creed is sung or said. At the words about the Incarnation all bow. On the Annunciation and on Christmas all genuflect.",
+      "ref": "Order of Mass 18–19; GIRM 67–68, 137",
+      "pplBow": [
+        [
+          0.42,
+          0.62
+        ]
+      ],
+      "acts": {
+        "P": [
+          [
+            "bows",
+            0.42,
+            0.62
+          ]
+        ],
+        "D": [
+          [
+            "bows",
+            0.42,
+            0.62
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "I believe in one God…",
+          0.04,
+          0.4
+        ],
+        [
+          "ppl",
+          "…and by the Holy Spirit was incarnate of the Virgin Mary, and became man.  (all bow)",
+          0.42,
+          0.62
+        ],
+        [
+          "ppl",
+          "…and the life of the world to come. Amen.",
+          0.7,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 16,
+      "startSeconds": 165,
+      "part": "Liturgy of the Word",
+      "title": "Universal Prayer (Prayer of the Faithful)",
+      "dur": 12,
+      "posture": "stand",
+      "text": "Standing at the chair, the Priest introduces the prayer with hands joined. The Deacon, or a cantor, lector or lay person, announces the intentions from the ambo, and the people respond. The Priest ends with a prayer, his hands extended.",
+      "ref": "Order of Mass 20; GIRM 69–71, 138, 177",
+      "mv": {
+        "D": {
+          "p": [
+            [
+              400,
+              110
+            ],
+            [
+              262,
+              232
+            ],
+            [
+              200,
+              222
+            ]
+          ],
+          "a": 0.1,
+          "b": 0.3
+        }
+      },
+      "orans": {
+        "P": [
+          [
+            0.82,
+            0.94
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(invitation to prayer)",
+          0,
+          0.12
+        ],
+        [
+          "D",
+          "(intention…) We pray to the Lord.",
+          0.32,
+          0.5
+        ],
+        [
+          "ppl",
+          "Lord, hear our prayer.",
+          0.5,
+          0.62
+        ],
+        [
+          "D",
+          "(intention…) We pray to the Lord.",
+          0.62,
+          0.72
+        ],
+        [
+          "ppl",
+          "Lord, hear our prayer.",
+          0.72,
+          0.82
+        ],
+        [
+          "P",
+          "(concluding prayer)",
+          0.82,
+          0.94
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.94,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 17,
+      "startSeconds": 177,
+      "part": "Liturgy of the Eucharist",
+      "title": "Preparation of the Altar",
+      "dur": 10,
+      "posture": "sit",
+      "text": "The Offertory Chant begins. The Deacon and ministers bring the corporal, purificator, chalice, pall and Missal from the credence table and place them on the altar.",
+      "ref": "Order of Mass 21; GIRM 73–74, 139, 178",
+      "mv": {
+        "D": {
+          "p": [
+            [
+              262,
+              232
+            ],
+            [
+              375,
+              215
+            ],
+            [
+              375,
+              122
+            ],
+            [
+              452,
+              122
+            ]
+          ],
+          "a": 0,
+          "b": 0.35
+        },
+        "S": [
+          {
+            "p": [
+              [
+                850,
+                100
+              ]
+            ],
+            "a": 0,
+            "b": 0.1
+          },
+          {
+            "p": [
+              [
+                640,
+                152
+              ]
+            ],
+            "a": 0.18,
+            "b": 0.42
+          },
+          {
+            "p": [
+              [
+                850,
+                100
+              ]
+            ],
+            "a": 0.62,
+            "b": 0.78
+          },
+          {
+            "p": [
+              [
+                805,
+                78
+              ]
+            ],
+            "a": 0.8,
+            "b": 0.9
+          }
+        ]
+      },
+      "props": {
+        "corporal": [
+          {
+            "by": "S",
+            "t": 0.11
+          },
+          {
+            "at": [
+              500,
+              168
+            ],
+            "a": 0.48,
+            "b": 0.56
+          }
+        ],
+        "missal": [
+          {
+            "by": "S",
+            "t": 0.11
+          },
+          {
+            "at": [
+              450,
+              160
+            ],
+            "a": 0.5,
+            "b": 0.58
+          }
+        ],
+        "chalice": [
+          {
+            "by": "S",
+            "t": 0.11
+          },
+          {
+            "at": [
+              540,
+              170
+            ],
+            "a": 0.52,
+            "b": 0.6
+          }
+        ]
+      },
+      "acts": {
+        "D": [
+          [
+            "spreads the corporal",
+            0.46,
+            0.6
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Offertory Chant ♪",
+          0.03,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 18,
+      "startSeconds": 187,
+      "part": "Liturgy of the Eucharist",
+      "title": "Presentation of the Gifts",
+      "dur": 12,
+      "posture": "sit",
+      "text": "It is praiseworthy for the faithful to present the bread and wine. The Priest or the Deacon receives them at a suitable place and carries them to the altar.",
+      "ref": "Order of Mass 22; GIRM 73, 140",
+      "mv": {
+        "G1": [
+          {
+            "p": [
+              [
+                490,
+                748
+              ],
+              [
+                490,
+                302
+              ]
+            ],
+            "a": 0.08,
+            "b": 0.5
+          },
+          {
+            "p": [
+              [
+                490,
+                748
+              ],
+              [
+                600,
+                745
+              ]
+            ],
+            "a": 0.68,
+            "b": 0.97
+          }
+        ],
+        "G2": [
+          {
+            "p": [
+              [
+                520,
+                752
+              ],
+              [
+                520,
+                306
+              ]
+            ],
+            "a": 0.1,
+            "b": 0.52
+          },
+          {
+            "p": [
+              [
+                520,
+                752
+              ],
+              [
+                640,
+                745
+              ]
+            ],
+            "a": 0.68,
+            "b": 0.97
+          }
+        ],
+        "P": {
+          "p": [
+            [
+              620,
+              82
+            ],
+            [
+              625,
+              265
+            ],
+            [
+              490,
+              272
+            ]
+          ],
+          "a": 0.2,
+          "b": 0.5
+        },
+        "D": {
+          "p": [
+            [
+              375,
+              210
+            ],
+            [
+              375,
+              265
+            ],
+            [
+              522,
+              274
+            ]
+          ],
+          "a": 0.22,
+          "b": 0.5
+        }
+      },
+      "props": {
+        "bread": [
+          {
+            "by": "G1",
+            "t": 0.05
+          },
+          {
+            "by": "P",
+            "t": 0.58
+          }
+        ],
+        "wine": [
+          {
+            "by": "G2",
+            "t": 0.05
+          },
+          {
+            "by": "D",
+            "t": 0.58
+          }
+        ]
+      },
+      "acts": {
+        "G1": [
+          [
+            "bows",
+            0.6,
+            0.67
+          ]
+        ],
+        "G2": [
+          [
+            "bows",
+            0.6,
+            0.67
+          ]
+        ],
+        "P": [
+          [
+            "receives the bread",
+            0.53,
+            0.62
+          ]
+        ],
+        "D": [
+          [
+            "receives the wine",
+            0.53,
+            0.62
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Offertory Chant ♪",
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 19,
+      "startSeconds": 199,
+      "part": "Liturgy of the Eucharist",
+      "title": "Offering of the Bread and Wine",
+      "dur": 13,
+      "posture": "sit",
+      "text": "At the altar the Priest holds the paten with the bread slightly raised and says the prayer of blessing in a low voice. The Deacon pours wine and a little water into the chalice while the Priest prays quietly. The Priest holds the chalice slightly raised, says the second prayer and places it on the corporal. If there is no singing, the people may respond aloud. The Priest then bows profoundly and prays quietly.",
+      "ref": "Order of Mass 23–27; GIRM 141–143, 178",
+      "mv": {
+        "P": {
+          "p": [
+            [
+              625,
+              250
+            ],
+            [
+              625,
+              122
+            ],
+            [
+              500,
+              122
+            ]
+          ],
+          "a": 0,
+          "b": 0.3
+        },
+        "D": {
+          "p": [
+            [
+              375,
+              250
+            ],
+            [
+              375,
+              122
+            ],
+            [
+              452,
+              122
+            ]
+          ],
+          "a": 0,
+          "b": 0.3
+        },
+        "S": [
+          {
+            "p": [
+              [
+                630,
+                150
+              ]
+            ],
+            "a": 0.4,
+            "b": 0.52
+          },
+          {
+            "p": [
+              [
+                850,
+                100
+              ]
+            ],
+            "a": 0.6,
+            "b": 0.8
+          },
+          {
+            "p": [
+              [
+                805,
+                78
+              ]
+            ],
+            "a": 0.88,
+            "b": 1
+          }
+        ]
+      },
+      "props": {
+        "bread": [
+          {
+            "at": [
+              500,
+              160
+            ],
+            "a": 0.3,
+            "b": 0.35
+          }
+        ],
+        "wine": [
+          {
+            "by": "S",
+            "t": 0.57
+          },
+          {
+            "at": [
+              886,
+              142
+            ],
+            "a": 0.8,
+            "b": 0.86
+          }
+        ]
+      },
+      "raise": [
+        [
+          "host-low",
+          0.33,
+          0.5
+        ],
+        [
+          "chalice-low",
+          0.65,
+          0.82
+        ]
+      ],
+      "acts": {
+        "D": [
+          [
+            "pours wine and a little water",
+            0.5,
+            0.62
+          ]
+        ],
+        "P": [
+          [
+            "bows profoundly",
+            0.9,
+            1
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(low voice) Blessed are you, Lord God of all creation…",
+          0.33,
+          0.5
+        ],
+        [
+          "P",
+          "(quietly) By the mystery of this water and wine…",
+          0.5,
+          0.63
+        ],
+        [
+          "P",
+          "(low voice) Blessed are you… fruit of the vine…",
+          0.65,
+          0.82
+        ],
+        [
+          "ppl",
+          "Blessed be God for ever.",
+          0.83,
+          0.95
+        ]
+      ]
+    },
+    {
+      "id": 20,
+      "startSeconds": 212,
+      "part": "Liturgy of the Eucharist",
+      "title": "Incensing the Gifts, Altar, Priest and People",
+      "dur": 14,
+      "posture": [
+        [
+          "sit",
+          0
+        ],
+        [
+          "stand",
+          0.7
+        ]
+      ],
+      "text": "If appropriate, the Priest incenses the offerings, the cross and the altar. Then the Deacon or another minister incenses the Priest and the people.",
+      "ref": "Order of Mass 28; GIRM 75, 144, 178",
+      "mv": {
+        "T": {
+          "p": [
+            [
+              700,
+              150
+            ],
+            [
+              640,
+              150
+            ]
+          ],
+          "a": 0,
+          "b": 0.14
+        },
+        "P": [
+          {
+            "p": [
+              [
+                640,
+                112
+              ]
+            ],
+            "a": 0.3,
+            "b": 0.38
+          },
+          {
+            "p": [
+              [
+                625,
+                215
+              ],
+              [
+                375,
+                215
+              ],
+              [
+                375,
+                110
+              ],
+              [
+                500,
+                122
+              ]
+            ],
+            "a": 0.4,
+            "b": 0.62
+          }
+        ],
+        "D": [
+          {
+            "p": [
+              [
+                470,
+                96
+              ]
+            ],
+            "a": 0.62,
+            "b": 0.66
+          },
+          {
+            "p": [
+              [
+                375,
+                110
+              ],
+              [
+                375,
+                262
+              ],
+              [
+                500,
+                282
+              ]
+            ],
+            "a": 0.68,
+            "b": 0.8
+          },
+          {
+            "p": [
+              [
+                375,
+                262
+              ],
+              [
+                375,
+                122
+              ],
+              [
+                452,
+                122
+              ]
+            ],
+            "a": 0.92,
+            "b": 1
+          }
+        ]
+      },
+      "props": {
+        "thurible": [
+          {
+            "by": "P",
+            "t": 0.15
+          },
+          {
+            "by": "D",
+            "t": 0.62
+          },
+          {
+            "by": "T",
+            "t": 0.91
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "incenses the offerings",
+            0.15,
+            0.3
+          ],
+          [
+            "incenses the cross",
+            0.3,
+            0.38
+          ],
+          [
+            "incenses the altar",
+            0.4,
+            0.62
+          ]
+        ],
+        "D": [
+          [
+            "incenses the Priest",
+            0.62,
+            0.67
+          ],
+          [
+            "incenses the people",
+            0.8,
+            0.9
+          ]
+        ]
+      },
+      "smoke": [
+        [
+          "T",
+          0,
+          0.15
+        ],
+        [
+          "P",
+          0.15,
+          0.62
+        ],
+        [
+          "D",
+          0.62,
+          0.91
+        ],
+        [
+          "T",
+          0.91,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 21,
+      "startSeconds": 226,
+      "part": "Liturgy of the Eucharist",
+      "title": "Washing of Hands",
+      "dur": 10,
+      "posture": "stand",
+      "text": "Standing at the side of the altar, the Priest washes his hands, saying a prayer quietly.",
+      "ref": "Order of Mass 28; GIRM 76, 145",
+      "mv": {
+        "P": [
+          {
+            "p": [
+              [
+                600,
+                122
+              ]
+            ],
+            "a": 0,
+            "b": 0.2
+          },
+          {
+            "p": [
+              [
+                500,
+                122
+              ]
+            ],
+            "a": 0.76,
+            "b": 0.9
+          }
+        ],
+        "T": {
+          "p": [
+            [
+              760,
+              100
+            ],
+            [
+              760,
+              55
+            ]
+          ],
+          "a": 0,
+          "b": 0.4
+        },
+        "S": [
+          {
+            "p": [
+              [
+                850,
+                105
+              ]
+            ],
+            "a": 0,
+            "b": 0.08
+          },
+          {
+            "p": [
+              [
+                642,
+                126
+              ]
+            ],
+            "a": 0.12,
+            "b": 0.3
+          },
+          {
+            "p": [
+              [
+                850,
+                105
+              ]
+            ],
+            "a": 0.72,
+            "b": 0.88
+          },
+          {
+            "p": [
+              [
+                805,
+                78
+              ]
+            ],
+            "a": 0.92,
+            "b": 1
+          }
+        ]
+      },
+      "props": {
+        "ewer": [
+          {
+            "by": "S",
+            "t": 0.09
+          },
+          {
+            "at": [
+              850,
+              144
+            ],
+            "a": 0.88,
+            "b": 0.92
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "washes his hands",
+            0.3,
+            0.7
+          ]
+        ],
+        "S": [
+          [
+            "pours water",
+            0.3,
+            0.7
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(quietly) Wash me, O Lord, from my iniquity…",
+          0.3,
+          0.7
+        ]
+      ]
+    },
+    {
+      "id": 22,
+      "startSeconds": 236,
+      "part": "Liturgy of the Eucharist",
+      "title": "\"Pray, brethren\" & Prayer over the Offerings",
+      "dur": 12,
+      "posture": "stand",
+      "text": "Back at the middle of the altar and facing the people, the Priest extends and then joins his hands and says \"Pray, brethren\". The people rise and reply. With hands extended, the Priest then says the Prayer over the Offerings, and the people acclaim \"Amen.\"",
+      "ref": "Order of Mass 29–30; GIRM 43, 146",
+      "orans": {
+        "P": [
+          [
+            0.03,
+            0.12
+          ],
+          [
+            0.58,
+            0.86
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.",
+          0.03,
+          0.3
+        ],
+        [
+          "ppl",
+          "May the Lord accept the sacrifice at your hands…",
+          0.32,
+          0.56
+        ],
+        [
+          "P",
+          "(Prayer over the Offerings)",
+          0.58,
+          0.86
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.88,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 23,
+      "startSeconds": 248,
+      "part": "Liturgy of the Eucharist",
+      "title": "Eucharistic Prayer: Preface Dialogue & Preface",
+      "dur": 13,
+      "posture": "stand",
+      "text": "The Eucharistic Prayer begins. With hands extended, the Priest sings or says the opening dialogue, raising his hands at \"Lift up your hearts.\" He then continues the Preface with hands extended.",
+      "ref": "Order of Mass 31; GIRM 78–79, 148",
+      "orans": {
+        "P": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.2,
+            0.3
+          ],
+          [
+            0.4,
+            0.5
+          ],
+          [
+            0.62,
+            1
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "The Lord be with you.",
+          0,
+          0.1
+        ],
+        [
+          "ppl",
+          "And with your spirit.",
+          0.1,
+          0.2
+        ],
+        [
+          "P",
+          "Lift up your hearts.",
+          0.2,
+          0.3
+        ],
+        [
+          "ppl",
+          "We lift them up to the Lord.",
+          0.3,
+          0.4
+        ],
+        [
+          "P",
+          "Let us give thanks to the Lord our God.",
+          0.4,
+          0.5
+        ],
+        [
+          "ppl",
+          "It is right and just.",
+          0.5,
+          0.6
+        ],
+        [
+          "P",
+          "(the Preface) …as we acclaim:",
+          0.62,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 24,
+      "startSeconds": 261,
+      "part": "Liturgy of the Eucharist",
+      "title": "Sanctus",
+      "dur": 9,
+      "posture": "stand",
+      "text": "At the end of the Preface the Priest joins his hands. Together with the people he concludes it by singing or saying the Sanctus aloud. The ministers take their places to kneel for the consecration.",
+      "ref": "Order of Mass 31; GIRM 79b, 148",
+      "mv": {
+        "S": {
+          "p": [
+            [
+              805,
+              160
+            ],
+            [
+              640,
+              245
+            ]
+          ],
+          "a": 0.45,
+          "b": 0.85
+        },
+        "T": {
+          "p": [
+            [
+              760,
+              250
+            ],
+            [
+              360,
+              250
+            ]
+          ],
+          "a": 0.45,
+          "b": 0.88
+        }
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Holy, Holy, Holy Lord God of hosts… Hosanna in the highest. ♪",
+          0.03,
+          1
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 25,
+      "startSeconds": 270,
+      "part": "Liturgy of the Eucharist",
+      "title": "Epiclesis",
+      "dur": 11,
+      "posture": "kneel",
+      "text": "After the Sanctus the people kneel, where this is the custom. The Deacon kneels from the epiclesis until the chalice is shown. The Priest holds his hands extended over the offerings and calls down the Holy Spirit. He then joins his hands and makes the Sign of the Cross over the bread and chalice together. Shortly before the consecration a minister may ring a small bell as a signal.",
+      "ref": "Eucharistic Prayer (e.g. EP II); GIRM 43, 79c, 150, 179",
+      "mv": {
+        "D": {
+          "p": [
+            [
+              455,
+              98
+            ]
+          ],
+          "a": 0,
+          "b": 0.2
+        }
+      },
+      "acts": {
+        "D": [
+          [
+            "kneels",
+            0.15,
+            1
+          ]
+        ],
+        "S": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ],
+        "T": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ],
+        "P": [
+          [
+            "hands extended over the offerings",
+            0.15,
+            0.55
+          ],
+          [
+            "makes the Sign of the Cross over them ✠",
+            0.58,
+            0.78
+          ]
+        ]
+      },
+      "bell": [
+        [
+          0.82,
+          0.95
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0.3,
+          1
+        ]
+      ],
+      "say": [
+        [
+          "P",
+          "(calls down the Holy Spirit upon the gifts) …that they may become for us the Body and ✠ Blood of our Lord Jesus Christ.",
+          0.15,
+          0.8
+        ]
+      ]
+    },
+    {
+      "id": 26,
+      "startSeconds": 281,
+      "part": "Liturgy of the Eucharist",
+      "title": "Consecration: the Host",
+      "dur": 12,
+      "posture": "kneel",
+      "text": "The words of the Lord are spoken clearly and distinctly. The Priest takes the bread, holds it slightly raised above the altar and bows slightly as he says the words of Institution. He shows the consecrated host to the people and places it again on the paten. Then he genuflects in adoration. The bell may be rung, and the host incensed, when it is shown to the people.",
+      "ref": "GIRM 79d, 150, 179",
+      "acts": {
+        "D": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ],
+        "S": [
+          [
+            "rings the bell",
+            0.47,
+            0.7
+          ]
+        ],
+        "T": [
+          [
+            "incenses the Host (3 swings)",
+            0.45,
+            0.7
+          ]
+        ],
+        "P": [
+          [
+            "bows slightly, says the words",
+            0.06,
+            0.4
+          ],
+          [
+            "shows the Host to the people",
+            0.45,
+            0.72
+          ],
+          [
+            "genuflects",
+            0.76,
+            0.95
+          ]
+        ]
+      },
+      "raise": [
+        [
+          "host",
+          0.45,
+          0.72
+        ]
+      ],
+      "bell": [
+        [
+          0.47,
+          0.52
+        ],
+        [
+          0.56,
+          0.61
+        ],
+        [
+          0.65,
+          0.7
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ],
+      "say": [
+        [
+          "P",
+          "…TAKE THIS, ALL OF YOU, AND EAT OF IT, FOR THIS IS MY BODY, WHICH WILL BE GIVEN UP FOR YOU.",
+          0.06,
+          0.42
+        ]
+      ]
+    },
+    {
+      "id": 27,
+      "startSeconds": 293,
+      "part": "Liturgy of the Eucharist",
+      "title": "Consecration: the Chalice",
+      "dur": 12,
+      "posture": "kneel",
+      "text": "In the same way the Priest takes the chalice and says the words over it. He shows the chalice to the people, places it on the corporal and genuflects in adoration. The bell may be rung and incense offered as before.",
+      "ref": "GIRM 79d, 150, 179",
+      "acts": {
+        "D": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ],
+        "S": [
+          [
+            "rings the bell",
+            0.47,
+            0.7
+          ]
+        ],
+        "T": [
+          [
+            "incenses the Chalice (3 swings)",
+            0.45,
+            0.7
+          ]
+        ],
+        "P": [
+          [
+            "says the words",
+            0.06,
+            0.4
+          ],
+          [
+            "shows the Chalice to the people",
+            0.45,
+            0.72
+          ],
+          [
+            "genuflects",
+            0.76,
+            0.95
+          ]
+        ]
+      },
+      "raise": [
+        [
+          "chalice",
+          0.45,
+          0.72
+        ]
+      ],
+      "bell": [
+        [
+          0.47,
+          0.52
+        ],
+        [
+          0.56,
+          0.61
+        ],
+        [
+          0.65,
+          0.7
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ],
+      "say": [
+        [
+          "P",
+          "…TAKE THIS, ALL OF YOU, AND DRINK FROM IT, FOR THIS IS THE CHALICE OF MY BLOOD…  DO THIS IN MEMORY OF ME.",
+          0.06,
+          0.42
+        ]
+      ]
+    },
+    {
+      "id": 28,
+      "startSeconds": 305,
+      "part": "Liturgy of the Eucharist",
+      "title": "The Mystery of Faith",
+      "dur": 9,
+      "posture": "kneel",
+      "text": "The Priest says \"The mystery of faith,\" and the people respond with one of the acclamations. The Deacon rises.",
+      "ref": "Order of Mass (Eucharistic Prayers); GIRM 151, 179",
+      "mv": {
+        "D": {
+          "p": [
+            [
+              452,
+              122
+            ]
+          ],
+          "a": 0,
+          "b": 0.2
+        }
+      },
+      "acts": {
+        "S": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ],
+        "T": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "The mystery of faith.",
+          0.1,
+          0.28
+        ],
+        [
+          "ppl",
+          "We proclaim your Death, O Lord, and profess your Resurrection until you come again.",
+          0.3,
+          0.85
+        ]
+      ]
+    },
+    {
+      "id": 29,
+      "startSeconds": 314,
+      "part": "Liturgy of the Eucharist",
+      "title": "Memorial, Offering & Intercessions",
+      "dur": 10,
+      "posture": "kneel",
+      "text": "With hands extended, the Priest continues the Eucharistic Prayer. The Church keeps the memorial of Christ, offers the spotless Victim and prays for communion in the Holy Spirit. It intercedes for the whole Church, for the living and the dead, and recalls the saints.",
+      "ref": "GIRM 79e–g",
+      "orans": {
+        "P": [
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "acts": {
+        "S": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ],
+        "T": [
+          [
+            "kneels",
+            0,
+            1
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(memorial and offering… for the Pope, the Bishop, all the clergy… for those who have died… with the Blessed Virgin Mary and all the Saints…)",
+          0.05,
+          0.95
+        ]
+      ]
+    },
+    {
+      "id": 30,
+      "startSeconds": 324,
+      "part": "Liturgy of the Eucharist",
+      "title": "Concluding Doxology",
+      "dur": 11,
+      "posture": "kneel",
+      "text": "The Priest takes the paten with the host, and the Deacon takes the chalice, and they raise them together. The Priest alone sings or says the doxology, and the people acclaim \"Amen.\"",
+      "ref": "GIRM 151, 180",
+      "mv": {
+        "S": {
+          "p": [
+            [
+              805,
+              160
+            ],
+            [
+              805,
+              78
+            ]
+          ],
+          "a": 0.85,
+          "b": 1
+        },
+        "T": {
+          "p": [
+            [
+              300,
+              250
+            ],
+            [
+              300,
+              110
+            ],
+            [
+              760,
+              40
+            ],
+            [
+              760,
+              55
+            ]
+          ],
+          "a": 0.85,
+          "b": 1
+        }
+      },
+      "raise": [
+        [
+          "both",
+          0.1,
+          0.72
+        ]
+      ],
+      "acts": {
+        "D": [
+          [
+            "raises the chalice",
+            0.1,
+            0.72
+          ]
+        ],
+        "P": [
+          [
+            "raises the paten with the Host",
+            0.1,
+            0.72
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "Through him, and with him, and in him, O God, almighty Father, in the unity of the Holy Spirit, all glory and honor is yours, for ever and ever.",
+          0.1,
+          0.62
+        ],
+        [
+          "ppl",
+          "♪ Amen. ♪",
+          0.63,
+          0.9
+        ]
+      ]
+    },
+    {
+      "id": 31,
+      "startSeconds": 335,
+      "part": "Communion Rite",
+      "title": "The Lord's Prayer",
+      "dur": 13,
+      "posture": "stand",
+      "text": "With hands joined, the Priest introduces the Lord's Prayer. With hands extended, he says it together with the people. He alone adds the embolism, \"Deliver us, Lord…\", and the people conclude it with the acclamation.",
+      "ref": "GIRM 81, 152",
+      "orans": {
+        "P": [
+          [
+            0.17,
+            0.75
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "At the Savior's command and formed by divine teaching, we dare to say:",
+          0,
+          0.15
+        ],
+        [
+          "ppl",
+          "Our Father, who art in heaven, hallowed be thy name…",
+          0.17,
+          0.5
+        ],
+        [
+          "P",
+          "Deliver us, Lord, we pray, from every evil…",
+          0.52,
+          0.75
+        ],
+        [
+          "ppl",
+          "For the kingdom, the power and the glory are yours now and for ever.",
+          0.77,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 32,
+      "startSeconds": 348,
+      "part": "Communion Rite",
+      "title": "Rite of Peace",
+      "dur": 11,
+      "posture": "stand",
+      "text": "With hands extended, the Priest says the prayer for peace. Facing the people, he says \"The peace of the Lord be with you always.\" If appropriate, the Deacon invites all to offer a sign of peace. The Priest gives the sign of peace to the Deacon or a minister and stays within the sanctuary.",
+      "ref": "GIRM 82, 154, 181",
+      "orans": {
+        "P": [
+          [
+            0,
+            0.2
+          ]
+        ]
+      },
+      "mv": {
+        "D": [
+          {
+            "p": [
+              [
+                478,
+                118
+              ]
+            ],
+            "a": 0.68,
+            "b": 0.74
+          },
+          {
+            "p": [
+              [
+                452,
+                122
+              ]
+            ],
+            "a": 0.88,
+            "b": 0.95
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "sign of peace to the Deacon",
+            0.7,
+            0.86
+          ]
+        ]
+      },
+      "special": {
+        "type": "peace",
+        "a": 0.65,
+        "b": 1
+      },
+      "say": [
+        [
+          "P",
+          "Lord Jesus Christ, who said to your Apostles: Peace I leave you…",
+          0,
+          0.2
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.2,
+          0.27
+        ],
+        [
+          "P",
+          "The peace of the Lord be with you always.",
+          0.28,
+          0.4
+        ],
+        [
+          "ppl",
+          "And with your spirit.",
+          0.4,
+          0.5
+        ],
+        [
+          "D",
+          "Let us offer each other the sign of peace.",
+          0.5,
+          0.63
+        ],
+        [
+          "ppl",
+          "(the faithful exchange a sign of peace)",
+          0.66,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 33,
+      "startSeconds": 359,
+      "part": "Communion Rite",
+      "title": "Fraction of the Bread — Agnus Dei",
+      "dur": 11,
+      "posture": [
+        [
+          "stand",
+          0
+        ],
+        [
+          "kneel",
+          0.95
+        ]
+      ],
+      "text": "The Priest breaks the host over the paten and places a small piece in the chalice, saying a prayer quietly. Meanwhile the Agnus Dei is sung or said. In many places the faithful kneel after it.",
+      "ref": "GIRM 43, 83, 155",
+      "acts": {
+        "P": [
+          [
+            "breaks the Host",
+            0.1,
+            0.3
+          ],
+          [
+            "places a particle in the chalice",
+            0.3,
+            0.42
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(quietly) May this mingling of the Body and Blood…",
+          0.15,
+          0.42
+        ],
+        [
+          "ppl",
+          "♪ Lamb of God, you take away the sins of the world… grant us peace. ♪",
+          0.08,
+          0.95
+        ]
+      ]
+    },
+    {
+      "id": 34,
+      "startSeconds": 370,
+      "part": "Communion Rite",
+      "title": "\"Behold the Lamb of God\"",
+      "dur": 12,
+      "posture": "kneel",
+      "text": "With hands joined, the Priest quietly says the prayer before Communion. He genuflects, takes the host and holds it slightly raised above the paten or chalice. Facing the people, he says \"Behold the Lamb of God…\" and then says \"Lord, I am not worthy…\" once, together with the people.",
+      "ref": "Order of Mass 132; GIRM 84, 156–157",
+      "acts": {
+        "P": [
+          [
+            "private prayer (hands joined)",
+            0,
+            0.2
+          ],
+          [
+            "genuflects",
+            0.2,
+            0.3
+          ],
+          [
+            "shows the Host",
+            0.32,
+            0.92
+          ]
+        ]
+      },
+      "raise": [
+        [
+          "host",
+          0.32,
+          0.92
+        ]
+      ],
+      "say": [
+        [
+          "P",
+          "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb.",
+          0.33,
+          0.6
+        ],
+        [
+          "ppl",
+          "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed.",
+          0.62,
+          0.95
+        ]
+      ]
+    },
+    {
+      "id": 35,
+      "startSeconds": 382,
+      "part": "Communion Rite",
+      "title": "Holy Communion",
+      "dur": 24,
+      "posture": "kneel",
+      "text": "Facing the altar, the Priest says a prayer quietly and reverently receives the Body of Christ, then the Blood. He gives Communion to the Deacon and ministers. The faithful then approach in procession. Showing each a host slightly raised, he says \"The Body of Christ,\" and the communicant replies \"Amen.\" Meanwhile the Communion Chant is sung.",
+      "ref": "Order of Mass 133–137; GIRM 86–87, 158–161, 182",
+      "mv": {
+        "P": [
+          {
+            "p": [
+              [
+                625,
+                122
+              ],
+              [
+                625,
+                262
+              ],
+              [
+                470,
+                292
+              ]
+            ],
+            "a": 0.22,
+            "b": 0.32
+          },
+          {
+            "p": [
+              [
+                625,
+                262
+              ],
+              [
+                625,
+                122
+              ],
+              [
+                500,
+                122
+              ]
+            ],
+            "a": 0.92,
+            "b": 1
+          }
+        ],
+        "D": [
+          {
+            "p": [
+              [
+                375,
+                122
+              ],
+              [
+                375,
+                262
+              ],
+              [
+                530,
+                292
+              ]
+            ],
+            "a": 0.22,
+            "b": 0.32
+          },
+          {
+            "p": [
+              [
+                375,
+                262
+              ],
+              [
+                375,
+                122
+              ],
+              [
+                452,
+                122
+              ]
+            ],
+            "a": 0.92,
+            "b": 1
+          }
+        ]
+      },
+      "props": {
+        "bread": [
+          {
+            "by": "P",
+            "t": 0.2
+          },
+          {
+            "at": [
+              500,
+              160
+            ],
+            "a": 0.985,
+            "b": 1
+          }
+        ],
+        "chalice": [
+          {
+            "by": "D",
+            "t": 0.2
+          },
+          {
+            "at": [
+              540,
+              170
+            ],
+            "a": 0.985,
+            "b": 1
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "receives Communion",
+            0.03,
+            0.13
+          ],
+          [
+            "gives Communion to the Deacon",
+            0.13,
+            0.2
+          ]
+        ],
+        "D": [
+          [
+            "receives Communion",
+            0.13,
+            0.2
+          ]
+        ]
+      },
+      "special": {
+        "type": "communion",
+        "a": 0.33,
+        "b": 0.9
+      },
+      "say": [
+        [
+          "P",
+          "(quietly) May the Body of Christ keep me safe for eternal life.",
+          0.03,
+          0.13
+        ],
+        [
+          "P",
+          "The Body of Christ.",
+          0.34,
+          0.46
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.46,
+          0.52
+        ],
+        [
+          "D",
+          "The Blood of Christ.",
+          0.52,
+          0.62
+        ],
+        [
+          "ppl",
+          "♪ Communion Chant ♪",
+          0.62,
+          0.92
+        ]
+      ]
+    },
+    {
+      "id": 36,
+      "startSeconds": 406,
+      "part": "Communion Rite",
+      "title": "Purification & Sacred Silence",
+      "dur": 12,
+      "posture": "kneel",
+      "text": "When Communion is over, the Deacon (or the Priest) consumes any of the Blood that remains, and the hosts that remain are placed in the tabernacle. The sacred vessels are purified at the credence table or the altar. The Priest returns to the chair. A period of sacred silence may follow, or a psalm or hymn of praise may be sung.",
+      "ref": "Order of Mass 137–138; GIRM 88, 163–164, 183",
+      "mv": {
+        "P": {
+          "p": [
+            [
+              560,
+              90
+            ],
+            [
+              500,
+              58
+            ]
+          ],
+          "a": 0.15,
+          "b": 0.35
+        },
+        "D": [
+          {
+            "p": [
+              [
+                640,
+                140
+              ],
+              [
+                838,
+                140
+              ]
+            ],
+            "a": 0.15,
+            "b": 0.4
+          },
+          {
+            "p": [
+              [
+                700,
+                95
+              ],
+              [
+                450,
+                62
+              ]
+            ],
+            "a": 0.82,
+            "b": 0.98
+          }
+        ],
+        "S": [
+          {
+            "p": [
+              [
+                620,
+                152
+              ]
+            ],
+            "a": 0.18,
+            "b": 0.32
+          },
+          {
+            "p": [
+              [
+                850,
+                100
+              ]
+            ],
+            "a": 0.4,
+            "b": 0.55
+          },
+          {
+            "p": [
+              [
+                805,
+                78
+              ]
+            ],
+            "a": 0.7,
+            "b": 0.85
+          }
+        ]
+      },
+      "props": {
+        "chalice": [
+          {
+            "by": "D",
+            "t": 0.1
+          },
+          {
+            "at": [
+              888,
+              128
+            ],
+            "a": 0.75,
+            "b": 0.8
+          }
+        ],
+        "bread": [
+          {
+            "by": "D",
+            "t": 0.1
+          },
+          {
+            "hide": true,
+            "t": 0.78
+          }
+        ],
+        "corporal": [
+          {
+            "by": "S",
+            "t": 0.34
+          },
+          {
+            "at": [
+              866,
+              120
+            ],
+            "a": 0.56,
+            "b": 0.62
+          }
+        ]
+      },
+      "acts": {
+        "D": [
+          [
+            "purifies the vessels",
+            0.42,
+            0.75
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "(sacred silence)",
+          0.45,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 37,
+      "startSeconds": 418,
+      "part": "Communion Rite",
+      "title": "Prayer after Communion",
+      "dur": 9,
+      "posture": "stand",
+      "text": "Standing at the chair or the altar, the Priest says \"Let us pray\" and then, with hands extended, the Prayer after Communion. The people acclaim \"Amen.\"",
+      "ref": "Order of Mass 139; GIRM 89, 165",
+      "orans": {
+        "P": [
+          [
+            0.32,
+            0.8
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "Let us pray.",
+          0,
+          0.15
+        ],
+        [
+          "ppl",
+          "(brief silence)",
+          0.17,
+          0.3
+        ],
+        [
+          "P",
+          "(Prayer after Communion)",
+          0.32,
+          0.8
+        ],
+        [
+          "ppl",
+          "Amen.",
+          0.82,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 38,
+      "startSeconds": 427,
+      "part": "Concluding Rites",
+      "title": "Greeting & Blessing",
+      "dur": 11,
+      "posture": "stand",
+      "text": "Brief announcements may be made if necessary. The Priest extends his hands and greets the people, then blesses them. On some days a Solemn Blessing or a Prayer over the People is used, and the Deacon may invite all to bow down for the blessing.",
+      "ref": "Order of Mass 140–143; GIRM 90, 166–167, 185",
+      "orans": {
+        "P": [
+          [
+            0.17,
+            0.28
+          ]
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "blesses the people ✠",
+            0.42,
+            0.75
+          ]
+        ]
+      },
+      "say": [
+        [
+          "P",
+          "(brief announcements)",
+          0,
+          0.15
+        ],
+        [
+          "P",
+          "The Lord be with you.",
+          0.17,
+          0.28
+        ],
+        [
+          "ppl",
+          "And with your spirit.",
+          0.28,
+          0.38
+        ],
+        [
+          "P",
+          "May almighty God bless you, the Father, and the Son, ✠ and the Holy Spirit.",
+          0.42,
+          0.75
+        ],
+        [
+          "ppl",
+          "Amen.  (all sign themselves)",
+          0.77,
+          0.92
+        ]
+      ]
+    },
+    {
+      "id": 39,
+      "startSeconds": 438,
+      "part": "Concluding Rites",
+      "title": "Dismissal & Veneration of the Altar",
+      "dur": 12,
+      "posture": "stand",
+      "text": "With hands joined and facing the people, the Deacon dismisses them, and the people reply. The Priest and Deacon then venerate the altar with a kiss as at the beginning.",
+      "ref": "Order of Mass 144–145; GIRM 90, 168–169, 185–186",
+      "mv": {
+        "P": {
+          "p": [
+            [
+              500,
+              122
+            ]
+          ],
+          "a": 0.45,
+          "b": 0.62
+        },
+        "D": {
+          "p": [
+            [
+              452,
+              95
+            ],
+            [
+              452,
+              122
+            ]
+          ],
+          "a": 0.45,
+          "b": 0.62
+        },
+        "X": {
+          "p": [
+            [
+              700,
+              95
+            ],
+            [
+              670,
+              142
+            ]
+          ],
+          "a": 0.55,
+          "b": 0.8
+        },
+        "C1": {
+          "p": [
+            [
+              392,
+              95
+            ],
+            [
+              392,
+              152
+            ]
+          ],
+          "a": 0.55,
+          "b": 0.8
+        },
+        "C2": {
+          "p": [
+            [
+              720,
+              95
+            ],
+            [
+              612,
+              152
+            ]
+          ],
+          "a": 0.55,
+          "b": 0.8
+        },
+        "T": {
+          "p": [
+            [
+              760,
+              250
+            ],
+            [
+              560,
+              292
+            ]
+          ],
+          "a": 0.6,
+          "b": 0.92
+        },
+        "L": {
+          "p": [
+            [
+              420,
+              296
+            ],
+            [
+              420,
+              266
+            ]
+          ],
+          "a": 0.7,
+          "b": 0.9
+        }
+      },
+      "props": {
+        "cross": [
+          {
+            "by": "X",
+            "t": 0.86
+          }
+        ],
+        "cand1": [
+          {
+            "by": "C1",
+            "t": 0.86
+          }
+        ],
+        "cand2": [
+          {
+            "by": "C2",
+            "t": 0.86
+          }
+        ]
+      },
+      "acts": {
+        "P": [
+          [
+            "kisses the altar",
+            0.66,
+            0.84
+          ]
+        ],
+        "D": [
+          [
+            "kisses the altar",
+            0.66,
+            0.84
+          ]
+        ]
+      },
+      "smoke": [
+        [
+          "T",
+          0.6,
+          1
+        ]
+      ],
+      "say": [
+        [
+          "D",
+          "Go forth, the Mass is ended.",
+          0.05,
+          0.25
+        ],
+        [
+          "ppl",
+          "Thanks be to God.",
+          0.27,
+          0.42
+        ],
+        [
+          "ppl",
+          "♪ (a closing hymn is customary) ♪",
+          0.6,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 40,
+      "startSeconds": 450,
+      "part": "Concluding Rites",
+      "title": "Recession",
+      "dur": 13,
+      "posture": "stand",
+      "text": "After a profound bow with the ministers, the Priest leaves with them, in much the same way as the entrance procession.",
+      "ref": "GIRM 90, 169, 186",
+      "mv": {
+        "P": [
+          {
+            "p": [
+              [
+                625,
+                122
+              ],
+              [
+                625,
+                250
+              ],
+              [
+                530,
+                250
+              ]
+            ],
+            "a": 0,
+            "b": 0.26
+          },
+          {
+            "p": [
+              [
+                500,
+                312
+              ],
+              [
+                500,
+                860
+              ]
+            ],
+            "a": 0.6,
+            "b": 1
+          }
+        ],
+        "D": [
+          {
+            "p": [
+              [
+                375,
+                122
+              ],
+              [
+                375,
+                250
+              ],
+              [
+                470,
+                250
+              ]
+            ],
+            "a": 0,
+            "b": 0.26
+          },
+          {
+            "p": [
+              [
+                500,
+                312
+              ],
+              [
+                500,
+                860
+              ]
+            ],
+            "a": 0.56,
+            "b": 0.95
+          }
+        ],
+        "X": [
+          {
+            "p": [
+              [
+                640,
+                265
+              ]
+            ],
+            "a": 0,
+            "b": 0.22
+          },
+          {
+            "p": [
+              [
+                500,
+                312
+              ],
+              [
+                500,
+                860
+              ]
+            ],
+            "a": 0.48,
+            "b": 0.86
+          }
+        ],
+        "C1": [
+          {
+            "p": [
+              [
+                360,
+                265
+              ]
+            ],
+            "a": 0,
+            "b": 0.22
+          },
+          {
+            "p": [
+              [
+                470,
+                312
+              ],
+              [
+                470,
+                860
+              ]
+            ],
+            "a": 0.48,
+            "b": 0.86
+          }
+        ],
+        "C2": [
+          {
+            "p": [
+              [
+                690,
+                265
+              ]
+            ],
+            "a": 0,
+            "b": 0.22
+          },
+          {
+            "p": [
+              [
+                530,
+                312
+              ],
+              [
+                530,
+                860
+              ]
+            ],
+            "a": 0.48,
+            "b": 0.86
+          }
+        ],
+        "T": [
+          {
+            "p": [
+              [
+                740,
+                265
+              ]
+            ],
+            "a": 0,
+            "b": 0.2
+          },
+          {
+            "p": [
+              [
+                500,
+                312
+              ],
+              [
+                500,
+                860
+              ]
+            ],
+            "a": 0.44,
+            "b": 0.8
+          }
+        ],
+        "L": {
+          "p": [
+            [
+              500,
+              312
+            ],
+            [
+              500,
+              860
+            ]
+          ],
+          "a": 0.53,
+          "b": 0.9
+        }
+      },
+      "acts": {
+        "P": [
+          [
+            "profound bow",
+            0.3,
+            0.42
+          ]
+        ],
+        "D": [
+          [
+            "profound bow",
+            0.3,
+            0.42
+          ]
+        ],
+        "X": [
+          [
+            "",
+            0.3,
+            0.42
+          ]
+        ],
+        "L": [
+          [
+            "profound bow",
+            0.3,
+            0.42
+          ]
+        ]
+      },
+      "say": [
+        [
+          "ppl",
+          "♪ Closing hymn ♪",
+          0,
+          1
+        ]
+      ],
+      "smoke": [
+        [
+          "T",
+          0,
+          1
+        ]
+      ]
+    }
+  ]
+}

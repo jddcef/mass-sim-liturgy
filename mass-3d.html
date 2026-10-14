@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mass in 3D - rubric explorer</title>
+<link rel="stylesheet" href="mass-3d.css">
+</head>
+<body>
+<header>
+  <div><h1>Mass in 3D</h1><span>A spatial walk-through of the Roman Rite</span></div>
+  <a href="mass-animation.html">Original floor-plan view</a>
+</header>
+<div id="layout">
+  <main>
+    <div id="viewport">
+      <div id="cameraBar" aria-label="Camera views">
+        <label>Watch <select id="camera">
+          <option value="action">Follow the action</option>
+          <option value="overview">Whole church</option>
+          <option value="altar">Altar</option>
+          <option value="ambo">Ambo</option>
+          <option value="chair">Celebrant's chair</option>
+          <option value="nave">From the congregation</option>
+          <option value="overhead">Overhead</option>
+          <option value="P">Follow priest</option>
+          <option value="D">Follow deacon</option>
+        </select></label>
+        <label><input id="labels" type="checkbox" checked> Labels</label>
+        <button id="resetCamera" type="button">Reset view</button>
+      </div>
+      <div id="sceneStatus">Loading 3D scene...</div>
+      <div id="caption" aria-live="off"></div>
+      <div id="trainingOverlay" hidden></div>
+      <div id="hint">Drag to orbit / right-drag to pan / scroll to zoom / click a minister to follow</div>
+    </div>
+    <div id="transport">
+      <button id="previous" aria-label="Previous step" type="button">Previous</button>
+      <button id="play3d" type="button">Play</button>
+      <button id="next3d" aria-label="Next step" type="button">Next</button>
+      <input id="timeline" type="range" min="0" max="10000" value="0" aria-label="Mass timeline">
+      <output id="time">0:00</output>
+      <select id="rate" aria-label="Playback speed"><option value=".5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="3">3x</option></select>
+    </div>
+    <div id="stepHeading"><span id="part3d"></span><h2 id="title3d"></h2></div>
+  </main>
+  <aside>
+    <section>
+      <h2>Server training</h2>
+      <label><input id="trainingEnabled" type="checkbox"> Train with one server</label>
+      <label class="field">Server <select id="trainingServer"></select></label>
+      <p><strong>Now:</strong> <span id="trainingNow"></span></p>
+      <p><strong>Next:</strong> <span id="trainingNext"></span></p>
+      <button id="nextDuty" type="button">Jump to next duty</button>
+      <p class="small">Follows your selected server. Cues come from this illustrative animation, not a complete ceremonial checklist.</p>
+    </section>
+    <section>
+      <h2>Spoken words</h2>
+      <label><input id="speechEnabled" type="checkbox"> Speak during playback</label>
+      <label class="field">Audio source <select id="audioSource">
+        <option value="static">Pre-generated AI recordings</option>
+        <option value="browser" selected>Live local system voices</option>
+      </select></label>
+      <label class="field">Language <select id="speechLanguage"></select></label>
+      <label class="field">Speech speed <select id="speechRate"><option value=".8">0.8x</option><option value="1" selected>1x</option><option value="1.2">1.2x</option></select></label>
+      <div id="voiceChoices"></div>
+      <button id="testVoice" type="button">Test priest's voice</button>
+      <button id="testGroup" type="button">Test congregation</button>
+      <button id="exportLanguage" type="button">Export language template</button>
+      <label class="field">Import language JSON <input id="importLanguage" type="file" accept=".json,application/json"></label>
+      <p id="speechStatus" class="small" role="status"></p>
+      <p class="small">Pre-generated AI recordings play offline, with fixed character voices and six layered voices for congregation responses. Static Latin pronunciation is experimental (Latin phonemes with English-trained voices). Live mode uses your installed local voices and speaks congregation parts as one speaker. Latin is a partial starter pack, not a complete Missal. Missing translations are not spoken. Sung words are spoken, not chanted. Playback waits for audio to finish.</p>
+    </section>
+    <section>
+      <h2>Church layout</h2>
+      <label class="field">Preset <select id="layoutPreset"></select></label>
+      <button id="applyPreset" type="button">Apply preset</button>
+      <p class="small">Illustrative sanctuary arrangements within the same church shell, not named architectural plans. You can edit any preset afterwards.</p>
+      <label class="field">Furniture <select id="layoutItem"></select></label>
+      <div class="coordinates">
+        <label>X <input id="layoutX" type="number" min="100" max="900" step="1"></label>
+        <label>Depth <input id="layoutY" type="number" min="35" max="260" step="1"></label>
+      </div>
+      <button id="applyLayout" type="button">Apply and save</button>
+      <button id="resetLayout" type="button">Default layout</button>
+      <button id="exportLayout" type="button">Export layout</button>
+      <label class="field">Import layout JSON <input id="importLayout" type="file" accept=".json,application/json"></label>
+      <p id="layoutStatus" class="small" role="status"></p>
+      <p class="small">X runs left to right; depth runs from the sanctuary's back wall towards the nave. Furniture, nearby movement destinations, vessels and cameras move together. Positions stay within the sanctuary; paths are schematic and do not provide collision avoidance. Layout is saved in this browser; export for a portable copy.</p>
+    </section>
+    <section>
+      <h2>Celebration setup</h2>
+      <div class="toggles">
+        <label><input id="deacon" type="checkbox" checked> Deacon</label>
+        <label>Altar servers <select id="serverCount">
+          <option value="0">0</option><option value="1">1</option>
+          <option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5" selected>5</option>
+        </select></label>
+        <label><input id="lector" type="checkbox" checked> Lay lector / psalmist</label>
+        <label><input id="incense" type="checkbox" checked> Incense</label>
+        <label><input id="bothKinds" type="checkbox"> Communion under both kinds</label>
+      </div>
+      <p id="scenarioNote" class="small"></p>
+      <p id="serverAssignments" class="small"></p>
+      <p class="small">Changes pause playback and restart the current step, retaining its place in the rite. Incense requires a server here; both kinds requires a deacon. Those options are disabled otherwise.</p>
+    </section>
+    <section>
+      <h2>Rubric <small>(paraphrased)</small></h2>
+      <p id="rubric3d"></p>
+      <p><strong>The faithful:</strong> <span id="posture3d"></span></p>
+      <p id="reference3d" class="small"></p>
+      <p id="actions3d" class="small"></p>
+    </section>
+    <section><h2>Order of Mass</h2><nav id="stepList" aria-label="Order of Mass"></nav></section>
+    <section class="small">
+      <strong>Illustrative, not a ceremonial authority.</strong> Sunday in Ordinary Time; gestures and duration are simplified. Regional posture customs vary. References inherited from the original need checking against your approved Missal and local norms. Communion under both kinds is an optional illustration, subject to the applicable norms. Speech uses excerpts, not a complete liturgical text.
+    </section>
+  </aside>
+</div>
+<noscript>This animation requires JavaScript and a browser with WebGL support.</noscript>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="mass-rite.js"></script>
+<script src="mass-scenarios.js"></script>
+<script src="mass-features.js"></script>
+<script src="audio/audio-manifest.js"></script>
+<script src="mass-speech.js"></script>
+<script src="mass-3d.js"></script>
+</body>
+</html>

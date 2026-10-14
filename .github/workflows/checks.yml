@@ -1,0 +1,22 @@
+name: Application checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check scripts and deterministic behavior
+        run: |
+          node --check mass-rite.js
+          node --check mass-scenarios.js
+          node --check mass-features.js
+          node --check mass-speech.js
+          node --check mass-3d.js
+          node mass-scenarios.test.cjs
+          node mass-features.test.cjs
+          node mass-assets.test.cjs

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Order of Mass — an animated walk-through of the rubrics</title>
+<style>
+  :root { --ink:#3b2a1a; --gold:#b8892b; --panel:#fbf7ef; --line:#d9c9a8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: Georgia, "Times New Roman", serif; color:var(--ink); background:#efe6d4; height:100vh; display:flex; flex-direction:column; }
+  header { padding:8px 16px; background:#4a2c14; color:#f7ecd4; display:flex; align-items:baseline; gap:16px; }
+  header h1 { font-size:20px; margin:0; font-weight:normal; letter-spacing:.5px; }
+  header span { font-size:13px; opacity:.8; }
+  header a { color:#f7ecd4; font-size:13px; white-space:nowrap; }
+  #app { flex:1; display:grid; grid-template-columns: 250px 1fr 340px; min-height:0; }
+  nav { position:relative; overflow:auto; background:var(--panel); border-right:1px solid var(--line); font-size:13px; }
+  nav h3 { margin:10px 10px 4px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--gold); }
+  nav div.item { padding:4px 10px 4px 14px; cursor:pointer; border-left:3px solid transparent; }
+  nav div.item:hover { background:#f1e6cf; }
+  nav div.item.active { background:#ead9b5; border-left-color:#8b1a1a; font-weight:bold; }
+  main { display:flex; flex-direction:column; min-height:0; min-width:0; padding:8px; }
+  #stageWrap { flex:1; min-height:0; display:flex; justify-content:center; }
+  svg#stage { width:100%; height:100%; background:#f3ece0; border:1px solid var(--line); border-radius:6px; }
+  @media (max-width: 1150px) {
+    body { height:auto; }
+    #app { grid-template-columns: 220px 1fr; grid-template-areas: "main main" "nav aside"; }
+    main { grid-area:main; height:78vh; }
+    nav { grid-area:nav; max-height:60vh; border-top:1px solid var(--line); }
+    aside { grid-area:aside; border-top:1px solid var(--line); }
+  }
+  #controls { display:flex; align-items:center; gap:8px; padding:8px 4px 0; font-size:14px; }
+  #controls button { font-size:16px; padding:4px 10px; border:1px solid #b9a37a; background:#fffaf0; border-radius:4px; cursor:pointer; }
+  #controls button:hover { background:#f3e3c2; }
+  #scrub { flex:1; }
+  aside { background:var(--panel); border-left:1px solid var(--line); padding:12px 16px; overflow:auto; }
+  #part { font-size:12px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); }
+  #title { font-size:22px; margin:4px 0 10px; }
+  .lbl { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#8b6b3a; margin-top:12px; }
+  #rubric { font-size:15px; line-height:1.45; font-style:italic; color:#7a1414; }
+  #posture { font-size:15px; }
+  #ref { font-size:13px; color:#6b5a40; }
+  .legend { display:grid; grid-template-columns: 22px 1fr; gap:3px 6px; font-size:13px; align-items:center; margin-top:4px; }
+  .dot { width:16px; height:16px; border-radius:50%; border:1.5px solid #3b2a1a; display:inline-flex; align-items:center; justify-content:center; font-size:9px; font-family:sans-serif; font-weight:bold; }
+  .note { font-size:11.5px; color:#6b5a40; margin-top:14px; line-height:1.4; border-top:1px solid var(--line); padding-top:8px; }
+  text { font-family: Georgia, serif; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✠ The Order of Mass</h1>
+  <span>An animated walk-through based on the rubrics of the Roman Missal (third typical edition) and the GIRM</span>
+  <a href="mass-3d.html">Explore in 3D</a>
+</header>
+<div id="app">
+  <nav id="steps"></nav>
+  <main>
+    <div id="stageWrap"><svg id="stage" viewBox="0 0 1000 830"></svg></div>
+    <div id="controls">
+      <button id="prev" title="Previous (←)">⏮</button>
+      <button id="play" title="Play / pause (space)">▶</button>
+      <button id="next" title="Next (→)">⏭</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0">
+      <span id="clock">0:00</span>
+      <select id="speed">
+        <option value="0.5">0.5×</option><option value="1" selected>1×</option>
+        <option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option>
+      </select>
+    </div>
+  </main>
+  <aside>
+    <div id="part"></div>
+    <div id="title"></div>
+    <div class="lbl">Rubric (paraphrased)</div>
+    <div id="rubric"></div>
+    <div class="lbl">The faithful</div>
+    <div id="posture"></div>
+    <div class="lbl">Reference</div>
+    <div id="ref"></div>
+    <div class="lbl">Who's who</div>
+    <div class="legend" id="legend"></div>
+    <div class="note">
+      This shows a Sunday Mass in Ordinary Time with a Deacon, incense and servers, one of several forms the Missal allows (GIRM 115ff.).
+      The rubrics are paraphrased, and only short responses are quoted. Postures follow GIRM 43; kneeling customs differ between Conferences of Bishops.
+      Many options are not shown here, such as the Sprinkling Rite and other Eucharistic Prayers.
+    </div>
+  </aside>
+</div>
+
+<script src="mass-rite.js"></script>
+<script>
+// ---------- SVG scene ----------
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('stage');
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+function txt(x,y,s,attrs,parent){const t=el('text',{x,y,...attrs},parent);t.textContent=s;return t;}
+
+const gStatic=el('g',{});
+// floor & sanctuary
+el('rect',{x:0,y:0,width:1000,height:830,fill:'#efe5d2'},gStatic);
+el('rect',{x:70,y:15,width:860,height:280,rx:18,fill:'#e4d3b0',stroke:'#c9b083','stroke-width':2},gStatic);
+for(let k=0;k<3;k++) el('line',{x1:90+k*8,y1:296+k*5,x2:910-k*8,y2:296+k*5,stroke:'#c9b083','stroke-width':1.5},gStatic);
+txt(90,38,'SANCTUARY',{'font-size':12,fill:'#9b7d4a','letter-spacing':2},gStatic);
+txt(80,345,'NAVE',{'font-size':12,fill:'#9b7d4a','letter-spacing':2},gStatic);
+// central aisle runner
+el('rect',{x:478,y:300,width:44,height:530,fill:'#a33b2e',opacity:.25},gStatic);
+// altar
+el('rect',{x:398,y:138,width:204,height:64,rx:3,fill:'#f7f3ea',stroke:'#8a6d3b','stroke-width':2.5},gStatic);
+el('rect',{x:398,y:138,width:204,height:8,fill:'#e9dcc0'},gStatic);
+txt(500,224,'ALTAR',{'text-anchor':'middle','font-size':11,fill:'#8a6d3b','letter-spacing':2},gStatic);
+// chair, deacon chair, bench
+el('rect',{x:482,y:36,width:36,height:30,rx:5,fill:'#8b5a2b',stroke:'#5a3a1a'},gStatic);
+txt(500,30,'CHAIR',{'text-anchor':'middle','font-size':10,fill:'#8a6d3b','letter-spacing':1},gStatic);
+el('rect',{x:436,y:42,width:28,height:26,rx:4,fill:'#a87b4f',stroke:'#5a3a1a'},gStatic);
+el('rect',{x:620,y:44,width:160,height:22,rx:4,fill:'#a87b4f',stroke:'#5a3a1a'},gStatic);
+txt(700,40,'MINISTERS',{'text-anchor':'middle','font-size':10,fill:'#8a6d3b','letter-spacing':1},gStatic);
+// credence
+el('rect',{x:828,y:104,width:76,height:52,rx:3,fill:'#f2ead8',stroke:'#8a6d3b'},gStatic);
+txt(866,172,'CREDENCE',{'text-anchor':'middle','font-size':10,fill:'#8a6d3b','letter-spacing':1},gStatic);
+// ambo
+el('rect',{x:168,y:236,width:64,height:26,rx:4,fill:'#a87b4f',stroke:'#5a3a1a','stroke-width':1.5},gStatic);
+el('rect',{x:186,y:240,width:28,height:12,fill:'#f2ead8'},gStatic);
+txt(200,278,'AMBO',{'text-anchor':'middle','font-size':11,fill:'#8a6d3b','letter-spacing':2},gStatic);
+// tabernacle hint
+el('rect',{x:120,y:70,width:34,height:30,rx:3,fill:'#d4a72c',stroke:'#7a5a12'},gStatic);
+txt(137,116,'TABERNACLE',{'text-anchor':'middle','font-size':9,fill:'#8a6d3b'},gStatic);
+el('circle',{cx:137,cy:60,r:4,fill:'#e33',opacity:.8},gStatic);
+// pews
+const ROWS=[];for(let y=356;y<=700;y+=34)ROWS.push(y);
+for(const y of [322,...ROWS]){
+  el('rect',{x:140,y:y+9,width:310,height:6,rx:2,fill:'#9a7046',opacity:.7},gStatic);
+  el('rect',{x:550,y:y+9,width:310,height:6,rx:2,fill:'#9a7046',opacity:.7},gStatic);
+}
+// door + gift table
+el('rect',{x:440,y:815,width:120,height:15,fill:'#6b4423'},gStatic);
+txt(500,810,'MAIN DOOR',{'text-anchor':'middle','font-size':10,fill:'#8a6d3b','letter-spacing':1},gStatic);
+el('rect',{x:596,y:760,width:50,height:20,rx:3,fill:'#c9b083',stroke:'#8a6d3b'},gStatic);
+txt(621,795,'gifts',{'text-anchor':'middle','font-size':10,fill:'#8a6d3b'},gStatic);
+
+// people
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const PEOPLE=[];
+for(const y of ROWS){
+  for(let x=160;x<=432;x+=27) if(rnd()>.22) PEOPLE.push({x,y,side:-1});
+  for(let x=568;x<=842;x+=27) if(rnd()>.22) PEOPLE.push({x,y,side:1});
+}
+const gPeople=el('g',{});
+const PCOL=['#c08a5b','#8d5524','#e0ac69','#6b4226','#d9a07a','#a0522d'];
+PEOPLE.forEach((p,i)=>{p.el=el('circle',{cx:p.x,cy:p.y,r:6,fill:PCOL[i%PCOL.length],stroke:'#3b2a1a','stroke-width':.8},gPeople);});
+// communion walkers: front rows first
+const WALK=PEOPLE.map((p,i)=>i).sort((a,b)=>PEOPLE[a].y-PEOPLE[b].y||PEOPLE[a].x-PEOPLE[b].x).filter((_,k)=>k%3!==2);
+
+const gProps=el('g',{});
+const gActors=el('g',{});
+const gDyn=el('g',{});
+
+// actors
+const AEL={};
+for(const a in ACTORS){
+  const d=ACTORS[a];
+  const g=el('g',{},gActors);
+  const arms=el('path',{d:'',stroke:d.stroke,'stroke-width':3,fill:'none','stroke-linecap':'round'},g);
+  const ring=el('circle',{r:d.r+5,fill:'none',stroke:'#8b1a1a','stroke-width':1.5,'stroke-dasharray':'3 3',opacity:0},g);
+  const body=el('circle',{r:d.r,fill:d.fill,stroke:d.stroke,'stroke-width':2.5},g);
+  const t=txt(0,4,d.lab||a,{'text-anchor':'middle','font-size':a.length>1&&!d.lab?9:11,'font-family':'sans-serif','font-weight':'bold',fill:d.txt},g);
+  AEL[a]={g,arms,ring,body,t};
+}
+// props
+const PEL={};
+function mkProp(name){
+  const g=el('g',{},gProps);
+  switch(name){
+    case 'corporal': el('rect',{x:-14,y:-12,width:28,height:24,fill:'#fff',stroke:'#bbb'},g); break;
+    case 'missal': el('rect',{x:-8,y:-10,width:16,height:20,rx:1.5,fill:'#8b1a1a',stroke:'#d4a72c'},g); break;
+    case 'gospels': el('rect',{x:-8,y:-10,width:16,height:20,rx:1.5,fill:'#d4a72c',stroke:'#7a5a12','stroke-width':1.5},g);
+      el('path',{d:'M0 -6V6M-4 -1H4',stroke:'#7a1414','stroke-width':1.6},g); break;
+    case 'chalice': el('circle',{r:7,fill:'#e5bd4a',stroke:'#7a5a12','stroke-width':1.5},g); el('circle',{r:3.5,fill:'#7a1414'},g); break;
+    case 'bread': el('circle',{r:8,fill:'#e5bd4a',stroke:'#7a5a12','stroke-width':1.2},g); el('circle',{r:5.5,fill:'#fffdf2',stroke:'#ccc','stroke-width':.6},g); break;
+    case 'wine': el('circle',{cx:-4,r:4,fill:'#7a1430',stroke:'#444'},g); el('circle',{cx:4,r:4,fill:'#e8f4ff',stroke:'#444'},g); break;
+    case 'cross': el('path',{d:'M0 -12V12M-7 -5H7',stroke:'#7a5a12','stroke-width':3.5,'stroke-linecap':'round'},g);
+      el('circle',{cy:-1,r:2.2,fill:'#f2e2b8'},g); break;
+    case 'cand1': case 'cand2': el('circle',{r:4.5,fill:'#fff8e0',stroke:'#a08850'},g);
+      PEL[name+'_flame']=el('circle',{r:2.4,fill:'#ff9a1f'},g); break;
+    case 'thurible': el('line',{x1:0,y1:-8,x2:0,y2:0,stroke:'#555','stroke-width':1},g); el('circle',{r:4.5,fill:'#9a8f86',stroke:'#444'},g); break;
+    case 'ewer': el('ellipse',{rx:7,ry:5,fill:'#cfe3ef',stroke:'#557'},g); break;
+  }
+  return g;
+}
+for(const k of ['corporal','missal','gospels','chalice','bread','wine','cross','cand1','cand2','thurible','ewer']) PEL[k]=mkProp(k);
+
+// ---------- dynamic drawing ----------
+function clearDyn(){while(gDyn.firstChild)gDyn.removeChild(gDyn.firstChild);}
+function wrap(s,n){const w=s.split(' ');const out=[];let line='';for(const x of w){if((line+' '+x).trim().length>n){if(line)out.push(line);line=x;}else line=(line+' '+x).trim();}if(line)out.push(line);return out;}
+function bubble(x,y,s,who,alpha){
+  const isP=who==='ppl';
+  const lines=wrap(s,isP?52:36);
+  const w=Math.max(...lines.map(l=>l.length))*6.7+22, h=lines.length*16+12;
+  let bx=Math.min(Math.max(x-w/2,6),994-w), by=y-h-18;
+  let below=false;
+  if(by<4){by=y+22;below=true;}
+  const g=el('g',{opacity:alpha},gDyn);
+  const col=isP?'#2a4a6b':who==='P'?'#1f5e38':'#5a3a1a';
+  el('rect',{x:bx,y:by,width:w,height:h,rx:8,fill:isP?'#eef4fb':'#fffdf6',stroke:col,'stroke-width':1.6,opacity:.96},g);
+  if(!isP){ const tx=Math.min(Math.max(x,bx+10),bx+w-10);
+    el('path',{d:below?`M${tx-6} ${by} L${x} ${y+12} L${tx+6} ${by}`:`M${tx-6} ${by+h} L${x} ${y-12} L${tx+6} ${by+h}`,fill:'#fffdf6',stroke:col,'stroke-width':1.6},g);}
+  const label=isP?'People':ACTORS[who].lab?ACTORS[who].name.split(' ')[0]:{P:'Priest',D:'Deacon',L:'Lector',Ps:'Psalmist',S:'Server',T:'Thurifer',X:'Cross-bearer'}[who];
+  txt(bx+8,by-3,label,{'font-size':10,fill:col,'font-style':'italic','font-weight':'bold'},g);
+  lines.forEach((l,k)=>txt(bx+11,by+19+k*16,l,{'font-size':13,fill:'#222'},g));
+}
+function windowAlpha(u,a,b){const f=.03;return Math.min(1,(u-a)/f,(b-u)/f);}
+function smokeAt(p,time,strength){
+  for(let k=0;k<7;k++){
+    const ph=((time*0.6+k/7)%1);
+    const x=p[0]+14+Math.sin(time*2+k*1.7)*5*ph+ph*6, y=p[1]+6-ph*38;
+    el('circle',{cx:x,cy:y,r:3+ph*7,fill:'#9a9a9a',opacity:(1-ph)*.4*strength},gDyn);
+  }
+}
+function lbl(x,y,s){txt(x,y,s,{'text-anchor':'middle','font-size':11,'font-style':'italic',fill:'#6b1010',stroke:'#fffaf0','stroke-width':3,'paint-order':'stroke'},gDyn);}
+
+// ---------- render a frame ----------
+let cur=0,u=0,playing=false,speed=1,wall=0;
+function render(){
+  const s=STEPS[cur];
+  const pos={};for(const a in ACTORS)pos[a]=actorAt(cur,a,u);
+  clearDyn();
+  // people posture
+  const post=postureAt(cur,u);
+  const bowing=(s.pplBow||[]).some(([a,b])=>u>a&&u<b);
+  const peace=s.special&&s.special.type==='peace'&&u>s.special.a&&u<s.special.b;
+  const comm=s.special&&s.special.type==='communion'?s.special:null;
+  const hidden=new Set();
+  if(comm){
+    const n=WALK.length, span=comm.b-comm.a, wd=span*0.32;
+    WALK.forEach((pi,k)=>{
+      const st=comm.a+(span-wd)*k/(n-1), uu=(u-st)/wd;
+      if(uu<=0||uu>=1)return;
+      const p=PEOPLE[pi]; hidden.add(pi);
+      const station=k%2?[530,312]:[470,312], outer=p.side<0?112:888;
+      const pts=[[p.x,p.y],[p.side<0?490:510,p.y],[p.side<0?490:510,330],station,[station[0],318],[outer,330],[outer,p.y],[p.x,p.y]];
+      let q;
+      if(uu<.45) q=along(pts.slice(0,4),uu/.45);
+      else if(uu<.55) q=station;
+      else q=along(pts.slice(3),(uu-.55)/.45);
+      el('circle',{cx:q[0],cy:q[1],r:6.5,fill:PCOL[pi%PCOL.length],stroke:'#3b2a1a','stroke-width':.8},gDyn);
+      if(uu>=.45&&uu<.55) lbl(q[0],q[1]+20,'Amen');
+    });
+  }
+  PEOPLE.forEach((p,i)=>{
+    const v=bowing?post.val*.75:post.val;
+    let x=p.x,y=p.y;
+    if(peace){x+=Math.sin(u*60+i)*1.6;}
+    p.el.setAttribute('cx',x);p.el.setAttribute('cy',y);
+    p.el.setAttribute('r',3.2+v*3.6);
+    p.el.setAttribute('opacity',hidden.has(i)?.15:(.55+v*.45));
+  });
+  // actors
+  const actsNow={};
+  for(const a in ACTORS){
+    const e=AEL[a],p=pos[a];
+    const act=((s.acts||{})[a]||[]).find(([l,x,y])=>u>=x&&u<=y);
+    actsNow[a]=act;
+    const low=act&&/bow|genuflect|kneel/.test(act[0]);
+    const sc=low?(/kneel|genuflect/.test(act[0])?.78:.86):1;
+    e.g.setAttribute('transform',`translate(${p[0]},${p[1]}) scale(${sc})`);
+    e.ring.setAttribute('opacity',low&&/kneel|genuflect/.test(act[0])?.9:0);
+    const or=((s.orans||{})[a]||[]).some(([x,y])=>u>=x&&u<=y);
+    const r=ACTORS[a].r;
+    e.arms.setAttribute('d',or?`M${-r+2} -3 L${-r-9} -12 M${r-2} -3 L${r+9} -12`:'');
+    if(act&&act[0]) lbl(p[0],p[1]+r+15,act[0]);
+  }
+  // props
+  for(const k in PEL){
+    if(k.endsWith('_flame'))continue;
+    const st=propAt(cur,k,u,pos), q=resolveProp(st,pos,k);
+    PEL[k].setAttribute('transform',`translate(${q[0]},${q[1]})`);
+    PEL[k].setAttribute('opacity',st.h?0:1);
+  }
+  const fl=1+Math.sin(wall*14)*.25; PEL.cand1_flame.setAttribute('r',2.4*fl); PEL.cand2_flame.setAttribute('r',2.4*fl);
+  // smoke
+  for(const [w,a,b] of (s.smoke||[])) if(u>=a&&u<=b){const tp=resolveProp(propAt(cur,'thurible',u,pos),pos,'thurible');smokeAt([tp[0]-14,tp[1]-6],wall,Math.min(1,windowAlpha(u,a,b)+.3));}
+  // elevation
+  for(const [type,a,b] of (s.raise||[])) if(u>a&&u<b){
+    const k=Math.sin(Math.PI*(u-a)/(b-a)); const full=!type.endsWith('-low'); const lift=(full?34:9)*k;
+    const draw=(what,x)=>{const y=150-lift;
+      el('circle',{cx:x,cy:y,r:(full?24:12)*k+4,fill:'url(#glow)',opacity:.9},gDyn);
+      if(what==='host'){el('circle',{cx:x,cy:y,r:9,fill:'#fffdf2',stroke:'#d4a72c','stroke-width':1.5},gDyn);el('path',{d:`M${x} ${y-5}V${y+5}M${x-4} ${y-1}H${x+4}`,stroke:'#d4a72c','stroke-width':1},gDyn);}
+      else{el('path',{d:`M${x-8} ${y-8} Q${x} ${y+8} ${x+8} ${y-8} Z`,fill:'#e5bd4a',stroke:'#7a5a12'},gDyn);el('rect',{x:x-1.5,y:y,width:3,height:9,fill:'#e5bd4a'},gDyn);el('rect',{x:x-6,y:y+9,width:12,height:3,fill:'#e5bd4a',stroke:'#7a5a12'},gDyn);}
+    };
+    if(type.startsWith('host'))draw('host',500);
+    if(type.startsWith('chalice'))draw('chalice',505);
+    if(type==='both'){draw('host',490);draw('chalice',525);}
+    if(full) txt(500,96-lift*.3,'✠',{'text-anchor':'middle','font-size':16,fill:'#b8892b',opacity:k},gDyn);
+  }
+  // bell
+  for(const [a,b] of (s.bell||[])) if(u>=a&&u<=b){
+    const p=pos.S,k=(u-a)/(b-a);
+    for(let j=0;j<2;j++){const kk=(k*2+j*.5)%1;el('circle',{cx:p[0],cy:p[1],r:12+kk*26,fill:'none',stroke:'#d4a72c','stroke-width':2,opacity:1-kk},gDyn);}
+    txt(p[0]+16,p[1]-12,'🔔',{'font-size':16},gDyn);
+  }
+  // speech
+  for(const [who,str,a,b] of (s.say||[])) if(u>=a&&u<=b){
+    const al=Math.max(0,windowAlpha(u,a,b));
+    if(who==='ppl') bubble(500,560,str,'ppl',al); else bubble(pos[who][0],pos[who][1],str,who,al);
+  }
+  // HUD
+  const pn={stand:'Standing',sit:'Seated',kneel:'Kneeling'}[post.name];
+  txt(990,820,'The faithful: '+pn+(bowing?' (bowing)':''),{'text-anchor':'end','font-size':12,fill:'#5a3a1a','font-style':'italic'},gDyn);
+  txt(10,820,`${cur+1} / ${STEPS.length}`,{'font-size':12,fill:'#5a3a1a'},gDyn);
+  // controls
+  const g=stepStart[cur]+u*s.dur;
+  scrub.value=Math.round(g/TOTAL*1000);
+  const fmt=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
+  clock.textContent=`${fmt(g)} / ${fmt(TOTAL)}`;
+  document.getElementById('posture').textContent=pn+(bowing?' (bowing)':'')+(comm&&u>comm.a&&u<comm.b?'. Communicants come forward in procession.':'');
+}
+// glow gradient
+const defs=el('defs',{});
+const rg=el('radialGradient',{id:'glow'},defs);
+el('stop',{offset:'0%','stop-color':'#fff6c8','stop-opacity':1},rg);
+el('stop',{offset:'100%','stop-color':'#ffd76a','stop-opacity':0},rg);
+
+// ---------- UI ----------
+const nav=document.getElementById('steps'), scrub=document.getElementById('scrub'), clock=document.getElementById('clock');
+const items=[];let lastPart='';
+STEPS.forEach((s,i)=>{
+  if(s.part!==lastPart){const h=document.createElement('h3');h.textContent=s.part;nav.appendChild(h);lastPart=s.part;}
+  const d=document.createElement('div');d.className='item';d.textContent=s.title;d.onclick=()=>go(i,0);nav.appendChild(d);items.push(d);
+});
+function showInfo(){
+  const s=STEPS[cur];
+  document.getElementById('part').textContent=s.part;
+  document.getElementById('title').textContent=s.title;
+  document.getElementById('rubric').textContent=s.text;
+  document.getElementById('ref').textContent=s.ref;
+  items.forEach((d,i)=>d.classList.toggle('active',i===cur));
+  const it=items[cur]; if(it.offsetTop<nav.scrollTop||it.offsetTop>nav.scrollTop+nav.clientHeight-30) nav.scrollTop=it.offsetTop-nav.clientHeight/3;
+}
+function go(i,uu){cur=Math.max(0,Math.min(STEPS.length-1,i));u=uu;showInfo();render();}
+const legend=document.getElementById('legend');
+for(const a of ['P','D','X','C1','T','S','L','Ps','G1']){const d=ACTORS[a];
+  legend.insertAdjacentHTML('beforeend',`<span class="dot" style="background:${d.fill};border-color:${d.stroke};color:${d.txt}">${d.lab||a}</span><span>${d.name}</span>`);}
+legend.insertAdjacentHTML('beforeend',`<span class="dot" style="background:#c08a5b"></span><span>The faithful (larger = standing, smaller = seated, smallest = kneeling)</span>`);
+legend.insertAdjacentHTML('beforeend',`<span class="dot" style="background:none;border:1.5px dashed #8b1a1a"></span><span>Kneeling / genuflecting minister</span>`);
+
+const playBtn=document.getElementById('play');
+function setPlay(v){playing=v;playBtn.textContent=v?'⏸':'▶';}
+playBtn.onclick=()=>{if(!playing&&cur===STEPS.length-1&&u>=1)go(0,0);setPlay(!playing);};
+document.getElementById('prev').onclick=()=>go(u>.15?cur:cur-1,0);
+document.getElementById('next').onclick=()=>go(cur+1,0);
+document.getElementById('speed').onchange=e=>speed=+e.target.value;
+scrub.oninput=()=>{const g=scrub.value/1000*TOTAL;let i=0;while(i<STEPS.length-1&&stepStart[i+1]<=g)i++;go(i,Math.min(1,(g-stepStart[i])/STEPS[i].dur));};
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='SELECT')return;
+  if(e.code==='Space'){e.preventDefault();playBtn.click();}
+  else if(e.code==='ArrowRight')go(cur+1,0);
+  else if(e.code==='ArrowLeft')go(u>.15?cur:cur-1,0);
+});
+let last=performance.now();
+function tick(now){
+  const dt=Math.min(.1,(now-last)/1000);last=now;wall+=dt;
+  if(playing){
+    u+=dt*speed/STEPS[cur].dur;
+    if(u>=1){ if(cur<STEPS.length-1){cur++;u=0;showInfo();} else {u=1;setPlay(false);} }
+  }
+  render();
+  requestAnimationFrame(tick);
+}
+go(0,0);
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

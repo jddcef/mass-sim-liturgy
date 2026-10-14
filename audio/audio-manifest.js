@@ -1,0 +1,43 @@
+window.MASS_STATIC_AUDIO = {
+  "version": 1,
+  "engine": "Kokoro-82M v1.0 (int8 ONNX)",
+  "voices": {
+    "P": "bm_george",
+    "D": "bm_lewis",
+    "L": "bf_emma",
+    "Ps": "bf_isabella"
+  },
+  "groupVoices": [
+    "bm_george",
+    "bm_lewis",
+    "bf_emma",
+    "bf_isabella",
+    "af_sarah",
+    "am_michael"
+  ],
+  "languages": [
+    "en",
+    "la"
+  ],
+  "latinExperimental": true,
+  "plannedClips": 100,
+  "clips": {
+    "[\"en\",\"P\",\"In the name of the Father, and of the Son, and of the Holy Spirit.\"]": "audio/b91e2d1df5c4c1cadf3d.mp3",
+    "[\"la\",\"P\",\"In nomine Patris, et Filii, et Spiritus Sancti.\"]": "audio/0212b5b527aff56a210d.mp3",
+    "[\"en\",\"ppl\",\"Amen.\"]": "audio/60d0df164770afea8592.mp3",
+    "[\"la\",\"ppl\",\"Amen.\"]": "audio/b61630527d9a5b3d1c69.mp3",
+    "[\"en\",\"P\",\"The Lord be with you.\"]": "audio/d5c639fef1aeae9b3e88.mp3",
+    "[\"la\",\"P\",\"Dominus vobiscum.\"]": "audio/156510aec00efe8b67f9.mp3",
+    "[\"en\",\"ppl\",\"And with your spirit.\"]": "audio/40b93bf576f7d2beb1fa.mp3",
+    "[\"la\",\"ppl\",\"Et cum spiritu tuo.\"]": "audio/271d488b95a2de98f651.mp3",
+    "[\"en\",\"ppl\",\"I confess to almighty God\"]": "audio/fee7f3e121663de30787.mp3",
+    "[\"en\",\"P\",\"May almighty God have mercy on us\"]": "audio/9a619a87967fba712bb5.mp3",
+    "[\"en\",\"P\",\"Kyrie, eleison.\"]": "audio/688c5c354c9586ee931d.mp3",
+    "[\"la\",\"P\",\"Kyrie, eleison.\"]": "audio/c935c08bbd8f06ae3851.mp3",
+    "[\"en\",\"ppl\",\"Kyrie, eleison.\"]": "audio/fbec53c1d76a01e87416.mp3",
+    "[\"la\",\"ppl\",\"Kyrie, eleison.\"]": "audio/e2a290032f0cdc3bcaca.mp3",
+    "[\"en\",\"P\",\"Christe, eleison.\"]": "audio/c92b1dd81a75f0e3564a.mp3",
+    "[\"la\",\"P\",\"Christe, eleison.\"]": "audio/c872450ce314863f98a6.mp3",
+    "[\"en\",\"ppl\",\"Christe, eleison.\"]": "audio/f9908054882f80112830.mp3"
+  }
+};
