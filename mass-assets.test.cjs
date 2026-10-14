@@ -38,7 +38,7 @@ for(const [key,relative] of Object.entries(audio.clips)){
   assert.equal(relative,jobsByKey.get(key)?.file,'manifest path must match its job: '+key);
   assert.ok(fs.statSync(relative).size>500);
 }
-const index=read('audio/index.csv').replace(/^\ufeff/,'').trim().split(/\r\n/);
+const index=read('audio/index.csv').replace(/^\ufeff/,'').trim().split(/\r?\n/);
 assert.equal(index.length,jobs.length+1);
 for(const job of jobs)assert.ok(index.some(line=>line.startsWith(job.file+',')),'index lists '+job.file);
 console.log('Validated director export, local assets and '+Object.keys(audio.clips).length+' static audio references.');
