@@ -289,7 +289,12 @@ so each bell is optional.
   switches to your character's eyes while your role speaks.
 - **First person** (game option): walk through your own eyes. If you head the
   wrong way for a few seconds, an arrow and a ring show where to go. As Priest,
-  click the Missal in front of you, then the right passage on the page.
+  click the Missal in front of you, then the right passage on the page. Choose
+  the view with the **👁** camera-pad button, the **V** key or the "First-person
+  view" option: over the shoulder (default), through the eyes, or high behind.
+  People standing in the way fade out, and the camera rises over your head
+  rather than passing through a wall. Outside first person, 👁 and V cycle the
+  fixed cameras.
 - **Skip** (the small button, or the **S** key) ends the current speech or action.
 - **Side quests**: when another minister misses a duty, a blue, dashed
   "Side quest" box asks who to remind and what to do. It is optional, so
@@ -298,7 +303,13 @@ so each bell is optional.
   unlock the sacristy door, enter, open the main doors from inside, then carry
   each item from the cupboard to its place. Hints appear after a delay that
   depends on the level. During pack-away the camera moves to each item asked
-  about, and the item is highlighted.
+  about, and the item is highlighted. The cupboard holds small models of each
+  item (greyed out if today's options don't need it). The vestments hang on a
+  rail. The Sacristan lays them out on the vesting stand, and puts them back
+  afterwards. The camera follows the Sacristan while carrying.
+- **Setup screen**: options are grouped (Ministers, Rites, Bells, Church,
+  Vestments, Game) with an icon on each. The sacristy bell rings as the
+  procession lines up.
 - New options: Deacon distributes Communion (on when there is a Deacon), homily
   at the ambo (default) or chair, altar size, and tabernacle mounting (against
   the wall by default; recessed, on a ledge or on a pillar). Short fixed texts

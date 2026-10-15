@@ -198,7 +198,7 @@ function buildScenario(requested){
       M([[640,140],minister==='D'?ALT_D:ALT_P],.48,.68)
     ];
     preparation.props={
-      missal:[{by:minister,t:.12},{at:[450,160],a:.7,b:.76}],
+      missal:[{by:minister,t:.12},{at:[570,160],a:.7,b:.76}],
       corporal:[{by:minister,t:.4},{at:[500,168],a:.72,b:.78}],
       chalice:[{by:minister,t:.4},{at:[540,170],a:.74,b:.8}]
     };

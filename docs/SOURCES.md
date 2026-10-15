@@ -124,3 +124,10 @@ homily at the ambo or chair ([GIRM 136](https://www.magisterium.com/docs/db52efa
 sacred silence ([GIRM 45](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/45))
 and tabernacle placement ([GIRM 315](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/315)).
 The silence tone and the sacristan's opening routine are judgement calls.
+
+Round six choices: the vestments on the rail and stand follow
+[GIRM 336-338](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/338)
+(alb under chasuble or dalmatic). The Missal on the Priest's left of the corporal,
+the vestment rail and vesting stand, the sacristy-bell moment, the cupboard models
+and the first-person camera views are common practice or judgement calls. The
+cupboard and vestment models are project-made simple geometry.

@@ -8,7 +8,8 @@ const sceneLabels=[];
 const materials=new Map();
 const SCALE=.025;
 // Servers are often of different ages; candle-bearers are drawn as younger children.
-const SERVER_HEIGHTS={S:.95,X:1,C1:.84,C2:.86,T:.92};
+// Relative figure heights: the Priest and Deacon are full-grown adults, servers vary in age.
+const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92};
 const groundAt=p=>{const y=layoutPoint(p)[1];return y<295?.32:y<310?.32*(310-y)/15:0;};
 const world=(p,height=0)=>{
   const mapped=layoutPoint(p);
@@ -69,9 +70,17 @@ function makeFigure(color,skin,role){
   if(role==='D'){
     const stole=box(torso,0,.4,.245,.055,.78,.018,'#e5ca83');
     stole.rotation.z=-.55;
+    // The alb reaches the ankles below the knee-length dalmatic.
+    mesh(new THREE.CylinderGeometry(.3,.36,.6,12),'#f4f1e8',torso,0,-.27,0,true);
   }
-  sphere(torso,0,1.02,0,.18,skin,Boolean(role));
-  if(!SERVER_ROLES.includes(role))sphere(torso,0,1.105,-.015,.15,'#4b3628',false).scale.set(1,.45,1);
+  const head=new THREE.Group();
+  torso.add(head);
+  sphere(head,0,1.02,0,.18,skin,Boolean(role));
+  if(!SERVER_ROLES.includes(role))sphere(head,0,1.105,-.015,.15,'#4b3628',false).scale.set(1,.45,1);
+  for(const side of [-1,1]){
+    sphere(head,side*.062,1.045,.155,.034,'#fbfaf5',false).scale.set(1,.8,.5);
+    sphere(head,side*.062,1.045,.17,.019,'#2a2019',false);
+  }
   const arms=[];
   for(const side of [-1,1]){
     const arm=new THREE.Group();
@@ -107,7 +116,7 @@ function makeFigure(color,skin,role){
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,arms,legs,label:name,cincture,pectoral};
+  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){

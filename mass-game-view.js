@@ -8,6 +8,16 @@ const gameView={firstPerson:false,yaw:0,pitch:-.18,fov:null,drag:null,highlightO
 // ---------- camera pad ----------
 function cameraNudge(action){
   if(!camera3d||!controls)return;
+  if(action==='view'){
+    if(firstPersonActive()){cycleFirstPersonView();return;}
+    // Outside first person, step through the fixed cameras of the camera menu.
+    if(gameView.speaker)endSpeakerView();
+    const choices=[...$('camera').options].map(o=>o.value);
+    const next=choices[(choices.indexOf(cameraMode)+1)%choices.length];
+    setCamera(next);
+    toast('Camera: '+$('camera').selectedOptions[0].textContent+'.',false,1200);
+    return;
+  }
   if(firstPersonActive()){
     // In first person the pad turns the head and zooms the eye instead of moving an orbit camera.
     const turn={left:.26,right:-.26,panLeft:.26,panRight:-.26}[action];
@@ -78,13 +88,18 @@ function updateCameraTween(){
 }
 
 // ---------- first-person mode ----------
-// The camera sits at the player's eyes and turns with them; drag (or the pad) to look around.
+// The camera follows the player and turns with them; drag (or the pad) to look around.
+// Views: just above and behind the shoulder (default), through the eyes (own head hidden),
+// or high behind. Walls pull the camera in, and people in the way are faded.
+const FP_VIEWS={shoulder:{name:'Over the shoulder',back:1.1,up:.7,side:.6},eyes:{name:'Through the eyes',back:0,up:0,side:0},high:{name:'High behind',back:3.2,up:1.9,side:0}};
+gameView.fpView='shoulder';
+gameView.faded=new Set();
 function firstPersonActive(){
   return gameView.firstPerson&&typeof game!=='undefined'&&game.phase!=='setup'&&game.phase!=='summary'&&figures.player?.root.visible;
 }
 function eyeOf(root){
   root.updateMatrixWorld();
-  return root.localToWorld(new THREE.Vector3(0,1.6,.24));
+  return root.localToWorld(new THREE.Vector3(0,1.6,.2));
 }
 function lookTowards(point){
   const root=figures.player.root,eye=eyeOf(root);
@@ -92,13 +107,115 @@ function lookTowards(point){
   gameView.yaw=Math.atan2(dx,dz)-root.rotation.y;
   gameView.pitch=Math.max(-1.2,Math.min(.6,Math.atan2(point.y-eye.y,Math.hypot(dx,dz))));
 }
+function setFirstPersonView(view){
+  gameView.fpView=FP_VIEWS[view]?view:'shoulder';
+  if($('fpView'))$('fpView').value=gameView.fpView;
+  updateOwnHead();
+}
+function cycleFirstPersonView(){
+  const keys=Object.keys(FP_VIEWS);
+  setFirstPersonView(keys[(keys.indexOf(gameView.fpView)+1)%keys.length]);
+  toast('View: '+FP_VIEWS[gameView.fpView].name+'.',false,1200);
+}
+// The player's own head and body block the view from the eyes, so they are hidden then
+// (also when a wall has pulled the camera right up to the head).
+function updateOwnHead(){
+  const hide=firstPersonActive()&&(gameView.fpView==='eyes'||gameView.closeUp);
+  for(const figure of [...Object.values(figures),...congregation.map(p=>p.figure)]){
+    if(!figure?.head)continue;
+    const mine=hide&&figure===figures.player;
+    figure.head.visible=!mine;
+    if(figure.body)figure.body.visible=!mine;
+  }
+  // Name tags (the player's own, or furniture right beside the camera) would float in front of the view.
+  const on=!!$('labels')?.checked,fp=firstPersonActive(),own=figures.player?.label;
+  for(const sprite of sceneLabels){
+    if(!on||!fp){sprite.visible=on;continue;}
+    sprite.visible=sprite!==own&&sprite.getWorldPosition(new THREE.Vector3()).distanceTo(camera3d.position)>1.8;
+  }
+}
+let staticMeshes=null;
+function sceneStaticMeshes(){
+  if(staticMeshes)return staticMeshes;
+  const moving=new Set([...Object.values(figures).map(f=>f.root),...congregation.map(p=>p.figure.root),...Object.values(objects)]);
+  staticMeshes=[];
+  scene.traverse(child=>{
+    if(!child.isMesh||child.material?.transparent)return;
+    for(let node=child;node;node=node.parent)if(moving.has(node))return;
+    staticMeshes.push(child);
+  });
+  return staticMeshes;
+}
+const fpRay=new THREE.Raycaster();
+function fadeFigure(root,on){
+  root.traverse(child=>{
+    if(!child.isMesh)return;
+    if(on){
+      if(!child.userData.fadeMaterial){
+        child.userData.fadeMaterial=child.material.clone();
+        Object.assign(child.userData.fadeMaterial,{transparent:true,opacity:.22,depthWrite:false});
+      }
+      if(child.material!==child.userData.fadeMaterial){child.userData.solidMaterial=child.material;child.material=child.userData.fadeMaterial;}
+    }else if(child.userData.solidMaterial&&child.material===child.userData.fadeMaterial){
+      child.material=child.userData.solidMaterial;
+    }
+  });
+}
+// Fades anyone standing between the camera and what the player is looking at or looking for.
+function updateOccluders(points){
+  const self=figures.player?.root;
+  const roots=[...Object.values(figures).map(f=>f.root),...congregation.map(p=>p.figure.root)].filter(r=>r.visible&&r!==self);
+  const hits=new Set();
+  for(const point of points){
+    if(!point)continue;
+    const dir=point.clone().sub(camera3d.position);
+    const far=dir.length();
+    if(far<.3)continue;
+    fpRay.set(camera3d.position,dir.normalize());
+    fpRay.camera=camera3d;
+    fpRay.far=far-.25;
+    for(const hit of fpRay.intersectObjects(roots,true)){
+      let node=hit.object;
+      while(node.parent&&!roots.includes(node))node=node.parent;
+      if(roots.includes(node))hits.add(node);
+    }
+  }
+  for(const root of gameView.faded)if(!hits.has(root))fadeFigure(root,false);
+  for(const root of hits)if(!gameView.faded.has(root))fadeFigure(root,true);
+  gameView.faded=hits;
+}
+function clearOccluders(){
+  for(const root of gameView.faded)fadeFigure(root,false);
+  gameView.faded=new Set();
+}
 function firstPersonCamera(){
   const root=figures.player.root,eye=eyeOf(root);
   const heading=root.rotation.y+gameView.yaw,pitch=gameView.pitch;
   const dir=new THREE.Vector3(Math.sin(heading)*Math.cos(pitch),Math.sin(pitch),Math.cos(heading)*Math.cos(pitch));
-  camera3d.position.copy(eye);
-  controls.target.copy(eye).add(dir.multiplyScalar(3));
+  const view=FP_VIEWS[gameView.fpView];
+  const flat=new THREE.Vector3(Math.sin(heading),0,Math.cos(heading));
+  const right=new THREE.Vector3(-flat.z,0,flat.x);
+  const scale=root.scale.x||1;
+  const wanted=eye.clone().addScaledVector(flat,-view.back*scale).addScaledVector(right,-view.side*scale).add(new THREE.Vector3(0,view.up*scale,0));
+  const offset=wanted.clone().sub(eye);
+  const full=offset.length();
+  let distance=full;
+  if(distance>.01){
+    // Keep the camera inside the church: stop just short of any wall or furniture behind.
+    fpRay.set(eye,offset.clone().normalize());
+    fpRay.camera=camera3d;
+    fpRay.far=distance;
+    const hit=fpRay.intersectObjects(sceneStaticMeshes(),false)[0];
+    if(hit)distance=Math.max(0,hit.distance-.25);
+  }
+  gameView.closeUp=gameView.fpView!=='eyes'&&distance<.7*scale;
+  camera3d.position.copy(eye).add(offset.setLength(distance));
+  // Pulled in by a wall: rise to look down over the head instead of into the back of it.
+  if(!gameView.closeUp&&distance<full-.05)camera3d.position.y+=Math.min(1,(full-distance)*.8)*scale;
+  controls.target.copy(eye).add(dir.multiplyScalar(4));
   camera3d.lookAt(controls.target);
+  updateOwnHead();
+  updateOccluders([controls.target.clone(),eye,hintWorldPoint(),game.highlight?.object&&objects[game.highlight.object]?.getWorldPosition(new THREE.Vector3())]);
 }
 function setFirstPerson(on){
   gameView.firstPerson=!!on;
@@ -107,6 +224,8 @@ function setFirstPerson(on){
   gameView.yaw=0;gameView.pitch=-.18;
   if(gameView.fov===null)gameView.fov=camera3d.fov;
   if(!gameView.firstPerson){
+    clearOccluders();
+    updateOwnHead();
     camera3d.fov=gameView.fov;camera3d.updateProjectionMatrix();
     setCamera($('camera').value);
   }else if(gameView.speaker)endSpeakerView();
