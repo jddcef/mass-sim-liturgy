@@ -230,6 +230,13 @@
         152
       ],
       "h": true
+    },
+    "ciborium2": {
+      "at": [
+        455,
+        170
+      ],
+      "h": true
     }
   },
   "durationSeconds": 463,
@@ -870,7 +877,7 @@
         ],
         [
           "P",
-          "May almighty God have mercy on us…",
+          "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.",
           0.74,
           0.9
         ],
@@ -2292,7 +2299,7 @@
         ],
         [
           "P",
-          "(quietly) By the mystery of this water and wine…",
+          "(quietly) By the mystery of this water and wine may we come to share in the divinity of Christ who humbled himself to share in our humanity.",
           0.5,
           0.63
         ],
@@ -2620,7 +2627,7 @@
       "say": [
         [
           "P",
-          "(quietly) Wash me, O Lord, from my iniquity…",
+          "(quietly) Wash me, O Lord, from my iniquity and cleanse me from my sin.",
           0.3,
           0.7
         ]
@@ -2656,7 +2663,7 @@
         ],
         [
           "ppl",
-          "May the Lord accept the sacrifice at your hands…",
+          "May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church.",
           0.32,
           0.56
         ],
@@ -3405,7 +3412,7 @@
       "say": [
         [
           "P",
-          "(quietly) May this mingling of the Body and Blood…",
+          "(quietly) May this mingling of the Body and Blood of our Lord Jesus Christ bring eternal life to us who receive it.",
           0.15,
           0.42
         ],

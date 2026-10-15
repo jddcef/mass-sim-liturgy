@@ -44,7 +44,8 @@
       31,
       33,
       36,
-      38
+      38,
+      39
     ],
     "title": "Sign of the Cross",
     "file": "audio/la/04-people-amen-b6163052.mp3"
@@ -121,6 +122,28 @@
   {
     "language": "en",
     "role": "ppl",
+    "text": "Asperges me / Vidi aquam",
+    "english": "Asperges me / Vidi aquam",
+    "steps": [
+      6
+    ],
+    "title": "Blessing and Sprinkling of Water",
+    "file": "audio/en/06-people-asperges-me-vidi-aquam-4e3c33e6.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
+    "text": "Christ, have mercy.",
+    "english": "Christ, have mercy.",
+    "steps": [
+      6
+    ],
+    "title": "Penitential Act (invocations)",
+    "file": "audio/en/06-people-christ-have-mercy-4e7330ce.mp3"
+  },
+  {
+    "language": "en",
+    "role": "ppl",
     "text": "I confess to almighty God",
     "english": "I confess to almighty God",
     "steps": [
@@ -131,14 +154,36 @@
   },
   {
     "language": "en",
+    "role": "ppl",
+    "text": "Lord, have mercy.",
+    "english": "Lord, have mercy.",
+    "steps": [
+      6
+    ],
+    "title": "Penitential Act (invocations)",
+    "file": "audio/en/06-people-lord-have-mercy-343523dc.mp3"
+  },
+  {
+    "language": "en",
     "role": "P",
-    "text": "May almighty God have mercy on us",
-    "english": "May almighty God have mercy on us",
+    "text": "May almighty God cleanse us of our sins, and through the celebration of this Eucharist make us worthy to share at the table of his Kingdom.",
+    "english": "May almighty God cleanse us of our sins, and through the celebration of this Eucharist make us worthy to share at the table of his Kingdom.",
+    "steps": [
+      6
+    ],
+    "title": "Blessing and Sprinkling of Water",
+    "file": "audio/en/06-priest-may-almighty-god-cleanse-us-of-our-sins-be65626a.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.",
+    "english": "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.",
     "steps": [
       6
     ],
     "title": "Penitential Act",
-    "file": "audio/en/06-priest-may-almighty-god-have-mercy-on-us-9a619a87.mp3"
+    "file": "audio/en/06-priest-may-almighty-god-have-mercy-on-us-forgiv-ffc4c655.mp3"
   },
   {
     "language": "en",
@@ -600,6 +645,7 @@
       20
     ],
     "title": "Offering of the Bread and Wine",
+    "quiet": true,
     "file": "audio/en/20-priest-blessed-are-you-fruit-of-the-vine-2cf4b847.mp3"
   },
   {
@@ -611,18 +657,20 @@
       20
     ],
     "title": "Offering of the Bread and Wine",
+    "quiet": true,
     "file": "audio/en/20-priest-blessed-are-you-lord-god-of-all-creation-949ca7f6.mp3"
   },
   {
     "language": "en",
     "role": "P",
-    "text": "By the mystery of this water and wine",
-    "english": "By the mystery of this water and wine",
+    "text": "By the mystery of this water and wine may we come to share in the divinity of Christ who humbled himself to share in our humanity.",
+    "english": "By the mystery of this water and wine may we come to share in the divinity of Christ who humbled himself to share in our humanity.",
     "steps": [
       20
     ],
     "title": "Offering of the Bread and Wine",
-    "file": "audio/en/20-priest-by-the-mystery-of-this-water-and-wine-f05de68b.mp3"
+    "quiet": true,
+    "file": "audio/en/20-priest-by-the-mystery-of-this-water-and-wine-ma-aaed6ad7.mp3"
   },
   {
     "language": "la",
@@ -638,24 +686,25 @@
   {
     "language": "en",
     "role": "P",
-    "text": "Wash me, O Lord, from my iniquity",
-    "english": "Wash me, O Lord, from my iniquity",
+    "text": "Wash me, O Lord, from my iniquity and cleanse me from my sin.",
+    "english": "Wash me, O Lord, from my iniquity and cleanse me from my sin.",
     "steps": [
       22
     ],
     "title": "Washing of Hands",
-    "file": "audio/en/22-priest-wash-me-o-lord-from-my-iniquity-e71368b0.mp3"
+    "quiet": true,
+    "file": "audio/en/22-priest-wash-me-o-lord-from-my-iniquity-and-clea-d7bfa736.mp3"
   },
   {
     "language": "en",
     "role": "ppl",
-    "text": "May the Lord accept the sacrifice at your hands",
-    "english": "May the Lord accept the sacrifice at your hands",
+    "text": "May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church.",
+    "english": "May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church.",
     "steps": [
       23
     ],
     "title": "\"Pray, brethren\" & Prayer over the Offerings",
-    "file": "audio/en/23-people-may-the-lord-accept-the-sacrifice-at-you-c91cf352.mp3"
+    "file": "audio/en/23-people-may-the-lord-accept-the-sacrifice-at-you-7d28c67a.mp3"
   },
   {
     "language": "en",
@@ -990,13 +1039,14 @@
   {
     "language": "en",
     "role": "P",
-    "text": "May this mingling of the Body and Blood",
-    "english": "May this mingling of the Body and Blood",
+    "text": "May this mingling of the Body and Blood of our Lord Jesus Christ bring eternal life to us who receive it.",
+    "english": "May this mingling of the Body and Blood of our Lord Jesus Christ bring eternal life to us who receive it.",
     "steps": [
       34
     ],
     "title": "Fraction of the Bread — Agnus Dei",
-    "file": "audio/en/34-priest-may-this-mingling-of-the-body-and-blood-02157b92.mp3"
+    "quiet": true,
+    "file": "audio/en/34-priest-may-this-mingling-of-the-body-and-blood-71846ed1.mp3"
   },
   {
     "language": "la",
@@ -1044,6 +1094,17 @@
   },
   {
     "language": "en",
+    "role": "D",
+    "text": "The Body of Christ.",
+    "english": "The Body of Christ.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/en/36-deacon-the-body-of-christ-242b1cdc.mp3"
+  },
+  {
+    "language": "en",
     "role": "P",
     "text": "May the Body of Christ keep me safe for eternal life.",
     "english": "May the Body of Christ keep me safe for eternal life.",
@@ -1051,6 +1112,7 @@
       36
     ],
     "title": "Holy Communion",
+    "quiet": true,
     "file": "audio/en/36-priest-may-the-body-of-christ-keep-me-safe-for-85af6584.mp3"
   },
   {
@@ -1063,6 +1125,17 @@
     ],
     "title": "Holy Communion",
     "file": "audio/en/36-priest-the-body-of-christ-1d8c5d13.mp3"
+  },
+  {
+    "language": "la",
+    "role": "D",
+    "text": "Corpus Christi.",
+    "english": "The Body of Christ.",
+    "steps": [
+      36
+    ],
+    "title": "Holy Communion",
+    "file": "audio/la/36-deacon-corpus-christi-d292d580.mp3"
   },
   {
     "language": "la",
@@ -1085,6 +1158,39 @@
     ],
     "title": "Holy Communion",
     "file": "audio/la/36-priest-corpus-christi-61a59e81.mp3"
+  },
+  {
+    "language": "en",
+    "role": "D",
+    "text": "Bow down for the blessing.",
+    "english": "Bow down for the blessing.",
+    "steps": [
+      39
+    ],
+    "title": "Greeting & Solemn Blessing",
+    "file": "audio/en/39-deacon-bow-down-for-the-blessing-ad22973c.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "And may the blessing of almighty God, the Father, and the Son, and the Holy Spirit, come down on you and remain with you for ever.",
+    "english": "And may the blessing of almighty God, the Father, and the Son, and the Holy Spirit, come down on you and remain with you for ever.",
+    "steps": [
+      39
+    ],
+    "title": "Greeting & Solemn Blessing",
+    "file": "audio/en/39-priest-and-may-the-blessing-of-almighty-god-the-9c5cd12e.mp3"
+  },
+  {
+    "language": "en",
+    "role": "P",
+    "text": "Bow down for the blessing.",
+    "english": "Bow down for the blessing.",
+    "steps": [
+      39
+    ],
+    "title": "Greeting & Solemn Blessing",
+    "file": "audio/en/39-priest-bow-down-for-the-blessing-bc76812b.mp3"
   },
   {
     "language": "en",

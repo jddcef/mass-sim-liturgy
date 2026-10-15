@@ -32,7 +32,7 @@ const GAME_DEFAULT_OPTIONS={
   gloria:true,creed:true,secondReading:true,introductory:'A',music:'sung',
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:true,epiclesis:true,elevation:true},
-  readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:false,
+  readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:false,deaconCommunion:true,openChurch:true,
   crucifix:'wall',crossStand:'right',
   lapses:true,detail:'key',symbols:true,seed:1
 };
@@ -72,7 +72,9 @@ const GAME_PLACES=[
   {id:'usherSeat',name:"the usher's place in the congregation",at:HOME.U,r:25},
   {id:'emhcSeat',name:"the EMHC's place in the congregation",at:HOME.E,r:25},
   {id:'aisle',name:'the central aisle',at:[500,520],r:45},
-  {id:'door',name:'the church door',at:[500,860],r:40}
+  {id:'door',name:'the church door',at:[500,860],r:40},
+  {id:'sacristyDoor',name:'the outside door of the sacristy',at:[1250,150],r:30},
+  {id:'mainDoors',name:'the main doors, from the inside',at:[500,805],r:30}
 ];
 
 function hashString(text){
@@ -132,7 +134,7 @@ function normaliseGameOptions(role,raw={}){
 }
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -183,7 +185,7 @@ function deriveDuties(role,steps=STEPS,options={}){
   steps.forEach((step,i)=>{
     const base={step:i,key:step.key,title:step.title,part:step.part,ref:step.ref,role};
     if(role==='P'&&step.key===14){
-      duties.push({...base,type:'homily',t:0,end:.28,to:CHAIR,targets:[CHAIR,AMBO],text:'choose the chair or the ambo for the homily',answer:"the celebrant's chair or the ambo"});
+      duties.push({...base,type:'homily',t:0,end:.28,to:AMBO,targets:[AMBO,CHAIR],text:'choose the ambo or the chair for the homily',answer:"the ambo or the celebrant's chair"});
     }
     if(actor){
       const groups=[];
@@ -303,9 +305,9 @@ function buildDecision(duty,level,seed=1,allDuties=[]){
     decision.kind='move';
     decision.prompt='Where will you preach the homily? Either place is permitted.';
     decision.targets=duty.targets;
-    decision.target=CHAIR;
-    decision.correctValues=["the celebrant's chair",'the ambo'];
-    decision.options=[{label:"the celebrant's chair",at:CHAIR,correct:true},{label:'the ambo',at:AMBO,correct:true}];
+    decision.target=AMBO;
+    decision.correctValues=['the ambo',"the celebrant's chair"];
+    decision.options=[{label:'the ambo',at:AMBO,correct:true},{label:"the celebrant's chair",at:CHAIR,correct:true}];
     if(level==='expert')decision.input='floor';
     return decision;
   }else if(duty.type==='posture'){
@@ -427,7 +429,7 @@ function nudgeDecision(lapse,level,visible){
   const ministers=[...visible].filter(r=>!['P','ppl','G1','G2'].includes(r));
   return {id:lapse.id,kind:'nudge',prompt:'Who needs a reminder? Due now: '+lapse.expected+'.',correctRoles,correct:ROLE_NAMES[lapse.role],
     ref:lapse.ref,title:lapse.title,level,timer:lapseRecoverySeconds(level),attempts:3,input:level==='expert'?'figure':'options',
-    options:ministers.map(r=>({label:ROLE_NAMES[r],role:r,correct:correctRoles.includes(r)})),lapse};
+    options:ministers.map(r=>({label:ROLE_NAMES[r]+(ministers.filter(o=>ROLE_NAMES[o]===ROLE_NAMES[r]).length>1?' '+(ministers.filter(o=>ROLE_NAMES[o]===ROLE_NAMES[r]).indexOf(r)+1):''),role:r,correct:correctRoles.includes(r)})),lapse};
 }
 
 // The M.C. cues ministers before their duties.
@@ -526,6 +528,34 @@ function sacristanPackAway(options,team=serverTeam(options.serverCount)){
     {id:'charcoalBin',name:'Tip the lit charcoal into the rubbish bin',place:'sacristy',needed:false,trap:true,ref:'Judgement call (fire safety)',reason:'Lit charcoal goes into a sand or ash bucket.'}
   ].map(item=>({...item,places:[].concat(item.place)}));
 }
+// Sacristan training: opening a locked church before anyone else arrives. The order is common
+// parish practice (judgement call): in through the sacristy, then the main doors from inside.
+const SACRISTAN_ARRIVAL=[1320,260];
+const CUPBOARD=[1180,190];
+function sacristanOpening(){
+  const ref='Judgement call (common parish practice; GIRM 105)';
+  const place=id=>GAME_PLACES.find(p=>p.id===id);
+  const opt=(id,correct)=>({label:place(id).name,correct,at:place(id).at});
+  return [
+    {id:'unlock',kind:'place',prompt:'You are the first to arrive and the church is locked. Which door do you unlock?',ref,places:['sacristyDoor'],target:place('sacristyDoor').at,correct:place('sacristyDoor').name,
+      explain:'Let yourself in by the sacristy; the main doors are opened from inside.',options:[opt('sacristyDoor',true),opt('outside',false),opt('door',false)]},
+    {id:'enter',kind:'place',prompt:'The sacristy door is open. Where do you go?',ref,places:['sacristy'],target:SACRISTY,correct:place('sacristy').name,
+      options:[opt('sacristy',true),opt('altar',false),opt('ambo',false)]},
+    {id:'lights',kind:'task',prompt:'You are in the sacristy. What do you do first?',ref:'GIRM 316; judgement call',correct:'Switch on the lights and check the sanctuary lamp is burning',
+      explain:'The sanctuary lamp burns while the Blessed Sacrament is reserved; if it has gone out, relight it.',
+      options:['Switch on the lights and check the sanctuary lamp is burning','Ring the sacristy bell','Light the altar candles straight away'].map((label,i)=>({label,correct:i===0}))},
+    {id:'openMain',kind:'place',prompt:'Now open the main doors so the faithful can come in.',ref,places:['mainDoors'],target:place('mainDoors').at,correct:place('mainDoors').name,
+      explain:'From inside, so the church is never left open and empty.',options:[opt('mainDoors',true),opt('outside',false),opt('credence',false)]}
+  ];
+}
+// Order for taking things out of the cupboard: vestments first (they stay in the sacristy),
+// then the altar, then the credence and the rest. Items not needed stay in the cupboard.
+function cupboardOrder(items){
+  const rank=item=>item.places[0]==='sacristy'?0:item.places[0]==='altar'?1:item.places[0]==='credence'?2:3;
+  return items.map((item,i)=>({item,i})).sort((a,b)=>rank(a.item)-rank(b.item)||a.i-b.i).map(x=>x.item);
+}
+// Seconds before a visual hint shows where the next thing goes.
+function hintDelay(level){return level==='guided'?0:level==='expert'?12:6;}
 function checklistScore(items,done){
   const chosen=new Set(done);
   let correct=0,missed=0,traps=0,extra=0;
@@ -547,6 +577,9 @@ function deriveSoundCues(steps=STEPS,startTimes){
     clock=start+step.dur;
     for(const [a,b] of step.bell||[]){
       cues.push({type:step.key===0?'sacristyBell':'bell',step:i,key:step.key,time:start+a*step.dur,until:start+b*step.dur});
+    }
+    for(const [,text,a,b] of step.say||[]){
+      if(/^\((?:brief silence|silence|silent prayer|sacred silence)\)$/i.test(text))cues.push({type:'silence',step:i,key:step.key,time:start+a*step.dur,until:start+b*step.dur});
     }
     for(const [actor,acts] of Object.entries(step.acts||{})){
       for(const [text,a,b] of acts){
@@ -702,4 +735,4 @@ function nextQuestionStop(stops,current,requested){
   // Seeking never skips an unanswered decision: snap to the first upcoming stop.
   return requested>current?next:null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,deriveSoundCues,buildBook,preMassTasks,postMassTasks};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,buildBook,preMassTasks,postMassTasks};

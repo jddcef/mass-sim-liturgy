@@ -117,3 +117,10 @@ choices, not universally prescribed arrangements. See Round 4 of
 
 Role portraits are inline SVG artwork created for this project, using its
 object symbols; no external portrait images or models were acquired.
+
+Round five choices (checked through Magisterium AI): Deacon distributing
+Communion ([GIRM 182](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/182)),
+homily at the ambo or chair ([GIRM 136](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/136)),
+sacred silence ([GIRM 45](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/45))
+and tabernacle placement ([GIRM 315](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/315)).
+The silence tone and the sacristan's opening routine are judgement calls.

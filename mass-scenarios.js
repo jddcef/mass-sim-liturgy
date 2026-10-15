@@ -23,6 +23,7 @@ function buildScenario(requested){
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
+    deaconCommunion:!!requested.deacon&&(requested.deaconCommunion??true),
     bells:{
       start:!!requested.bells?.start,
       epiclesis:serverCount>0&&(requested.bells?.epiclesis??true),
@@ -405,7 +406,8 @@ function applyParishMinistries(steps,options,initialPos,initialProps){
   }
   // The celebrant can choose either legitimate preaching place during the game.
   at(14).acts.P=[['preaches the homily',.3,.86]];
-  at(14).homilyPlaces=[CHAIR.slice(),AMBO.slice()];
+  at(14).homilyPlaces=[AMBO.slice(),CHAIR.slice()];
+  at(14).mv.P=M([AMBO],0,.28);
   (at(15).mv??={}).P=M([CHAIR],0,.2);
   if(!options.creed)at(16).mv.P=M([CHAIR],0,.2);
   const gifts=at(18);
@@ -469,6 +471,18 @@ function applyParishMinistries(steps,options,initialPos,initialProps){
     communion.special.emhc=true;
     communion.text+=' When assistance is genuinely needed, an authorised EMHC approaches after the Priest has received, receives Communion and the vessel from him, and helps distribute. The EMHC returns the vessel to the ordinary minister afterwards.';
   }
+  // The Deacon is an ordinary minister of Communion: by default he gives the Host at a second station.
+  if(options.deaconCommunion&&!options.bothKinds){
+    communion.mv.D=[M([[500,114]],.13,.2),M([[375,122],[375,262],[530,292]],.22,.32),M([[375,262],[375,122],ALT_D],.92,1)];
+    communion.mv.P=[M([[625,122],[625,262],[470,292]],.22,.32),M([[625,262],[625,122],ALT_P],.92,1)];
+    communion.acts.D=[['receives Communion from the Priest',.13,.2],['takes a ciborium and distributes Holy Communion',.2,.9]];
+    communion.props.ciborium2=[{hide:false,t:.19},{by:'D',t:.2},{at:[455,170],a:.985,b:1}];
+    communion.say.push(['D','The Body of Christ.',.52,.6]);
+    communion.special.deaconHosts=true;
+    purification.props.ciborium2=[{by:'D',t:.02},{hide:true,t:.33}];
+    communion.text+=' The Deacon, an ordinary minister of Holy Communion, gives the Host at a second station.';
+    communion.ref+='; GIRM 108, 182';
+  }
   // Show reservation explicitly instead of hiding the remaining hosts at the credence.
   purification.dur=22;
   purification.mv[ordinary]=[
@@ -520,7 +534,7 @@ function applyOptionalElements(steps,options,initialProps,find){
       [options.deacon?'D':'P','(invocation to Christ) … Lord, have mercy.',.3,.42],['ppl','Lord, have mercy.',.42,.5],
       [options.deacon?'D':'P','(invocation) … Christ, have mercy.',.5,.6],['ppl','Christ, have mercy.',.6,.68],
       [options.deacon?'D':'P','(invocation) … Lord, have mercy.',.68,.76],['ppl','Lord, have mercy.',.76,.84],
-      ['P','May almighty God have mercy on us…',.85,.94],['ppl','Amen.',.94,1]];
+      ['P','May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.',.85,.94],['ppl','Amen.',.94,1]];
   }else if(options.introductory==='sprinkling'){
     penitential.title='Blessing and Sprinkling of Water';
     penitential.dur=22;
@@ -539,7 +553,7 @@ function applyOptionalElements(steps,options,initialProps,find){
       penitential.acts.D=[['accompanies the Priest',.3,.82]];
     }
     penitential.say=[['P','(invites all to pray that God will bless this water)',.03,.1],['P','(prayer of blessing over the water)',.12,.27],['ppl','Amen.',.27,.3],
-      ['ppl','♪ Asperges me… / Vidi aquam… ♪',.3,.82],['P','May almighty God cleanse us of our sins…',.86,.96],['ppl','Amen.',.96,1]];
+      ['ppl','♪ Asperges me… / Vidi aquam… ♪',.3,.82],['P','May almighty God cleanse us of our sins, and through the celebration of this Eucharist make us worthy to share at the table of his Kingdom.',.86,.96],['ppl','Amen.',.96,1]];
   }
 
   if(options.music==='said'){

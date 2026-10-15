@@ -197,7 +197,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   for(let i=1;i<cues.length;i++)assert.ok(cues[i].time>=cues[i-1].time);
   setup('P',{incense:false,bells:{start:false,epiclesis:false,elevation:false}});
   cues=G('deriveSoundCues')(STEPS,G('stepStart'));
-  assert.equal(cues.length,0);
+  assert.equal(cues.filter(c=>c.type!=='silence').length,0,'no bells or thurible');
+  assert.ok(cues.some(c=>c.type==='silence'),'silences are marked with a soft sound');
   setup('P',{gloria:false});
   const book=G('buildBook')('P');
   assert.ok(book.length>=4);
@@ -413,6 +414,39 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   same(G('nextQuestionStop')(stops,12,100),stops[1]);
   assert.equal(G('nextQuestionStop')(stops,12,5),null);
 }
+// ---- round 5: Deacon Communion, sacristan opening, cupboard and hints ----
+{
+  const says=(scenario,role,text)=>G('STEPS').some(s=>(s.say||[]).some(([r,t])=>r===role&&t===text));
+  let {options,scenario}=setup('P',{deacon:true});
+  assert.equal(options.deaconCommunion,true);
+  assert.ok(says(scenario,'D','The Body of Christ.'),'the Deacon distributes Communion by default');
+  ({scenario}=setup('P',{deacon:true,deaconCommunion:false}));
+  assert.ok(!says(scenario,'D','The Body of Christ.'));
+  ({options}=setup('SAC',{}));
+  assert.equal(options.openChurch,true);
+  const opening=G('sacristanOpening')();
+  same(opening.map(t=>t.id),['unlock','enter','lights','openMain']);
+  assert.equal(opening[0].correct,'the outside door of the sacristy');
+  assert.equal(opening[3].correct,'the main doors, from the inside');
+  for(const task of opening){
+    assert.equal(task.options.filter(o=>o.correct).length,1,task.id);
+    assert.equal(task.options.find(o=>o.correct).label,task.correct,task.id);
+    if(task.kind==='place')assert.ok(task.target,task.id+' has a target');
+  }
+  const items=G('sacristanSetup')(options);
+  const ordered=G('cupboardOrder')(items);
+  assert.equal(ordered.length,items.length);
+  same(new Set(ordered.map(i=>i.id)).size,items.length);
+  const firstOther=ordered.findIndex(i=>i.places[0]!=='sacristy');
+  assert.ok(ordered.slice(firstOther).every(i=>i.places[0]!=='sacristy'),'vestments and sacristy things come first');
+  assert.equal(G('hintDelay')('guided'),0);
+  assert.ok(G('hintDelay')('choice')>0&&G('hintDelay')('expert')>G('hintDelay')('choice'));
+  const places=G('GAME_PLACES');
+  assert.ok(places.some(p=>p.id==='sacristyDoor')&&places.some(p=>p.id==='mainDoors'));
+  const nudge=G('nudgeDecision')({id:'x',role:'C2',expected:'lights the candle'},'choice',new Set(['P','C1','C2','S']));
+  same(nudge.options.map(o=>o.label),['Candle-bearer 1','Candle-bearer 2','Server']);
+  assert.equal(nudge.options.find(o=>o.correct).role,'C2');
+}
 // ---- controller regressions: revealed answer and score rollback ----
 {
   const ui=vm.createContext({
@@ -471,6 +505,21 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.equal(game.active,null);assert.equal(game.lapse,null);assert.equal(game.busy,false);
     assert.equal(nodes.bookModal.hidden,true);
     assert.equal(jumped[0],0);assert.equal(playing,true);
+
+    // A skipped side quest resolves without scoring.
+    const before=JSON.stringify(game.board);
+    let skipped=null;
+    logLine=()=>{};
+    nodes.decision.hidden=false;
+    const quest={finished:false,decision:{sideQuest:true,prompt:'Who needs a reminder?'},resolve:o=>{skipped=o;}};
+    game.active=quest;
+    skipSideQuest(quest);
+    assert.equal(skipped.skipped,true);
+    assert.equal(skipped.correct,false);
+    assert.equal(JSON.stringify(game.board),before);
+    assert.equal(game.active,null);
+    skipSideQuest(quest);
+    assert.equal(skipped.skipped,true,'only once');
   `,ui);
 }
 console.log('mass-game tests passed');

@@ -1,14 +1,18 @@
 ﻿file,language,role,steps,step_title,english,text,recorded
 audio/en/04-people-amen-60d0df16.mp3,en,ppl,4 6 9 17 23 31 33 36 38 39,Sign of the Cross,Amen.,Amen.,yes
 audio/en/04-priest-in-the-name-of-the-father-and-of-the-son-b91e2d1d.mp3,en,P,4,Sign of the Cross,"In the name of the Father, and of the Son, and of the Holy Spirit.","In the name of the Father, and of the Son, and of the Holy Spirit.",yes
-audio/la/04-people-amen-b6163052.mp3,la,ppl,4 6 9 17 23 31 33 36 38,Sign of the Cross,Amen.,Amen.,yes
+audio/la/04-people-amen-b6163052.mp3,la,ppl,4 6 9 17 23 31 33 36 38 39,Sign of the Cross,Amen.,Amen.,yes
 audio/la/04-priest-in-nomine-patris-et-filii-et-spiritus-sa-0212b5b5.mp3,la,P,4,Sign of the Cross,"In the name of the Father, and of the Son, and of the Holy Spirit.","In nomine Patris, et Filii, et Spiritus Sancti.",yes
 audio/en/05-people-and-with-your-spirit-40b93bf5.mp3,en,ppl,5 14 24 33 39,Greeting,And with your spirit.,And with your spirit.,yes
 audio/en/05-priest-the-lord-be-with-you-d5c639fe.mp3,en,P,5 14 24 39,Greeting,The Lord be with you.,The Lord be with you.,yes
 audio/la/05-people-et-cum-spiritu-tuo-271d488b.mp3,la,ppl,5 14 24 33 39,Greeting,And with your spirit.,Et cum spiritu tuo.,yes
 audio/la/05-priest-dominus-vobiscum-156510ae.mp3,la,P,5 14 24 39,Greeting,The Lord be with you.,Dominus vobiscum.,yes
+audio/en/06-people-asperges-me-vidi-aquam-4e3c33e6.mp3,en,ppl,6,Blessing and Sprinkling of Water,Asperges me / Vidi aquam,Asperges me / Vidi aquam,yes
+audio/en/06-people-christ-have-mercy-4e7330ce.mp3,en,ppl,6,Penitential Act (invocations),"Christ, have mercy.","Christ, have mercy.",yes
 audio/en/06-people-i-confess-to-almighty-god-fee7f3e1.mp3,en,ppl,6,Penitential Act,I confess to almighty God,I confess to almighty God,yes
-audio/en/06-priest-may-almighty-god-have-mercy-on-us-9a619a87.mp3,en,P,6,Penitential Act,May almighty God have mercy on us,May almighty God have mercy on us,yes
+audio/en/06-people-lord-have-mercy-343523dc.mp3,en,ppl,6,Penitential Act (invocations),"Lord, have mercy.","Lord, have mercy.",yes
+audio/en/06-priest-may-almighty-god-cleanse-us-of-our-sins-be65626a.mp3,en,P,6,Blessing and Sprinkling of Water,"May almighty God cleanse us of our sins, and through the celebration of this Eucharist make us worthy to share at the table of his Kingdom.","May almighty God cleanse us of our sins, and through the celebration of this Eucharist make us worthy to share at the table of his Kingdom.",yes
+audio/en/06-priest-may-almighty-god-have-mercy-on-us-forgiv-ffc4c655.mp3,en,P,6,Penitential Act,"May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.","May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.",yes
 audio/en/07-people-christe-eleison-f9908054.mp3,en,ppl,7,Kyrie,"Christe, eleison.","Christe, eleison.",yes
 audio/en/07-people-kyrie-eleison-fbec53c1.mp3,en,ppl,7,Kyrie,"Kyrie, eleison.","Kyrie, eleison.",yes
 audio/en/07-priest-christe-eleison-c92b1dd8.mp3,en,P,7,Kyrie,"Christe, eleison.","Christe, eleison.",yes
@@ -51,10 +55,10 @@ audio/la/17-people-te-rogamus-audi-nos-14ceb220.mp3,la,ppl,17,Universal Prayer (
 audio/en/20-people-blessed-be-god-for-ever-4aeb6b77.mp3,en,ppl,20,Offering of the Bread and Wine,Blessed be God for ever.,Blessed be God for ever.,yes
 audio/en/20-priest-blessed-are-you-fruit-of-the-vine-2cf4b847.mp3,en,P,20,Offering of the Bread and Wine,Blessed are you fruit of the vine,Blessed are you fruit of the vine,yes
 audio/en/20-priest-blessed-are-you-lord-god-of-all-creation-949ca7f6.mp3,en,P,20,Offering of the Bread and Wine,"Blessed are you, Lord God of all creation","Blessed are you, Lord God of all creation",yes
-audio/en/20-priest-by-the-mystery-of-this-water-and-wine-f05de68b.mp3,en,P,20,Offering of the Bread and Wine,By the mystery of this water and wine,By the mystery of this water and wine,yes
+audio/en/20-priest-by-the-mystery-of-this-water-and-wine-ma-aaed6ad7.mp3,en,P,20,Offering of the Bread and Wine,By the mystery of this water and wine may we come to share in the divinity of Christ who humbled himself to share in our humanity.,By the mystery of this water and wine may we come to share in the divinity of Christ who humbled himself to share in our humanity.,yes
 audio/la/20-people-benedictus-deus-in-saecula-7bf9c890.mp3,la,ppl,20,Offering of the Bread and Wine,Blessed be God for ever.,Benedictus Deus in saecula.,yes
-audio/en/22-priest-wash-me-o-lord-from-my-iniquity-e71368b0.mp3,en,P,22,Washing of Hands,"Wash me, O Lord, from my iniquity","Wash me, O Lord, from my iniquity",yes
-audio/en/23-people-may-the-lord-accept-the-sacrifice-at-you-c91cf352.mp3,en,ppl,23,"""Pray, brethren"" & Prayer over the Offerings",May the Lord accept the sacrifice at your hands,May the Lord accept the sacrifice at your hands,yes
+audio/en/22-priest-wash-me-o-lord-from-my-iniquity-and-clea-d7bfa736.mp3,en,P,22,Washing of Hands,"Wash me, O Lord, from my iniquity and cleanse me from my sin.","Wash me, O Lord, from my iniquity and cleanse me from my sin.",yes
+audio/en/23-people-may-the-lord-accept-the-sacrifice-at-you-7d28c67a.mp3,en,ppl,23,"""Pray, brethren"" & Prayer over the Offerings","May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church.","May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church.",yes
 audio/en/23-priest-pray-brethren-that-my-sacrifice-and-your-e016af61.mp3,en,P,23,"""Pray, brethren"" & Prayer over the Offerings","Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.","Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.",yes
 audio/en/24-people-it-is-right-and-just-7e50dc7b.mp3,en,ppl,24,Eucharistic Prayer: Preface Dialogue & Preface,It is right and just.,It is right and just.,yes
 audio/en/24-people-we-lift-them-up-to-the-lord-070c2f37.mp3,en,ppl,24,Eucharistic Prayer: Preface Dialogue & Preface,We lift them up to the Lord.,We lift them up to the Lord.,yes
@@ -85,15 +89,20 @@ audio/la/33-deacon-offerte-vobis-pacem-f2d23b6d.mp3,la,D,33,Rite of Peace,Let us
 audio/la/33-priest-offerte-vobis-pacem-a3305c88.mp3,la,P,33,Rite of Peace,Let us offer each other the sign of peace.,Offerte vobis pacem.,yes
 audio/la/33-priest-pax-domini-sit-semper-vobiscum-b404aaf1.mp3,la,P,33,Rite of Peace,The peace of the Lord be with you always.,Pax Domini sit semper vobiscum.,yes
 audio/en/34-people-lamb-of-god-you-take-away-the-sins-of-th-ec20aa9d.mp3,en,ppl,34,Fraction of the Bread — Agnus Dei,"Lamb of God, you take away the sins of the world grant us peace.","Lamb of God, you take away the sins of the world grant us peace.",yes
-audio/en/34-priest-may-this-mingling-of-the-body-and-blood-02157b92.mp3,en,P,34,Fraction of the Bread — Agnus Dei,May this mingling of the Body and Blood,May this mingling of the Body and Blood,yes
+audio/en/34-priest-may-this-mingling-of-the-body-and-blood-71846ed1.mp3,en,P,34,Fraction of the Bread — Agnus Dei,May this mingling of the Body and Blood of our Lord Jesus Christ bring eternal life to us who receive it.,May this mingling of the Body and Blood of our Lord Jesus Christ bring eternal life to us who receive it.,yes
 audio/la/34-people-agnus-dei-qui-tollis-peccata-mundi-dona-c478c08c.mp3,la,ppl,34,Fraction of the Bread — Agnus Dei,"Lamb of God, you take away the sins of the world grant us peace.","Agnus Dei, qui tollis peccata mundi, dona nobis pacem.",yes
 audio/en/35-people-lord-i-am-not-worthy-that-you-should-ent-8d67d79e.mp3,en,ppl,35,"""Behold the Lamb of God""","Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed.","Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed.",yes
 audio/en/35-priest-behold-the-lamb-of-god-behold-him-who-ta-97514938.mp3,en,P,35,"""Behold the Lamb of God""","Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb.","Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb.",yes
 audio/en/36-deacon-the-blood-of-christ-0fd599e8.mp3,en,D,36,Holy Communion,The Blood of Christ.,The Blood of Christ.,yes
+audio/en/36-deacon-the-body-of-christ-242b1cdc.mp3,en,D,36,Holy Communion,The Body of Christ.,The Body of Christ.,yes
 audio/en/36-priest-may-the-body-of-christ-keep-me-safe-for-85af6584.mp3,en,P,36,Holy Communion,May the Body of Christ keep me safe for eternal life.,May the Body of Christ keep me safe for eternal life.,yes
 audio/en/36-priest-the-body-of-christ-1d8c5d13.mp3,en,P,36,Holy Communion,The Body of Christ.,The Body of Christ.,yes
+audio/la/36-deacon-corpus-christi-d292d580.mp3,la,D,36,Holy Communion,The Body of Christ.,Corpus Christi.,yes
 audio/la/36-deacon-sanguis-christi-355f211c.mp3,la,D,36,Holy Communion,The Blood of Christ.,Sanguis Christi.,yes
 audio/la/36-priest-corpus-christi-61a59e81.mp3,la,P,36,Holy Communion,The Body of Christ.,Corpus Christi.,yes
+audio/en/39-deacon-bow-down-for-the-blessing-ad22973c.mp3,en,D,39,Greeting & Solemn Blessing,Bow down for the blessing.,Bow down for the blessing.,yes
+audio/en/39-priest-and-may-the-blessing-of-almighty-god-the-9c5cd12e.mp3,en,P,39,Greeting & Solemn Blessing,"And may the blessing of almighty God, the Father, and the Son, and the Holy Spirit, come down on you and remain with you for ever.","And may the blessing of almighty God, the Father, and the Son, and the Holy Spirit, come down on you and remain with you for ever.",yes
+audio/en/39-priest-bow-down-for-the-blessing-bc76812b.mp3,en,P,39,Greeting & Solemn Blessing,Bow down for the blessing.,Bow down for the blessing.,yes
 audio/en/39-priest-may-almighty-god-bless-you-the-father-an-ad744f7a.mp3,en,P,39,Greeting & Blessing,"May almighty God bless you, the Father, and the Son, and the Holy Spirit.","May almighty God bless you, the Father, and the Son, and the Holy Spirit.",yes
 audio/en/40-deacon-go-forth-the-mass-is-ended-52d9ee2f.mp3,en,D,40,Dismissal & Veneration of the Altar,"Go forth, the Mass is ended.","Go forth, the Mass is ended.",yes
 audio/en/40-priest-go-forth-the-mass-is-ended-444a85a2.mp3,en,P,40,Dismissal & Veneration of the Altar,"Go forth, the Mass is ended.","Go forth, the Mass is ended.",yes

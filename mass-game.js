@@ -103,7 +103,26 @@ function buildGameScene(){
   box(scene,vesting.x,.32+.48,vesting.z,2.6,.08,.8,'#8a6a45');
   box(scene,vesting.x,.32+.22,vesting.z,2.4,.44,.7,'#6e5236');
   const cupboard=world([1205,190]);
-  box(scene,cupboard.x,.32+.9,cupboard.z,.6,1.8,1.6,'#6e5236');
+  box(scene,cupboard.x+.22,.32+.9,cupboard.z,.16,1.8,1.6,'#6e5236');
+  for(const side of [-1,1])box(scene,cupboard.x,.32+.9,cupboard.z+side*.78,.6,1.8,.05,'#6e5236');
+  for(const y of [.05,.5,.95,1.4,1.78])box(scene,cupboard.x,.32+y,cupboard.z,.6,.04,1.6,'#7d6040');
+  scene.add(Object.assign(label('Cupboard',world([1205,190],2.35)),{}));
+  // Doors the sacristan unlocks and opens in the training opening; open the rest of the time.
+  const hinge=new THREE.Group();
+  hinge.position.copy(world([1222,130]));hinge.position.x+=.07;
+  const leaf=box(hinge,0,.32+.65,.5,.07,1.3,1.0,'#4f3920');
+  leaf.userData.door=true;
+  scene.add(hinge);
+  game.doors={sacristy:hinge,main:[]};
+  for(const side of [-1,1]){
+    const pivot=new THREE.Group();
+    pivot.position.set(side*1.275,0,11.05);
+    box(pivot,-side*.64,1.38,0,1.25,2.72,.08,'#5b3f22');
+    box(pivot,-side*1.1,1.3,.06,.05,.25,.04,'#c9a64a');
+    scene.add(pivot);
+    game.doors.main.push(pivot);
+  }
+  setDoors(true,true);
   const crucifix=world([1110,44]);
   box(scene,crucifix.x,1.8,crucifix.z+.1,.06,.9,.05,'#795b34');
   box(scene,crucifix.x,2.0,crucifix.z+.1,.45,.06,.05,'#795b34');
@@ -124,6 +143,21 @@ function buildGameScene(){
   figures.PEW.root.scale.set(.78,.78,.78);
   figures.PEW.root.userData.baseScale=.78;
   for(const sprite of sceneLabels)sprite.scale.multiplyScalar(LABEL_SCALE);
+}
+
+// ---------- doors ----------
+const DOOR_OPEN={sacristy:1.45,main:[1.55,-1.55]};
+function setDoors(open,instant=false,which=['sacristy','main']){
+  game.doorTargets=game.doorTargets||{};
+  if(which.includes('sacristy'))game.doorTargets.sacristy=open?DOOR_OPEN.sacristy:0;
+  if(which.includes('main'))game.doorTargets.main=open?DOOR_OPEN.main:[0,0];
+  if(instant)updateDoors(99);
+}
+function updateDoors(dt){
+  if(!game.doors||!game.doorTargets)return;
+  const ease=(object,to)=>{object.rotation.y+=(to-object.rotation.y)*Math.min(1,dt*3);};
+  ease(game.doors.sacristy,game.doorTargets.sacristy);
+  game.doors.main.forEach((pivot,i)=>ease(pivot,game.doorTargets.main[i]));
 }
 
 // ---------- walking ----------
@@ -227,11 +261,12 @@ function readForm(){
     crucifix:saved.crucifix,crossStand:saved.crossStand,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
-  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion});
-  return {role:saved.role||'P',level:saved.level||'choice',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
+  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false});
+  return {role:saved.role||'P',level:saved.level||'choice',firstPerson:saved.firstPerson===true,sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
+const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people'};
 function rolePortrait(role){
-  const badge={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people'}[role];
+  const badge=ROLE_ICONS[role];
   const image=el('span',{className:'rolePortrait',role:'img'});
   image.setAttribute('aria-label',GAME_ROLES[role].name);
   const robe=['P','D','S','X','C1','T'].includes(role)?'#f4f1e6':'#7293aa';
@@ -263,6 +298,7 @@ function resetGameState(){
   game.gen=(game.gen||0)+1;
   closeDecision();
   clearMarkers();
+  if(game.carrying)carry(null);
   for(const token of game.tokens)disposeSprite(token);
   game.tokens=[];
   for(const key of Object.keys(EXTRA_FIGURES))figures[key].root.visible=false;
@@ -278,7 +314,9 @@ function resetGameState(){
   }
   congregation.forEach(person=>{person.figure.root.visible=true;});
   Object.assign(game,{phase:'setup',stops:[],active:null,lapse:null,duties:[],soundCues:[],lastElapsed:-1,walkers:{},overrides:{},
-    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[],timerAllowance:0});
+    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[],timerAllowance:0,emptyChurch:false,hintTarget:null,carrying:null});
+  setDoors(true,true);
+  resetGameView();
   $('gameLog').replaceChildren();
   $('gameChecklist').hidden=true;
   $('bookModal').hidden=true;
@@ -290,6 +328,7 @@ function startGame(config){
   $('summaryModal').hidden=true;
   GameAudio.setEnabled(config.sound);
   game.recordedAudio=config.recordedAudio;
+  game.firstPersonChoice=config.firstPerson;
   $('speechEnabled').checked=config.sound&&config.recordedAudio;
   $('audioSource').value='static';
   resetSpeech();
@@ -314,14 +353,17 @@ function startGame(config){
   const info=GAME_ROLES[game.role];
   $('gameBadge').textContent='You: '+info.name+' / '+GAME_LEVELS[game.level].name;
   $('gameRoleNote').textContent=ROLE_BLURBS[game.role];
+  $('roleCard').hidden=false;
+  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:GAME_LEVELS[game.level].name+' level'})]));
   $('gameBookButton').hidden=!info.book;
   $('gameBookButton').textContent='Open the '+(info.book||'book');
   game.book=info.sayRole?buildBook(info.sayRole):null;
   for(const note of notes)logLine(note,'note');
   logLine('Celebration: '+describeCelebration(),'note');
   setCamera('player');
+  setFirstPerson(game.firstPersonChoice);
   runPreMass(game.gen);
-  if(GAME_ROLES[game.role].start==='sacristy'){
+  if(GAME_ROLES[game.role].start==='sacristy'&&!(game.role==='SAC'&&options.openChurch)&&!gameView.firstPerson){
     // After the figures are placed: a higher, wider view of the crowded sacristy, which the follow camera keeps.
     const gen=game.gen;
     wait(150).then(()=>{
@@ -418,7 +460,12 @@ function renderDecision(active){
   const box=$('decision');
   box.hidden=false;
   box.className=d.input==='floor'||d.input==='figure'?'floor':'';
+  if(d.sideQuest)box.classList.add('sideQuest');
   document.body.classList.add('deciding');
+  $('decisionRole').replaceChildren(iconNode(ROLE_ICONS[game.role]),(d.sideQuest?'Side quest / ':'You: ')+GAME_ROLES[game.role].name);
+  $('decisionPortrait').replaceChildren(rolePortrait(game.role));
+  $('decisionSkip').hidden=!d.sideQuest;
+  $('decisionSkip').onclick=()=>skipSideQuest(active);
   $('decisionStep').textContent=d.stage||(STEPS[cur3d].part+' / '+(d.title||STEPS[cur3d].title));
   $('decisionPrompt').textContent=d.prompt;
   const hints={
@@ -463,9 +510,37 @@ function renderDecision(active){
   if(d.input==='options'&&!isGuided(game.level)){
     for(const option of d.options)if(option.at)addMarker(option.at,option.label,optionValue(option));
   }
-  if(d.input==='book')openBook();
+  if(d.input==='book'){
+    const missalAt=objects.missal?.visible&&objects.missal.getWorldPosition(new THREE.Vector3());
+    const near=missalAt&&figures.player&&missalAt.distanceTo(figures.player.root.position)<3.2;
+    if(firstPersonActive()&&near){
+      $('decisionHint').textContent='Look at the Missal in front of you and click it to read.';
+      d.hintAfter=hintDelay(game.level);d.hintTarget={object:'missal'};
+      d.hintText='Hint: the Missal is where the ring glows. Click it.';
+      lookTowards(missalAt);
+    }else openBook();
+  }
+  if(d.hintAfter===undefined&&d.kind==='place'&&d.input!=='book'){
+    const at=d.target||d.options?.find(o=>o.correct)?.at||(d.places?.[0]&&placeById(d.places[0])?.at);
+    if(at){d.hintAfter=hintDelay(game.level);d.hintTarget={point:at};}
+  }
+  scheduleHint(active);
   const first=list.querySelector('button');
   if(first&&d.input!=='book')first.focus({preventScroll:true});
+}
+// After a pause with no answer, a glowing ring shows where to go (or what to pick up).
+function scheduleHint(active){
+  const d=active.decision;
+  if(d.hintAfter===undefined||!d.hintTarget)return;
+  const show=()=>{
+    if(game.active!==active||active.finished)return;
+    game.hintTarget=d.hintTarget;
+    setHighlight(null);
+    $('decisionHint').textContent=d.hintText||'Hint: follow the glowing ring.';
+    $('decision').classList.add('hinted');
+  };
+  if(d.hintAfter<=0)show();
+  else active.hintTimer=setTimeout(show,d.hintAfter*1000);
 }
 function answer(value,button){
   const active=game.active;
@@ -530,10 +605,18 @@ function finish(active,result){
     if(game.level==='timed')active.timer=setTimeout(done,4000);
   }
 }
+function skipSideQuest(active){
+  if(game.active!==active||active.finished)return;
+  active.finished=true;
+  logLine('Side quest skipped: '+(active.decision.explain||active.decision.prompt),'auto');
+  closeDecision();
+  active.resolve({correct:false,skipped:true,attempt:1,remaining:0,raw:null,answer:'(skipped)'});
+}
 function closeDecision(){
   const active=game.active;
-  if(active){clearTimeout(active.timer);}
+  if(active){clearTimeout(active.timer);clearTimeout(active.hintTimer);}
   game.active=null;
+  game.hintTarget=null;
   $('decision').hidden=true;
   document.body.classList.remove('deciding');
   clearMarkers();
@@ -594,8 +677,8 @@ function highlightTarget(option,text){
 }
 let highlightMesh=null;
 function setHighlight(target){
-  game.highlight=target||null;
-  if(!target&&highlightMesh)highlightMesh.visible=false;
+  game.highlight=target||game.hintTarget||null;
+  if(!game.highlight&&highlightMesh)highlightMesh.visible=false;
 }
 function linkHighlight(node,resolve){
   const show=()=>setHighlight(resolve());
@@ -622,6 +705,7 @@ function updateHighlight(now){
   if(target.point)position=world(target.point);
   else if(target.figure)position=figures[target.figure].root.position.clone();
   else if(target.object)position=objects[target.object].position.clone();
+  else if(target.mesh)position=target.mesh.getWorldPosition(new THREE.Vector3());
   if(!position){highlightMesh.visible=false;return;}
   highlightMesh.visible=true;
   highlightMesh.position.set(position.x,position.y+.05,position.z);
@@ -726,6 +810,8 @@ function taskDecision(task,stage){
     if(task.target)d.options.forEach(o=>{if(o.correct)o.at=task.target;});
     if(level==='expert')d.input='floor';
     if(task.target)d.check=value=>Array.isArray(value)?distance(value,task.target)<=60||checkAnswer(d,value):checkAnswer(d,value);
+    const at=task.target||d.options.find(o=>o.correct)?.at;
+    if(at){d.hintAfter=hintDelay(level);d.hintTarget={point:at};}
   }
   if(task.kind==='pew'){
     d.input='floor';
@@ -747,15 +833,21 @@ async function runPreMass(gen){
   const ministers=ministersOnStage();
   ministers.forEach((r,i)=>{game.overrides[r]=SACRISTY_SLOTS[i].slice();game.facing[r]=Math.PI;});
   if(game.role==='MC'){game.overrides.MC=SACRISTY_SLOTS[8].slice();game.facing.MC=Math.PI;}
-  if(game.role==='SAC'){game.overrides.SAC=[1190,205];game.facing.SAC=Math.PI;}
+  if(game.role==='SAC'){game.overrides.SAC=game.options.openChurch?SACRISTAN_ARRIVAL.slice():[1190,205];game.facing.SAC=Math.PI;}
   if(game.role==='PEW'){game.overrides.PEW=OUTSIDE.slice();game.facing.PEW=Math.PI;}
   for(const role of ['L','L2','U','E'])if(game.visible.has(role)&&!ministers.includes(role)){
     game.overrides[role]=HOME[role].slice();game.facing[role]=Math.PI;
   }
   const npcWalk=()=>Promise.all(ministers.filter(r=>r!==GAME_ROLES[game.role].actor).map((r,i)=>wait(i*350).then(()=>walk(r,game.overrides[r],starts[0].pos[r]))));
   if(game.role==='SAC'){
-    setPhase('Before Mass: preparing','Set out everything this celebration needs (GIRM 105, 117-118). The ministers are vesting in the sacristy.');
+    if(game.options.openChurch){
+      setPhase('Before Mass: opening the church','You are the first to arrive. Let yourself in and open up.');
+      await runOpening(gen);
+      if(gen!==game.gen)return;
+    }
+    setPhase('Before Mass: preparing','Set out everything this celebration needs (GIRM 105, 117-118).'+(game.options.openChurch?' Take each thing from the cupboard in turn.':' The ministers are vesting in the sacristy.'));
     await runSacristanSetup(gen);
+    game.emptyChurch=false;
     if(gen!==game.gen)return;
     const seat=game.options.bells.start?[1040,200]:SACRISTAN_SEAT;
     toast('Everything is ready. The ministers line up.');
@@ -826,24 +918,93 @@ async function takeSeat(point,gen){
 // ---------- sacristan ----------
 const NOT_NEEDED='Not needed (or not my task)';
 const SHORT_NAMES={altarCloth:'Altar cloth',altarCandles:'Candles lit',lectionary:'Lectionary',lavabo:'Lavabo set',commPlate:'Communion plate',chalice2:'Second chalice',aspersory:'Holy water',sacristyBell:'Sacristy bell',vestP:'Chasuble',vestD:'Dalmatic',vestS:'Albs',lamp:'Lamp lit',altarCross:'Altar cross'};
+// Training opening: the church is empty and locked until the sacristan opens it.
+async function runOpening(gen){
+  game.emptyChurch=true;
+  setDoors(false,true);
+  setCamera('player');
+  for(const task of sacristanOpening()){
+    const outcome=await ask(taskDecision(task,'Before Mass: opening up'));
+    if(gen!==game.gen)return;
+    void outcome;
+    if(task.id==='unlock'){
+      await walk('SAC',game.overrides.SAC,[1262,150]);
+      if(gen!==game.gen)return;
+      GameAudio.unlock();
+      toast('Click: the sacristy door is unlocked.');
+      setDoors(true,false,['sacristy']);
+      await wait(700);
+    }else if(task.id==='enter'){
+      await walk('SAC',game.overrides.SAC,[1150,150]);
+    }else if(task.id==='lights'){
+      toast('Lights on. The sanctuary lamp is burning.');
+      await wait(600);
+    }else if(task.id==='openMain'){
+      await walk('SAC',game.overrides.SAC,[500,795]);
+      if(gen!==game.gen)return;
+      GameAudio.unlock();
+      setDoors(true,false,['main']);
+      toast('The main doors are open. People can start to arrive.');
+      await wait(900);
+    }
+    if(gen!==game.gen)return;
+  }
+  // The others arrive only once the sacristan has set everything out (cleared in runPreMass).
+}
+// Small boxes on the cupboard shelves, one for each thing the sacristan may take out.
+function fillCupboard(items){
+  const base=world([1205,190]);
+  return items.map((item,i)=>{
+    const row=i%4,col=Math.floor(i/4);
+    const mesh=box(scene,base.x-.1,.32+.5+row*.45+.08,base.z-.62+col*.2,.14,.14,.14,item.needed?'#d8c27a':'#b7a99a');
+    mesh.userData.item=item.id;
+    game.tokens.push(mesh);
+    return mesh;
+  });
+}
 async function runSacristanSetup(gen){
-  const items=sacristanSetup(game.options,game.team);
+  const training=!!game.options.openChurch;
+  const items=training?cupboardOrder(sacristanSetup(game.options,game.team)):sacristanSetup(game.options,game.team);
   game.checklist=items;
   setChecklist(items);
   for(const item of items)if(item.needed)for(const prop of PROP_FOR_ITEM[item.id]||[])game.hideProps.add(prop);
   const placeCount={};
-  for(const item of items){
+  const shelf=training?fillCupboard(items):[];
+  if(training){
+    await walk('SAC',game.overrides.SAC,CUPBOARD);
+    if(gen!==game.gen)return;
+    game.facing.SAC=Math.PI/2;
+    focusCameraOn(world([1180,190],1));
+    toast('Everything is in the cupboard. Take one thing at a time.');
+  }
+  for(const [index,item] of items.entries()){
+    if(training&&distance(game.overrides.SAC,CUPBOARD)>8){
+      await walk('SAC',game.overrides.SAC,CUPBOARD,240);
+      if(gen!==game.gen)return;
+    }
     const decision=placeDecision(item);
+    if(training){
+      decision.prompt='From the cupboard: '+item.name+'. Where does it go?';
+      setHighlight({mesh:shelf[index]});
+    }
     const outcome=await ask(decision);
     if(gen!==game.gen)return;
     markChecklist(item.id,outcome.correct?'done':'missed');
-    if(!item.needed)continue;
+    if(!item.needed){
+      if(training)shelf[index].material.color.set('#8f8579');
+      continue;
+    }
     const place=placeById(item.places[0]);
     const target=outcome.correct&&Array.isArray(outcome.raw)?outcome.raw:place.at;
+    if(training)carry(shelf[index]);
     if(item.places[0]!=='sacristy'){
-      await walk('SAC',game.overrides.SAC,[target[0],target[1]+(target[1]<300?28:0)]);
+      await walk('SAC',game.overrides.SAC,[target[0],target[1]+(target[1]<300?28:0)],training?240:undefined);
+      if(gen!==game.gen)return;
+    }else if(training){
+      await walk('SAC',game.overrides.SAC,[1150,95],240);
       if(gen!==game.gen)return;
     }
+    if(training)carry(null);
     for(const prop of PROP_FOR_ITEM[item.id]||[])game.hideProps.delete(prop);
     if(!PROP_FOR_ITEM[item.id]||item.places[0]==='sacristy'){
       const n=placeCount[place.id]=(placeCount[place.id]||0)+1;
@@ -871,9 +1032,33 @@ function placeDecision(item){
     places:item.needed?item.places:[],correct:item.needed?right.name:NOT_NEEDED,ref:item.ref,explain:item.reason||'',
     level,attempts:GAME_LEVELS[level].attempts,timer:decisionTimer(level,'place'),
     input:level==='expert'?'floor':'options',options,extraOptions:level==='expert'?[{label:NOT_NEEDED,correct:!item.needed}]:undefined,
-    hint:level==='expert'?'Click where it belongs in the church or sacristy, or press "'+NOT_NEEDED+'".':undefined};
+    hint:level==='expert'?'Click where it belongs in the church or sacristy, or press "'+NOT_NEEDED+'".':undefined,
+    hintAfter:hintDelay(level),hintTarget:item.needed?{point:right.at}:null};
+}
+// The item being carried rides in the sacristan's hands; null puts it down (it becomes the real prop).
+function carry(mesh){
+  if(game.carrying){
+    figures.SAC.root.remove(game.carrying);
+    game.carrying.visible=false;
+  }
+  game.carrying=mesh||null;
+  if(mesh){
+    const scale=figures.SAC.root.scale.x||1;
+    mesh.position.set(0,1.15/scale,.35/scale);
+    figures.SAC.root.add(mesh);
+  }
 }
 const PACK_PROPS={booksBack:['missal','gospels'],vessels:['chalice','bread'],cruets:['ewer','wine'],procBack:['cross','cand1','cand2'],thuribleOut:['thurible'],bellBack:['bell']};
+// What a pack-away question is about: the object itself if it is still in the church, else its place.
+const PACK_FOCUS={linens:'corporal',pourAway:'chalice',charcoalBin:'thurible',hostsAway:'ciborium'};
+function packFocus(item){
+  for(const name of [PACK_FOCUS[item.id],...(PACK_PROPS[item.id]||[])]){
+    const object=name&&objects[name];
+    if(object?.visible&&!game.hideProps.has(name))return {target:{object:name},position:object.position.clone()};
+  }
+  const place=placeById(item.places[0]);
+  return place?{target:{point:place.at},position:world(place.at,1)}:null;
+}
 async function runPackAway(gen){
   const items=sacristanPackAway(game.options,game.team);
   game.checklist=items;
@@ -904,11 +1089,17 @@ async function runPackAway(gen){
     return;
   }
   for(const item of items){
+    const focus=packFocus(item);
+    if(focus){
+      focusCameraOn(focus.position);
+      game.hintTarget=focus.target;
+      setHighlight(null);
+    }
     const correct=item.needed?'Do it now':'Leave it';
     let options=[{label:'Do it now',correct:item.needed},{label:'Leave it',correct:!item.needed}];
     if(isGuided(game.level))options=options.filter(o=>o.correct);
     const outcome=await ask({id:'pack:'+item.id,kind:'task',stage:'After Mass: sacristan',title:item.name,prompt:item.name+'?',correct,options,ref:item.ref,explain:item.reason||'',
-      level:game.level,attempts:1,timer:decisionTimer(game.level,'task'),input:'options'});
+      level:game.level,attempts:1,timer:decisionTimer(game.level,'task'),input:'options',hintAfter:0,hintTarget:focus?.target,hintText:'The glowing ring shows what this is about.'});
     if(gen!==game.gen)return;
     markChecklist(item.id,outcome.correct?'done':'missed');
     if(item.needed){
@@ -924,6 +1115,8 @@ async function runPackAway(gen){
 function beginMass(){
   for(const r of Object.keys(ACTORS))delete game.overrides[r];
   game.facing={};
+  if(game.carrying)carry(null);
+  game.emptyChurch=false;
   for(const token of game.tokens)disposeSprite(token);
   game.tokens=[];
   game.hideProps.clear();
@@ -950,8 +1143,8 @@ async function runStop(stop){
     if(stop.duty.type==='move')d.explain='You go to '+placeFor(stop.duty.to,GAME_ROLES[game.role].actor).name+'.';
     const outcome=await ask(d);
     if(gen===game.gen&&stop.duty.type==='homily'){
-      const value=outcome.correct?outcome.raw:CHAIR;
-      chooseHomilyPlace(Array.isArray(value)?value:value==='the ambo'?AMBO:CHAIR);
+      const value=outcome.correct?outcome.raw:AMBO;
+      chooseHomilyPlace(Array.isArray(value)?value:value==="the celebrant's chair"?CHAIR:AMBO);
     }
   }else if(stop.type==='cue'){
     const d=cueDecision(stop.cue,game.level,game.visible,game.seed);
@@ -999,9 +1192,11 @@ async function lapseStop(lapse,gen){
   if(game.level==='timed'||game.level==='expert')d.prompt='The celebration has stalled. Who needs a discreet reminder? Due now: '+lapse.expected+'.';
   if(game.level==='expert')d.hint='Click the minister who has missed their duty.';
   d.stage=STEPS[cur3d].part+' / something is wrong';
+  d.sideQuest=true;
   const outcome=await ask(d);
   if(gen!==game.gen)return;
   game.lapse=null;
+  if(outcome.skipped){toast('Left alone, the '+who.toLowerCase()+' notices and carries on.',false,2200);return;}
   toast(outcome.correct?'A quiet word: the '+who.toLowerCase()+' carries on.':'The '+who.toLowerCase()+' realises and carries on, a little late.',!outcome.correct);
 }
 
@@ -1121,6 +1316,11 @@ function gameBeforeRender(dt,positions){
     }
   }
   for(const index of game.hidden)congregation[index].figure.root.visible=false;
+  if(game.emptyChurch){
+    for(const person of congregation)person.figure.root.visible=false;
+    for(const key of Object.keys(ACTORS))if(figures[key])figures[key].root.visible=false;
+  }
+  updateDoors(dt);
   for(const name of game.hideProps)if(objects[name])objects[name].visible=false;
   if(game.lapse&&figures[game.lapse.role]){
     const figure=figures[game.lapse.role];
@@ -1136,6 +1336,7 @@ function gameBeforeRender(dt,positions){
         const rate=Number($('rate').value)||1;
         if(cue.type==='bell')GameAudio.altarBell(Math.max(.8,Math.min(3,(cue.until-cue.time)/rate)));
         else if(cue.type==='sacristyBell')GameAudio.sacristyBell();
+        else if(cue.type==='silence')GameAudio.silence();
         else GameAudio.thurible(cue.swings,Math.max(.35,.9/Math.sqrt(rate)));
       }
     }
@@ -1167,6 +1368,7 @@ function gamePick(raycaster){
     const hit=raycaster.intersectObjects(game.markers,false)[0];
     if(hit){answer(hit.object.userData.answer);return true;}
   }
+  if(d.input==='book'&&objects.missal?.visible&&raycaster.intersectObject(objects.missal,true).length){openBook();return true;}
   if(d.input==='figure'){
     const role=figureRole(raycaster);
     if(role&&ROLE_NAMES[role]){answer(role);return true;}
@@ -1199,6 +1401,7 @@ function initialiseGame(){
   if(!scene)return;
   buildGameScene();
   buildSetupForm();
+  initialiseGameView();
   $('gameBookButton').onclick=()=>openBook();
   $('gameSound').onclick=()=>{
     GameAudio.setEnabled(!GameAudio.enabled);
@@ -1248,6 +1451,13 @@ function initialiseGame(){
     if(['INPUT','SELECT','TEXTAREA'].includes(event.target.tagName))return;
     if(event.code==='ArrowLeft'||event.code==='ArrowRight'){event.stopImmediatePropagation();event.preventDefault();return;}
     if(event.code==='Space'&&game.phase!=='mass'){event.stopImmediatePropagation();event.preventDefault();return;}
+    if(event.key==='s'||event.key==='S'){
+      if(!$('gameSetup').hidden||!$('bookModal').hidden)return;
+      event.preventDefault();
+      if(game.active&&!game.active.finished&&game.active.decision.sideQuest)skipSideQuest(game.active);
+      else skipCurrent();
+      return;
+    }
     if(game.active&&/^[1-9]$/.test(event.key)&&$('bookModal').hidden&&$('gameSetup').hidden){
       const button=$('decisionOptions').querySelectorAll('button')[Number(event.key)-1];
       if(button&&!button.disabled){event.preventDefault();button.click();}

@@ -35,7 +35,8 @@ const languagePacks=new Map([
   ['la',{version:1,id:'la',name:'Latin (partial responses)',lang:'la',texts:LATIN_TEXTS}]
 ]);
 const SPEECH_ROLES=['P','D','L','L2','Ps','E','ppl'];
-let speechBusy=false,speechGeneration=0,speechUtterance=null,speechTimer=null;
+const QUIET_CUE=/^\((?:quietly|low voice)\)/i;
+let speechBusy=false,speechGeneration=0,speechUtterance=null,speechTimer=null,speechWindowEnd=null;
 let spokenCaption='',localVoices=[];
 const spokenCues=new Set();
 const voiceSelections=new Map();
@@ -100,6 +101,7 @@ function selectedVoice(role){
 function resetSpeech(){
   speechGeneration++;
   speechBusy=false;
+  speechWindowEnd=null;
   spokenCaption='';
   spokenCues.clear();
   if(speechTimer!==null){clearTimeout(speechTimer);speechTimer=null;}
@@ -114,6 +116,16 @@ function resetSpeech(){
   }
 }
 
+// Ends the line being spoken now and lets the timeline continue (the skip button).
+function skipSpeech(){
+  if(!speechBusy&&!recording&&!speechUtterance)return false;
+  const generation=speechGeneration;
+  if(speechUtterance&&window.speechSynthesis)window.speechSynthesis.cancel();
+  if(recording){recording.onended=null;recording.onerror=null;recording.pause();}
+  finishSpeech(generation);
+  return true;
+}
+
 function finishSpeech(generation){
   if(generation!==speechGeneration)return;
   speechBusy=false;
@@ -123,7 +135,7 @@ function finishSpeech(generation){
   if(speechTimer!==null){clearTimeout(speechTimer);speechTimer=null;}
 }
 
-function playRecording(text,role,holdTimeline){
+function playRecording(text,role,holdTimeline,quiet){
   const path=staticClip(text,role);
   if(!path){
     $('speechStatus').textContent='No pre-generated recording for '+ROLE_NAMES[role]+' in '+selectedPack().name+'. Choose live voices or generate a matching audio pack. This cue is skipped.';
@@ -133,6 +145,7 @@ function playRecording(text,role,holdTimeline){
   const audio=new Audio(path);
   recording=audio;
   audio.playbackRate=Number($('speechRate').value);
+  if(quiet)audio.volume=.55;
   speechBusy=holdTimeline;
   spokenCaption=ROLE_NAMES[role]+': '+text;
   const failed=message=>{
@@ -149,8 +162,8 @@ function playRecording(text,role,holdTimeline){
   return true;
 }
 
-function speakText(text,role,holdTimeline){
-  if(useStaticAudio())return playRecording(text,role,holdTimeline);
+function speakText(text,role,holdTimeline,quiet){
+  if(useStaticAudio())return playRecording(text,role,holdTimeline,quiet);
   const voice=selectedVoice(role);
   if(!voice){
     $('speechStatus').textContent='No local voice selected for '+ROLE_NAMES[role]+'. Choose a voice for this language; the cue is not spoken.';
@@ -160,6 +173,7 @@ function speakText(text,role,holdTimeline){
   const utterance=new SpeechSynthesisUtterance(text);
   utterance.voice=voice;utterance.lang=voice.lang;
   utterance.rate=Number($('speechRate').value);
+  if(quiet){utterance.volume=.45;utterance.pitch=.9;}
   speechBusy=holdTimeline;
   speechUtterance=utterance;
   spokenCaption=ROLE_NAMES[role]+': '+text;
@@ -188,6 +202,14 @@ function speakText(text,role,holdTimeline){
 function interceptSpeech(nextElapsed){
   if(!speechInitialised||!$('speechEnabled').checked)return nextElapsed;
   const now=stepStart[cur3d]+progress3d*STEPS[cur3d].dur;
+  // The timeline was held while the line was spoken, so its caption window is already used up:
+  // continue from the end of that window (at most a few seconds) instead of replaying it in silence.
+  if(speechWindowEnd!==null){
+    let target=Math.min(speechWindowEnd,now+4,TOTAL);
+    speechWindowEnd=null;
+    if(typeof gameTimeLimit==='function')target=Math.min(target,gameTimeLimit(target));
+    if(target>nextElapsed)nextElapsed=target;
+  }
   const pack=selectedPack();
   for(let i=cur3d;i<STEPS.length;i++){
     if(stepStart[i]>nextElapsed)break;
@@ -203,7 +225,7 @@ function interceptSpeech(nextElapsed){
       const text=speechText(event.source,pack);
       if(!text)continue;
       if(!SPEECH_ROLES.includes(event.role))continue;
-      if(speakText(text,event.role,true))return Math.max(now,start);
+      if(speakText(text,event.role,true,QUIET_CUE.test(event.source))){speechWindowEnd=end;return Math.max(now,start);}
     }
   }
   return nextElapsed;
