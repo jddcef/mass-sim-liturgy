@@ -44,12 +44,14 @@ const GAME_ICON_PATHS={
   sacristy:'M4 3h16v18H4z M12 3v18 M10 12h.01 M14 12h.01',
   church:'M12 2v4 M10 4h4 M5 21V11l7-5 7 5v10z M10 21v-5h4v5',
   check:'M5 12l5 5 9-10',
-  none:'M12 4a8 8 0 1 1 0 16a8 8 0 1 1 0-16 M6.5 6.5l11 11'
+  none:'M12 4a8 8 0 1 1 0 16a8 8 0 1 1 0-16 M6.5 6.5l11 11',
+  collection:'M3 10h18l-3 11H6z M7 10V6a5 5 0 0 1 10 0v4 M9 14h6 M12 12v6'
 };
 
 // Ordered: the first matching rule wins, so specific phrases come before general words.
 const GAME_ICON_RULES=[
   [/not needed|leave it|nothing to do/,'none',null],
+  [/collection|money|usher|other offerings/,'collection',{prop:'collection'}],
   [/^do it now/,'check',null],
   [/sign of the cross|blesses|blessing|signs (himself|the)|makes the sign/,'bless',null],
   [/incens.*(crucifix|cross)/,'thurible',{cross:true}],

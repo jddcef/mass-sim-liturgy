@@ -61,9 +61,10 @@
       <button id="previous" aria-label="Previous step" type="button" hidden>Previous</button>
       <button id="play3d" type="button">Play</button>
       <button id="next3d" aria-label="Next step" type="button" hidden>Next</button>
-      <input id="timeline" type="range" min="0" max="10000" value="0" aria-label="Mass timeline" disabled>
+      <input id="timeline" type="range" min="0" max="10000" value="0" aria-label="Skip forward to the next question">
       <output id="time">0:00</output>
       <label class="small">Speed <select id="rate" aria-label="Playback speed"><option value=".5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="3">3x</option><option value="6">6x</option></select></label>
+      <label class="small speedControl">Speed slider <input id="speedSlider" type="range" min=".5" max="6" step=".5" value="1" aria-label="Playback speed slider"><output id="speedValue">1x</output></label>
     </div>
     <div id="stepHeading"><span id="part3d"></span><h2 id="title3d"></h2></div>
   </main>
@@ -97,10 +98,10 @@
       </section>
       <section>
         <h2>Spoken words</h2>
-        <label><input id="speechEnabled" type="checkbox"> Speak during playback</label>
+        <label><input id="speechEnabled" type="checkbox" checked> Speak during playback</label>
         <label class="field">Audio source <select id="audioSource">
-          <option value="static">Pre-generated AI recordings</option>
-          <option value="browser" selected>Live local system voices</option>
+          <option value="static" selected>Pre-generated AI recordings</option>
+          <option value="browser">Live local system voices</option>
         </select></label>
         <label class="field">Language <select id="speechLanguage"></select></label>
         <label class="field">Speech speed <select id="speechRate"><option value=".8">0.8x</option><option value="1" selected>1x</option><option value="1.2">1.2x</option></select></label>
@@ -162,6 +163,11 @@
         <label><input type="checkbox" name="deacon" checked> Deacon</label>
         <label>Altar servers <select name="serverCount"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select></label>
         <label><input type="checkbox" name="lector" checked> Lay lector and psalmist</label>
+        <label>Readers <select name="readerCount"><option value="1" selected>One</option><option value="2">Two (one for each reading)</option></select></label>
+        <label><input type="checkbox" name="lectorProcession"> Lector joins the entrance and exit processions</label>
+        <label><input type="checkbox" name="collection" checked> Collection usher</label>
+        <label><input type="checkbox" name="emhc"> Authorised EMHC assists when needed</label>
+        <label><input type="checkbox" name="reservedCommunion"> Additional reserved hosts needed for Communion</label>
         <label><input type="checkbox" name="incense" checked> Incense</label>
         <label><input type="checkbox" name="bothKinds"> Communion under both kinds</label>
         <label><input type="checkbox" name="gloria" checked> Gloria</label>
@@ -172,13 +178,14 @@
         <label>Introductory rite <select name="introductory"><option value="A">Penitential Act (Confiteor) + Kyrie</option><option value="C">Penitential Act with invocations</option><option value="sprinkling">Blessing and sprinkling of water</option></select></label>
         <label>Music <select name="music"><option value="sung">Sung Mass</option><option value="said">Said Mass</option></select></label>
         <label>Eucharistic Prayer <select name="eucharisticPrayer"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select></label>
-        <label><input type="checkbox" name="bellStart"> Sacristy bell as the procession sets out</label>
+        <label><input type="checkbox" name="bellStart" checked> Sacristy bell as the procession sets out</label>
         <label><input type="checkbox" name="bellEpiclesis" checked> Altar bell before the consecration</label>
         <label><input type="checkbox" name="bellElevation" checked> Altar bell at the elevations</label>
         <label>Crucifix <select name="crucifix"><option value="wall">On the wall behind the altar</option><option value="apse">In a recessed apse behind the altar</option><option value="wallLeft">On the back wall, to the left</option><option value="wallRight">On the back wall, to the right</option><option value="chapelLeft">In a recessed side chapel, left</option><option value="none">None (processional cross serves)</option></select></label>
         <label>Processional cross stand <select name="crossStand"><option value="right">Beside the altar, right</option><option value="left">Beside the altar, left</option><option value="backRight">Back of the sanctuary, right</option><option value="backLeft">Back of the sanctuary, left</option></select></label>
         <label>Crucifix body (corpus) <select id="app_corpus" name="app_corpus"><option value="yes" selected>With corpus</option><option value="no">Bare cross</option></select></label>
-        <label>Sanctuary windows <select id="app_windows" name="app_windows"><option value="grid" selected>Fine leaded grid</option><option value="stained">Stained glass</option><option value="plain">Plain glass</option></select></label>
+        <label>Sanctuary windows <select id="app_windows" name="app_windows"><option value="grid">Fine leaded grid</option><option value="stained" selected>Stained glass</option><option value="plain">Plain glass</option></select></label>
+        <label>Tabernacle <select id="app_tabernacle" name="app_tabernacle"><option value="behind" selected>Behind the altar</option><option value="left">Sanctuary left</option><option value="right">Sanctuary right</option><option value="custom">Keep custom layout position</option></select></label>
         <label>Sanctuary floor <select id="app_floor" name="app_floor"><option value="sandstone" selected>Sandstone</option><option value="terracotta">Terracotta</option><option value="slate">Slate</option><option value="marble">Pale marble</option></select></label>
         <label>Priest and Deacon vestments <select id="app_vestment" name="app_vestment"><option value="season" selected>By season (next Sunday)</option><option value="green">Green</option><option value="purple">Violet</option><option value="white">White</option><option value="red">Red</option><option value="rose">Rose</option><option value="gold">Gold</option></select></label>
         <small id="vestmentNote" class="small"></small>
@@ -192,6 +199,7 @@
         <label><input type="checkbox" name="lapses" checked> Other ministers sometimes forget (Priest, Deacon and M.C. must notice)</label>
         <label>Decisions <select name="detail"><option value="key">Key moments</option><option value="all">Every duty</option></select></label>
         <label><input type="checkbox" name="sound" checked> Bells and thurible sounds</label>
+        <label><input type="checkbox" name="recordedAudio" checked> Play the generated recordings for spoken parts</label>
         <label><input type="checkbox" name="symbols" checked> Symbols beside answers (hover an answer to see where it is)</label>
       </div>
     </fieldset>

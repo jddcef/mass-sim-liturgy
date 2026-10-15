@@ -1,6 +1,6 @@
 const ORIGINAL_STEPS=JSON.parse(JSON.stringify(STEPS));
 const SERVER_ROLES=['X','C1','C2','T','S'];
-const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',Ps:'Psalmist',G1:'Gift-bearer',G2:'Gift-bearer',ppl:'People'};
+const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',ppl:'People'};
 
 function buildScenario(requested){
   const serverCount=requested.serverCount??(requested.servers?5:0);
@@ -20,6 +20,9 @@ function buildScenario(requested){
     eucharisticPrayer:['I','II','III','IV'].includes(requested.eucharisticPrayer)?requested.eucharisticPrayer:'II',
     crucifix:CRUCIFIX_PLACES[requested.crucifix]?requested.crucifix:'wall',
     crossStand:CROSS_STANDS[requested.crossStand]?requested.crossStand:'right',
+    readerCount:requested.readerCount===2?2:1,
+    lectorProcession:requested.lectorProcession??false,
+    collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
     bells:{
       start:!!requested.bells?.start,
       epiclesis:serverCount>0&&(requested.bells?.epiclesis??true),
@@ -27,6 +30,9 @@ function buildScenario(requested){
     }
   });
   const visible=new Set(Object.keys(ACTORS));
+  if(!options.lector||options.readerCount!==2)visible.delete('L2');
+  if(!options.collection)visible.delete('U');
+  if(!options.emhc)visible.delete('E');
   if(!options.deacon)visible.delete('D');
   if(!options.servers)SERVER_ROLES.forEach(a=>visible.delete(a));
   const team=[
@@ -330,6 +336,7 @@ function buildScenario(requested){
   }
 
   applyOptionalElements(steps,options,initialProps,find);
+  applyParishMinistries(steps,options,initialPos,initialProps);
 
   for(const s of steps){
     for(const field of ['mv','acts','orans']){
@@ -356,6 +363,139 @@ function buildScenario(requested){
     return 'Server '+(team.indexOf(role)+1)+': processional candle.';
   });
   return {options,visible,assignments,team};
+}
+
+// Parish options share the original step keys so audio and training references remain stable.
+function applyParishMinistries(steps,options,initialPos,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const route=(from,to,a,b)=>M([[110,from[1]],[110,290],[255,290],[255,222],to],a,b);
+  const homeward=(home,a,b)=>M([[255,222],[255,290],[110,290],[110,home[1]],home],a,b);
+  if(options.lector){
+    if(!options.lectorProcession){
+      initialPos.L=HOME.L.slice();
+      for(const key of [0,1,39,40]){
+        delete at(key).mv?.L;
+        delete at(key).acts?.L;
+      }
+      if(!options.deacon){
+        initialProps.gospels={at:[500,176]};
+        delete at(1).props?.gospels;
+      }
+      at(0).text=at(0).text.replace(/The lector follows\. |The lector carries the Book of the Gospels\. /g,'The readers are already in their pews. ');
+      at(1).text=at(1).text.replace('The lector places the Book of the Gospels on the altar.','The Book of the Gospels is already on the altar.');
+    }
+    at(9).mv.L=route(HOME.L,AMBO,0,.25);
+    at(10).mv.L=homeward(HOME.L,0,.25);
+    at(10).mv.Ps=route(HOME.Ps,AMBO,.15,.42);
+    at(11).mv.Ps=homeward(HOME.Ps,0,.25);
+    at(11).mv.L=route(HOME.L,AMBO,.12,.38);
+    at(12).mv.L=homeward(HOME.L,0,.2);
+    if(!options.secondReading)at(12).mv.Ps=homeward(HOME.Ps,0,.2);
+    if(!options.deacon){
+      at(16).mv.L=route(HOME.L,AMBO,.1,.3);
+      at(17).mv.L=homeward(HOME.L,0,.3);
+    }
+    if(options.lectorProcession)at(1).mv.L=homeward(HOME.L,.45,.9);
+    if(options.readerCount===2){
+      at(11).mv.L2=at(11).mv.L;delete at(11).mv.L;
+      at(11).say=at(11).say.map(([role,...rest])=>[role==='L'?'L2':role,...rest]);
+      at(12).mv.L2=homeward(HOME.L2,0,.2);delete at(12).mv.L;
+      at(11).text+=' A second reader comes from their pew for this reading.';
+    }
+  }
+  // The celebrant can choose either legitimate preaching place during the game.
+  at(14).acts.P=[['preaches the homily',.3,.86]];
+  at(14).homilyPlaces=[CHAIR.slice(),AMBO.slice()];
+  (at(15).mv??={}).P=M([CHAIR],0,.2);
+  if(!options.creed)at(16).mv.P=M([CHAIR],0,.2);
+  const gifts=at(18);
+  if(options.giftsProcession){
+    gifts.acts.P=[['receives the bread and wine, assisted by the ministers',.53,.62]];
+    gifts.props.wine=[{by:'P',t:.58},...(options.deacon?[{by:'D',t:.64}]:[])];
+    gifts.text+=' The Priest receives both bread and wine, assisted by the Deacon or another minister. Other offerings for the Church and the poor are placed away from the altar.';
+  }
+  if(options.collection){
+    initialProps.collection={by:'U'};
+    const collection={key:17.5,part:'Liturgy of the Eucharist',title:'Taking up the Collection',dur:20,posture:'sit',
+      text:'An usher takes up the collection for the Church and the poor. One figure represents the collection team. Money is placed at a suitable place away from the altar.',
+      ref:'GIRM 73, 105c; judgement call on timing',
+      acts:{U:[['begins taking up the collection',0,.12],['collects the offerings from the pews',.12,.85]]},
+      mv:{U:M([[890,700],[890,370],[110,330],[110,700],[890,745]],.12,.92)},
+      props:{collection:[{by:'U',t:0}]},say:[]};
+    steps.splice(steps.indexOf(gifts),0,collection);
+    gifts.mv.U=[M([[890,300],[700,280]],0,.5),M([[890,300],HOME.U],.65,1)];
+    gifts.acts.U=[['presents the collection and sets it beside the sanctuary, not on the altar',.5,.65]];
+    gifts.props.collection=[{at:[710,280],a:.55,b:.6}];
+    (gifts.acts.P??=[]).push(['acknowledges the other offerings for the Church and the poor',.63,.68]);
+  }
+  // The Priest incenses the offerings first; the assisting minister then incenses him before the people.
+  const incense=at(20),minister=options.deacon?'D':'S';
+  if(options.incense){
+    incense.acts[minister]=[['receives the thurible from the Priest',.64,.69],['incenses the Priest',.7,.79],['incenses the people',.86,.95]];
+    incense.mv[minister]=[M([[605,155]],.62,.7),M([[625,262],[500,282]],.79,.86),M([minister==='D'?ALT_D:HOME.S],.96,1)];
+    incense.face??={};
+    incense.face[minister]=[[ALT_P,.7,.79],[[500,500],.86,.95]];
+    const thurifer=options.serverCount<5?'S':'T';
+    incense.props.thurible=[{by:'P',t:.14},{by:minister,t:.69},{by:thurifer,t:.96}];
+    incense.smoke=[[thurifer,0,.14],['P',.14,.69],[minister,.69,.96],[thurifer,.96,1]];
+    incense.posture=[['sit',0],['stand',.82]];
+    incense.text+=' The assisting minister receives the thurible, turns to incense the Priest first, then turns towards the people.';
+  }
+  const peace=at(32);
+  peace.dur=22;
+  peace.special={type:'peace',a:.65,b:1};
+  peace.text+=' A short interval is allowed for neighbours to exchange the sign of peace without leaving their places.';
+  for(const key of [38,39,40])at(key).posture='stand';
+  const communion=at(35),purification=at(36);
+  const ordinary=options.deacon?'D':'P';
+  if(options.reservedCommunion){
+    const fetch={key:34.5,part:'Communion Rite',title:'Fetching Reserved Hosts',dur:12,posture:'kneel',
+      ref:'GIRM 85, 163, 182; local practice',
+      text:'If additional hosts are needed, the Deacon (or Priest) goes to the tabernacle, genuflects, opens it and brings the reserved ciborium. Prefer Communion from hosts consecrated at this Mass. An EMHC does not take the vessel independently.',
+      mv:{[ordinary]:[M([[375,110],[137,110],[137,85]],0,.32),M([[137,110],[375,110],ordinary==='D'?ALT_D:ALT_P],.58,.95)]},
+      acts:{[ordinary]:[['genuflects before opening the tabernacle',.32,.42],['takes the reserved ciborium and closes the tabernacle',.43,.57]]},
+      face:{[ordinary]:[[[137,85],.32,.57]]},
+      props:{ciborium:[{hide:false,t:.43},{by:ordinary,t:.43},{at:[580,170],a:.95,b:1}]},say:[]};
+    steps.splice(steps.indexOf(communion),0,fetch);
+    initialProps.ciborium={at:[137,85],h:true};
+  }else if(options.emhc)initialProps.ciborium={at:[866,152]};
+  if(options.emhc){
+    communion.dur=32;
+    communion.mv.E=[M([[890,402],[890,300],[625,240],[580,210]],.14,.24),M([[625,262],[620,292]],.3,.36),M([[625,262],[580,210]],.9,.98)];
+    communion.acts.E=[['approaches only after the Priest has received Communion',.14,.24],['receives Communion and the ciborium from the Priest',.25,.3],['distributes Holy Communion',.36,.89]];
+    communion.acts.P.push(['gives Communion and the ciborium to the EMHC',.25,.3]);
+    communion.props.ciborium=[{by:'P',t:.24},{by:'E',t:.3},{by:ordinary,t:.98}];
+    communion.say.push(['E','The Body of Christ.',.65,.72]);
+    communion.special.emhc=true;
+    communion.text+=' When assistance is genuinely needed, an authorised EMHC approaches after the Priest has received, receives Communion and the vessel from him, and helps distribute. The EMHC returns the vessel to the ordinary minister afterwards.';
+  }
+  // Show reservation explicitly instead of hiding the remaining hosts at the credence.
+  purification.dur=22;
+  purification.mv[ordinary]=[
+    M([[375,110],[137,110],[137,85]],.04,.23),
+    M([[137,110],[375,110],[838,140]],.4,.57),
+    M([[700,95],ordinary==='D'?DCHAIR:CHAIR],.9,1)
+  ];
+  purification.acts[ordinary]=[
+    ['opens the tabernacle and reposes the remaining hosts',.24,.33],
+    ['closes the tabernacle and genuflects',.34,.4],
+    ['consumes remaining Precious Blood and purifies the vessels',.6,.88]
+  ];
+  purification.face??={};
+  purification.face[ordinary]=[[[137,85],.23,.4]];
+  purification.props.bread=[{by:ordinary,t:.02},{hide:true,t:.33}];
+  purification.props.chalice=[{at:[540,170],a:0,b:.01},{by:ordinary,t:.57},{at:[888,128],a:.88,b:.9}];
+  if(options.emhc||options.reservedCommunion)purification.props.ciborium=[{by:ordinary,t:.02},{hide:true,t:.33}];
+  purification.text='After distribution, the '+(options.deacon?'Deacon':'Priest')+' reposes remaining hosts in the tabernacle, closes it and genuflects. Remaining Precious Blood is consumed, never reserved. The sacred vessels are purified by the Priest, Deacon or instituted acolyte, not a lay EMHC. Sacred silence follows.';
+  purification.ref='GIRM 163-164, 182-183, 192, 279';
+}
+
+function chooseHomilyPlace(point){
+  const homily=STEPS.find(s=>s.key===14);
+  if(!homily)return;
+  const ambo=Math.hypot(point[0]-AMBO[0],point[1]-AMBO[1])<60;
+  homily.mv.P=M([ambo?AMBO:CHAIR],0,.28);
+  rebuildTimeline(starts[0].pos,starts[0].props);
 }
 
 // Optional elements chosen for a particular celebration (used by the game and the 3D setup).

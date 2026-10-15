@@ -122,10 +122,14 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
     torso.position.y=.25;
     root.scale.y=baseScale*.84;
     legs.forEach(leg=>{leg.rotation.x=-1.25;});
-  }else if(posture==='kneel'||/kneels|genuflects/.test(action)){
+  }else if(/genuflects/.test(action)){
     root.scale.y=baseScale*.72;
     torso.rotation.x=.12;
     legs.forEach((leg,i)=>{leg.rotation.x=i===0?.85:-.45;});
+  }else if(posture==='kneel'||/kneels/.test(action)){
+    root.scale.y=baseScale*.72;
+    torso.position.y=.4;
+    legs.forEach(leg=>{leg.rotation.x=.85;});
   }
   if(/bow|kisses/.test(action))torso.rotation.x=action.includes('slightly')?.22:.6;
   if(orans){
@@ -148,7 +152,7 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
   }
 }
 
-let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup;
+let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor;
 function buildCrucifix(){
   crucifixGroup=new THREE.Group();
   box(crucifixGroup,0,0,0,.16,1.8,.12,'#5e432d');
@@ -212,7 +216,7 @@ function setWindowStyle(style){
 function setSanctuaryFloor(name){
   if(sanctuaryFloor)sanctuaryFloor.material=material(FLOOR_COLOURS[name]||FLOOR_COLOURS.sandstone);
 }
-const APPEARANCE_DEFAULTS={corpus:'yes',windows:'grid',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes'};
+const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind'};
 function readAppearance(){
   const a={...APPEARANCE_DEFAULTS};
   for(const key of Object.keys(a))if($('app_'+key))a[key]=$('app_'+key).value;
@@ -226,6 +230,12 @@ function applyAppearance(a){
   setCorpus(a.corpus!=='no');
   setWindowStyle(a.windows);
   setSanctuaryFloor(a.floor);
+  if(a.tabernacle!=='custom'){
+    churchLayout.tabernacle=({behind:[500,40],left:[137,85],right:[863,85]})[a.tabernacle]?.slice()||[500,40];
+    if(a.tabernacle==='behind'&&Math.hypot(churchLayout.chair[0]-500,churchLayout.chair[1]-40)<100)churchLayout.chair=[320,65];
+    refreshFurniture();
+    if(featuresReady)refreshLayoutFields();
+  }
   const day=liturgicalDay(nextSunday(new Date()));
   const colour=a.vestment==='season'?day.hex:(VESTMENT_COLOURS[a.vestment]||VESTMENT_COLOURS.green).hex;
   recolour(figures.P,colour);
@@ -322,14 +332,26 @@ function buildChurch(){
   }
   fixtureStart=scene.children.length;
   const tab=world([137,85]);
-  box(scene,tab.x,tab.y+.9,tab.z,1.1,1.8,.8,'#a89162');
-  box(scene,tab.x,tab.y+1.7,tab.z+.1,.7,.7,.55,'#bd944d');
-  sphere(scene,tab.x,tab.y+2.2,tab.z+.4,.06,'#df4735');
+  box(scene,tab.x,tab.y+.6,tab.z,1.4,1.2,1,'#7f3433');
+  box(scene,tab.x,tab.y+1.23,tab.z,1.7,.14,1.25,'#e5d7bc');
+  box(scene,tab.x,tab.y+1.7,tab.z,.95,.8,.7,'#c59a3f');
+  tabernacleDoor=new THREE.Group();
+  tabernacleDoor.position.set(tab.x-.38,tab.y+1.7,tab.z+.37);
+  box(tabernacleDoor,.38,0,0,.76,.65,.04,'#e3bc62');
+  box(tabernacleDoor,.38,.05,.04,.03,.35,.02,'#fff1ba');
+  box(tabernacleDoor,.38,.12,.04,.22,.03,.02,'#fff1ba');
+  sphere(tabernacleDoor,.66,0,.04,.025,'#7f3433',false);
+  scene.add(tabernacleDoor);
+  for(const side of [-1,1])cylinder(scene,tab.x+side*.48,tab.y+1.7,tab.z+.38,.04,.05,.87,'#e3bc62');
+  cylinder(scene,tab.x,tab.y+2.16,tab.z,.27,.52,.18,'#c59a3f');
+  sphere(scene,tab.x,tab.y+2.31,tab.z,.055,'#fff1ba');
+  sphere(scene,tab.x+.76,tab.y+1.95,tab.z+.15,.09,'#df4735');
+  cylinder(scene,tab.x+.76,tab.y+1.75,tab.z+.15,.025,.025,.3,'#c59a3f');
   collectFurniture('tabernacle',fixtureStart);
   const gifts=world([621,770]);
   box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60');
   box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e');
-  for(const [name,p] of [['Altar',[500,180]],['Ambo',[200,250]],['Chair',[500,55]],['Credence',[866,150]]]){
+  for(const [name,p] of [['Altar',[500,180]],['Ambo',[200,250]],['Chair',[500,55]],['Credence',[866,150]],['Tabernacle',[137,85]]]){
     const sprite=label(name,world(p,1.95));
     sprite.userData.fixture=name.toLowerCase();
     sprite.userData.canonical=p;
@@ -356,6 +378,18 @@ function makeObjects(){
       cylinder(g,0,.01,0,.12,.12,.025,'#caa347');
       cylinder(g,0,.12,0,.025,.025,.22,'#caa347');
       cylinder(g,0,.26,0,.115,.035,.19,'#d4b563');
+    }else if(name==='collection'){
+      cylinder(g,0,.1,0,.2,.16,.2,'#8a6540');
+      const handle=mesh(new THREE.TorusGeometry(.2,.025,6,16,Math.PI),'#8a6540',g,0,.15,0);
+      handle.rotation.z=0;
+      box(g,0,.22,0,.16,.015,.12,'#d4af37',false);
+    }else if(name==='ciborium'){
+      cylinder(g,0,.025,0,.12,.12,.04,'#c59a3f');
+      cylinder(g,0,.13,0,.03,.03,.2,'#c59a3f');
+      cylinder(g,0,.29,0,.18,.08,.18,'#e3bc62');
+      cylinder(g,0,.4,0,.05,.19,.08,'#e3bc62');
+      box(g,0,.49,0,.018,.12,.018,'#c59a3f');
+      box(g,0,.51,0,.07,.018,.018,'#c59a3f');
     }else if(name==='bread'){
       cylinder(g,0,.025,0,.18,.18,.025,'#cfb464');
       const host=cylinder(g,0,.055,0,.105,.105,.025,'#fffdf0');
@@ -372,7 +406,11 @@ function makeObjects(){
       cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c');
       sphere(g,0,-.4,0,.09,'#a9a6a0');
     }else if(name==='corporal'){
-      box(g,0,.006,0,.72,.012,.6,'#ffffff',false);
+      box(g,.5,.006,0,1.5,.012,1.5,'#ffffff',false);
+      for(const z of [-.7,.7])box(g,.5,.014,z,1.4,.004,.018,'#a6a195',false);
+      for(const x of [-.2,1.2])box(g,x,.014,0,.018,.004,1.4,'#a6a195',false);
+      for(const x of [.25,.75])box(g,x,.013,0,.009,.002,1.38,'#dedbd3',false);
+      for(const z of [-.25,.25])box(g,.5,.013,z,1.38,.002,.009,'#dedbd3',false);
     }else{
       box(g,0,.035,0,.38,.07,.5,name==='gospels'?'#c5a34f':'#913b33');
       box(g,0,.075,0,.045,.008,.3,'#f0d085');
@@ -488,11 +526,16 @@ function updateFollow(dt){
   followPosition=target;
 }
 
+function reservedPew(point){
+  return ['L','L2','Ps','U','E'].some(role=>scenario.visible.has(role)&&Math.hypot(point[0]-HOME[role][0],point[1]-HOME[role][1])<25);
+}
+
 function updatePeople(step,phase){
   const posture=postureAt(cur3d,progress3d).name;
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const special=step.special?.type==='communion'?step.special:null;
   congregation.forEach((person,i)=>{
+    person.figure.root.visible=!reservedPew(person.home);
     let p=person.home;
     let walking=false, receiving=false;
     if(special&&i%3===0){
@@ -502,7 +545,7 @@ function updatePeople(step,phase){
       const t=(progress3d-start)/duration;
       if(t>0&&t<1){
         const side=p[0]<500?-1:1;
-        const station=special.bothKinds?(i%2?[530,318]:[470,318]):[500,318];
+        const station=special.emhc&&i%2?[620,318]:special.bothKinds?(i%2?[530,318]:[470,318]):[500,318];
         const aisle=side<0?487:513,outer=side<0?112:888;
         if(t<.43)p=along([p,[aisle,p[1]],[aisle,340],station],t/.43);
         else if(t<.55){p=station;receiving=true;}
@@ -514,8 +557,9 @@ function updatePeople(step,phase){
     person.figure.root.rotation.y=Math.PI;
     pose(person.figure,walking||receiving?'stand':posture,receiving||bow?'bows':'',phase+i,walking);
     if(step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b){
-      person.figure.torso.rotation.y=i%2?.4:-.4;
+      person.figure.root.rotation.y=Math.PI+(i%2?-.7:.7);
       person.figure.arms[1].rotation.x=-1;
+      person.figure.arms[1].rotation.z=(i%2?1:-1)*.35*Math.sin(phase*3);
     }
   });
 }
@@ -537,6 +581,7 @@ function objectHeight(name,state,p){
 
 function renderFrame(dt=1/60){
   const step=STEPS[cur3d];
+  if(tabernacleDoor)tabernacleDoor.rotation.y=(step.key===34.5&&progress3d>=.43&&progress3d<=.57||step.key===36&&progress3d>=.24&&progress3d<=.33)?-1.2:0;
   const elapsed=stepStart[cur3d]+step.dur*progress3d;
   const positions={};
   const actionTexts=[];
@@ -570,9 +615,11 @@ function renderFrame(dt=1/60){
     }
     const orans=(step.orans?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     const atSeat=Math.hypot(p[0]-HOME[role][0],p[1]-HOME[role][1])<15;
-    const seated=postureAt(cur3d,progress3d).name==='sit'&&atSeat&&!walking&&role!=='L'&&role!=='Ps';
-    const kneelingServer=(role==='S'||role==='T')&&step.key>=25&&step.key<=30&&!walking;
-    pose(figure,seated?'sit':kneelingServer?'kneel':'stand',action,elapsed,walking,orans);
+    const posture=postureAt(cur3d,progress3d).name;
+    const layInPew=['L','L2','Ps','U','E'].includes(role)&&p[1]>310&&!walking;
+    const seated=posture==='sit'&&atSeat&&!walking&&!(role==='P'&&step.key===14);
+    const kneelingServer=SERVER_ROLES.includes(role)&&posture==='kneel'&&!walking;
+    pose(figure,layInPew?posture:seated?'sit':kneelingServer?'kneel':'stand',action,elapsed,walking,orans);
     if(action)actionTexts.push(ROLE_NAMES[role]+': '+action);
   }
   updatePeople(step,elapsed);
@@ -669,6 +716,8 @@ function applySetup(){
   setPlaying(false);
   const requested=Object.fromEntries(['deacon','lector','incense','bothKinds'].map(id=>[id,$(id).checked]));
   requested.serverCount=Number($('serverCount').value);
+  if($('readerCount'))requested.readerCount=Number($('readerCount').value);
+  for(const id of ['lectorProcession','collection','emhc','reservedCommunion'])if($(id))requested[id]=$(id).checked;
   for(const id of ['crucifix','crossStand'])if($(id))requested[id]=$(id).value;
   if(typeof gameScenarioOptions==='function')Object.assign(requested,gameScenarioOptions());
   scenario=buildScenario(requested);
@@ -784,7 +833,8 @@ function initialise(){
   setCamera('overview');
   applySetup();
   initialiseFeatures();
-  for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand',...Object.keys(APPEARANCE_DEFAULTS).map(k=>'app_'+k)])if($(id))$(id).onchange=applySetup;
+  applyAppearance(readAppearance());
+  for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion',...Object.keys(APPEARANCE_DEFAULTS).map(k=>'app_'+k)])if($(id))$(id).onchange=applySetup;
   $('camera').onchange=event=>setCamera(event.target.value);
   $('resetCamera').onclick=()=>setCamera(cameraMode);
   $('play3d').onclick=()=>{

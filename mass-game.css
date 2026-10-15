@@ -5,6 +5,9 @@ body.game #layout { height:calc(100dvh - 64px); grid-template-columns:minmax(0,1
 #gameScore { font:600 18px Georgia,serif; color:#ffe2a3; min-width:110px; text-align:right; }
 #gameBadge { font-size:13px; }
 #transport label { display:flex; align-items:center; gap:4px; }
+.speedControl input { width:90px; flex:none; }
+.rolePortrait { display:block; width:96px; height:80px; margin:0 auto 5px; }
+.rolePortrait svg { width:100%; height:100%; }
 #stepHeading { padding:6px 16px 8px; }
 #title3d { font-size:19px; }
 

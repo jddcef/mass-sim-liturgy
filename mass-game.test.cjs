@@ -73,8 +73,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   for(const level of ['guided','choice','timed','expert']){
     for(const duty of key){
       const d=G('buildDecision')(duty,level,7,duties);
-      assert.equal(d.options.filter(o=>o.correct).length,1,role+' '+level+' one correct option: '+duty.text);
-      if(level==='guided')assert.equal(d.options.length,1);
+      assert.equal(d.options.filter(o=>o.correct).length,duty.type==='homily'?2:1,role+' '+level+' correct options: '+duty.text);
+      if(level==='guided')assert.equal(d.options.length,duty.type==='homily'?2:1);
       if(level==='choice'&&duty.type!=='posture')assert.ok(d.options.length>=2,'choices for '+duty.text);
       assert.equal(d.timer>0,level==='timed');
       const right=d.options.find(o=>o.correct);
@@ -173,7 +173,10 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(mcl.length,6);assert.ok(mcl.some(l=>l.kind==='wrong'));
   const cues=G('deriveCues')(mc.scenario.visible,STEPS,'key');
   assert.ok(cues.length>10);
-  const steps=new Set();for(const c of cues){assert.ok(!steps.has(c.step));steps.add(c.step);}
+  const steps=new Set();for(const c of cues){
+    assert.ok(!steps.has(c.step)||c.key===20&&/incenses the Priest/.test(c.text));
+    steps.add(c.step);
+  }
   for(const level of ['guided','choice','timed','expert']){
     const cd=G('cueDecision')(cues[3],level,mc.scenario.visible,1);
     assert.ok(cd.options.some(o=>o.correct));
@@ -192,7 +195,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(cues.filter(c=>c.type==='bell').length>=2);
   assert.ok(cues.some(c=>c.type==='thurible'&&c.swings>=2));
   for(let i=1;i<cues.length;i++)assert.ok(cues[i].time>=cues[i-1].time);
-  setup('P',{incense:false,bells:{epiclesis:false,elevation:false}});
+  setup('P',{incense:false,bells:{start:false,epiclesis:false,elevation:false}});
   cues=G('deriveSoundCues')(STEPS,G('stepStart'));
   assert.equal(cues.length,0);
   setup('P',{gloria:false});
@@ -226,7 +229,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     const tasks=G('postMassTasks')(role,options);
     if(role==='SAC'){assert.equal(tasks.length,0);continue;}
     for(const t of tasks)assert.equal(t.options.filter(o=>o.correct).length,1,role+' '+t.id);
-    if(role!=='PEW')assert.ok(G('checkAnswer')(tasks[0],[1110,150]),'sacristy floor click');
+    if(tasks[0].kind==='place')assert.ok(G('checkAnswer')(tasks[0],[1110,150]),'sacristy floor click');
   }
   const {options}=setup('MC',{});
   const order=G('procOrder')(options,G('serverTeam')(5));
@@ -315,7 +318,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(here.some(d=>d.type==='move'),'moves to the chair');
   assert.ok(here.some(d=>d.type==='act'&&/signs/.test(d.text)),'signs himself');
   assert.ok(here.some(d=>d.type==='say'&&/Father/.test(d.text)),'speaks the words before the Greeting');
-  const actions=key.filter(d=>d.type!=='move'&&d.type!=='posture');
+  const actions=key.filter(d=>d.type!=='move'&&d.type!=='posture'&&!(d.key===20&&/incenses the Priest|incenses the people/.test(d.text)));
   assert.equal(new Set(actions.map(d=>d.step+':'+d.type)).size,actions.length,'one gesture and spoken line at each key moment');
 }
 
@@ -336,6 +339,79 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(run('easterSunday(2025).toDateString()'),'Sun Apr 20 2025');
   assert.equal(run('nextSunday(new Date(2026,9,14)).toDateString()'),'Sun Oct 18 2026');
   assert.equal(run('nextSunday(new Date(2026,9,18)).toDateString()'),'Sun Oct 18 2026');
+}
+// ---- parish ministries and fair decisions ----
+{
+  const {options,scenario}=setup('P',{readerCount:2,emhc:true,reservedCommunion:true,collection:true,lectorProcession:false});
+  assert.ok(scenario.visible.has('L2')&&scenario.visible.has('E')&&scenario.visible.has('U'));
+  same(G('starts')[0].pos.L,G('HOME').L);
+  assert.ok(!STEPS.find(s=>s.key===0).mv.L);
+  const second=STEPS.find(s=>s.key===11);
+  assert.ok(second.say.some(([role])=>role==='L2'));
+  assert.ok(!second.say.some(([role])=>role==='L'));
+  const cues=G('deriveCues')(scenario.visible,STEPS,'key');
+  assert.ok(cues.some(c=>c.key===17.5&&c.correctRoles.includes('U')&&/begins/.test(c.text)));
+  const incensing=STEPS.find(s=>s.key===20);
+  const priest=incensing.acts.D.find(([text])=>text==='incenses the Priest');
+  const people=incensing.acts.D.find(([text])=>text==='incenses the people');
+  assert.ok(priest[2]<people[1]);
+  assert.equal(G('propAt')(STEPS.indexOf(incensing),'thurible',.94).by,'D','minister retains thurible until the people have been incensed');
+  assert.ok(cues.some(c=>c.key===20&&c.text==='incenses the Priest'));
+  const communion=STEPS.find(s=>s.key===35);
+  assert.ok(communion.mv.E[0].a>communion.acts.P.find(([text])=>text==='receives Communion')[2]);
+  assert.ok(communion.acts.E.some(([text])=>/from the Priest/.test(text)));
+  const reserve=STEPS.find(s=>s.key===36);
+  assert.ok(reserve.acts.D.some(([text])=>/reposes/.test(text)));
+  assert.ok(!reserve.acts.E);
+  assert.ok(STEPS.some(s=>s.key===34.5));
+  for(const key of [38,39,40])assert.equal(STEPS.find(s=>s.key===key).posture,'stand');
+  assert.ok(STEPS.find(s=>s.key===32).dur>=20);
+  const duties=G('deriveDuties')('P',STEPS,options);
+  const homily=duties.find(d=>d.type==='homily');
+  for(const level of ['watch','guided','choice','timed','expert']){
+    const d=G('buildDecision')(homily,level,1,duties);
+    for(const target of [G('AMBO'),G('CHAIR')])assert.ok(G('checkAnswer')(d,target));
+    assert.ok(G('checkAnswer')(d,'the ambo'));
+    assert.ok(G('checkAnswer')(d,"the celebrant's chair"));
+  }
+  G('chooseHomilyPlace')(G('AMBO'));
+  const index=STEPS.findIndex(s=>s.key===14);
+  same(G('actorAt')(index,'P',.5),G('AMBO'));
+  G('chooseHomilyPlace')(G('CHAIR'));
+  same(G('actorAt')(index,'P',.5),G('CHAIR'));
+  const nudge=G('nudgeDecision')({id:'test',role:'S',expected:'ring the bell',title:'Elevation'},'expert',scenario.visible);
+  assert.match(nudge.prompt,/ring the bell/);
+  for(const duty of duties.filter(d=>d.type==='move'&&['altarP','altarD','altarFront','altarRight','altarLeft','altar'].includes(d.place))){
+    const d=G('buildDecision')(duty,'choice',1,duties);
+    for(const option of d.options.filter(o=>!o.correct))assert.ok(G('distance')(option.at,duty.to)>100);
+  }
+  for(const role of ['L2','U','E']){
+    const config=setup(role,{deacon:false,lector:false,secondReading:false});
+    assert.ok(config.scenario.visible.has(G('GAME_ROLES')[role].actor));
+    assert.ok(G('deriveDuties')(role,STEPS,config.options).length>0);
+    const tasks=G('preMassTasks')(role,config.options,config.scenario.team,G('HOME')[role]);
+    assert.ok(tasks.some(task=>task.id==='line'&&task.target[1]>310));
+    assert.ok(!G('postMassTasks')(role,config.options).some(task=>task.id==='where'));
+  }
+  for(let mask=0;mask<32;mask++){
+    const config=setup('P',{deacon:!!(mask&1),lectorProcession:!!(mask&2),readerCount:2,
+      emhc:!!(mask&4),reservedCommunion:!!(mask&8),giftsProcession:!!(mask&16),incense:!!(mask&2)});
+    for(let i=0;i<STEPS.length;i++)for(const u of [0,.5,1]){
+      const pos=Object.fromEntries(Object.keys(G('ACTORS')).map(role=>[role,G('actorAt')(i,role,u)]));
+      for(const p of Object.values(pos))assert.ok(p.every(Number.isFinite));
+      for(const name of Object.keys(G('PROP_DEF'))){
+        const state=G('propAt')(i,name,u,pos);
+        assert.ok(G('resolveProp')(state,pos,name).every(Number.isFinite));
+        if(state.by&&!state.h)assert.ok(config.scenario.visible.has(state.by),name+' has a visible holder');
+      }
+    }
+  }
+  assert.equal(G('nextTimerAllowance')(0,true),5);
+  assert.equal(G('nextTimerAllowance')(30,true),30);
+  assert.equal(G('nextTimerAllowance')(10,false),10);
+  const stops=[{time:10,done:true},{time:20},{time:30}];
+  same(G('nextQuestionStop')(stops,12,100),stops[1]);
+  assert.equal(G('nextQuestionStop')(stops,12,5),null);
 }
 // ---- controller regressions: revealed answer and score rollback ----
 {

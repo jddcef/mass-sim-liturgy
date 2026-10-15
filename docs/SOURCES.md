@@ -83,7 +83,8 @@ Game icons in `mass-game-icons.js` are simple line drawings made for this
 project.
 
 Game sounds are synthesised at runtime with the Web Audio API; no recorded
-samples are included.
+effect samples are included. Spoken parts use the local generated MP3 pack
+described above; new reader and EMHC roles reuse matching existing recordings.
 
 The appearance additions were checked through Magisterium AI on 15 October
 2026: [GIRM 119](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/119)
@@ -101,3 +102,18 @@ Gregorian computus; Christmas, Advent, Lent, Easter and selected major Sunday
 feasts are recognised. Regional feast transfers and other calendar
 precedences require the manual override. These limits and all visual choices
 are recorded in `GAME-DECISIONS.md`.
+
+Round 4 was checked on 15 October 2026 against
+[USCCB GIRM chapter IV](https://www.usccb.org/prayer-and-worship/the-mass/general-instruction-of-the-roman-missal/girm-chapter-4)
+(136: homily at chair or ambo; 140: offerings; 144: incensing Priest then
+people) and the Vatican publication linked above (82: peace, 85: hosts
+consecrated at the same Mass preferred, 162-163: EMHC timing and remaining
+Sacrament, 178-183: Deacon's duties). Additional references are GIRM 73,
+105(c), 109, 117, 194-196 and 314-315 for collection, readers, preparation,
+procession and tabernacle placement. Reader seating, a single representative
+usher, movement timings and the selected parish arrangement are illustrative
+choices, not universally prescribed arrangements. See Round 4 of
+`GAME-DECISIONS.md` for the EMHC and reservation limits.
+
+Role portraits are inline SVG artwork created for this project, using its
+object symbols; no external portrait images or models were acquired.

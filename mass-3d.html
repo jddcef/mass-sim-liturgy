@@ -98,6 +98,11 @@
           <option value="4">4</option><option value="5" selected>5</option>
         </select></label>
         <label><input id="lector" type="checkbox" checked> Lay lector / psalmist</label>
+        <label>Readers <select id="readerCount"><option value="1">One</option><option value="2">Two</option></select></label>
+        <label><input id="lectorProcession" type="checkbox"> Lector in processions</label>
+        <label><input id="collection" type="checkbox" checked> Collection usher</label>
+        <label><input id="emhc" type="checkbox"> Authorised EMHC if needed</label>
+        <label><input id="reservedCommunion" type="checkbox"> Additional reserved hosts needed</label>
         <label><input id="incense" type="checkbox" checked> Incense</label>
         <label><input id="bothKinds" type="checkbox"> Communion under both kinds</label>
         <label>Crucifix <select id="crucifix">
@@ -115,7 +120,8 @@
           <option value="backLeft">Back of the sanctuary, left</option>
         </select></label>
         <label>Crucifix body (corpus) <select id="app_corpus" name="app_corpus"><option value="yes" selected>With corpus</option><option value="no">Bare cross</option></select></label>
-        <label>Sanctuary windows <select id="app_windows" name="app_windows"><option value="grid" selected>Fine leaded grid</option><option value="stained">Stained glass</option><option value="plain">Plain glass</option></select></label>
+        <label>Sanctuary windows <select id="app_windows" name="app_windows"><option value="grid">Fine leaded grid</option><option value="stained" selected>Stained glass</option><option value="plain">Plain glass</option></select></label>
+        <label>Tabernacle <select id="app_tabernacle" name="app_tabernacle"><option value="behind" selected>Behind the altar</option><option value="left">Sanctuary left</option><option value="right">Sanctuary right</option><option value="custom">Keep custom layout position</option></select></label>
         <label>Sanctuary floor <select id="app_floor" name="app_floor"><option value="sandstone" selected>Sandstone</option><option value="terracotta">Terracotta</option><option value="slate">Slate</option><option value="marble">Pale marble</option></select></label>
         <label>Priest and Deacon vestments <select id="app_vestment" name="app_vestment"><option value="season" selected>By season (next Sunday)</option><option value="green">Green</option><option value="purple">Violet</option><option value="white">White</option><option value="red">Red</option><option value="rose">Rose</option><option value="gold">Gold</option></select></label>
         <small id="vestmentNote" class="small"></small>
