@@ -124,6 +124,10 @@ vm.runInContext(`
   assert.equal(recording,null);
   assert.equal(speakText('No generated cue','ppl',true),false);
   assert.ok($('speechStatus').textContent.includes('No pre-generated recording'));
+  window.MASS_STATIC_AUDIO.clips[JSON.stringify(['la','L','Verbum Domini.'])]='audio/test-reader.mp3';
+  window.MASS_STATIC_AUDIO.clips[JSON.stringify(['la','P','Corpus Christi.'])]='audio/test-communion.mp3';
+  assert.equal(staticClip('Verbum Domini.','L2'),'audio/test-reader.mp3');
+  assert.equal(staticClip('Corpus Christi.','E'),'audio/test-communion.mp3');
   console.log('Passed layout transforms, 0-5 server training cues, language validation and speech synchronization.');
 `,context);
 assert.ok(canceled>0);

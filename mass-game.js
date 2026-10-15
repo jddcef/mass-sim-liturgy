@@ -9,12 +9,15 @@ const ROLE_BLURBS={
   C1:'Carry a candle in the processions and flank the Gospel.',
   T:'Thurible and boat: incense at the entrance, Gospel, offertory and elevations.',
   L:'Proclaim the readings from the ambo and lead the Psalm.',
+  L2:'Proclaim the Second Reading, then return to your place with the congregation.',
+  U:'Take up the collection when cued and keep other gifts away from the altar.',
+  E:'An authorised extraordinary minister: wait until after the Priest receives Communion, then assist when needed.',
   MC:'Master of Ceremonies: direct the liturgy, cue every minister and catch mistakes.',
   SAC:'Prepare everything before Mass and put it away afterwards.',
   PEW:'Arrive, find a seat and take your part: postures, responses and acclamations.'
 };
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'}};
-const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell']};
+const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
 
 const game={
@@ -183,10 +186,10 @@ function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 // ---------- setup form ----------
 const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores';
 function buildSetupForm(){
-  const roleOrder=['P','D','S','X','C1','T','L','MC','SAC','PEW'];
+  const roleOrder=['P','D','S','X','C1','T','L','L2','U','E','MC','SAC','PEW'];
   $('roleCards').replaceChildren(...roleOrder.map(id=>el('label',{},[
     el('input',{type:'radio',name:'role',value:id,checked:id==='P'}),
-    el('strong',{textContent:GAME_ROLES[id].name}),ROLE_BLURBS[id]])));
+    rolePortrait(id),el('strong',{textContent:GAME_ROLES[id].name}),ROLE_BLURBS[id]])));
   $('levelCards').replaceChildren(...Object.values(GAME_LEVELS).map(level=>el('label',{},[
     el('input',{type:'radio',name:'level',value:level.id,checked:level.id==='choice'}),
     el('strong',{textContent:level.name}),level.blurb])));
@@ -224,7 +227,18 @@ function readForm(){
     crucifix:saved.crucifix,crossStand:saved.crossStand,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
-  return {role:saved.role||'P',level:saved.level||'choice',sound:saved.sound!==false,raw};
+  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion});
+  return {role:saved.role||'P',level:saved.level||'choice',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
+}
+function rolePortrait(role){
+  const badge={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people'}[role];
+  const image=el('span',{className:'rolePortrait',role:'img'});
+  image.setAttribute('aria-label',GAME_ROLES[role].name);
+  const robe=['P','D','S','X','C1','T'].includes(role)?'#f4f1e6':'#7293aa';
+  image.innerHTML='<svg viewBox="0 0 96 80" aria-hidden="true"><circle cx="29" cy="17" r="10" fill="#c99b75"/><path d="M18 30h22l12 44H6z" fill="'+robe+'" stroke="#4d5b62" stroke-width="2"/><path d="M15 34L6 53m37-19 10 19" stroke="#4d5b62" stroke-width="5" stroke-linecap="round"/>'+
+    (role==='D'?'<path d="m17 32 25 37" stroke="#d4af37" stroke-width="5"/>':role==='P'?'<path d="M29 34v33m-9-22h18" stroke="#d4af37" stroke-width="4"/>':'')+
+    '<g transform="translate(57 26) scale(1.5)" fill="none" stroke="#7b5d27" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'+GameIcons.PATHS[badge]+'"/></g></svg>';
+  return image;
 }
 function previewNotes(){
   const config=readForm();
@@ -264,7 +278,7 @@ function resetGameState(){
   }
   congregation.forEach(person=>{person.figure.root.visible=true;});
   Object.assign(game,{phase:'setup',stops:[],active:null,lapse:null,duties:[],soundCues:[],lastElapsed:-1,walkers:{},overrides:{},
-    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[]});
+    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[],timerAllowance:0});
   $('gameLog').replaceChildren();
   $('gameChecklist').hidden=true;
   $('bookModal').hidden=true;
@@ -275,6 +289,10 @@ function startGame(config){
   $('gameSetup').hidden=true;
   $('summaryModal').hidden=true;
   GameAudio.setEnabled(config.sound);
+  game.recordedAudio=config.recordedAudio;
+  $('speechEnabled').checked=config.sound&&config.recordedAudio;
+  $('audioSource').value='static';
+  resetSpeech();
   GameAudio.ensure();
   syncSoundButton();
   resetGameState();
@@ -384,6 +402,7 @@ function optionValue(option){return option.role??option.value??option.label;}
 function ask(decision){
   return new Promise(resolve=>{
     closeDecision();
+    if(game.level==='timed'&&decision.timer)decision.timer+=game.timerAllowance;
     const active={decision,resolve,attempt:1,started:performance.now(),finished:false,gen:game.gen,lastTick:99};
     if(!game.questions){
       // Questions off: the duty is done for the player after a short pause, without scoring.
@@ -475,6 +494,7 @@ function finish(active,result){
   const remaining=d.timer?Math.max(0,1-(performance.now()-active.started)/(d.timer*1000)):0;
   const attempt=result.correct?active.attempt:d.attempts;
   const outcome={...result,attempt,remaining,raw:result.answer,answer:displayAnswer(result.answer)};
+  if(game.level==='timed'&&result.timedOut)game.timerAllowance=nextTimerAllowance(game.timerAllowance,true);
   let points=0;
   if(d.score)points=d.score(result,outcome);
   else if(!d.noScore)points=recordResult(game.board,d,outcome);
@@ -719,7 +739,7 @@ const roleStart=()=>{
   const actor=GAME_ROLES[game.role].actor;
   return actor?starts[0].pos[actor]:game.role==='MC'?MC_START:null;
 };
-function ministersOnStage(){return ['P','D','X','C1','C2','T','S','L'].filter(r=>game.visible.has(r));}
+function ministersOnStage(){return ['P','D','X','C1','C2','T','S',...(game.options.lectorProcession?['L']:[])].filter(r=>game.visible.has(r));}
 
 // ---------- before Mass ----------
 async function runPreMass(gen){
@@ -729,6 +749,9 @@ async function runPreMass(gen){
   if(game.role==='MC'){game.overrides.MC=SACRISTY_SLOTS[8].slice();game.facing.MC=Math.PI;}
   if(game.role==='SAC'){game.overrides.SAC=[1190,205];game.facing.SAC=Math.PI;}
   if(game.role==='PEW'){game.overrides.PEW=OUTSIDE.slice();game.facing.PEW=Math.PI;}
+  for(const role of ['L','L2','U','E'])if(game.visible.has(role)&&!ministers.includes(role)){
+    game.overrides[role]=HOME[role].slice();game.facing[role]=Math.PI;
+  }
   const npcWalk=()=>Promise.all(ministers.filter(r=>r!==GAME_ROLES[game.role].actor).map((r,i)=>wait(i*350).then(()=>walk(r,game.overrides[r],starts[0].pos[r]))));
   if(game.role==='SAC'){
     setPhase('Before Mass: preparing','Set out everything this celebration needs (GIRM 105, 117-118). The ministers are vesting in the sacristy.');
@@ -738,7 +761,7 @@ async function runPreMass(gen){
     toast('Everything is ready. The ministers line up.');
     await Promise.all([npcWalk(),walk('SAC',game.overrides.SAC,seat)]);
   }else{
-    const where=game.role==='PEW'?'You arrive outside the church.':'You are in the sacristy with the other ministers.';
+    const where=game.role==='PEW'?'You arrive outside the church.':['L','L2','U','E'].includes(game.role)&&!ministers.includes(game.role)?'You prepare your ministry and take your place with the congregation.':'You are in the sacristy with the other ministers.';
     setPhase('Before Mass',where);
     const tasks=preMassTasks(game.role,game.options,game.team,roleStart());
     let walking=null;
@@ -779,8 +802,8 @@ async function afterPreTask(task,outcome,gen){
   void gen;
 }
 async function takeSeat(point,gen){
-  let best=0;
-  congregation.forEach((person,i)=>{if(distance(person.home,point)<distance(congregation[best].home,point))best=i;});
+  let best=-1;
+  congregation.forEach((person,i)=>{if(!reservedPew(person.home)&&(best<0||distance(person.home,point)<distance(congregation[best].home,point)))best=i;});
   const person=congregation[best];
   person.figure.root.visible=false;
   game.hidden.add(best);
@@ -914,18 +937,22 @@ function beginMass(){
     PEW:'Follow the Mass: postures, responses and acclamations.'
   };
   setPhase('Holy Mass',notes[game.role]||'Your decisions appear at each of your duties. Watch the other ministers too.');
-  if(game.role==='SAC'){$('rate').value='3';toast('Speed set to 3x: there is little for the sacristan to do during Mass.');}
+  if(game.role==='SAC'){$('rate').value='3';$('rate').dispatchEvent(new Event('change'));toast('Speed set to 3x: there is little for the sacristan to do during Mass.');}
   if(game.role==='MC'||game.role==='SAC')setCamera('action');
   setPlaying(true);
 }
 async function runStop(stop){
   game.busy=true;
   const gen=game.gen;
-  const snapshot={stop,board:JSON.parse(JSON.stringify(game.board)),autoCount:game.autoCount,logLen:$('gameLog').children.length};
+  const snapshot={stop,board:JSON.parse(JSON.stringify(game.board)),autoCount:game.autoCount,timerAllowance:game.timerAllowance,logLen:$('gameLog').children.length};
   if(stop.type==='decision'){
     const d=buildDecision(stop.duty,game.level,game.seed,game.allDuties);
     if(stop.duty.type==='move')d.explain='You go to '+placeFor(stop.duty.to,GAME_ROLES[game.role].actor).name+'.';
-    await ask(d);
+    const outcome=await ask(d);
+    if(gen===game.gen&&stop.duty.type==='homily'){
+      const value=outcome.correct?outcome.raw:CHAIR;
+      chooseHomilyPlace(Array.isArray(value)?value:value==='the ambo'?AMBO:CHAIR);
+    }
   }else if(stop.type==='cue'){
     const d=cueDecision(stop.cue,game.level,game.visible,game.seed);
     d.explain=stop.cue.correctRoles.map(r=>ROLE_NAMES[r]).join(' / ')+': '+stop.cue.text+'.';
@@ -950,6 +977,7 @@ function redoPrevious(){
   game.busy=false;game.lapse=null;
   Object.assign(game.board,entry.board);
   game.autoCount=entry.autoCount;
+  game.timerAllowance=entry.timerAllowance??0;
   const log=$('gameLog');
   while(log.children.length>entry.logLen)log.firstElementChild.remove();
   const index=game.stops.indexOf(entry.stop);
@@ -968,7 +996,7 @@ async function lapseStop(lapse,gen){
   const who=ROLE_NAMES[lapse.role];
   d.explain='Due now for the '+who.toLowerCase()+': '+lapse.expected+'.';
   if(isGuided(game.level))d.options=d.options.filter(o=>o.correct);
-  if(game.level==='timed'||game.level==='expert')d.prompt='The celebration has stalled. Who needs a discreet reminder?';
+  if(game.level==='timed'||game.level==='expert')d.prompt='The celebration has stalled. Who needs a discreet reminder? Due now: '+lapse.expected+'.';
   if(game.level==='expert')d.hint='Click the minister who has missed their duty.';
   d.stage=STEPS[cur3d].part+' / something is wrong';
   const outcome=await ask(d);
@@ -1172,7 +1200,13 @@ function initialiseGame(){
   buildGameScene();
   buildSetupForm();
   $('gameBookButton').onclick=()=>openBook();
-  $('gameSound').onclick=()=>{GameAudio.setEnabled(!GameAudio.enabled);if(GameAudio.enabled)GameAudio.ensure();syncSoundButton();};
+  $('gameSound').onclick=()=>{
+    GameAudio.setEnabled(!GameAudio.enabled);
+    $('speechEnabled').checked=GameAudio.enabled&&game.recordedAudio!==false;
+    if(!GameAudio.enabled)resetSpeech();
+    else GameAudio.ensure();
+    syncSoundButton();
+  };
   $('gameRestart').onclick=showSetup;
   $('gameRedo').onclick=redoPrevious;
   $('gameQuestions').onclick=()=>{
@@ -1187,6 +1221,25 @@ function initialiseGame(){
   $('bookPage').onchange=()=>renderBookPage(Number($('bookPage').value));
   $('summaryAgain').onclick=()=>startGame(readForm());
   $('summaryNew').onclick=showSetup;
+  $('timeline').disabled=false;
+  $('timeline').oninput=()=>{
+    const stop=game.phase==='mass'?nextQuestionStop(game.stops,currentElapsed(),Number($('timeline').value)/10000*TOTAL):null;
+    if(!stop||game.busy){toast('Answer or continue the current question before skipping forward.');return;}
+    let step=0;
+    while(step<STEPS.length-1&&stepStart[step+1]<=stop.time)step++;
+    jump(step,(stop.time-stepStart[step])/STEPS[step].dur);
+    game.lastElapsed=stop.time-1e-6;
+    setPlaying(true);
+    toast('Skipped ahead to your next question; intervening time is not scored.');
+  };
+  const slider=$('speedSlider');
+  slider.oninput=()=>{
+    const rate=$('rate');
+    if(![...rate.options].some(option=>option.value===slider.value))rate.add(el('option',{value:slider.value,textContent:slider.value+'x'}));
+    rate.value=slider.value;
+    $('speedValue').textContent=slider.value+'x';
+  };
+  $('rate').addEventListener('change',()=>{slider.value=$('rate').value;$('speedValue').textContent=$('rate').value+'x';});
   $('play3d').addEventListener('click',event=>{
     if(game.phase!=='mass'){event.stopImmediatePropagation();toast(game.phase==='setup'?'Choose a role first.':'The clock starts when Mass begins.');}
   },true);

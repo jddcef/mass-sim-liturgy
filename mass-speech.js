@@ -34,7 +34,7 @@ const languagePacks=new Map([
   ['en',{version:1,id:'en',name:'English (script excerpts)',lang:'en',texts:null}],
   ['la',{version:1,id:'la',name:'Latin (partial responses)',lang:'la',texts:LATIN_TEXTS}]
 ]);
-const SPEECH_ROLES=['P','D','L','Ps','ppl'];
+const SPEECH_ROLES=['P','D','L','L2','Ps','E','ppl'];
 let speechBusy=false,speechGeneration=0,speechUtterance=null,speechTimer=null;
 let spokenCaption='',localVoices=[];
 const spokenCues=new Set();
@@ -45,7 +45,8 @@ let recording=null;
 function staticClip(text,role){
   const manifest=window.MASS_STATIC_AUDIO;
   if(!manifest||manifest.version!==1)return null;
-  return manifest.clips[JSON.stringify([selectedPack().id,role,text])]||null;
+  const voiceRole=role==='L2'?'L':role==='E'?'P':role;
+  return manifest.clips[JSON.stringify([selectedPack().id,voiceRole,text])]||null;
 }
 
 function useStaticAudio(){

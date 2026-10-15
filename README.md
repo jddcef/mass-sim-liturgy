@@ -182,21 +182,28 @@ in a role. The decisions made while building it are logged for review in
 [`docs/GAME-DECISIONS.md`](docs/GAME-DECISIONS.md).
 
 1. **Choose a role**: Priest, Deacon, Server (book, bell and vessels),
-   Cross-bearer, Candle-bearer, Thurifer, Lector, Master of Ceremonies,
-   Sacristan or a member of the congregation.
+   Cross-bearer, Candle-bearer, Thurifer, first or second Lector, collection
+   Usher, extraordinary minister of Holy Communion (EMHC), Master of
+   Ceremonies, Sacristan or a member of the congregation. Each has an
+   illustrated role card.
 2. **Choose a level**:
    - **Watch**: no questions at all. Every duty is done for you, so you can
      simply follow the Mass from your role. No score is kept.
    - **Guided**: only the right action is shown; click it and you are moved along.
    - **Choice**: pick the right action, words or place from a few options (two tries).
-   - **Timed**: as Choice, with a 12-second countdown and a bonus for quick answers.
+   - **Timed**: as Choice, with action-dependent countdowns and a bonus for quick
+     answers. A timeout adds five seconds to later questions, up to 30 extra
+     seconds for the run.
    - **Expert**: no hints. Click where to go on the church floor, click the
      minister you mean, and find your words in your book (the Priest's Missal,
      the Deacon's Book of the Gospels, the Lectionary or a pew missal).
 3. **Choose the celebration**: incense, deacon, lector, 0-5 servers, Communion
    under both kinds, Gloria, Creed, second reading, Penitential Act form or the
    sprinkling rite, sung or said, Eucharistic Prayer I-IV, Solemn Blessing,
-   gifts procession, bells (start, epiclesis, elevations) and minister lapses.
+   gifts procession, collection, one or two readers, optional lector processions,
+   EMHC assistance, additional reserved hosts, bells (start, epiclesis,
+   elevations) and minister lapses. Sacristy bell and collection are on by
+   default; lector processions, EMHC and additional reserved hosts are off.
    If your role needs something (for example the thurifer needs incense), the
    setup adds it and says so. You can also place the **crucifix** (on the wall
    behind the altar, in a recessed apse, on the back wall to the left or right,
@@ -213,12 +220,15 @@ default to the coming Sunday's season (today when it is Sunday), with a manual
 colour override. The simplified calendar includes Gaudete/Laetare rose,
 which is optional, and some major Sunday feasts; override it for local
 calendars. The main crucifix has a corpus by default. Sanctuary windows can
-be fine leaded grids, stained glass or plain glass; the floor defaults to
-warm sandstone, with terracotta, slate and pale marble alternatives.
+be stained glass (default), fine leaded grids or plain glass; the floor defaults
+to warm sandstone, with terracotta, slate and pale marble alternatives. The
+gold tabernacle defaults to a separate plinth behind the altar; choose left,
+right or a custom position. Applying a layout preserves it as custom.
 
 You begin in the sacristy (ministers, M.C., sacristan) or outside the doors
 (congregation): vest, take what you carry, line up, or take holy water and find
-a pew. During Mass the clock stops at each of your duties. Number keys pick
+a pew. Nonprocessing readers, the usher and EMHC prepare at ordinary pew places.
+During Mass the clock stops at each of your duties. Number keys pick
 options; click markers or the floor to move. Every answer shows the rubric
 reference. After Mass you return to the sacristy (or leave), and a summary lists
 every decision with its reference and your score; best scores are kept in the
@@ -239,6 +249,22 @@ to) an answer shows a pulsing ring in the church on the thing, place or
 minister it refers to. Congregation members and servers vary in height, and
 some of the congregation are children.
 
+Use the **timeline** to move forward to your next unanswered question, once
+the current question is finished; it does not award points or bypass questions.
+Choose animation speed with the selector or adjacent slider. The Priest may
+preach at either the chair or ambo. Reminder questions also name the duty due.
+Readers and Psalmist sit with the people; everyone stands through the final
+blessing and exit procession. The longer sign-of-peace interval shows exchanges
+between neighbours.
+
+The usher collects offerings and the M.C. can cue collection. Bread and wine
+are received at the offertory; other offerings stay off the altar. After the
+Priest incenses the gifts, cross and altar, the Deacon (or server) incenses the
+Priest, then the people. Optional EMHC assistance assumes proper deputation
+and genuine need, starts after the Priest's Communion, and does not include
+purification. Communion from hosts consecrated at this Mass remains preferred;
+additional reserved hosts can be fetched by the Deacon or Priest if selected.
+
 - **Priest / Deacon**: other ministers occasionally miss a duty or do the wrong
   thing; the celebration stalls until you nudge the right person.
 - **Master of Ceremonies**: direct the whole celebration, cueing each minister
@@ -246,9 +272,13 @@ some of the congregation are children.
 - **Sacristan**: set out everything the chosen options need before Mass, refuse
   the trap tasks, then pack away afterwards. Mass runs faster in between.
 
-Sounds (altar bell, sacristy bell, thurible chains, right/wrong cues) are
-synthesised in the browser, so no network is needed; use the sound button to
-mute. Bell customs vary by place, so each bell is optional.
+Existing **generated audio** for spoken parts plays by default. The sound button
+mutes speech and effects; the setup checkbox can disable recordings separately.
+The second reader shares the Lector's recorded voice, and the EMHC shares the
+recorded Communion formula. Missing clips are reported in the speech controls.
+Effects (altar bell, sacristy bell, thurible chains, right/wrong cues) are
+synthesised in the browser. Everything plays offline. Bell customs vary by place,
+so each bell is optional.
 
 ## Repository checks
 

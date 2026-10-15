@@ -118,6 +118,7 @@ function commitLayout(candidate){
   const validated=validateLayout(candidate);
   setPlaying(false);
   churchLayout=validated;
+  if($('app_tabernacle'))$('app_tabernacle').value='custom';
   refreshFurniture();
   refreshLayoutFields();
   renderFrame();

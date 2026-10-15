@@ -62,10 +62,31 @@
       "r": 10,
       "txt": "#fff"
     },
+    "L2": {
+      "name": "Second reader",
+      "fill": "#658bab",
+      "stroke": "#244",
+      "r": 10,
+      "txt": "#fff"
+    },
     "Ps": {
       "name": "Psalmist / cantor",
       "fill": "#7b68a6",
       "stroke": "#334",
+      "r": 10,
+      "txt": "#fff"
+    },
+    "U": {
+      "name": "Collection usher",
+      "fill": "#8a6540",
+      "stroke": "#444",
+      "r": 10,
+      "txt": "#fff"
+    },
+    "E": {
+      "name": "Extraordinary minister of Holy Communion",
+      "fill": "#738d80",
+      "stroke": "#444",
       "r": 10,
       "txt": "#fff"
     },
@@ -119,9 +140,21 @@
       500,
       756
     ],
+    "L2": [
+      365,
+      368
+    ],
     "Ps": [
-      380,
-      322
+      335,
+      368
+    ],
+    "U": [
+      875,
+      745
+    ],
+    "E": [
+      735,
+      402
     ],
     "G1": [
       600,
@@ -183,6 +216,20 @@
     },
     "thurible": {
       "by": "T"
+    },
+    "collection": {
+      "at": [
+        875,
+        745
+      ],
+      "h": true
+    },
+    "ciborium": {
+      "at": [
+        866,
+        152
+      ],
+      "h": true
     }
   },
   "durationSeconds": 463,
