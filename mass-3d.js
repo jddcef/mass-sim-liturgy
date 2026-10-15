@@ -7,6 +7,8 @@ const figures={}, objects={}, congregation=[], smokeParticles=[];
 const sceneLabels=[];
 const materials=new Map();
 const SCALE=.025;
+// Servers are often of different ages; candle-bearers are drawn as younger children.
+const SERVER_HEIGHTS={S:.95,X:1,C1:.84,C2:.86,T:.92};
 const groundAt=p=>{const y=layoutPoint(p)[1];return y<295?.32:y<310?.32*(310-y)/15:0;};
 const world=(p,height=0)=>{
   const mapped=layoutPoint(p);
@@ -131,6 +133,37 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
   }
 }
 
+let crucifixGroup, nicheGroup;
+function buildCrucifix(){
+  crucifixGroup=new THREE.Group();
+  box(crucifixGroup,0,0,0,.16,1.8,.12,'#795b34');
+  box(crucifixGroup,0,.35,.02,1.1,.13,.16,'#795b34');
+  box(crucifixGroup,0,.05,.1,.12,.62,.08,'#e2cfb0');
+  box(crucifixGroup,0,.33,.1,.78,.08,.07,'#e2cfb0');
+  sphere(crucifixGroup,0,.46,.11,.075,'#e2cfb0');
+  crucifixGroup.position.set(0,3.8,-10.49);
+  scene.add(crucifixGroup);
+  nicheGroup=new THREE.Group();
+  box(nicheGroup,0,2.4,0,3.4,4.6,.04,'#8c7c62',false);
+  for(const dx of [-1.85,1.85])box(nicheGroup,dx,2.4,.18,.32,4.8,.36,'#d8ccb4');
+  box(nicheGroup,0,4.9,.18,4.05,.34,.4,'#d8ccb4');
+  box(nicheGroup,0,.08,.18,3.4,.16,.36,'#cbbd9f',false);
+  nicheGroup.position.set(0,0,-10.54);
+  nicheGroup.visible=false;
+  scene.add(nicheGroup);
+}
+// Moves the fixed crucifix (and its recess, if any) to the chosen place; 'none' hides it.
+function placeCrucifix(id){
+  if(!crucifixGroup)return;
+  const place=(typeof CRUCIFIX_PLACES!=='undefined'&&CRUCIFIX_PLACES[id])||{x:0,face:[500,14]};
+  crucifixGroup.visible=!!place.face;
+  nicheGroup.visible=!!(place.face&&place.recess);
+  if(!place.face)return;
+  const x=world(place.face).x;
+  crucifixGroup.position.set(x,place.recess?2.9:3.8,place.recess?-10.44:-10.49);
+  nicheGroup.position.x=x;
+}
+
 function buildChurch(){
   box(scene,0,-.16,0,25,.3,22,'#ded4c0',false);
   box(scene,0,.14,-7.1,22,.34,7.5,'#e5d7bc',false);
@@ -141,8 +174,7 @@ function buildChurch(){
   // Cutaway walls leave the nave open to inspection from every camera.
   box(scene,0,2.6,-10.7,23,5.2,.28,'#c4b69d');
   box(scene,0,4.6,-10.52,5,.2,.1,'#967749');
-  box(scene,0,3.8,-10.49,.16,1.8,.12,'#795b34');
-  box(scene,0,4.15,-10.47,1.1,.13,.16,'#795b34');
+  buildCrucifix();
   for(const side of [-1,1]){
     for(const z of [-8,-3.5,2,7]){
       cylinder(scene,side*11.6,1.8,z,.23,.3,3.6,'#e7ddca');
@@ -441,6 +473,11 @@ function renderFrame(dt=1/60){
       const altar=layoutPoint([500,170]);
       figure.root.rotation.y=Math.atan2(altar[0]-mapped[0],altar[1]-mapped[1]);
     }
+    const facing=!walking&&(step.face?.[role]||[]).find(([,a,b])=>progress3d>=a&&progress3d<=b);
+    if(facing){
+      const target=layoutPoint(facing[0]);
+      figure.root.rotation.y=Math.atan2(target[0]-mapped[0],target[1]-mapped[1]);
+    }
     if(role==='P'&&step.title==='The Gospel'&&scenario.options.deacon){
       const ambo=layoutPoint(AMBO);
       figure.root.rotation.y=Math.atan2(ambo[0]-mapped[0],ambo[1]-mapped[1]);
@@ -546,11 +583,13 @@ function applySetup(){
   setPlaying(false);
   const requested=Object.fromEntries(['deacon','lector','incense','bothKinds'].map(id=>[id,$(id).checked]));
   requested.serverCount=Number($('serverCount').value);
+  for(const id of ['crucifix','crossStand'])if($(id))requested[id]=$(id).value;
   if(typeof gameScenarioOptions==='function')Object.assign(requested,gameScenarioOptions());
   scenario=buildScenario(requested);
   for(const id of ['incense','bothKinds'])$(id).checked=scenario.options[id];
   $('incense').disabled=!scenario.options.servers;
   $('bothKinds').disabled=!scenario.options.deacon;
+  placeCrucifix(scenario.options.crucifix);
   for(const option of $('camera').options){
     if(figures[option.value])option.disabled=!scenario.visible.has(option.value);
   }
@@ -630,14 +669,19 @@ function initialise(){
   buildChurch();
   for(const role of Object.keys(ACTORS)){
     figures[role]=makeFigure(ACTORS[role].fill,role==='P'?'#d2aa86':'#b78866',role);
+    const height=SERVER_HEIGHTS[role];
+    if(height){figures[role].root.scale.set(height,height,height);figures[role].root.userData.baseScale=height;}
   }
   for(let y=356;y<=700;y+=34){
     for(const x of [185,255,325,395,605,675,745,815]){
       const i=congregation.length;
       const colors=['#6d899a','#997656','#767e59','#785961','#c6ac86'];
       const figure=makeFigure(colors[i%colors.length],['#c99970','#8a5538','#deb28c'][i%3],null);
-      figure.root.scale.set(.78,.78,.78);
-      figure.root.userData.baseScale=.78;
+      // Deterministic mix of adults and children so every load looks the same.
+      const child=i%6===3;
+      const height=child?.5+(i*7%9)/100:.72+(i*13%15)/100;
+      figure.root.scale.set(height,height,height);
+      figure.root.userData.baseScale=height;
       congregation.push({home:[x,y],figure});
     }
   }
@@ -653,7 +697,7 @@ function initialise(){
   setCamera('overview');
   applySetup();
   initialiseFeatures();
-  for(const id of ['deacon','serverCount','lector','incense','bothKinds'])$(id).onchange=applySetup;
+  for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand'])if($(id))$(id).onchange=applySetup;
   $('camera').onchange=event=>setCamera(event.target.value);
   $('resetCamera').onclick=()=>setCamera(cameraMode);
   $('play3d').onclick=()=>{

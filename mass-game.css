@@ -94,3 +94,13 @@ button.primary:hover { background:#36614c; }
   #decision { position:relative; left:auto; transform:none; width:auto; margin:8px; bottom:auto; }
   #headerTools a { display:none; }
 }
+
+/* Symbols beside answers, checklist items and the log */
+.iconWrap { display:inline-flex; vertical-align:-4px; margin-right:6px; color:var(--gold); }
+.iconWrap:empty { display:none; }
+.iconWrap svg { width:18px; height:18px; }
+#gameLog .iconWrap svg, #gameChecklist .iconWrap svg, #summaryLog .iconWrap svg { width:15px; height:15px; }
+body.noSymbols .iconWrap { display:none; }
+#gameLog li.auto { color:#5d6b7a; }
+#gameQuestions[aria-pressed="false"] { background:#2f6f7a; color:#fff; border-color:#2f6f7a; }
+#decisionOptions button:hover, #decisionOptions button:focus-visible, #decisionOptions label:hover { outline:2px solid #3fd0e6; outline-offset:1px; }

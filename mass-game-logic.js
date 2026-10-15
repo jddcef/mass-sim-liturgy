@@ -2,11 +2,14 @@
 // Pure game rules for the Holy Mass simulator. No DOM access: tested in Node.
 
 const GAME_LEVELS={
+  watch:{id:'watch',name:'Watch',blurb:'No questions: watch the whole Mass from your role while every duty is done for you. You can switch questions back on at any time.',options:1,timer:0,attempts:1,watch:true},
   guided:{id:'guided',name:'Guided',blurb:'The next duty is highlighted. Click "Do it" and you are moved along.',options:1,timer:0,attempts:1},
   choice:{id:'choice',name:'Choice',blurb:'Pick the right action, words or place from a few options.',options:4,timer:0,attempts:2},
   timed:{id:'timed',name:'Timed',blurb:'As Choice, but each decision has a countdown.',options:4,timer:12,attempts:2},
   expert:{id:'expert',name:'Expert',blurb:'No hints. Click where to go, find the words in your book, choose from every action.',options:0,timer:0,attempts:2}
 };
+// Watch behaves like Guided whenever questions are switched back on.
+const isGuided=level=>level==='guided'||level==='watch';
 
 const GAME_ROLES={
   P:{name:'Priest',actor:'P',sayRole:'P',start:'sacristy',book:'Roman Missal',nudges:true},
@@ -26,7 +29,8 @@ const GAME_DEFAULT_OPTIONS={
   gloria:true,creed:true,secondReading:true,introductory:'A',music:'sung',
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:false,epiclesis:true,elevation:true},
-  lapses:true,detail:'key',seed:1
+  crucifix:'wall',crossStand:'right',
+  lapses:true,detail:'key',symbols:true,seed:1
 };
 
 // Plan coordinates beyond the 1000x830 church: the sacristy annex lies past the right wall.
@@ -111,11 +115,13 @@ function normaliseGameOptions(role,raw={}){
   if(!['A','C','sprinkling'].includes(o.introductory))o.introductory='A';
   if(!['key','all'].includes(o.detail))o.detail='key';
   if(!GAME_LEVELS[o.level])o.level='choice';
+  if(typeof CRUCIFIX_PLACES!=='undefined'&&!CRUCIFIX_PLACES[o.crucifix])o.crucifix='wall';
+  if(typeof CROSS_STANDS!=='undefined'&&!CROSS_STANDS[o.crossStand])o.crossStand='right';
   return {options:o,notes};
 }
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -289,8 +295,8 @@ function buildDecision(duty,level,seed=1,allDuties=[]){
     }else distractors=pickDistractors(duty.answer,pool,want,random,simultaneous).map(label=>({label}));
   }
   const correctOption={label:duty.answer,correct:true,...(duty.type==='move'?{at:duty.to}:{})};
-  decision.options=level==='guided'?[correctOption]:shuffled([correctOption,...distractors.map(d=>({...d,correct:false}))],random);
-  if(duty.type==='posture'&&level!=='guided')decision.options=['stand','sit','kneel'].map(label=>({label,correct:label===duty.answer}));
+  decision.options=isGuided(level)?[correctOption]:shuffled([correctOption,...distractors.map(d=>({...d,correct:false}))],random);
+  if(duty.type==='posture'&&!isGuided(level))decision.options=['stand','sit','kneel'].map(label=>({label,correct:label===duty.answer}));
   return decision;
 }
 
@@ -319,12 +325,12 @@ function scoreDecision({level,correct,attempt=1,remaining=0,timedOut=false}){
   const expert=level==='expert';
   let points=attempt<=1?(expert?SCORE_RULES.expert:SCORE_RULES.first):(expert?SCORE_RULES.expertRetry:SCORE_RULES.retry);
   if(level==='timed'&&attempt<=1)points+=Math.round(SCORE_RULES.timeBonus*Math.max(0,Math.min(1,remaining)));
-  if(level==='guided')points=Math.round(points/4);
+  if(isGuided(level))points=Math.round(points/4);
   return points;
 }
 function maxScore(level){
   const base=level==='expert'?SCORE_RULES.expert:SCORE_RULES.first;
-  return level==='guided'?Math.round(base/4):base+(level==='timed'?SCORE_RULES.timeBonus:0);
+  return isGuided(level)?Math.round(base/4):base+(level==='timed'?SCORE_RULES.timeBonus:0);
 }
 function recordResult(board,decision,result){
   const points=decision.kind==='nudge'
@@ -351,7 +357,7 @@ function gradeBoard(board){
 }
 
 // NPC lapses that a Priest, Deacon or M.C. must notice and correct.
-const LAPSE_COUNTS={guided:2,choice:3,timed:3,expert:4};
+const LAPSE_COUNTS={watch:0,guided:2,choice:3,timed:3,expert:4};
 function lapseCandidates(playerRole,visible,steps=STEPS){
   const roles=['D','S','X','C1','C2','T','L','Ps'].filter(r=>visible.has(r)&&r!==playerRole);
   const result=[];
@@ -365,11 +371,11 @@ function lapseCandidates(playerRole,visible,steps=STEPS){
   return result.sort((a,b)=>a.step-b.step||a.t-b.t);
 }
 function planLapses({playerRole,level='choice',enabled=true,seed=1,visible,steps=STEPS,avoid=[]}){
-  if(!enabled||!GAME_ROLES[playerRole]?.nudges)return [];
+  if(!enabled||GAME_LEVELS[level]?.watch||!GAME_ROLES[playerRole]?.nudges)return [];
   const random=seededRandom('lapse|'+seed);
   const avoidIds=new Set(avoid.map(d=>d.step+':'+d.t.toFixed(3)));
   const pool=lapseCandidates(playerRole,visible,steps).filter(d=>!avoidIds.has(d.step+':'+d.t.toFixed(3)));
-  const count=Math.min(pool.length,(LAPSE_COUNTS[level]||3)+(playerRole==='MC'?2:0));
+  const count=Math.min(pool.length,(LAPSE_COUNTS[level]??3)+(playerRole==='MC'?2:0));
   const chosen=[];
   for(let n=0;n<count;n++){
     const from=Math.floor(n*pool.length/count), to=Math.floor((n+1)*pool.length/count);
@@ -384,7 +390,7 @@ function planLapses({playerRole,level='choice',enabled=true,seed=1,visible,steps
   return chosen;
 }
 function lapseRecoverySeconds(level){
-  return {guided:0,choice:20,timed:12,expert:20}[level]??20;
+  return {watch:0,guided:0,choice:20,timed:12,expert:20}[level]??20;
 }
 function nudgeDecision(lapse,level,visible){
   const correctRoles=lapse.role==='C1'||lapse.role==='C2'?[lapse.role]:[lapse.role];
@@ -423,7 +429,7 @@ function cueDecision(cue,level,visible,seed=1){
   const random=seededRandom('cue|'+seed+'|'+cue.id);
   const ministers=[...visible].filter(r=>!['P','ppl','G1','G2'].includes(r));
   let options=ministers.map(r=>({label:ROLE_NAMES[r]+(r.startsWith('C')?' ('+r+')':''),role:r,correct:cue.correctRoles.includes(r)}));
-  if(level==='guided')options=options.filter(o=>o.correct).slice(0,1);
+  if(isGuided(level))options=options.filter(o=>o.correct).slice(0,1);
   else if(level!=='expert'){
     const right=options.filter(o=>o.correct).slice(0,1);
     options=shuffled([...right,...shuffled(options.filter(o=>!o.correct),random).slice(0,3)],random);
@@ -439,7 +445,7 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
   const items=[
     {id:'altarCloth',name:'White cloth on the altar',place:'altar',needed:true,ref:'GIRM 117, 304'},
     {id:'altarCandles',name:'Candles on or near the altar, lit',place:'altar',needed:true,ref:'GIRM 117, 307'},
-    {id:'altarCross',name:'Cross on or near the altar',place:'altar',needed:!has('X'),ref:'GIRM 117, 308',reason:'Without a cross-bearer the cross stands at the altar.'},
+    {id:'altarCross',name:'Cross set up on its stand near the altar',place:['crossStand','altar'],needed:!has('X'),ref:'GIRM 117, 122, 308',reason:'Without a cross-bearer the cross is already in place beside the altar.'},
     {id:'procCross',name:'Processional cross ready in the sacristy',place:'sacristy',needed:has('X'),ref:'GIRM 120b, 122',reason:'It is carried in the procession and then placed near the altar.'},
     {id:'procCandles',name:'Two processional candles ready, lit',place:'sacristy',needed:has('C1'),ref:'GIRM 117, 120b'},
     {id:'gospels',name:'Book of the Gospels ready for the procession',place:'sacristy',needed:options.deacon||options.lector,ref:'GIRM 117, 120d, 172, 194',reason:'Carried by the Deacon (or by the lector if there is no Deacon).'},
@@ -616,4 +622,28 @@ function procOrder(options,team){
   return order;
 }
 
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,deriveSoundCues,buildBook,preMassTasks,postMassTasks};
+// Points the cross-stand place (and the spot for incensing the cross) at the chosen layout.
+function setCrossPlaces(options={}){
+  const stand=typeof CROSS_STANDS!=='undefined'?(CROSS_STANDS[options.crossStand]||CROSS_STANDS.right).at:[670,126];
+  const crossStand=GAME_PLACES.find(p=>p.id==='crossStand');
+  crossStand.at=[stand[0],stand[1]+16];
+  const index=GAME_PLACES.findIndex(p=>p.id==='beforeCross');
+  if(index>=0)GAME_PLACES.splice(index,1);
+  if(typeof incensedCross==='undefined')return null;
+  const cross=incensedCross({crucifix:options.crucifix||'wall',crossStand:options.crossStand||'right'});
+  // Listed first so that it wins over the nearby washing stand or altar corners.
+  GAME_PLACES.unshift({id:'beforeCross',name:cross.kind==='crucifix'?'in front of the altar, facing the crucifix':'before the processional cross, to incense it',at:cross.stop,r:20});
+  return cross;
+}
+
+// The answer given on the player's behalf when questions are switched off.
+function autoAnswer(decision){
+  if(decision.input==='checklist')return (decision.items||[]).filter(i=>i.needed).map(i=>i.id);
+  if(decision.kind==='pew')return 'auto';
+  if(decision.correctRoles?.length)return decision.correctRoles[0];
+  if((decision.kind==='move'||decision.kind==='place')&&decision.target)return decision.target.slice();
+  const option=[...(decision.options||[]),...(decision.extraOptions||[])].find(o=>o.correct);
+  if(option)return option.role??option.value??option.label;
+  return decision.correct;
+}
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,deriveSoundCues,buildBook,preMassTasks,postMassTasks};

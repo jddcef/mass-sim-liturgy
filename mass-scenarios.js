@@ -18,6 +18,8 @@ function buildScenario(requested){
     solemnBlessing:!!requested.solemnBlessing,
     giftsProcession:requested.giftsProcession??true,
     eucharisticPrayer:['I','II','III','IV'].includes(requested.eucharisticPrayer)?requested.eucharisticPrayer:'II',
+    crucifix:CRUCIFIX_PLACES[requested.crucifix]?requested.crucifix:'wall',
+    crossStand:CROSS_STANDS[requested.crossStand]?requested.crossStand:'right',
     bells:{
       start:!!requested.bells?.start,
       epiclesis:serverCount>0&&(requested.bells?.epiclesis??true),
@@ -60,6 +62,7 @@ function buildScenario(requested){
       describe(s,s.text.replace(/, and the host incensed,/,',').replace('The bell may be rung and incense offered as before.','The bell may be rung as before.'));
     }
   }
+  applyCrossPlacement(steps,options);
 
   if(!options.deacon){
     initialProps.gospels=options.lector?{by:'L'}:{at:[500,176]};
@@ -172,7 +175,7 @@ function buildScenario(requested){
   }
 
   if(!options.servers){
-    initialProps.cross={at:[670,126]};
+    initialProps.cross={at:CROSS_STANDS[options.crossStand].at.slice()};
     initialProps.cand1={at:[388,140]};
     initialProps.cand2={at:[612,140]};
     initialProps.missal={at:[545,82]};
@@ -252,7 +255,7 @@ function buildScenario(requested){
     const carriedCross=team.includes('X');
     const carriedCandles=team.includes('C1');
     const combinedThurifer=serverCount<5&&options.incense;
-    if(!carriedCross)initialProps.cross={at:[670,126]};
+    if(!carriedCross)initialProps.cross={at:CROSS_STANDS[options.crossStand].at.slice()};
     if(!carriedCandles){
       initialProps.cand1={at:[388,140]};
       initialProps.cand2={at:[612,140]};
@@ -475,3 +478,110 @@ function applyOptionalElements(steps,options,initialProps,find){
     byKey(25).text+=' In the Roman Canon (EP I) the corresponding prayer begins "Be pleased, O God…" before the Institution narrative.';
   }
 }
+
+// Where the fixed crucifix hangs and where the processional cross is set up (GIRM 117, 122, 277).
+const CRUCIFIX_PLACES={
+  wall:{name:'On the wall behind the altar',face:[500,14],x:0,nearAltar:true},
+  apse:{name:'In a recessed apse behind the altar',face:[500,10],x:0,recess:true,nearAltar:true},
+  wallLeft:{name:'On the back wall, to the left',face:[260,14],x:-6},
+  wallRight:{name:'On the back wall, to the right',face:[740,14],x:6},
+  chapelLeft:{name:'In a recessed side chapel on the left',face:[260,10],x:-6,recess:true},
+  none:{name:'No fixed crucifix (the processional cross serves)',face:null}
+};
+const CROSS_STANDS={
+  right:{name:'Beside the altar, right',at:[670,126]},
+  left:{name:'Beside the altar, left',at:[330,126]},
+  backRight:{name:'Back of the sanctuary, right',at:[800,95]},
+  backLeft:{name:'Back of the sanctuary, left',at:[250,95]}
+};
+const ALTAR_RING={FL:[375,232],BL:[375,108],BR:[625,108],FR:[625,232]};
+const THURIFER_WAIT={BR:[660,94],FR:[662,246],BL:[340,94]};
+
+// The cross the Priest incenses and the point where he stands to do it.
+function incensedCross(options){
+  const crucifix=CRUCIFIX_PLACES[options.crucifix]||CRUCIFIX_PLACES.wall;
+  const stand=(CROSS_STANDS[options.crossStand]||CROSS_STANDS.right).at;
+  if(crucifix.nearAltar)return {kind:'crucifix',at:crucifix.face,stop:[500,240],offertoryStop:[500,106],name:'the crucifix behind the altar'};
+  const len=Math.hypot(500-stand[0],170-stand[1]);
+  const stop=[Math.round(stand[0]+(500-stand[0])*45/len),Math.round(stand[1]+(170-stand[1])*45/len)];
+  return {kind:'processional',at:stand,stop,offertoryStop:stop,name:'the processional cross'};
+}
+
+// A full circuit of the altar starting at the corner nearest the Priest; never ends at the front-left corner.
+function altarCircuit(stop){
+  const order=['FL','BL','BR','FR'];
+  let start=0;
+  order.forEach((corner,i)=>{
+    const p=ALTAR_RING[corner],q=ALTAR_RING[order[start]];
+    if(Math.hypot(p[0]-stop[0],p[1]-stop[1])<=Math.hypot(q[0]-stop[0],q[1]-stop[1]))start=i;
+  });
+  const names=[0,1,2,3,4].map(i=>order[(start+i)%4]);
+  if(names[names.length-1]==='FL')names.push('BL');
+  return {path:names.map(n=>ALTAR_RING[n].slice()),end:names[names.length-1]};
+}
+
+function applyCrossPlacement(steps,options){
+  const stand=CROSS_STANDS[options.crossStand].at;
+  const foot=[stand[0],stand[1]+16];
+  const same=(p,q)=>p[0]===q[0]&&p[1]===q[1];
+  const remap=p=>same(p,[670,126])?stand.slice():same(p,[670,142])?foot.slice():p;
+  for(const step of steps){
+    for(const value of Object.values(step.mv||{}))for(const seg of [].concat(value))seg.p=seg.p.map(remap);
+    for(const events of Object.values(step.props||{}))for(const e of events)if(e.at)e.at=remap(e.at);
+  }
+  if(options.crossStand!=='right'){
+    // Keep the cross-bearer clear of the altar on the way to and from another stand.
+    const left=stand[0]<500;
+    const reverence=steps.find(s=>s.key===1);
+    reverence.mv.X=[M(left?[[350,240],foot]:[foot],.15,.33),M([[foot[0],92],[700,92],[640,55]],.45,.72)];
+    steps.find(s=>s.key===39).mv.X=M([[700,92],[foot[0],92],foot],.55,.8);
+    if(left)steps.find(s=>s.key===40).mv.X=M([[foot[0],250],[640,265]],0,.22);
+  }
+  const cross=incensedCross(options);
+  const where=CROSS_STANDS[options.crossStand].name.toLowerCase();
+  if(!options.incense)return;
+  const entrance=steps.find(s=>s.key===2);
+  if(entrance){
+    const circuit=altarCircuit(cross.stop);
+    const wait=THURIFER_WAIT[circuit.end];
+    const thuriferRoute={BR:[wait],FR:[[640,128],wait],BL:[[546,94],wait]}[circuit.end];
+    entrance.dur=16;
+    entrance.mv={
+      T:[M([[600,140],[546,130]],0,.06),M(thuriferRoute,.22,.34)],
+      P:[M(cross.kind==='crucifix'?[[625,122],[625,232],cross.stop]:[cross.stop],.2,.3),M(circuit.path,.46,.88)]
+    };
+    entrance.props={thurible:[{by:'P',t:.17},{by:'T',t:.93}]};
+    entrance.acts={
+      P:[['puts incense in the thurible',.06,.14],['takes the thurible from the thurifer',.14,.19],['bows to the cross',.3,.33],['incenses the cross',.33,.42],['bows again to the cross',.42,.45],['incenses the altar, walking around it',.46,.88],['returns the thurible to the thurifer',.89,.95]],
+      T:[['presents the thurible and boat',0,.14],['hands the thurible to the Priest',.14,.19],['receives the thurible back',.89,.95]]
+    };
+    entrance.face={P:[[cross.at,.3,.46]]};
+    entrance.smoke=[['T',0,.17],['P',.17,.93],['T',.93,1]];
+    entrance.cross=cross;
+    entrance.text='If incense is used, the thurifer brings the thurible. The Priest puts in incense and blesses it, saying nothing, then takes the thurible. '+
+      (cross.kind==='crucifix'
+        ?'The crucifix stands behind the altar, so he incenses it from in front of the altar with three double swings, bowing before and after. '
+        :'There is no crucifix on or near the altar here, so the processional cross, set up '+where+', serves as the altar cross: he goes to it, bows, incenses it with three double swings and bows again. ')+
+      'Then he walks around the altar, incensing it with single swings, and returns the thurible to the thurifer.';
+    entrance.ref='GIRM 49, 122–123, 276–277';
+  }
+  const offertory=steps.find(s=>s.key===20);
+  if(offertory){
+    const circuit=altarCircuit(cross.offertoryStop);
+    const path=circuit.path;
+    if(circuit.end==='FR')path.push(ALTAR_RING.BR.slice());
+    path.push(ALT_P.slice());
+    offertory.dur=18;
+    offertory.posture=[['sit',0],['stand',.72]];
+    offertory.mv.P=[M([cross.offertoryStop],.27,.31),M(path,.4,.68)];
+    offertory.mv.D=[M([[470,96]],.7,.73),M([[375,110],[375,262],[500,282]],.75,.84),M([[375,262],[375,122],ALT_D],.93,1)];
+    offertory.props={thurible:[{by:'P',t:.14},{by:'D',t:.7},{by:'T',t:.92}]};
+    offertory.acts={P:[['incenses the offerings',.14,.26],['incenses the cross',.31,.38],['incenses the altar',.4,.68]],D:[['incenses the Priest',.7,.75],['incenses the people',.85,.92]]};
+    offertory.face={P:[[cross.at,.31,.39]]};
+    offertory.smoke=[['T',0,.14],['P',.14,.7],['D',.7,.92],['T',.92,1]];
+    offertory.cross=cross;
+    offertory.text+=cross.kind==='crucifix'?' The Priest turns to the crucifix behind the altar to incense it.':' The Priest incenses the processional cross where it stands ('+where+').';
+  }
+}
+
+if(typeof module!=='undefined')module.exports={...(module.exports||{}),CRUCIFIX_PLACES,CROSS_STANDS,incensedCross,altarCircuit};

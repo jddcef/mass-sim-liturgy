@@ -13,6 +13,7 @@
   <div id="headerTools">
     <output id="gameScore" aria-live="polite">Score 0</output>
     <button id="gameBookButton" type="button" hidden>Open the book</button>
+    <button id="gameQuestions" type="button" aria-pressed="true" title="Turn questions off to just watch: your duties are done for you">Questions on</button>
     <button id="gameSound" type="button" aria-pressed="true">Sound on</button>
     <button id="gameRestart" type="button">New game</button>
     <a href="mass-3d.html">3D explorer</a>
@@ -173,6 +174,8 @@
         <label><input type="checkbox" name="bellStart"> Sacristy bell as the procession sets out</label>
         <label><input type="checkbox" name="bellEpiclesis" checked> Altar bell before the consecration</label>
         <label><input type="checkbox" name="bellElevation" checked> Altar bell at the elevations</label>
+        <label>Crucifix <select name="crucifix"><option value="wall">On the wall behind the altar</option><option value="apse">In a recessed apse behind the altar</option><option value="wallLeft">On the back wall, to the left</option><option value="wallRight">On the back wall, to the right</option><option value="chapelLeft">In a recessed side chapel, left</option><option value="none">None (processional cross serves)</option></select></label>
+        <label>Processional cross stand <select name="crossStand"><option value="right">Beside the altar, right</option><option value="left">Beside the altar, left</option><option value="backRight">Back of the sanctuary, right</option><option value="backLeft">Back of the sanctuary, left</option></select></label>
       </div>
     </fieldset>
     <fieldset><legend>4. Game options</legend>
@@ -180,6 +183,7 @@
         <label><input type="checkbox" name="lapses" checked> Other ministers sometimes forget (Priest, Deacon and M.C. must notice)</label>
         <label>Decisions <select name="detail"><option value="key">Key moments</option><option value="all">Every duty</option></select></label>
         <label><input type="checkbox" name="sound" checked> Bells and thurible sounds</label>
+        <label><input type="checkbox" name="symbols" checked> Symbols beside answers (hover an answer to see where it is)</label>
       </div>
     </fieldset>
     <p id="setupNotes" class="small" role="status"></p>
@@ -216,6 +220,7 @@
 <script src="mass-features.js"></script>
 <script src="audio/audio-manifest.js"></script>
 <script src="mass-speech.js"></script>
+<script src="mass-game-icons.js"></script>
 <script src="mass-game-logic.js"></script>
 <script src="mass-game-audio.js"></script>
 <script src="mass-3d.js"></script>

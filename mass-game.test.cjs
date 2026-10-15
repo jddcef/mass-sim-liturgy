@@ -3,7 +3,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 
 const context=vm.createContext({assert,console});
-for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js']){
+for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game-icons.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),context,{filename:file});
 }
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
@@ -236,5 +236,72 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(G('placeFor')([1100,160]).id,'sacristy');
   const route=G('routeBetween')([300,500],[700,100]);
   assert.ok(route.length>1);
+}
+// ---- watch level, questions off ----
+{
+  const levels=G('GAME_LEVELS');
+  assert.equal(Object.keys(levels)[0],'watch');assert.ok(levels.watch.watch);
+  assert.ok(G('isGuided')('watch'));assert.ok(G('isGuided')('guided'));assert.ok(!G('isGuided')('choice'));
+  const {options,scenario}=setup('P',{lapses:true});
+  same(G('planLapses')({playerRole:'P',level:'watch',seed:4,visible:scenario.visible}),[],'no lapses when watching');
+  const auto=G('autoAnswer'),check=G('checkAnswer');
+  for(const level of ['choice','expert','timed'])for(const role of ['P','S','T','L','D']){
+    const {options:o}=setup(role,{});
+    const duties=G('deriveDuties')(role,STEPS,o);
+    for(const duty of duties){
+      const d=G('buildDecision')(duty,level,7,duties);
+      assert.ok(check(d,auto(d)),'autoAnswer must be correct: '+role+' '+level+' '+d.title);
+    }
+  }
+  const items=G('sacristanSetup')(options,scenario.team||[]);
+  same(auto({input:'checklist',items}),items.filter(i=>i.needed).map(i=>i.id));
+  assert.equal(auto({kind:'nudge',correctRoles:['C1'],options:[]}),'C1');
+}
+
+// ---- crucifix and processional-cross placement ----
+{
+  const CP=G('CRUCIFIX_PLACES'),CS=G('CROSS_STANDS'),inc=G('incensedCross'),circ=G('altarCircuit');
+  for(const crucifix of Object.keys(CP))for(const crossStand of Object.keys(CS)){
+    const c=inc({crucifix,crossStand});
+    assert.equal(c.kind,CP[crucifix].nearAltar?'crucifix':'processional',crucifix);
+    if(c.kind==='processional')same(c.at,CS[crossStand].at);
+    const circuit=circ(c.stop);
+    assert.notEqual(circuit.end,'FL','circuit must not end where it began');
+    assert.ok(circuit.path.length>=4);
+    for(const incense of [true,false])for(const serverCount of [1,3,5]){
+      const {options,scenario}=setup('P',{crucifix,crossStand,incense,serverCount});
+      void scenario;
+      const stand=STEPS.find(s=>s.key===39)?.props?.cross?.find(e=>e.at);
+      if(stand&&serverCount>=2)same(stand.at,CS[crossStand].at,'cross returns to its stand');
+      const step=STEPS.find(s=>s.key===2);
+      if(!options.incense){assert.ok(!step,'no incensing step without incense');continue;}
+      same(step.cross.at,c.at);
+      const holders=step.props.thurible.map(e=>e.by);
+      assert.equal(holders[0],'P');assert.notEqual(holders[1],'P','thurible returned');
+      assert.ok(step.acts.P.some(a=>/incenses the cross/.test(a[0])));
+    }
+  }
+  // GAME_PLACES follows the stand; the incensing spot wins over the washing stand.
+  const cross=G('setCrossPlaces')({crucifix:'none',crossStand:'left'});
+  assert.equal(cross.kind,'processional');
+  assert.equal(G('placeFor')(cross.stop).id,'beforeCross');
+  same(G('GAME_PLACES').find(p=>p.id==='crossStand').at,[330,142]);
+  G('setCrossPlaces')({crucifix:'wall',crossStand:'right'});
+  assert.equal(G('GAME_PLACES').filter(p=>p.id==='beforeCross').length,1);
+  const norm=G('normaliseGameOptions')('P',{crucifix:'bogus',crossStand:'nowhere'}).options;
+  assert.equal(norm.crucifix,'wall');assert.equal(norm.crossStand,'right');
+}
+
+// ---- symbols ----
+{
+  const I=G('GameIcons');
+  assert.equal(I.iconFor('Ring the bell'),'bell');
+  assert.equal(I.iconFor('Cruet of wine'),'cruets');
+  same(I.targetFor('Incense the crucifix'),{cross:true});
+  same(I.targetFor('Chalice with purificator'),{prop:'chalice'});
+  assert.equal(I.iconFor('Thurifer','role'),'person');
+  for(const [,icon] of I.RULES)assert.ok(I.PATHS[icon],'icon '+icon+' has a drawing');
+  assert.match(I.svg('bell'),/^<svg[^>]*>.*<\/svg>$/s);
+  for(const item of G('sacristanSetup')(setup('SAC',{}).options,[]))assert.ok(I.iconFor(item.name),'icon for '+item.name);
 }
 console.log('mass-game tests passed');

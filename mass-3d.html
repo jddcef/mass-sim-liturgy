@@ -100,6 +100,20 @@
         <label><input id="lector" type="checkbox" checked> Lay lector / psalmist</label>
         <label><input id="incense" type="checkbox" checked> Incense</label>
         <label><input id="bothKinds" type="checkbox"> Communion under both kinds</label>
+        <label>Crucifix <select id="crucifix">
+          <option value="wall" selected>On the wall behind the altar</option>
+          <option value="apse">Recessed apse behind the altar</option>
+          <option value="wallLeft">Back wall, left</option>
+          <option value="wallRight">Back wall, right</option>
+          <option value="chapelLeft">Recessed side chapel, left</option>
+          <option value="none">None (processional cross serves)</option>
+        </select></label>
+        <label>Processional cross stand <select id="crossStand">
+          <option value="right" selected>Beside the altar, right</option>
+          <option value="left">Beside the altar, left</option>
+          <option value="backRight">Back of the sanctuary, right</option>
+          <option value="backLeft">Back of the sanctuary, left</option>
+        </select></label>
       </div>
       <p id="scenarioNote" class="small"></p>
       <p id="serverAssignments" class="small"></p>

@@ -17,6 +17,7 @@ jobs:
           node --check mass-features.js
           node --check mass-speech.js
           node --check mass-3d.js
+          node --check mass-game-icons.js
           node --check mass-game-logic.js
           node --check mass-game-audio.js
           node --check mass-game.js

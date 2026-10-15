@@ -185,6 +185,8 @@ in a role. The decisions made while building it are logged for review in
    Cross-bearer, Candle-bearer, Thurifer, Lector, Master of Ceremonies,
    Sacristan or a member of the congregation.
 2. **Choose a level**:
+   - **Watch**: no questions at all. Every duty is done for you, so you can
+     simply follow the Mass from your role. No score is kept.
    - **Guided**: only the right action is shown; click it and you are moved along.
    - **Choice**: pick the right action, words or place from a few options (two tries).
    - **Timed**: as Choice, with a 12-second countdown and a bonus for quick answers.
@@ -196,7 +198,12 @@ in a role. The decisions made while building it are logged for review in
    sprinkling rite, sung or said, Eucharistic Prayer I-IV, Solemn Blessing,
    gifts procession, bells (start, epiclesis, elevations) and minister lapses.
    If your role needs something (for example the thurifer needs incense), the
-   setup adds it and says so.
+   setup adds it and says so. You can also place the **crucifix** (on the wall
+   behind the altar, in a recessed apse, on the back wall to the left or right,
+   in a recessed side chapel, or none) and the **processional cross stand**
+   (either side of the altar, or at the back of the sanctuary). When no crucifix
+   is on or near the altar, the Priest incenses the processional cross where it
+   stands (GIRM 122, 277).
 
 You begin in the sacristy (ministers, M.C., sacristan) or outside the doors
 (congregation): vest, take what you carry, line up, or take holy water and find
@@ -205,6 +212,14 @@ options; click markers or the floor to move. Every answer shows the rubric
 reference. After Mass you return to the sacristy (or leave), and a summary lists
 every decision with its reference and your score; best scores are kept in the
 browser.
+
+The **Questions** button in the header turns questions off at any time (and
+back on): the current and later duties are done for you and are not scored.
+With **Symbols** on (game options), each answer, checklist item and log line
+carries a small icon for the object it is about, and hovering over (or tabbing
+to) an answer shows a pulsing ring in the church on the thing, place or
+minister it refers to. Congregation members and servers vary in height, and
+some of the congregation are children.
 
 - **Priest / Deacon**: other ministers occasionally miss a duty or do the wrong
   thing; the celebration stalls until you nudge the right person.

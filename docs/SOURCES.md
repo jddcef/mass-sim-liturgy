@@ -73,5 +73,14 @@ Ceremonial of Bishops 34-36 (master of ceremonies) could not be retrieved, so
 the M.C. role rests on GIRM 106 and is marked as a judgement call. Each choice
 is listed with its source in `GAME-DECISIONS.md`.
 
+The detailed incensation at the start of Mass and at the offertory (taking
+the thurible, incensing the crucifix from before the altar or the processional
+cross where it stands, then the altar walking around it with single swings)
+follows GIRM 49, 122-123 and 276-277, checked through Magisterium AI
+(https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/277).
+
+Game icons in `mass-game-icons.js` are simple line drawings made for this
+project.
+
 Game sounds are synthesised at runtime with the Web Audio API; no recorded
 samples are included.
