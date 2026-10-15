@@ -201,6 +201,7 @@ function buildSetupForm(){
       else field.value=value;
     }
   }catch{}
+  if(typeof applyAppearance==='function'&&figures.P)applyAppearance(readAppearance());
   form.addEventListener('change',previewNotes);
   form.addEventListener('submit',event=>{event.preventDefault();startGame(readForm());});
   previewNotes();
@@ -263,7 +264,7 @@ function resetGameState(){
   }
   congregation.forEach(person=>{person.figure.root.visible=true;});
   Object.assign(game,{phase:'setup',stops:[],active:null,lapse:null,duties:[],soundCues:[],lastElapsed:-1,walkers:{},overrides:{},
-    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null});
+    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[]});
   $('gameLog').replaceChildren();
   $('gameChecklist').hidden=true;
   $('bookModal').hidden=true;
@@ -483,8 +484,11 @@ function finish(active,result){
   box.className=(box.className.replace(/\b(right|wrong)\b/g,'')+(result.correct?' right':' wrong')).trim();
   for(const button of $('decisionOptions').querySelectorAll('button')){
     const option=d.options?.find(o=>JSON.stringify(optionValue(o))===button.dataset.value);
-    if(option?.correct)button.classList.add('correct');
     button.disabled=true;
+    if(option?.correct){
+      button.classList.add('correct');
+      if(!result.correct){button.disabled=false;button.onclick=()=>done();}
+    }
   }
   $('decisionTimer').hidden=true;
   const message=result.correct
@@ -493,11 +497,11 @@ function finish(active,result){
   $('decisionFeedback').replaceChildren(message.trim()+' ',el('span',{className:'ref',textContent:d.ref?'('+d.ref+')':''}),points?el('strong',{textContent:' '+(points>0?'+':'')+points}):'');
   logResult(d,result.correct,outcome,points);
   if(d.input==='book'&&result.correct)$('bookModal').hidden=true;
-  const done=()=>{
+  function done(){
     if(game.active!==active)return;
     closeDecision();
     active.resolve(outcome);
-  };
+  }
   if(result.correct)active.timer=setTimeout(done,isGuided(game.level)?450:900);
   else{
     $('decisionContinue').hidden=false;
@@ -917,6 +921,7 @@ function beginMass(){
 async function runStop(stop){
   game.busy=true;
   const gen=game.gen;
+  const snapshot={stop,board:JSON.parse(JSON.stringify(game.board)),autoCount:game.autoCount,logLen:$('gameLog').children.length};
   if(stop.type==='decision'){
     const d=buildDecision(stop.duty,game.level,game.seed,game.allDuties);
     if(stop.duty.type==='move')d.explain='You go to '+placeFor(stop.duty.to,GAME_ROLES[game.role].actor).name+'.';
@@ -931,7 +936,31 @@ async function runStop(stop){
   }
   if(gen!==game.gen)return;
   stop.done=true;
+  game.history.push(snapshot);
   game.busy=false;
+}
+// Takes the player back to the previous decision, undoing its score and log entry.
+function redoPrevious(){
+  if(game.phase!=='mass'||!game.history.length){toast('There is no earlier step to redo yet.');return;}
+  const entry=game.history.pop();
+  game.gen++;
+  closeDecision();
+  $('bookModal').hidden=true;
+  setHighlight(null);
+  game.busy=false;game.lapse=null;
+  Object.assign(game.board,entry.board);
+  game.autoCount=entry.autoCount;
+  const log=$('gameLog');
+  while(log.children.length>entry.logLen)log.firstElementChild.remove();
+  const index=game.stops.indexOf(entry.stop);
+  game.stops.forEach((stop,i)=>{if(i>=index)stop.done=false;});
+  let step=0;
+  while(step<STEPS.length-1&&stepStart[step+1]<=entry.stop.time)step++;
+  jump(step,Math.min(1,(entry.stop.time-stepStart[step])/STEPS[step].dur));
+  game.lastElapsed=entry.stop.time-1e-6;
+  setPlaying(true);
+  updateScore();
+  toast('Back one step: '+STEPS[step].title+'.');
 }
 async function lapseStop(lapse,gen){
   game.lapse=lapse;
@@ -1145,6 +1174,7 @@ function initialiseGame(){
   $('gameBookButton').onclick=()=>openBook();
   $('gameSound').onclick=()=>{GameAudio.setEnabled(!GameAudio.enabled);if(GameAudio.enabled)GameAudio.ensure();syncSoundButton();};
   $('gameRestart').onclick=showSetup;
+  $('gameRedo').onclick=redoPrevious;
   $('gameQuestions').onclick=()=>{
     game.questions=!game.questions;
     syncQuestionsButton();

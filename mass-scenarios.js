@@ -584,4 +584,48 @@ function applyCrossPlacement(steps,options){
   }
 }
 
-if(typeof module!=='undefined')module.exports={...(module.exports||{}),CRUCIFIX_PLACES,CROSS_STANDS,incensedCross,altarCircuit};
+// Simplified Sunday calendar; vestment colours follow GIRM 346.
+const VESTMENT_COLOURS={
+  green:{name:'Green',hex:'#2e7d4f'},purple:{name:'Violet',hex:'#6a3d8f'},white:{name:'White',hex:'#f4f1e6'},
+  red:{name:'Red',hex:'#b3262d'},rose:{name:'Rose',hex:'#d88ea2'},gold:{name:'Gold',hex:'#d4af37'}
+};
+function easterSunday(year){
+  const a=year%19,b=Math.floor(year/100),c=year%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3);
+  const h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+  const month=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;
+  return new Date(year,month-1,day);
+}
+// The Sunday on or after the given date.
+function nextSunday(date=new Date()){
+  const day=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  day.setDate(day.getDate()+(7-day.getDay())%7);
+  return day;
+}
+const DAY_MS=864e5;
+const daysBetween=(a,b)=>Math.round((Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/DAY_MS);
+// Season and colour of a Sunday, with the commonly used colour for the day.
+function liturgicalDay(date){
+  const y=date.getFullYear();
+  const easter=easterSunday(y);
+  const since=daysBetween(easter,date);
+  const christmasDay=new Date(y,11,25);
+  const advent1=new Date(y,10,27);advent1.setDate(advent1.getDate()+(7-advent1.getDay())%7);
+  const baptism=new Date(y,0,7);baptism.setDate(baptism.getDate()+(7-baptism.getDay())%7);
+  const info=(season,name,colour)=>({season,name,colour,hex:VESTMENT_COLOURS[colour].hex,colourName:VESTMENT_COLOURS[colour].name});
+  if(date.getMonth()===10&&date.getDate()===1)return info('Ordinary Time','All Saints','white');
+  if(date>=advent1&&date<christmasDay){
+    const week=daysBetween(advent1,date)/7+1;
+    return week===3?info('Advent','Third Sunday of Advent (Gaudete)','rose'):info('Advent','Advent Sunday '+week,'purple');
+  }
+  if(daysBetween(new Date(y,advent1.getMonth(),advent1.getDate()-7),date)===0)return info('Ordinary Time','Our Lord Jesus Christ, King of the Universe','white');
+  if(date>=christmasDay)return info('Christmas','Christmas season','white');
+  if(daysBetween(date,baptism)>=0)return info('Christmas','Christmas season (to the Baptism of the Lord)','white');
+  if(since<-7&&since>=-46)return since===-21?info('Lent','Fourth Sunday of Lent (Laetare)','rose'):info('Lent','Lent','purple');
+  if(since===-7)return info('Lent','Palm Sunday of the Passion of the Lord','red');
+  if(since>=0&&since<49)return info('Easter','Easter season','white');
+  if(since===49)return info('Easter','Pentecost','red');
+  if(since===56)return info('Ordinary Time','The Most Holy Trinity','white');
+  if(since===63)return info('Ordinary Time','The Most Holy Body and Blood of Christ','white');
+  return info('Ordinary Time','Ordinary Time','green');
+}
+if(typeof module!=='undefined')module.exports={...(module.exports||{}),CRUCIFIX_PLACES,CROSS_STANDS,incensedCross,altarCircuit,easterSunday,nextSunday,liturgicalDay,VESTMENT_COLOURS};

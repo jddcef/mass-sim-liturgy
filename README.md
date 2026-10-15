@@ -205,6 +205,17 @@ in a role. The decisions made while building it are logged for review in
    is on or near the altar, the Priest incenses the processional cross where it
    stands (GIRM 122, 277).
 
+Both the game and the 3D explorer have **appearance options**: servers' robe
+and cincture colours (white by default), no cincture if preferred, and an
+optional pectoral cross on the senior/general server. This cross is a local
+custom option, not a universal prescription. Priest and Deacon vestments
+default to the coming Sunday's season (today when it is Sunday), with a manual
+colour override. The simplified calendar includes Gaudete/Laetare rose,
+which is optional, and some major Sunday feasts; override it for local
+calendars. The main crucifix has a corpus by default. Sanctuary windows can
+be fine leaded grids, stained glass or plain glass; the floor defaults to
+warm sandstone, with terracotta, slate and pale marble alternatives.
+
 You begin in the sacristy (ministers, M.C., sacristan) or outside the doors
 (congregation): vest, take what you carry, line up, or take holy water and find
 a pew. During Mass the clock stops at each of your duties. Number keys pick
@@ -212,6 +223,13 @@ options; click markers or the floor to move. Every answer shows the rubric
 reference. After Mass you return to the sacristy (or leave), and a summary lists
 every decision with its reference and your score; best scores are kept in the
 browser.
+
+After two wrong answers, either click the **green correct answer** or press
+**Continue**. During Mass, **Redo previous** returns to the last completed
+decision and rolls back its score and log (and any in-progress answer).
+Repeated clicks go back further. The key-moments setting includes both the
+gesture and the spoken words alongside movements, so walking to the chair
+does not replace the Sign of the Cross before the Greeting.
 
 The **Questions** button in the header turns questions off at any time (and
 back on): the current and later duties are done for you and are not scored.

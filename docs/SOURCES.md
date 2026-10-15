@@ -84,3 +84,20 @@ project.
 
 Game sounds are synthesised at runtime with the Web Audio API; no recorded
 samples are included.
+
+The appearance additions were checked through Magisterium AI on 15 October
+2026: [GIRM 119](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/119)
+and 336 (alb and cincture),
+[GIRM 339](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/339)
+(lay ministers' attire), [GIRM 346](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/346)
+(colours and optional rose), and [GIRM 308](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/308)
+(the altar cross with the figure of Christ crucified). No universal
+prescription for a senior lay server's pectoral cross was found; it is
+presented only as a customisable local-practice option.
+
+The automatic vestment colour is an illustrative Sunday calendar, not a
+complete diocesan or national calendar. Easter is calculated using the
+Gregorian computus; Christmas, Advent, Lent, Easter and selected major Sunday
+feasts are recognised. Regional feast transfers and other calendar
+precedences require the manual override. These limits and all visual choices
+are recorded in `GAME-DECISIONS.md`.

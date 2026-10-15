@@ -88,11 +88,26 @@ function makeFigure(color,skin,role){
     box(leg,0,-.56,.045,.13,.1,.24,'#322c26',Boolean(role));
     root.add(leg);legs.push(leg);
   }
+  let cincture=null,pectoral=null;
+  if(SERVER_ROLES.includes(role)){
+    cincture=new THREE.Group();
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.3,.024,6,18),material('#ffffff'));
+    ring.rotation.x=Math.PI/2;ring.position.set(0,.36,0);
+    cincture.add(ring);
+    for(const dx of [.03,.085])box(cincture,dx,.2,.3,.026,.3,.026,'#ffffff',false);
+    torso.add(cincture);
+    pectoral=new THREE.Group();
+    box(pectoral,0,0,0,.035,.15,.02,'#d7b565',false);
+    box(pectoral,0,.03,0,.1,.032,.02,'#d7b565',false);
+    box(pectoral,0,.12,-.01,.2,.02,.02,'#d7b565',false);
+    pectoral.position.set(0,.6,.275);
+    torso.add(pectoral);
+  }
   const name=role?label(ROLE_NAMES[role],new THREE.Vector3(0,2,0)):null;
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,arms,legs,label:name};
+  return {root,torso,body,arms,legs,label:name,cincture,pectoral};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){
@@ -133,14 +148,25 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
   }
 }
 
-let crucifixGroup, nicheGroup;
+let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup;
 function buildCrucifix(){
   crucifixGroup=new THREE.Group();
-  box(crucifixGroup,0,0,0,.16,1.8,.12,'#795b34');
-  box(crucifixGroup,0,.35,.02,1.1,.13,.16,'#795b34');
-  box(crucifixGroup,0,.05,.1,.12,.62,.08,'#e2cfb0');
-  box(crucifixGroup,0,.33,.1,.78,.08,.07,'#e2cfb0');
-  sphere(crucifixGroup,0,.46,.11,.075,'#e2cfb0');
+  box(crucifixGroup,0,0,0,.16,1.8,.12,'#5e432d');
+  box(crucifixGroup,0,.35,.02,1.1,.13,.16,'#5e432d');
+  box(crucifixGroup,0,.9,.02,.2,.05,.13,'#d7b565',false);
+  // The corpus: head with crown, outstretched arms, torso, loincloth and legs.
+  corpusGroup=new THREE.Group();
+  const ivory='#d9b982';
+  box(corpusGroup,0,.1,.11,.2,.52,.07,ivory);
+  box(corpusGroup,-.27,.34,.11,.42,.07,.06,ivory).rotation.z=.12;
+  box(corpusGroup,.27,.34,.11,.42,.07,.06,ivory).rotation.z=-.12;
+  sphere(corpusGroup,0,.5,.12,.095,ivory);
+  sphere(corpusGroup,0,.55,.115,.085,'#5b4630',false).scale.set(1,.5,1);
+  box(corpusGroup,0,-.2,.12,.26,.2,.09,'#f6f1e4');
+  box(corpusGroup,0,.1,.145,.015,.4,.01,'#a98456',false);
+  box(corpusGroup,-.04,-.5,.11,.08,.5,.06,ivory);
+  box(corpusGroup,.04,-.5,.11,.08,.5,.06,ivory);
+  crucifixGroup.add(corpusGroup);
   crucifixGroup.position.set(0,3.8,-10.49);
   scene.add(crucifixGroup);
   nicheGroup=new THREE.Group();
@@ -151,6 +177,71 @@ function buildCrucifix(){
   nicheGroup.position.set(0,0,-10.54);
   nicheGroup.visible=false;
   scene.add(nicheGroup);
+}
+function setCorpus(on){if(corpusGroup)corpusGroup.visible=on;}
+const WINDOW_GLASS=['#b3262d','#2f5fa8','#e0b43a','#2e7d4f','#6a3d8f','#d9822b'];
+const FLOOR_COLOURS={sandstone:'#c2a27a',terracotta:'#b5694a',slate:'#7a8288',marble:'#e5d7bc'};
+// Back-wall windows: a fine leaded grid, stained glass, or plain glass (never a four-pane cross).
+function setWindowStyle(style){
+  if(windowsGroup){scene.remove(windowsGroup);windowsGroup.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+  windowsGroup=new THREE.Group();
+  const W=1.1,H=2.3;
+  [-8,-4,4,8].forEach((x,n)=>{
+    const win=new THREE.Group();
+    win.position.set(x,3.1,-10.5);
+    if(style==='plain')box(win,0,0,0,W,H,.06,'#9fc3c8',false);
+    else if(style==='stained'){
+      const cols=3,rows=7,pw=W/cols,ph=H/rows;
+      for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+        const colour=r===3&&c===1?'#f4e6a8':WINDOW_GLASS[(r*2+c*3+n)%WINDOW_GLASS.length];
+        box(win,(c-1)*pw,(r-3)*ph,0,pw-.025,ph-.025,.06,colour,false);
+      }
+    }else{
+      const cols=4,rows=9;
+      box(win,0,0,0,W,H,.06,'#8fb4bb',false);
+      for(let c=1;c<cols;c++)box(win,(c/cols-.5)*W,0,.04,.022,H,.03,'#4f4b40',false);
+      for(let r=1;r<rows;r++)box(win,0,(r/rows-.5)*H,.04,W,.022,.03,'#4f4b40',false);
+    }
+    box(win,0,H/2+.03,.04,W+.1,.07,.05,'#caa96e',false);
+    box(win,0,-H/2-.03,.04,W+.1,.07,.05,'#caa96e',false);
+    for(const dx of [-W/2-.03,W/2+.03])box(win,dx,0,.04,.07,H+.14,.05,'#caa96e',false);
+    windowsGroup.add(win);
+  });
+  scene.add(windowsGroup);
+}
+function setSanctuaryFloor(name){
+  if(sanctuaryFloor)sanctuaryFloor.material=material(FLOOR_COLOURS[name]||FLOOR_COLOURS.sandstone);
+}
+const APPEARANCE_DEFAULTS={corpus:'yes',windows:'grid',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes'};
+function readAppearance(){
+  const a={...APPEARANCE_DEFAULTS};
+  for(const key of Object.keys(a))if($('app_'+key))a[key]=$('app_'+key).value;
+  return a;
+}
+function recolour(figure,colour){
+  figure.body.material=material(colour);
+  for(const arm of figure.arms)arm.children[0].material=material(colour);
+}
+function applyAppearance(a){
+  setCorpus(a.corpus!=='no');
+  setWindowStyle(a.windows);
+  setSanctuaryFloor(a.floor);
+  const day=liturgicalDay(nextSunday(new Date()));
+  const colour=a.vestment==='season'?day.hex:(VESTMENT_COLOURS[a.vestment]||VESTMENT_COLOURS.green).hex;
+  recolour(figures.P,colour);
+  recolour(figures.D,colour);
+  const note=$('vestmentNote');
+  if(note){
+    const date=nextSunday(new Date()).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+    note.textContent='Next Sunday ('+date+'): '+day.name+', '+day.colourName.toLowerCase()+'. Simplified Sunday calendar; override for local feasts. Rose is optional.';
+  }
+  for(const role of SERVER_ROLES){
+    const figure=figures[role];
+    recolour(figure,a.serverRobe);
+    figure.cincture.visible=a.cincture!=='none';
+    if(a.cincture!=='none')figure.cincture.children.forEach(part=>{part.material=material(a.cincture);});
+    figure.pectoral.visible=role==='S'&&a.seniorCross!=='no';
+  }
 }
 // Moves the fixed crucifix (and its recess, if any) to the chosen place; 'none' hides it.
 function placeCrucifix(id){
@@ -166,7 +257,7 @@ function placeCrucifix(id){
 
 function buildChurch(){
   box(scene,0,-.16,0,25,.3,22,'#ded4c0',false);
-  box(scene,0,.14,-7.1,22,.34,7.5,'#e5d7bc',false);
+  sanctuaryFloor=box(scene,0,.14,-7.1,22,.34,7.5,'#c2a27a',false);
   box(scene,0,.07,-3.3,21,.16,.22,'#c6b99e',false);
   box(scene,0,.025,3.65,1.18,.04,14.3,'#923f38',false);
   for(let x=-12;x<=12;x+=1.5)box(scene,x,.008,3.5,.012,.014,13,'#cbc1af',false);
@@ -180,11 +271,6 @@ function buildChurch(){
       cylinder(scene,side*11.6,1.8,z,.23,.3,3.6,'#e7ddca');
       box(scene,side*11.6,3.63,z,.8,.18,.8,'#a39172');
       box(scene,side*11.6,.08,z,.7,.16,.7,'#a39172');
-    }
-    for(const x of [side*4,side*8]){
-      box(scene,x,3.1,-10.5,1.1,2.3,.06,'#577f85');
-      box(scene,x,3.1,-10.44,.065,2.3,.07,'#caa96e');
-      box(scene,x,3.1,-10.44,1.1,.065,.07,'#caa96e');
     }
   }
   let fixtureStart=scene.children.length;
@@ -590,6 +676,7 @@ function applySetup(){
   $('incense').disabled=!scenario.options.servers;
   $('bothKinds').disabled=!scenario.options.deacon;
   placeCrucifix(scenario.options.crucifix);
+  if(figures.P)applyAppearance(readAppearance());
   for(const option of $('camera').options){
     if(figures[option.value])option.disabled=!scenario.visible.has(option.value);
   }
@@ -697,7 +784,7 @@ function initialise(){
   setCamera('overview');
   applySetup();
   initialiseFeatures();
-  for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand'])if($(id))$(id).onchange=applySetup;
+  for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand',...Object.keys(APPEARANCE_DEFAULTS).map(k=>'app_'+k)])if($(id))$(id).onchange=applySetup;
   $('camera').onchange=event=>setCamera(event.target.value);
   $('resetCamera').onclick=()=>setCamera(cameraMode);
   $('play3d').onclick=()=>{

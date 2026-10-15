@@ -223,11 +223,13 @@ function deriveDuties(role,steps=STEPS,options={}){
 // Which duties become interactive decisions: key moments only, or every duty.
 function selectDecisionDuties(duties,detail='key'){
   if(detail==='all')return duties.slice();
+  // Keep a gesture and a spoken line as well as the moves at each key moment.
   const seen=new Set();
   return duties.filter(d=>{
-    if(d.type==='move'||d.type==='posture'){seen.add(d.step);return true;}
-    if(seen.has(d.step))return false;
-    seen.add(d.step);return true;
+    if(d.type==='move'||d.type==='posture')return true;
+    const key=d.step+':'+d.type;
+    if(seen.has(key))return false;
+    seen.add(key);return true;
   });
 }
 

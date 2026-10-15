@@ -304,4 +304,97 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.match(I.svg('bell'),/^<svg[^>]*>.*<\/svg>$/s);
   for(const item of G('sacristanSetup')(setup('SAC',{}).options,[]))assert.ok(I.iconFor(item.name),'icon for '+item.name);
 }
+// ---- round 3: the Sign of the Cross is its own decision, not hidden behind the walk to the chair ----
+{
+  const {options}=setup('P',{});
+  const key=G('selectDecisionDuties')(G('deriveDuties')('P',STEPS,options),'key');
+  const index=STEPS.findIndex(s=>s.title==='Sign of the Cross');
+  const greeting=STEPS.findIndex(s=>s.title==='Greeting');
+  assert.ok(index>=0&&index<greeting,'the Sign of the Cross comes before the Greeting');
+  const here=key.filter(d=>d.step===index);
+  assert.ok(here.some(d=>d.type==='move'),'moves to the chair');
+  assert.ok(here.some(d=>d.type==='act'&&/signs/.test(d.text)),'signs himself');
+  assert.ok(here.some(d=>d.type==='say'&&/Father/.test(d.text)),'speaks the words before the Greeting');
+  const actions=key.filter(d=>d.type!=='move'&&d.type!=='posture');
+  assert.equal(new Set(actions.map(d=>d.step+':'+d.type)).size,actions.length,'one gesture and spoken line at each key moment');
+}
+
+// ---- round 3: season colours ----
+{
+  const day=d=>JSON.parse(JSON.stringify(run('liturgicalDay(new Date('+JSON.stringify(d+'T12:00:00')+'))')));
+  assert.equal(day('2025-12-07').colour,'purple');
+  assert.equal(day('2025-12-14').colour,'rose');
+  assert.equal(day('2026-02-22').colour,'purple');
+  assert.equal(day('2026-03-15').colour,'rose');
+  assert.equal(day('2026-03-29').colour,'red');
+  assert.equal(day('2026-04-05').colour,'white');
+  assert.equal(day('2026-05-24').colour,'red');
+  assert.equal(day('2026-08-02').colour,'green');
+  assert.equal(day('2026-01-11').season,'Christmas');
+  assert.equal(day('2026-11-22').colour,'white');
+  assert.equal(run('easterSunday(2026).toDateString()'),'Sun Apr 05 2026');
+  assert.equal(run('easterSunday(2025).toDateString()'),'Sun Apr 20 2025');
+  assert.equal(run('nextSunday(new Date(2026,9,14)).toDateString()'),'Sun Oct 18 2026');
+  assert.equal(run('nextSunday(new Date(2026,9,18)).toDateString()'),'Sun Oct 18 2026');
+}
+// ---- controller regressions: revealed answer and score rollback ----
+{
+  const ui=vm.createContext({
+    assert,console,scene:null,clearTimeout:()=>{},performance:{now:()=>100},
+    document:{body:{classList:{remove:()=>{}}},createElement:()=>({append:()=>{}})},
+    GameAudio:{correct:()=>{},wrong:()=>{}}
+  });
+  for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game.js']){
+    vm.runInContext(fs.readFileSync(file,'utf8'),ui,{filename:file});
+  }
+  vm.runInContext(`
+    const nodes={
+      decision:{className:'',hidden:false},
+      decisionOptions:{buttons:[],querySelectorAll(){return this.buttons;}},
+      decisionTimer:{hidden:false},
+      decisionFeedback:{replaceChildren(){}},
+      decisionContinue:{hidden:true,focus(){}},
+      bookModal:{hidden:false},
+      gameLog:{children:[1,2,3],get firstElementChild(){return {remove:()=>this.children.shift()};}}
+    };
+    const $=id=>nodes[id];
+    updateScore=()=>{};logResult=()=>{};clearMarkers=()=>{};setHighlight=()=>{};toast=()=>{};
+    let jumped,playing,resolved=0;
+    jump=(...args)=>{jumped=args;};setPlaying=value=>{playing=value;};
+    const options=[{label:'correct',correct:true},{label:'wrong'}];
+    nodes.decisionOptions.buttons=options.map(o=>({
+      dataset:{value:JSON.stringify(o.label)},disabled:false,classList:{add(){}}
+    }));
+    const active={finished:false,decision:{options,correct:'correct',attempts:2,noScore:true},
+      started:100,attempt:3,resolve:()=>resolved++};
+    game.active=active;game.level='choice';
+    finish(active,{correct:false,answer:'wrong'});
+    assert.equal(nodes.decisionOptions.buttons[0].disabled,false);
+    assert.equal(nodes.decisionOptions.buttons[1].disabled,true);
+    assert.equal(nodes.decisionContinue.hidden,false);
+    nodes.decisionOptions.buttons[0].onclick();
+    assert.equal(resolved,1);
+    assert.equal(game.active,null);
+    nodes.decisionContinue.onclick();
+    assert.equal(resolved,1,'stale Continue cannot resolve twice');
+
+    const prior={time:2,done:true},later={time:4,done:true};
+    const oldBoard=createScoreboard();
+    game.phase='mass';game.gen=3;game.stops=[prior,later];game.autoCount=4;
+    game.history=[{stop:prior,board:oldBoard,autoCount:1,logLen:1}];
+    game.board.points=200;game.board.log.push({correct:true});
+    game.active={timer:1};game.busy=true;game.lapse={role:'S'};
+    nodes.bookModal.hidden=false;
+    redoPrevious();
+    assert.equal(game.gen,4);
+    assert.equal(game.history.length,0);
+    assert.equal(JSON.stringify(game.board),JSON.stringify(oldBoard));
+    assert.equal(game.autoCount,1);
+    assert.equal(nodes.gameLog.children.length,1);
+    assert.equal(prior.done,false);assert.equal(later.done,false);
+    assert.equal(game.active,null);assert.equal(game.lapse,null);assert.equal(game.busy,false);
+    assert.equal(nodes.bookModal.hidden,true);
+    assert.equal(jumped[0],0);assert.equal(playing,true);
+  `,ui);
+}
 console.log('mass-game tests passed');
