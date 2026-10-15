@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Holy Mass simulator - play a role</title>
+<link rel="stylesheet" href="mass-3d.css">
+<link rel="stylesheet" href="mass-game.css">
+</head>
+<body class="game">
+<header>
+  <div><h1>Holy Mass simulator</h1><span id="gameBadge">Choose a role to begin</span></div>
+  <div id="headerTools">
+    <output id="gameScore" aria-live="polite">Score 0</output>
+    <button id="gameBookButton" type="button" hidden>Open the book</button>
+    <button id="gameSound" type="button" aria-pressed="true">Sound on</button>
+    <button id="gameRestart" type="button">New game</button>
+    <a href="mass-3d.html">3D explorer</a>
+  </div>
+</header>
+<div id="layout">
+  <main>
+    <div id="viewport">
+      <div id="cameraBar" aria-label="Camera views">
+        <label>Watch <select id="camera">
+          <option value="action">Follow the action</option>
+          <option value="overview">Whole church</option>
+          <option value="altar">Altar</option>
+          <option value="ambo">Ambo</option>
+          <option value="chair">Celebrant's chair</option>
+          <option value="nave">From the congregation</option>
+          <option value="overhead">Overhead</option>
+          <option value="P">Follow priest</option>
+          <option value="D">Follow deacon</option>
+          <option value="player">Follow me</option>
+        </select></label>
+        <label><input id="labels" type="checkbox" checked> Labels</label>
+        <button id="resetCamera" type="button">Reset view</button>
+      </div>
+      <div id="sceneStatus">Loading 3D scene...</div>
+      <div id="caption" aria-live="off"></div>
+      <div id="trainingOverlay" hidden></div>
+      <div id="gameToast" role="status" aria-live="polite" hidden></div>
+      <div id="decision" hidden>
+        <div id="decisionHead"><span id="decisionStep"></span><span id="decisionTimer"><span></span></span></div>
+        <p id="decisionPrompt"></p>
+        <p id="decisionHint" class="small"></p>
+        <div id="decisionOptions"></div>
+        <div id="decisionTools">
+          <button id="decisionBook" type="button" hidden>Look in the book</button>
+          <button id="decisionFinish" type="button" hidden>Finished</button>
+          <button id="decisionContinue" type="button" hidden>Continue</button>
+        </div>
+        <p id="decisionFeedback" aria-live="assertive"></p>
+      </div>
+      <div id="hint">Drag to orbit / right-drag to pan / scroll to zoom</div>
+    </div>
+    <div id="transport">
+      <button id="previous" aria-label="Previous step" type="button" hidden>Previous</button>
+      <button id="play3d" type="button">Play</button>
+      <button id="next3d" aria-label="Next step" type="button" hidden>Next</button>
+      <input id="timeline" type="range" min="0" max="10000" value="0" aria-label="Mass timeline" disabled>
+      <output id="time">0:00</output>
+      <label class="small">Speed <select id="rate" aria-label="Playback speed"><option value=".5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="3">3x</option><option value="6">6x</option></select></label>
+    </div>
+    <div id="stepHeading"><span id="part3d"></span><h2 id="title3d"></h2></div>
+  </main>
+  <aside>
+    <section id="gameStatus">
+      <h2 id="gamePhase">Setting up</h2>
+      <p id="gameRoleNote" class="small"></p>
+      <div id="gameNow"></div>
+      <ul id="gameChecklist" hidden></ul>
+    </section>
+    <section>
+      <h2>Rubric <small>(paraphrased)</small></h2>
+      <p id="rubric3d"></p>
+      <p><strong>The faithful:</strong> <span id="posture3d"></span></p>
+      <p id="reference3d" class="small"></p>
+      <p id="actions3d" class="small"></p>
+    </section>
+    <section>
+      <h2>Your record</h2>
+      <ol id="gameLog" reversed></ol>
+    </section>
+    <details id="engineDrawer">
+      <summary>Engine settings (layout, voices, training, order of Mass)</summary>
+      <section>
+        <h2>Server training</h2>
+        <label><input id="trainingEnabled" type="checkbox"> Train with one server</label>
+        <label class="field">Server <select id="trainingServer"></select></label>
+        <p><strong>Now:</strong> <span id="trainingNow"></span></p>
+        <p><strong>Next:</strong> <span id="trainingNext"></span></p>
+        <button id="nextDuty" type="button">Jump to next duty</button>
+      </section>
+      <section>
+        <h2>Spoken words</h2>
+        <label><input id="speechEnabled" type="checkbox"> Speak during playback</label>
+        <label class="field">Audio source <select id="audioSource">
+          <option value="static">Pre-generated AI recordings</option>
+          <option value="browser" selected>Live local system voices</option>
+        </select></label>
+        <label class="field">Language <select id="speechLanguage"></select></label>
+        <label class="field">Speech speed <select id="speechRate"><option value=".8">0.8x</option><option value="1" selected>1x</option><option value="1.2">1.2x</option></select></label>
+        <div id="voiceChoices"></div>
+        <button id="testVoice" type="button">Test priest's voice</button>
+        <button id="testGroup" type="button">Test congregation</button>
+        <button id="exportLanguage" type="button">Export language template</button>
+        <label class="field">Import language JSON <input id="importLanguage" type="file" accept=".json,application/json"></label>
+        <p id="speechStatus" class="small" role="status"></p>
+      </section>
+      <section>
+        <h2>Church layout</h2>
+        <label class="field">Preset <select id="layoutPreset"></select></label>
+        <button id="applyPreset" type="button">Apply preset</button>
+        <label class="field">Furniture <select id="layoutItem"></select></label>
+        <div class="coordinates">
+          <label>X <input id="layoutX" type="number" min="100" max="900" step="1"></label>
+          <label>Depth <input id="layoutY" type="number" min="35" max="260" step="1"></label>
+        </div>
+        <button id="applyLayout" type="button">Apply and save</button>
+        <button id="resetLayout" type="button">Default layout</button>
+        <button id="exportLayout" type="button">Export layout</button>
+        <label class="field">Import layout JSON <input id="importLayout" type="file" accept=".json,application/json"></label>
+        <p id="layoutStatus" class="small" role="status"></p>
+        <p class="small">Change the layout before starting a game; places are recognised wherever the furniture stands.</p>
+      </section>
+      <section hidden>
+        <h2>Celebration setup</h2>
+        <div class="toggles">
+          <label><input id="deacon" type="checkbox" checked> Deacon</label>
+          <label>Altar servers <select id="serverCount">
+            <option value="0">0</option><option value="1">1</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5" selected>5</option>
+          </select></label>
+          <label><input id="lector" type="checkbox" checked> Lay lector / psalmist</label>
+          <label><input id="incense" type="checkbox" checked> Incense</label>
+          <label><input id="bothKinds" type="checkbox"> Communion under both kinds</label>
+        </div>
+        <p id="scenarioNote" class="small"></p>
+        <p id="serverAssignments" class="small"></p>
+      </section>
+      <section><h2>Order of Mass</h2><nav id="stepList" aria-label="Order of Mass"></nav></section>
+    </details>
+    <section class="small">
+      <strong>Illustrative, not a ceremonial authority.</strong> Texts are short paraphrases or incipits, not the complete liturgical text. Customs (bells, postures, procession details) vary by place; follow your parish and your approved Missal. Decisions made for this game are listed in docs/GAME-DECISIONS.md.
+    </section>
+  </aside>
+</div>
+
+<div id="gameSetup" class="modal" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+  <form id="setupForm" class="sheet">
+    <h2 id="setupTitle">Holy Mass simulator</h2>
+    <p class="small">Choose who you are, how hard it should be, and what kind of celebration it is. You can start again at any time.</p>
+    <fieldset><legend>1. Your role</legend><div id="roleCards" class="cards"></div></fieldset>
+    <fieldset><legend>2. Level</legend><div id="levelCards" class="cards levels"></div></fieldset>
+    <fieldset><legend>3. The celebration</legend>
+      <div class="optionGrid">
+        <label><input type="checkbox" name="deacon" checked> Deacon</label>
+        <label>Altar servers <select name="serverCount"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select></label>
+        <label><input type="checkbox" name="lector" checked> Lay lector and psalmist</label>
+        <label><input type="checkbox" name="incense" checked> Incense</label>
+        <label><input type="checkbox" name="bothKinds"> Communion under both kinds</label>
+        <label><input type="checkbox" name="gloria" checked> Gloria</label>
+        <label><input type="checkbox" name="creed" checked> Creed</label>
+        <label><input type="checkbox" name="secondReading" checked> Second Reading</label>
+        <label><input type="checkbox" name="giftsProcession" checked> Procession of the gifts</label>
+        <label><input type="checkbox" name="solemnBlessing"> Solemn Blessing</label>
+        <label>Introductory rite <select name="introductory"><option value="A">Penitential Act (Confiteor) + Kyrie</option><option value="C">Penitential Act with invocations</option><option value="sprinkling">Blessing and sprinkling of water</option></select></label>
+        <label>Music <select name="music"><option value="sung">Sung Mass</option><option value="said">Said Mass</option></select></label>
+        <label>Eucharistic Prayer <select name="eucharisticPrayer"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select></label>
+        <label><input type="checkbox" name="bellStart"> Sacristy bell as the procession sets out</label>
+        <label><input type="checkbox" name="bellEpiclesis" checked> Altar bell before the consecration</label>
+        <label><input type="checkbox" name="bellElevation" checked> Altar bell at the elevations</label>
+      </div>
+    </fieldset>
+    <fieldset><legend>4. Game options</legend>
+      <div class="optionGrid">
+        <label><input type="checkbox" name="lapses" checked> Other ministers sometimes forget (Priest, Deacon and M.C. must notice)</label>
+        <label>Decisions <select name="detail"><option value="key">Key moments</option><option value="all">Every duty</option></select></label>
+        <label><input type="checkbox" name="sound" checked> Bells and thurible sounds</label>
+      </div>
+    </fieldset>
+    <p id="setupNotes" class="small" role="status"></p>
+    <div class="sheetActions"><button id="startGame" type="submit" class="primary">Start</button></div>
+    <div id="highScores" class="small"></div>
+  </form>
+</div>
+
+<div id="bookModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="bookTitle" hidden>
+  <div class="sheet book">
+    <div class="bookHead"><h2 id="bookTitle">Book</h2><button id="bookClose" type="button">Close</button></div>
+    <div class="bookNav"><button id="bookPrev" type="button">◀ Previous page</button><select id="bookPage" aria-label="Page"></select><button id="bookNext" type="button">Next page ▶</button></div>
+    <p id="bookHint" class="small"></p>
+    <div id="bookBody"></div>
+    <p class="small">Abbreviated, paraphrased excerpts for practice: not the approved liturgical text.</p>
+  </div>
+</div>
+
+<div id="summaryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="summaryTitle" hidden>
+  <div class="sheet">
+    <h2 id="summaryTitle">Ite, missa est</h2>
+    <p id="summaryScore"></p>
+    <p id="summaryVerdict"></p>
+    <div id="summaryLog"></div>
+    <div class="sheetActions"><button id="summaryAgain" type="button" class="primary">Play again</button><button id="summaryNew" type="button">Choose another role</button></div>
+  </div>
+</div>
+
+<noscript>This game requires JavaScript and a browser with WebGL support.</noscript>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="mass-rite.js"></script>
+<script src="mass-scenarios.js"></script>
+<script src="mass-features.js"></script>
+<script src="audio/audio-manifest.js"></script>
+<script src="mass-speech.js"></script>
+<script src="mass-game-logic.js"></script>
+<script src="mass-game-audio.js"></script>
+<script src="mass-3d.js"></script>
+<script src="mass-game.js"></script>
+</body>
+</html>

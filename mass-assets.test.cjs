@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const {clipKey,clipFile}=require('./audio-names.cjs');
 process.chdir(__dirname);
 const read=file=>fs.readFileSync(file,'utf8');
-for(const html of ['mass-animation.html','mass-3d.html']){
+for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
   for(const match of read(html).matchAll(/(?:src|href)="([^"]+)"/g)){
     const asset=match[1];
     if(!asset.startsWith('#')&&!/^https?:/.test(asset)){

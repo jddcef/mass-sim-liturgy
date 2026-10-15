@@ -67,3 +67,8 @@ camera targets, live speech and cancellation.
 This does **not** constitute independent verification of every Missal paragraph,
 approval of the translations, human listening review of every generated clip,
 or collision-free validation of every editable arrangement.
+
+## Holy Mass simulator game (15 October 2026)
+
+The user asked for a playable simulator built on this explorer, with decisions recorded for later review. See [GAME-DECISIONS.md](GAME-DECISIONS.md) for every choice, the alternatives and the source.
+

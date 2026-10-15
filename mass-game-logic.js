@@ -1,0 +1,619 @@
+'use strict';
+// Pure game rules for the Holy Mass simulator. No DOM access: tested in Node.
+
+const GAME_LEVELS={
+  guided:{id:'guided',name:'Guided',blurb:'The next duty is highlighted. Click "Do it" and you are moved along.',options:1,timer:0,attempts:1},
+  choice:{id:'choice',name:'Choice',blurb:'Pick the right action, words or place from a few options.',options:4,timer:0,attempts:2},
+  timed:{id:'timed',name:'Timed',blurb:'As Choice, but each decision has a countdown.',options:4,timer:12,attempts:2},
+  expert:{id:'expert',name:'Expert',blurb:'No hints. Click where to go, find the words in your book, choose from every action.',options:0,timer:0,attempts:2}
+};
+
+const GAME_ROLES={
+  P:{name:'Priest',actor:'P',sayRole:'P',start:'sacristy',book:'Roman Missal',nudges:true},
+  D:{name:'Deacon',actor:'D',sayRole:'D',start:'sacristy',book:'Book of the Gospels',nudges:true},
+  S:{name:'Server (book, bell and vessels)',actor:'S',start:'sacristy'},
+  X:{name:'Cross-bearer',actor:'X',start:'sacristy'},
+  C1:{name:'Candle-bearer',actor:'C1',start:'sacristy'},
+  T:{name:'Thurifer',actor:'T',start:'sacristy'},
+  L:{name:'Lector',actor:'L',sayRole:'L',start:'sacristy',book:'Lectionary'},
+  MC:{name:'Master of Ceremonies',actor:null,start:'sacristy',director:true,nudges:true},
+  SAC:{name:'Sacristan',actor:null,start:'sacristy'},
+  PEW:{name:'Member of the congregation',actor:null,sayRole:'ppl',start:'outside',book:'Pew missal'}
+};
+
+const GAME_DEFAULT_OPTIONS={
+  deacon:true,lector:true,serverCount:5,incense:true,bothKinds:false,
+  gloria:true,creed:true,secondReading:true,introductory:'A',music:'sung',
+  solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
+  bells:{start:false,epiclesis:true,elevation:true},
+  lapses:true,detail:'key',seed:1
+};
+
+// Plan coordinates beyond the 1000x830 church: the sacristy annex lies past the right wall.
+const SACRISTY=[1110,150];
+const OUTSIDE=[500,960];
+const MC_HOME=[578,46];
+const MC_START=[535,795];
+const SACRISTAN_SEAT=[905,745];
+const PEW_ZONE=[[150,350,450,715],[550,350,850,715]];
+
+const GAME_PLACES=[
+  {id:'sacristy',name:'the sacristy',at:SACRISTY,r:115},
+  {id:'outside',name:'outside the church doors',at:OUTSIDE,r:60},
+  {id:'stoup',name:'the holy-water stoup by the door',at:[440,866],r:28},
+  {id:'giftTable',name:'the gift table at the back',at:[621,770],r:35},
+  {id:'procession',name:'the back of the church (procession line)',at:[500,770],r:55},
+  {id:'chair',name:"the celebrant's chair",at:[500,58],r:22},
+  {id:'deaconChair',name:"the Deacon's seat",at:[450,62],r:18},
+  {id:'bookStand',name:'beside the chair, holding the Missal',at:[542,82],r:16},
+  {id:'serverBench',name:"the servers' bench",at:[720,58],r:95},
+  {id:'altarP',name:"the Priest's place at the altar",at:[500,122],r:22},
+  {id:'altarD',name:"the Deacon's place at the altar",at:[452,122],r:26},
+  {id:'altarFront',name:'in front of the altar, to reverence it',at:[500,258],r:45},
+  {id:'altarRight',name:'the right-hand side of the altar',at:[618,116],r:30},
+  {id:'altarLeft',name:'the left-hand side of the altar',at:[392,150],r:30},
+  {id:'crossStand',name:'the stand for the processional cross',at:[670,142],r:14},
+  {id:'altar',name:'the altar',at:[500,170],r:60},
+  {id:'credence',name:'the credence table',at:[858,125],r:55},
+  {id:'washStand',name:'the washing stand beside the altar',at:[640,150],r:28},
+  {id:'ambo',name:'the ambo',at:[200,222],r:65},
+  {id:'tabernacle',name:'the tabernacle',at:[137,85],r:45},
+  {id:'communion',name:'the Communion station at the sanctuary step',at:[500,292],r:28},
+  {id:'sanctuaryStep',name:'the sanctuary step',at:[660,245],r:40},
+  {id:'readerSeat',name:"the readers' seats in the front pew",at:[400,322],r:30},
+  {id:'aisle',name:'the central aisle',at:[500,520],r:45},
+  {id:'door',name:'the church door',at:[500,860],r:40}
+];
+
+function hashString(text){
+  let h=2166136261;
+  for(const c of String(text)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}
+  return h>>>0;
+}
+function seededRandom(seed){
+  let a=hashString(seed)||1;
+  return ()=>{
+    a|=0;a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function shuffled(list,random){
+  const copy=[...list];
+  for(let i=copy.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}
+  return copy;
+}
+const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+
+function serverTeam(count){
+  return [[],['S'],['S','X'],['S','C1','C2'],['S','X','C1','C2'],['S','X','C1','C2','T']][count]||[];
+}
+
+// Makes the celebration consistent with the chosen role (the role must exist in it).
+function normaliseGameOptions(role,raw={}){
+  const o={...GAME_DEFAULT_OPTIONS,...raw,bells:{...GAME_DEFAULT_OPTIONS.bells,...(raw.bells||{})}};
+  const notes=[];
+  if(!GAME_ROLES[role])throw new RangeError('Unknown role '+role);
+  o.serverCount=Math.max(0,Math.min(5,Number(o.serverCount)||0));
+  if(role==='D'&&!o.deacon){o.deacon=true;notes.push('A Deacon was added because you are playing the Deacon.');}
+  if(role==='L'&&!o.lector){o.lector=true;notes.push('A lay lector was added because you are playing the lector.');}
+  const minimum={S:1,X:2,C1:3,T:5}[role];
+  if(minimum&&o.serverCount<minimum){o.serverCount=minimum;notes.push('Server count raised to '+minimum+' so that your role exists.');}
+  if(role==='X'&&o.serverCount===3){o.serverCount=4;notes.push('Server count raised to 4: with three servers there is no cross-bearer.');}
+  if(role==='T'&&!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
+  if(o.incense&&o.serverCount===0){o.incense=false;notes.push('Incense needs at least one server here, so it was switched off.');}
+  if(o.bothKinds&&!o.deacon){o.bothKinds=false;notes.push('Communion under both kinds needs the Deacon in this simulator, so it was switched off.');}
+  if(o.serverCount===0&&(o.bells.epiclesis||o.bells.elevation)){
+    o.bells={...o.bells,epiclesis:false,elevation:false};
+    notes.push('No servers: the altar bell is not rung.');
+  }
+  if(!['A','C','sprinkling'].includes(o.introductory))o.introductory='A';
+  if(!['key','all'].includes(o.detail))o.detail='key';
+  if(!GAME_LEVELS[o.level])o.level='choice';
+  return {options:o,notes};
+}
+
+function scenarioRequest(options){
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells'];
+  return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
+}
+
+function placeFor(point,role){
+  if(role&&HOME[role]&&distance(point,HOME[role])<8)return {id:'home',name:'your own seat',at:HOME[role],r:12};
+  let best=null;
+  for(const place of GAME_PLACES){
+    const d=distance(point,place.at);
+    if(d<=place.r&&(!best||d/place.r<best.d))best={place,d:d/place.r};
+  }
+  if(best)return best.place;
+  if(point[1]>=232&&point[1]<300)return {id:'sanctuaryFoot',name:'your place in line at the foot of the sanctuary',at:point,r:30};
+  if(point[1]<232&&distance(point,[500,140])<140)return {id:'nearAltar',name:'your place close to the altar',at:point,r:25};
+  if(point[1]<295)return {id:'sanctuary',name:'a place in the sanctuary',at:point,r:30};
+  if(point[1]>840)return {id:'door',name:'the church door',at:[500,860],r:40};
+  return {id:'nave',name:'a place in the nave',at:point,r:40};
+}
+function inPews(point){
+  return PEW_ZONE.some(([l,t,r,b])=>point[0]>=l&&point[0]<=r&&point[1]>=t&&point[1]<=b);
+}
+
+// Straight lines, but through an aisle rather than across pews.
+function routeBetween(from,to){
+  const crossesPews=[from,to].some(inPews)||
+    (Math.max(from[1],to[1])>350&&Math.min(from[1],to[1])<715&&
+     !(Math.abs(from[0]-500)<45&&Math.abs(to[0]-500)<45)&&
+     !(from[0]>870&&to[0]>870)&&!(from[0]<130&&to[0]<130));
+  if(!crossesPews)return [to];
+  const middle=(from[0]+to[0])/2;
+  const aisle=middle<300?110:middle>700?890:500;
+  const top=Math.min(from[1],to[1]);
+  const startY=inPews(from)?from[1]:Math.max(350,Math.min(715,from[1]));
+  const endY=inPews(to)?to[1]:Math.max(345,Math.min(720,to[1]));
+  void top;
+  return [[aisle,startY],[aisle,endY],to];
+}
+
+const GENERIC_ACTS=['genuflects to the tabernacle','sits down','kneels','bows to the altar','rings the bell','incenses the altar','picks up the Missal','extends hands','lights a candle','returns to the sacristy'];
+const PLACE_DISTRACTORS=['altarFront','chair','credence','ambo','altar','altarP','washStand','serverBench','communion','tabernacle','bookStand','sanctuaryStep','aisle','readerSeat'];
+
+// Every duty of one role in the current STEPS, in order.
+function deriveDuties(role,steps=STEPS,options={}){
+  const info=GAME_ROLES[role]||{};
+  const actor=info.actor===undefined?role:info.actor;
+  const sayRole=info.sayRole||(actor&&['P','D','L','Ps'].includes(actor)?actor:null);
+  const duties=[];
+  let lastSay=null;
+  steps.forEach((step,i)=>{
+    const base={step:i,key:step.key,title:step.title,part:step.part,ref:step.ref,role};
+    if(actor){
+      const groups=[];
+      for(const seg of segs(step.mv?.[actor])){
+        const last=groups[groups.length-1];
+        if(last&&seg.a-last.b<.035){last.b=seg.b;last.to=seg.p[seg.p.length-1];}
+        else groups.push({a:seg.a,b:seg.b,to:seg.p[seg.p.length-1]});
+      }
+      for(const g of groups){
+        const from=actorAt(i,actor,g.a);
+        if(distance(from,g.to)<20)continue;
+        const place=placeFor(g.to,actor);
+        duties.push({...base,type:'move',t:g.a,end:g.b,from,to:g.to,place:place.id,text:'go to '+place.name,answer:place.name});
+      }
+      for(const [text,a,b] of step.acts?.[actor]||[]){
+        if(!text)continue;
+        duties.push({...base,type:'act',t:a,end:b,text,answer:text});
+      }
+      if(actor==='S'&&step.key!==0){
+        for(const [a,b] of step.bell||[]){
+          const covered=(step.acts?.S||[]).some(([text,x,y])=>/bell/.test(text)&&a>=x-.01&&a<=y);
+          if(!covered)duties.push({...base,type:'act',t:a,end:b,text:'rings the bell',answer:'rings the bell'});
+        }
+      }
+    }
+    if(role==='SAC'&&step.key===0&&(step.bell||[]).length){
+      duties.push({...base,type:'act',t:0,end:step.bell[0][1],text:'rings the sacristy bell as the procession sets out',answer:'rings the sacristy bell as the procession sets out'});
+    }
+    if(sayRole){
+      for(const [who,text,a,b] of step.say||[]){
+        if(who!==sayRole)continue;
+        // A chant that simply continues into the next step is one duty, not several.
+        if(lastSay&&lastSay.text===text&&lastSay.step>=i-1){lastSay.step=i;continue;}
+        const duty={...base,type:'say',t:a,end:b,text,answer:text};
+        duties.push(duty);lastSay={text,step:i};
+      }
+    }
+    if(role==='PEW'){
+      let previous=i>0?postureList(i-1).slice(-1)[0][0]:'stand';
+      for(const [name,t] of postureList(i)){
+        if(name!==previous)duties.push({...base,type:'posture',t,end:Math.min(1,t+.08),text:name,answer:name});
+        previous=name;
+      }
+    }
+  });
+  duties.sort((x,y)=>x.step-y.step||x.t-y.t||(x.type==='posture'?-1:0));
+  duties.forEach((d,n)=>{d.id=role+':'+d.step+':'+d.type+':'+n;});
+  return duties;
+}
+
+// Which duties become interactive decisions: key moments only, or every duty.
+function selectDecisionDuties(duties,detail='key'){
+  if(detail==='all')return duties.slice();
+  const seen=new Set();
+  return duties.filter(d=>{
+    if(d.type==='move'||d.type==='posture'){seen.add(d.step);return true;}
+    if(seen.has(d.step))return false;
+    seen.add(d.step);return true;
+  });
+}
+
+function sayPool(sayRole){
+  const lines=[];
+  for(const source of [STEPS,ORIGINAL_STEPS]){
+    source.forEach((step,i)=>{
+      for(const [who,text] of step.say||[])if(who===sayRole)lines.push({text,step:i,key:step.key??i});
+    });
+  }
+  return lines;
+}
+function actPool(actor){
+  const acts=[];
+  for(const step of ORIGINAL_STEPS.concat(STEPS)){
+    for(const [text] of step.acts?.[actor]||[])if(text)acts.push(text);
+  }
+  return [...new Set([...acts,...GENERIC_ACTS])];
+}
+
+function pickDistractors(correct,pool,count,random,avoid=[]){
+  const banned=new Set([correct,...avoid].map(x=>String(x).toLowerCase()));
+  const result=[];
+  for(const item of shuffled([...new Set(pool)],random)){
+    if(result.length>=count)break;
+    if(banned.has(String(item).toLowerCase()))continue;
+    banned.add(String(item).toLowerCase());
+    result.push(item);
+  }
+  return result;
+}
+
+function decisionTimer(level,kind){
+  if(level!=='timed')return 0;
+  return {move:12,act:10,say:14,posture:8,cue:10,nudge:12,task:12,place:12}[kind]||12;
+}
+
+// Turns one duty into a decision for the chosen level.
+function buildDecision(duty,level,seed=1,allDuties=[]){
+  const random=seededRandom(seed+'|'+duty.id);
+  const rules=GAME_LEVELS[level]||GAME_LEVELS.choice;
+  const prompt={move:'Where do you go now?',act:'What do you do now?',say:duty.role==='PEW'?'What do you say or sing now?':'What do you say now?',posture:'What posture now?'}[duty.type];
+  const simultaneous=allDuties.filter(d=>d.step===duty.step&&d.type===duty.type&&Math.abs(d.t-duty.t)<.12).map(d=>d.answer);
+  const decision={id:duty.id,kind:duty.type,duty,prompt,correct:duty.answer,timer:decisionTimer(level,duty.type),ref:duty.ref,title:duty.title,level,attempts:rules.attempts,input:'options',options:[]};
+  const want=rules.options?rules.options-1:0;
+  let distractors=[];
+  if(duty.type==='move'){
+    decision.target=duty.to;
+    const near=PLACE_DISTRACTORS.map(id=>GAME_PLACES.find(p=>p.id===id)).filter(p=>p&&p.id!==duty.place&&distance(p.at,duty.to)>40);
+    distractors=shuffled(near,random).slice(0,want).map(p=>({label:p.name,at:p.at}));
+    if(level==='expert')decision.input='floor';
+  }else if(duty.type==='posture'){
+    distractors=['stand','sit','kneel'].filter(x=>x!==duty.answer).slice(0,Math.min(2,want)).map(label=>({label}));
+  }else if(duty.type==='say'){
+    const sayRole=GAME_ROLES[duty.role]?.sayRole||duty.role;
+    const pool=sayPool(sayRole).filter(l=>Math.abs(l.step-duty.step)<=6).map(l=>l.text);
+    distractors=pickDistractors(duty.answer,pool.length>3?pool:sayPool(sayRole).map(l=>l.text),want,random,simultaneous).map(label=>({label}));
+    if(level==='expert')decision.input='book';
+  }else{
+    const actor=GAME_ROLES[duty.role]?.actor||duty.role;
+    const pool=actPool(actor);
+    if(level==='expert'){
+      decision.input='palette';
+      distractors=pickDistractors(duty.answer,pool,11,random,simultaneous).map(label=>({label}));
+    }else distractors=pickDistractors(duty.answer,pool,want,random,simultaneous).map(label=>({label}));
+  }
+  const correctOption={label:duty.answer,correct:true,...(duty.type==='move'?{at:duty.to}:{})};
+  decision.options=level==='guided'?[correctOption]:shuffled([correctOption,...distractors.map(d=>({...d,correct:false}))],random);
+  if(duty.type==='posture'&&level!=='guided')decision.options=['stand','sit','kneel'].map(label=>({label,correct:label===duty.answer}));
+  return decision;
+}
+
+const MOVE_TOLERANCE=45;
+function checkAnswer(decision,answer){
+  if(decision.kind==='move'&&Array.isArray(answer)){
+    return distance(answer,decision.target)<=MOVE_TOLERANCE;
+  }
+  if(decision.kind==='cue'||decision.kind==='nudge')return decision.correctRoles.includes(answer);
+  if(decision.kind==='task'&&decision.validIds)return decision.validIds.includes(answer);
+  if(decision.kind==='place'){
+    if(Array.isArray(answer))return decision.places.some(id=>{const p=GAME_PLACES.find(x=>x.id===id);return p&&distance(answer,p.at)<=Math.max(p.r,35);});
+    return decision.places.includes(answer)||decision.options.some(o=>o.correct&&o.label===answer);
+  }
+  if(decision.kind==='pew')return Array.isArray(answer)&&inPews(answer);
+  return String(answer).trim().toLowerCase()===String(decision.correct).trim().toLowerCase();
+}
+
+const SCORE_RULES={first:100,retry:40,expert:150,expertRetry:60,timeBonus:50,nudge:80,lateNudge:0,wrongNudge:-20};
+function createScoreboard(){
+  return {points:0,possible:0,decisions:0,correct:0,firstTry:0,wrong:0,timeouts:0,lapsesCaught:0,lapsesMissed:0,log:[]};
+}
+// One finished decision. attempt is 1-based; remaining is the timer fraction left (0-1).
+function scoreDecision({level,correct,attempt=1,remaining=0,timedOut=false}){
+  if(timedOut||!correct)return 0;
+  const expert=level==='expert';
+  let points=attempt<=1?(expert?SCORE_RULES.expert:SCORE_RULES.first):(expert?SCORE_RULES.expertRetry:SCORE_RULES.retry);
+  if(level==='timed'&&attempt<=1)points+=Math.round(SCORE_RULES.timeBonus*Math.max(0,Math.min(1,remaining)));
+  if(level==='guided')points=Math.round(points/4);
+  return points;
+}
+function maxScore(level){
+  const base=level==='expert'?SCORE_RULES.expert:SCORE_RULES.first;
+  return level==='guided'?Math.round(base/4):base+(level==='timed'?SCORE_RULES.timeBonus:0);
+}
+function recordResult(board,decision,result){
+  const points=decision.kind==='nudge'
+    ?(result.correct?SCORE_RULES.nudge:0)
+    :scoreDecision({level:decision.level,...result});
+  board.points+=points;
+  board.possible+=decision.kind==='nudge'?SCORE_RULES.nudge:maxScore(decision.level);
+  board.decisions++;
+  if(result.correct){board.correct++;if((result.attempt||1)<=1)board.firstTry++;}
+  else if(result.timedOut)board.timeouts++;
+  else board.wrong++;
+  if(decision.kind==='nudge'){if(result.correct)board.lapsesCaught++;else board.lapsesMissed++;}
+  board.log.push({id:decision.id,title:decision.title,kind:decision.kind,prompt:decision.prompt,correct:result.correct,answer:result.answer,expected:decision.correct,ref:decision.ref,points,timedOut:!!result.timedOut,attempt:result.attempt||1});
+  return points;
+}
+function penalise(board,points,reason,ref){
+  board.points+=points;
+  board.log.push({title:reason,kind:'penalty',correct:false,points,ref});
+}
+function gradeBoard(board){
+  const percent=board.possible?Math.max(0,Math.round(board.points/board.possible*100)):0;
+  const verdict=percent>=90?'Exemplary: ready to serve at a solemn Mass.':percent>=75?'Well done: a few points to revise.':percent>=50?'Good start: practise the marked steps.':'Keep practising with the Guided level.';
+  return {percent,verdict};
+}
+
+// NPC lapses that a Priest, Deacon or M.C. must notice and correct.
+const LAPSE_COUNTS={guided:2,choice:3,timed:3,expert:4};
+function lapseCandidates(playerRole,visible,steps=STEPS){
+  const roles=['D','S','X','C1','C2','T','L','Ps'].filter(r=>visible.has(r)&&r!==playerRole);
+  const result=[];
+  for(const role of roles){
+    for(const duty of deriveDuties(role,steps)){
+      if(duty.type==='say'||duty.text==='kneels'||/^kneels/.test(duty.text))continue;
+      if(duty.key===0||duty.key===40||duty.key===1)continue;
+      result.push({...duty,role});
+    }
+  }
+  return result.sort((a,b)=>a.step-b.step||a.t-b.t);
+}
+function planLapses({playerRole,level='choice',enabled=true,seed=1,visible,steps=STEPS,avoid=[]}){
+  if(!enabled||!GAME_ROLES[playerRole]?.nudges)return [];
+  const random=seededRandom('lapse|'+seed);
+  const avoidIds=new Set(avoid.map(d=>d.step+':'+d.t.toFixed(3)));
+  const pool=lapseCandidates(playerRole,visible,steps).filter(d=>!avoidIds.has(d.step+':'+d.t.toFixed(3)));
+  const count=Math.min(pool.length,(LAPSE_COUNTS[level]||3)+(playerRole==='MC'?2:0));
+  const chosen=[];
+  for(let n=0;n<count;n++){
+    const from=Math.floor(n*pool.length/count), to=Math.floor((n+1)*pool.length/count);
+    const options=pool.slice(from,to).filter(d=>!chosen.some(c=>Math.abs(c.step-d.step)<2));
+    if(!options.length)continue;
+    const duty=options[Math.floor(random()*options.length)];
+    const kind=playerRole==='MC'&&chosen.length%2===1?'wrong':'missed';
+    chosen.push({id:'lapse:'+duty.id,role:duty.role,step:duty.step,key:duty.key,t:duty.t,kind,duty,ref:duty.ref,title:duty.title,
+      wrongAction:kind==='wrong'?'sits down instead':'looks away',
+      expected:duty.text});
+  }
+  return chosen;
+}
+function lapseRecoverySeconds(level){
+  return {guided:0,choice:20,timed:12,expert:20}[level]??20;
+}
+function nudgeDecision(lapse,level,visible){
+  const correctRoles=lapse.role==='C1'||lapse.role==='C2'?[lapse.role]:[lapse.role];
+  const ministers=[...visible].filter(r=>!['P','ppl','G1','G2'].includes(r));
+  return {id:lapse.id,kind:'nudge',prompt:'Someone has missed their duty. Who needs a nudge?',correctRoles,correct:ROLE_NAMES[lapse.role],
+    ref:lapse.ref,title:lapse.title,level,timer:lapseRecoverySeconds(level),attempts:3,input:level==='expert'?'figure':'options',
+    options:ministers.map(r=>({label:ROLE_NAMES[r],role:r,correct:correctRoles.includes(r)})),lapse};
+}
+
+// The M.C. cues ministers before their duties.
+function deriveCues(visible,steps=STEPS,detail='key'){
+  const roles=['D','S','X','C1','C2','T','L','Ps'].filter(r=>visible.has(r));
+  const all=[];
+  for(const role of roles){
+    for(const duty of deriveDuties(role,steps)){
+      if(duty.type==='say'||/^kneels/.test(duty.text)||duty.text==='profound bow'||duty.text==='bows')continue;
+      if(duty.key===40)continue;
+      all.push({...duty,role});
+    }
+  }
+  all.sort((a,b)=>a.step-b.step||a.t-b.t);
+  const cues=[];
+  for(const duty of all){
+    const same=cues.find(c=>c.step===duty.step&&Math.abs(c.t-duty.t)<.04&&c.type===duty.type&&(c.text===duty.text||c.type==='move'));
+    if(same){if(!same.correctRoles.includes(duty.role))same.correctRoles.push(duty.role);continue;}
+    if(detail==='key'&&cues.some(c=>c.step===duty.step))continue;
+    cues.push({...duty,correctRoles:[duty.role]});
+  }
+  return cues;
+}
+function describeCue(duty){
+  if(duty.type==='move')return 'Someone must now go to '+placeFor(duty.to,duty.role).name.replace('your own seat','their seat')+'.';
+  return 'Due now: "'+duty.text+'".';
+}
+function cueDecision(cue,level,visible,seed=1){
+  const random=seededRandom('cue|'+seed+'|'+cue.id);
+  const ministers=[...visible].filter(r=>!['P','ppl','G1','G2'].includes(r));
+  let options=ministers.map(r=>({label:ROLE_NAMES[r]+(r.startsWith('C')?' ('+r+')':''),role:r,correct:cue.correctRoles.includes(r)}));
+  if(level==='guided')options=options.filter(o=>o.correct).slice(0,1);
+  else if(level!=='expert'){
+    const right=options.filter(o=>o.correct).slice(0,1);
+    options=shuffled([...right,...shuffled(options.filter(o=>!o.correct),random).slice(0,3)],random);
+  }
+  return {id:'cue:'+cue.id,kind:'cue',prompt:'Cue the right minister. '+describeCue(cue),correctRoles:cue.correctRoles,correct:cue.correctRoles.map(r=>ROLE_NAMES[r]).join(' or '),
+    ref:cue.ref,title:cue.title,level,timer:decisionTimer(level,'cue'),attempts:GAME_LEVELS[level].attempts,input:level==='expert'?'figure':'options',options,duty:cue};
+}
+
+// Sacristan: items to set out before Mass (GIRM 105, 117-118) and to put away after it.
+function sacristanSetup(options,team=serverTeam(options.serverCount)){
+  const has=r=>team.includes(r);
+  const ep=options.eucharisticPrayer||'II';
+  const items=[
+    {id:'altarCloth',name:'White cloth on the altar',place:'altar',needed:true,ref:'GIRM 117, 304'},
+    {id:'altarCandles',name:'Candles on or near the altar, lit',place:'altar',needed:true,ref:'GIRM 117, 307'},
+    {id:'altarCross',name:'Cross on or near the altar',place:'altar',needed:!has('X'),ref:'GIRM 117, 308',reason:'Without a cross-bearer the cross stands at the altar.'},
+    {id:'procCross',name:'Processional cross ready in the sacristy',place:'sacristy',needed:has('X'),ref:'GIRM 120b, 122',reason:'It is carried in the procession and then placed near the altar.'},
+    {id:'procCandles',name:'Two processional candles ready, lit',place:'sacristy',needed:has('C1'),ref:'GIRM 117, 120b'},
+    {id:'gospels',name:'Book of the Gospels ready for the procession',place:'sacristy',needed:options.deacon||options.lector,ref:'GIRM 117, 120d, 172, 194',reason:'Carried by the Deacon (or by the lector if there is no Deacon).'},
+    {id:'gospelsAltar',name:'Book of the Gospels placed on the altar',place:'altar',needed:!options.deacon&&!options.lector,ref:'GIRM 117',reason:'With nobody to carry it, it may be placed on the altar beforehand.'},
+    {id:'lectionary',name:'Lectionary on the ambo, marked',place:'ambo',needed:true,ref:'GIRM 118b'},
+    {id:'missal',name:'Roman Missal marked (Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
+    {id:'chalice',name:'Chalice with purificator, paten and pall',place:'credence',needed:true,ref:'GIRM 118c'},
+    {id:'corporal',name:'Corporal',place:'credence',needed:true,ref:'GIRM 118c'},
+    {id:'water',name:'Cruet of water',place:'credence',needed:true,ref:'GIRM 118c'},
+    {id:'lavabo',name:'Lavabo bowl, jug and towel',place:'credence',needed:true,ref:'GIRM 118c'},
+    {id:'commPlate',name:'Communion plate for the faithful',place:'credence',needed:true,ref:'GIRM 118c'},
+    {id:'wine',name:'Cruet of wine',place:options.giftsProcession?'giftTable':'credence',needed:true,ref:options.giftsProcession?'GIRM 73, 118c':'GIRM 118c',reason:options.giftsProcession?'The faithful bring it up in the procession of the gifts.':'No procession of the gifts today.'},
+    {id:'ciborium',name:'Ciborium with altar breads',place:options.giftsProcession?'giftTable':'credence',needed:true,ref:options.giftsProcession?'GIRM 73, 118c':'GIRM 118c'},
+    {id:'chalice2',name:'Second chalice for Communion under both kinds',place:'credence',needed:!!options.bothKinds,ref:'GIRM 118c, 285a'},
+    {id:'aspersory',name:'Holy-water vessel and sprinkler',place:'credence',needed:options.introductory==='sprinkling',ref:'GIRM 51; Missal App. II'},
+    {id:'thurible',name:'Thurible with lit charcoal, and boat with incense',place:'sacristy',needed:!!options.incense,ref:'GIRM 120a, 276'},
+    {id:'altarBell',name:'Altar bell at the sanctuary step',place:'sanctuaryStep',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 150 (local custom)'},
+    {id:'sacristyBell',name:'Sacristy bell by the door',place:'sacristy',needed:!!options.bells.start,ref:'Local custom'},
+    {id:'vestP',name:'Vestments for the Priest (alb, stole, chasuble)',place:'sacristy',needed:true,ref:'GIRM 337'},
+    {id:'vestD',name:'Vestments for the Deacon (alb, stole, dalmatic)',place:'sacristy',needed:!!options.deacon,ref:'GIRM 338'},
+    {id:'vestS',name:'Albs or cassock and surplice for '+team.length+' server'+(team.length===1?'':'s'),place:'sacristy',needed:team.length>0,ref:'GIRM 339'},
+    {id:'lamp',name:'Sanctuary lamp burning before the tabernacle',place:'tabernacle',needed:true,ref:'GIRM 316'},
+    {id:'hosts',name:'Bring consecrated hosts out of the tabernacle onto the altar',place:'altar',needed:false,trap:true,ref:'GIRM 85',reason:'Not a sacristan task, and the faithful should ideally receive hosts consecrated at the same Mass.'}
+  ];
+  return items.map(item=>({...item,places:[].concat(item.place)}));
+}
+function sacristanPackAway(options,team=serverTeam(options.serverCount)){
+  const has=r=>team.includes(r);
+  return [
+    {id:'candlesOut',name:'Extinguish the altar candles',place:'altar',needed:true,ref:'Judgement call (after the ministers leave)'},
+    {id:'procBack',name:'Return the processional cross and candles to the sacristy',place:'sacristy',needed:has('X')||has('C1'),ref:'GIRM 105'},
+    {id:'booksBack',name:'Return the Missal, Lectionary and Book of the Gospels',place:'sacristy',needed:true,ref:'GIRM 105'},
+    {id:'vessels',name:'Wash the chalice, paten and ciborium (already purified at Mass)',place:'sacristy',needed:true,ref:'GIRM 163, 183, 279'},
+    {id:'linens',name:'Purificators, corporal and towel to the linen basket',place:'sacristy',needed:true,ref:'GIRM 105'},
+    {id:'cruets',name:'Rinse and put away the cruets',place:'sacristy',needed:true,ref:'GIRM 105'},
+    {id:'thuribleOut',name:'Empty the thurible safely into the sand or ash bucket',place:'sacristy',needed:!!options.incense,ref:'Judgement call (fire safety)'},
+    {id:'aspersoryBack',name:'Return the holy-water vessel and sprinkler',place:'sacristy',needed:options.introductory==='sprinkling',ref:'GIRM 105'},
+    {id:'bellBack',name:'Put the altar bell away',place:'sacristy',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 105'},
+    {id:'giftTable',name:'Clear the gift table',place:'giftTable',needed:!!options.giftsProcession,ref:'GIRM 105'},
+    {id:'vestments',name:'Hang up the vestments',place:'sacristy',needed:true,ref:'GIRM 105'},
+    {id:'dustCover',name:'Put the dust cover on the altar cloth',place:'altar',needed:true,ref:'Local custom'},
+    {id:'lampOut',name:'Extinguish the sanctuary lamp',place:'tabernacle',needed:false,trap:true,ref:'GIRM 316',reason:'It burns permanently while the Blessed Sacrament is reserved.'},
+    {id:'hostsAway',name:'Move the remaining hosts into the tabernacle yourself',place:'tabernacle',needed:false,trap:true,ref:'GIRM 163',reason:'The Priest or Deacon reserves the Blessed Sacrament during Mass.'},
+    {id:'pourAway',name:'Pour the remaining Precious Blood down the sink',place:'sacristy',needed:false,trap:true,ref:'GIRM 163, 182',reason:'What remains is consumed at the altar, never poured away.'},
+    {id:'charcoalBin',name:'Tip the lit charcoal into the rubbish bin',place:'sacristy',needed:false,trap:true,ref:'Judgement call (fire safety)',reason:'Lit charcoal goes into a sand or ash bucket.'}
+  ].map(item=>({...item,places:[].concat(item.place)}));
+}
+function checklistScore(items,done){
+  const chosen=new Set(done);
+  let correct=0,missed=0,traps=0,extra=0;
+  for(const item of items){
+    if(item.needed&&chosen.has(item.id))correct++;
+    else if(item.needed)missed++;
+    else if(chosen.has(item.id))(item.trap?traps++:extra++);
+  }
+  const needed=items.filter(i=>i.needed).length;
+  return {correct,missed,traps,extra,needed,complete:missed===0,points:correct*50-traps*60-extra*20,possible:needed*50};
+}
+
+// Bells and thurible clinks with absolute times.
+function deriveSoundCues(steps=STEPS,startTimes){
+  const cues=[];
+  let clock=0;
+  steps.forEach((step,i)=>{
+    const start=startTimes?startTimes[i]:clock;
+    clock=start+step.dur;
+    for(const [a,b] of step.bell||[]){
+      cues.push({type:step.key===0?'sacristyBell':'bell',step:i,key:step.key,time:start+a*step.dur,until:start+b*step.dur});
+    }
+    for(const [actor,acts] of Object.entries(step.acts||{})){
+      for(const [text,a,b] of acts){
+        if(!/incens/i.test(text||''))continue;
+        const match=/\((\d+)\s*swings?\)/.exec(text);
+        const swings=match?Number(match[1]):(/altar|gifts|offerings/i.test(text)?6:3);
+        cues.push({type:'thurible',step:i,key:step.key,actor,time:start+a*step.dur,until:start+b*step.dur,swings});
+      }
+    }
+  });
+  return cues.sort((a,b)=>a.time-b.time);
+}
+
+// The player's book: today's texts plus omitted ones, grouped by part.
+function buildBook(sayRole,steps=STEPS){
+  const used=new Set(steps.map(s=>s.key));
+  const pages=[];
+  ORIGINAL_STEPS.forEach((step,key)=>{
+    const today=steps.find(s=>s.key===key);
+    const source=today||step;
+    const lines=(source.say||[]).filter(([who])=>who===sayRole).map(([,text])=>text);
+    if(!lines.length)return;
+    let page=pages.find(p=>p.part===source.part);
+    if(!page){page={part:source.part,sections:[]};pages.push(page);}
+    page.sections.push({key,title:source.title,ref:source.ref,lines,today:used.has(key),note:used.has(key)?'':'(when prescribed / not used today)'});
+  });
+  return pages;
+}
+function findInBook(book,text){
+  for(let p=0;p<book.length;p++)for(const s of book[p].sections)if(s.lines.includes(text))return {page:p,key:s.key};
+  return null;
+}
+
+// What each role does before the procession.
+function preMassTasks(role,options,team=serverTeam(options.serverCount),startPos){
+  const tasks=[];
+  const vest=(ref,correct,wrong)=>tasks.push({id:'vest',kind:'task',prompt:'Vest for Mass. What do you put on?',ref,options:shuffled([correct,...wrong],seededRandom(role+'vest')).map(label=>({label,correct:label===correct})),correct});
+  if(role==='P')vest('GIRM 337','Alb, stole and chasuble',['Alb and dalmatic','Cassock and surplice only','Cope over a surplice']);
+  if(role==='D')vest('GIRM 338, 340','Alb, diagonal stole and dalmatic',['Alb, stole and chasuble','Cassock and surplice only','Alb with the stole around the neck']);
+  if(['S','X','C1','T'].includes(role))vest('GIRM 339','Alb (or cassock and surplice)',['Dalmatic','Stole over the alb','Chasuble']);
+  if(role==='L')tasks.push({id:'prepare',kind:'task',prompt:'Before Mass, what should you check?',ref:'GIRM 118b; 196',correct:'Find and read through today\'s reading in the Lectionary',options:[
+    'Find and read through today\'s reading in the Lectionary','Mark the Preface in the Missal','Light the thurible','Put on a stole'].map(label=>({label,correct:label.startsWith('Find')}))});
+  const carry={D:['Book of the Gospels','GIRM 172'],X:['Processional cross','GIRM 120b'],C1:['A lit processional candle','GIRM 120b'],T:['Thurible with burning incense','GIRM 120a, 276'],L:options.deacon?null:['Book of the Gospels (slightly elevated)','GIRM 194']}[role];
+  if(carry){
+    const pool=['Book of the Gospels','Processional cross','A lit processional candle','Thurible with burning incense','The Roman Missal','The chalice','Nothing'];
+    const correct=carry[0];
+    const options2=shuffled([correct,...pool.filter(x=>!correct.startsWith(x)&&!x.startsWith(correct)).slice(0,3)],seededRandom(role+'carry'));
+    tasks.push({id:'carry',kind:'task',prompt:'What do you carry in the procession?',ref:carry[1],correct,options:options2.map(label=>({label,correct:label===correct}))});
+  }
+  if(role==='MC'){
+    const order=procOrder(options,team);
+    const wrong1=[...order].reverse().join(' → ');
+    const wrong2=order.filter(x=>x!=='Priest').concat([]).join(' → ').replace(/^/,'Priest → ');
+    tasks.push({id:'order',kind:'task',prompt:'Line up the procession. Which order is correct?',ref:'GIRM 120, 172',correct:order.join(' → '),options:shuffled([order.join(' → '),wrong1,wrong2],seededRandom('mcorder')).map(label=>({label,correct:label===order.join(' → ')}))});
+    tasks.push({id:'credence',kind:'task',prompt:'Final check of the credence table. What must be there?',ref:'GIRM 118c',correct:'Chalice, corporal, purificator, water, lavabo set',options:[
+      'Chalice, corporal, purificator, water, lavabo set','The Book of the Gospels','The thurible','The Lectionary'].map(label=>({label,correct:label.startsWith('Chalice')}))});
+  }
+  if(role==='PEW'){
+    tasks.push({id:'stoup',kind:'place',prompt:'You arrive at the church. Where do you go first?',ref:'Custom: signing oneself with holy water on entering',places:['stoup'],correct:'the holy-water stoup by the door',
+      options:[{label:'the holy-water stoup by the door',correct:true},{label:"the celebrant's chair",correct:false},{label:'the credence table',correct:false}]});
+    tasks.push({id:'reverence',kind:'task',prompt:'Before entering your pew, what do you do?',ref:'GIRM 274 (by analogy); custom',correct:'Genuflect toward the tabernacle',options:[
+      'Genuflect toward the tabernacle','Ring the altar bell','Bow to the ambo','Light a candle on the altar'].map(label=>({label,correct:label.startsWith('Genuflect')}))});
+    tasks.push({id:'pew',kind:'pew',prompt:'Find a place in a pew.',ref:'Judgement call',correct:'any pew',options:[]});
+  }else if(role!=='SAC'&&startPos&&startPos[1]<300){
+    // Ministers who do not walk in the procession wait in the sanctuary.
+    const place=GAME_PLACES.find(p=>p.id!=='altar'&&distance(startPos,p.at)<=p.r)||GAME_PLACES.find(p=>p.id==='serverBench');
+    tasks.push({id:'line',kind:'place',prompt:'You do not walk in the procession. Where do you wait for it?',ref:'GIRM 120 (judgement call: this server waits in the sanctuary)',target:startPos,places:[place.id],correct:place.name,
+      options:shuffled([{label:place.name,correct:true},{label:'the back of the church (procession line)',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'line'))});
+  }else if(role!=='SAC'){
+    const target=startPos||(role==='MC'?MC_START:[500,770]);
+    tasks.push({id:'line',kind:'place',prompt:'Go to your place in the entrance procession at the back of the church.',ref:'GIRM 120',target,places:['procession'],correct:'the back of the church (procession line)',
+      options:shuffled([{label:'the back of the church (procession line)',correct:true},{label:"the celebrant's chair",correct:false},{label:'the credence table',correct:false},{label:'the ambo',correct:false}],seededRandom(role+'line'))});
+  }
+  return tasks;
+}
+// After the recession: back to the sacristy, then one closing task.
+function postMassTasks(role,options){
+  const tasks=[];
+  if(role==='PEW'){
+    tasks.push({id:'leave',kind:'task',prompt:'Mass has ended. When do you leave?',ref:'GIRM 90, 169 (judgement call on custom)',correct:'After the ministers have gone out (and the hymn has ended)',
+      options:shuffled(['After the ministers have gone out (and the hymn has ended)','Straight after receiving Communion','During the final Blessing','Before the Dismissal, to beat the traffic'],seededRandom('pewleave')).map(label=>({label,correct:label.startsWith('After the ministers')}))});
+    return tasks;
+  }
+  if(role==='SAC')return tasks;
+  tasks.push({id:'where',kind:'place',prompt:'The procession has left the church. Where do you go?',ref:'GIRM 169, 186',places:['sacristy'],correct:'the sacristy',
+    options:shuffled([{label:'the sacristy',correct:true},{label:'the altar',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'where'))});
+  const close={
+    P:['Bow to the cross with the ministers, then take off the vestments','Count the collection','Pour away what remains in the chalice','Leave the vestments on the altar'],
+    D:['Bow to the cross, then help put the Book of the Gospels away and unvest','Consume the remaining hosts in the sacristy','Extinguish the sanctuary lamp','Leave straight away in the dalmatic'],
+    MC:['Bow to the cross, thank the ministers and check that everything is put away','Ring the altar bell again','Relight the candles for the next Mass','Leave the books open on the ambo'],
+    L:['Bow to the cross with the others, then return the Lectionary if it is your job','Take the Lectionary home','Leave the Book of the Gospels on the floor','Ring the sacristy bell']
+  }[role]||['Bow to the cross, put your item away safely and hang up your alb'+(options.incense&&role==='T'?' (charcoal into the sand bucket)':''),'Leave the thurible on the altar','Keep the alb on and go home','Blow out the sanctuary lamp'];
+  tasks.push({id:'sacristy',kind:'task',prompt:'In the sacristy: what now?',ref:role==='MC'?'GIRM 106; CB 34-36 (judgement call)':'GIRM 105; custom',correct:close[0],
+    options:shuffled(close,seededRandom(role+'close')).map(label=>({label,correct:label===close[0]}))});
+  return tasks;
+}
+function procOrder(options,team){
+  const order=[];
+  if(team.includes('T'))order.push('Thurifer');
+  if(team.includes('X'))order.push(team.includes('C1')?'Cross between candles':'Cross-bearer');
+  else if(team.includes('C1'))order.push('Candle-bearers');
+  if(team.includes('S'))order.push('Server');
+  if(options.lector)order.push('Lector');
+  if(options.deacon)order.push('Deacon');
+  order.push('Priest');
+  return order;
+}
+
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,deriveSoundCues,buildBook,preMassTasks,postMassTasks};

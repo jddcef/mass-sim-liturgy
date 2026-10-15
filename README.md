@@ -175,12 +175,55 @@ To generate or complete the pack:
 Use an environment outside this repository for model downloads and Python
 dependencies. See `docs/SOURCES.md` for upstream licenses and attribution.
 
+## Holy Mass simulator game
+
+Open **mass-game.html** (also straight from the folder) to play through a Mass
+in a role. The decisions made while building it are logged for review in
+[`docs/GAME-DECISIONS.md`](docs/GAME-DECISIONS.md).
+
+1. **Choose a role**: Priest, Deacon, Server (book, bell and vessels),
+   Cross-bearer, Candle-bearer, Thurifer, Lector, Master of Ceremonies,
+   Sacristan or a member of the congregation.
+2. **Choose a level**:
+   - **Guided**: only the right action is shown; click it and you are moved along.
+   - **Choice**: pick the right action, words or place from a few options (two tries).
+   - **Timed**: as Choice, with a 12-second countdown and a bonus for quick answers.
+   - **Expert**: no hints. Click where to go on the church floor, click the
+     minister you mean, and find your words in your book (the Priest's Missal,
+     the Deacon's Book of the Gospels, the Lectionary or a pew missal).
+3. **Choose the celebration**: incense, deacon, lector, 0-5 servers, Communion
+   under both kinds, Gloria, Creed, second reading, Penitential Act form or the
+   sprinkling rite, sung or said, Eucharistic Prayer I-IV, Solemn Blessing,
+   gifts procession, bells (start, epiclesis, elevations) and minister lapses.
+   If your role needs something (for example the thurifer needs incense), the
+   setup adds it and says so.
+
+You begin in the sacristy (ministers, M.C., sacristan) or outside the doors
+(congregation): vest, take what you carry, line up, or take holy water and find
+a pew. During Mass the clock stops at each of your duties. Number keys pick
+options; click markers or the floor to move. Every answer shows the rubric
+reference. After Mass you return to the sacristy (or leave), and a summary lists
+every decision with its reference and your score; best scores are kept in the
+browser.
+
+- **Priest / Deacon**: other ministers occasionally miss a duty or do the wrong
+  thing; the celebration stalls until you nudge the right person.
+- **Master of Ceremonies**: direct the whole celebration, cueing each minister
+  at their moment and catching every lapse.
+- **Sacristan**: set out everything the chosen options need before Mass, refuse
+  the trap tasks, then pack away afterwards. Mass runs faster in between.
+
+Sounds (altar bell, sacristy bell, thurible chains, right/wrong cues) are
+synthesised in the browser, so no network is needed; use the sound button to
+mute. Bell customs vary by place, so each bell is optional.
+
 ## Repository checks
 
 ```text
 node mass-scenarios.test.cjs
 node mass-features.test.cjs
 node mass-assets.test.cjs
+node mass-game.test.cjs
 ```
 
 GitHub Actions runs these checks on pushes and pull requests. After editing

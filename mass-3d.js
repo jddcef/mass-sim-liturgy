@@ -511,6 +511,7 @@ function renderFrame(dt=1/60){
   $('previous').disabled=cur3d===0&&progress3d===0;
   sceneLabels.forEach(l=>{l.visible=$('labels').checked;});
   objects.bell.position.copy(world([660,245]));
+  if(typeof gameBeforeRender==='function')gameBeforeRender(dt,positions);
   updateTraining();
   updateFollow(dt);
   controls.update();
@@ -545,6 +546,7 @@ function applySetup(){
   setPlaying(false);
   const requested=Object.fromEntries(['deacon','lector','incense','bothKinds'].map(id=>[id,$(id).checked]));
   requested.serverCount=Number($('serverCount').value);
+  if(typeof gameScenarioOptions==='function')Object.assign(requested,gameScenarioOptions());
   scenario=buildScenario(requested);
   for(const id of ['incense','bothKinds'])$(id).checked=scenario.options[id];
   $('incense').disabled=!scenario.options.servers;
@@ -679,6 +681,7 @@ function initialise(){
     if(!down||Math.hypot(event.clientX-down[0],event.clientY-down[1])>5||event.button!==0)return;
     const rect=renderer.domElement.getBoundingClientRect();
     raycaster.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1),camera3d);
+    if(typeof gamePick==='function'&&gamePick(raycaster,event))return;
     const hits=raycaster.intersectObjects(Object.values(figures).filter(f=>f.root.visible).map(f=>f.root),true);
     for(const hit of hits){
       let root=hit.object;
@@ -701,6 +704,7 @@ function initialise(){
     if(playing3d&&!speechBusy){
       let elapsed=stepStart[cur3d]+progress3d*STEPS[cur3d].dur+dt*Number($('rate').value);
       elapsed=Math.min(elapsed,TOTAL);
+      if(typeof gameTimeLimit==='function')elapsed=Math.min(elapsed,gameTimeLimit(elapsed));
       const old=cur3d;
       elapsed=interceptSpeech(elapsed);
       while(cur3d<STEPS.length-1&&elapsed>=stepStart[cur3d+1])cur3d++;
