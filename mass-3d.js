@@ -406,7 +406,11 @@ function makeObjects(){
       cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c');
       sphere(g,0,-.4,0,.09,'#a9a6a0');
     }else if(name==='corporal'){
-      box(g,0,.006,0,.72,.012,.6,'#ffffff',false);
+      box(g,.5,.006,0,1.5,.012,1.5,'#ffffff',false);
+      for(const z of [-.7,.7])box(g,.5,.014,z,1.4,.004,.018,'#a6a195',false);
+      for(const x of [-.2,1.2])box(g,x,.014,0,.018,.004,1.4,'#a6a195',false);
+      for(const x of [.25,.75])box(g,x,.013,0,.009,.002,1.38,'#dedbd3',false);
+      for(const z of [-.25,.25])box(g,.5,.013,z,1.38,.002,.009,'#dedbd3',false);
     }else{
       box(g,0,.035,0,.38,.07,.5,name==='gospels'?'#c5a34f':'#913b33');
       box(g,0,.075,0,.045,.008,.3,'#f0d085');
