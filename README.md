@@ -280,6 +280,30 @@ Effects (altar bell, sacristy bell, thurible chains, right/wrong cues) are
 synthesised in the browser. Everything plays offline. Bell customs vary by place,
 so each bell is optional.
 
+### Views, controls and training modes
+
+- **Your role** is shown on a fixed card in the sidebar and in the question
+  header, with its portrait.
+- **Camera pad** (bottom right): zoom, pan and rotate. **Highlight** greys the
+  church except the people and objects currently moving. **Speaker view** briefly
+  switches to your character's eyes while your role speaks.
+- **First person** (game option): walk through your own eyes. If you head the
+  wrong way for a few seconds, an arrow and a ring show where to go. As Priest,
+  click the Missal in front of you, then the right passage on the page.
+- **Skip** (the small button, or the **S** key) ends the current speech or action.
+- **Side quests**: when another minister misses a duty, a blue, dashed
+  "Side quest" box asks who to remind and what to do. It is optional, so
+  **Skip** costs no points.
+- **Sacristan training** ("Open the church", on by default): arrive outside,
+  unlock the sacristy door, enter, open the main doors from inside, then carry
+  each item from the cupboard to its place. Hints appear after a delay that
+  depends on the level. During pack-away the camera moves to each item asked
+  about, and the item is highlighted.
+- New options: Deacon distributes Communion (on when there is a Deacon), homily
+  at the ambo (default) or chair, altar size, and tabernacle mounting (against
+  the wall by default; recessed, on a ledge or on a pillar). Short fixed texts
+  are fully voiced; quiet prayers sound softer; a soft tone marks the silences
+  after the homily and after Communion.
 ## Repository checks
 
 ```text

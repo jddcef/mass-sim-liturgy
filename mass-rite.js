@@ -59,7 +59,7 @@ const STEPS=[
 {part:'Introductory Rites',title:'Penitential Act',dur:11,posture:'stand',
  text:'The Priest invites the faithful to the Penitential Act, and a brief silence follows. All then make a common confession. The Priest gives the absolution, which lacks the efficacy of the Sacrament of Penance.',
  ref:'Order of Mass 4–6; GIRM 51',
- say:[['P','(invites all to acknowledge their sins)',.04,.25],['ppl','(brief silence)',.27,.4],['ppl','I confess to almighty God… (all strike the breast)',.43,.72],['P','May almighty God have mercy on us…',.74,.9],['ppl','Amen.',.91,1]]},
+ say:[['P','(invites all to acknowledge their sins)',.04,.25],['ppl','(brief silence)',.27,.4],['ppl','I confess to almighty God… (all strike the breast)',.43,.72],['P','May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.',.74,.9],['ppl','Amen.',.91,1]]},
 {part:'Introductory Rites',title:'Kyrie',dur:8,posture:'stand',
  text:'The Kyrie invocations follow, unless they were already part of the Penitential Act.',
  ref:'Order of Mass 7; GIRM 52',
@@ -151,7 +151,7 @@ const STEPS=[
  props:{bread:[{at:[500,160],a:.3,b:.35}],wine:[{by:'S',t:.57},{at:[886,142],a:.8,b:.86}]},
  raise:[['host-low',.33,.5],['chalice-low',.65,.82]],
  acts:{D:[['pours wine and a little water',.5,.62]],P:[['bows profoundly',.9,1]]},
- say:[['P','(low voice) Blessed are you, Lord God of all creation…',.33,.5],['P','(quietly) By the mystery of this water and wine…',.5,.63],['P','(low voice) Blessed are you… fruit of the vine…',.65,.82],['ppl','Blessed be God for ever.',.83,.95]]},
+ say:[['P','(low voice) Blessed are you, Lord God of all creation…',.33,.5],['P','(quietly) By the mystery of this water and wine may we come to share in the divinity of Christ who humbled himself to share in our humanity.',.5,.63],['P','(low voice) Blessed are you… fruit of the vine…',.65,.82],['ppl','Blessed be God for ever.',.83,.95]]},
 {part:'Liturgy of the Eucharist',title:'Incensing the Gifts, Altar, Priest and People',dur:14,posture:[['sit',0],['stand',.7]],
  text:'If appropriate, the Priest incenses the offerings, the cross and the altar. Then the Deacon or another minister incenses the Priest and the people.',
  ref:'Order of Mass 28; GIRM 75, 144, 178',
@@ -166,12 +166,12 @@ const STEPS=[
  mv:{P:[M([[600,122]],0,.2),M([ALT_P],.76,.9)],T:M([[760,100],[760,55]],0,.4),S:[M([[850,105]],0,.08),M([[642,126]],.12,.3),M([[850,105]],.72,.88),M([[805,78]],.92,1)]},
  props:{ewer:[{by:'S',t:.09},{at:[850,144],a:.88,b:.92}]},
  acts:{P:[['washes his hands',.3,.7]],S:[['pours water',.3,.7]]},
- say:[['P','(quietly) Wash me, O Lord, from my iniquity…',.3,.7]]},
+ say:[['P','(quietly) Wash me, O Lord, from my iniquity and cleanse me from my sin.',.3,.7]]},
 {part:'Liturgy of the Eucharist',title:'"Pray, brethren" & Prayer over the Offerings',dur:12,posture:'stand',
  text:'Back at the middle of the altar and facing the people, the Priest extends and then joins his hands and says "Pray, brethren". The people rise and reply. With hands extended, the Priest then says the Prayer over the Offerings, and the people acclaim "Amen."',
  ref:'Order of Mass 29–30; GIRM 43, 146',
  orans:{P:[[.03,.12],[.58,.86]]},
- say:[['P','Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.',.03,.3],['ppl','May the Lord accept the sacrifice at your hands…',.32,.56],['P','(Prayer over the Offerings)',.58,.86],['ppl','Amen.',.88,1]]},
+ say:[['P','Pray, brethren, that my sacrifice and yours may be acceptable to God, the almighty Father.',.03,.3],['ppl','May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church.',.32,.56],['P','(Prayer over the Offerings)',.58,.86],['ppl','Amen.',.88,1]]},
 {part:'Liturgy of the Eucharist',title:'Eucharistic Prayer: Preface Dialogue & Preface',dur:13,posture:'stand',
  text:'The Eucharistic Prayer begins. With hands extended, the Priest sings or says the opening dialogue, raising his hands at "Lift up your hearts." He then continues the Preface with hands extended.',
  ref:'Order of Mass 31; GIRM 78–79, 148',
@@ -239,7 +239,7 @@ const STEPS=[
  text:'The Priest breaks the host over the paten and places a small piece in the chalice, saying a prayer quietly. Meanwhile the Agnus Dei is sung or said. In many places the faithful kneel after it.',
  ref:'GIRM 43, 83, 155',
  acts:{P:[['breaks the Host',.1,.3],['places a particle in the chalice',.3,.42]]},
- say:[['P','(quietly) May this mingling of the Body and Blood…',.15,.42],['ppl','♪ Lamb of God, you take away the sins of the world… grant us peace. ♪',.08,.95]]},
+ say:[['P','(quietly) May this mingling of the Body and Blood of our Lord Jesus Christ bring eternal life to us who receive it.',.15,.42],['ppl','♪ Lamb of God, you take away the sins of the world… grant us peace. ♪',.08,.95]]},
 {part:'Communion Rite',title:'"Behold the Lamb of God"',dur:12,posture:'kneel',
  text:'With hands joined, the Priest quietly says the prayer before Communion. He genuflects, takes the host and holds it slightly raised above the paten or chalice. Facing the people, he says "Behold the Lamb of God…" and then says "Lord, I am not worthy…" once, together with the people.',
  ref:'Order of Mass 132; GIRM 84, 156–157',
@@ -302,12 +302,12 @@ const START_POS={...HOME,T:[500,700],X:[500,730],C1:[470,730],C2:[530,730],L:[50
 const PROP_DEF={
   corporal:{off:[0,-16]},missal:{off:[0,-16]},gospels:{off:[0,-16]},chalice:{off:[0,-16]},bread:{off:[0,-16]},wine:{off:[0,-16]},
   cross:{off:[0,-18]},cand1:{off:[0,-16]},cand2:{off:[0,-16]},thurible:{off:[13,8]},ewer:{off:[14,-4]},
-  collection:{off:[0,-12]},ciborium:{off:[0,-16]}
+  collection:{off:[0,-12]},ciborium:{off:[0,-16]},ciborium2:{off:[0,-16]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
   bread:{at:[612,770]},wine:{at:[632,770]},gospels:{by:'D'},cross:{by:'X'},cand1:{by:'C1'},cand2:{by:'C2'},thurible:{by:'T'},
-  collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true}
+  collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true},ciborium2:{at:[455,170],h:true}
 };
 
 // ---------- math helpers ----------

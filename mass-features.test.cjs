@@ -88,7 +88,10 @@ vm.runInContext(`
   progress3d=(held-stepStart[cur3d])/STEPS[cur3d].dur;
   utterances[0].onend();
   assert.equal(speechBusy,false);
-  assert.equal(interceptSpeech(proposed),proposed);
+  const greeting=STEPS[cur3d].say.find(s=>s[1]==='The Lord be with you.');
+  const windowEnd=stepStart[cur3d]+greeting[3]*STEPS[cur3d].dur;
+  // The spoken line's caption window was used up while the timeline was held, so it is skipped.
+  assert.equal(interceptSpeech(proposed),Math.max(proposed,Math.min(windowEnd,held+4)));
   assert.equal(utterances.length,1);
   resetSpeech();
   $('speechLanguage').value='la';
@@ -128,6 +131,18 @@ vm.runInContext(`
   window.MASS_STATIC_AUDIO.clips[JSON.stringify(['la','P','Corpus Christi.'])]='audio/test-communion.mp3';
   assert.equal(staticClip('Verbum Domini.','L2'),'audio/test-reader.mp3');
   assert.equal(staticClip('Corpus Christi.','E'),'audio/test-communion.mp3');
+  // Quiet (secret) prayers play softer; skipping ends the line in progress.
+  assert.ok(QUIET_CUE.test('(quietly) Wash me, O Lord.'));
+  assert.ok(!QUIET_CUE.test('The Lord be with you.'));
+  resetSpeech();
+  window.MASS_STATIC_AUDIO.clips[JSON.stringify(['la','P','Lava me.'])]='audio/test-quiet.mp3';
+  assert.equal(speakText('Lava me.','P',true,true),true);
+  const quiet=recordings[recordings.length-1];
+  assert.ok(quiet.volume<1,'quiet line is softer');
+  assert.ok(speechBusy);
+  assert.equal(skipSpeech(),true);
+  assert.equal(speechBusy,false);
+  assert.equal(skipSpeech(),false,'nothing left to skip');
   console.log('Passed layout transforms, 0-5 server training cues, language validation and speech synchronization.');
 `,context);
 assert.ok(canceled>0);

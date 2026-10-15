@@ -55,6 +55,25 @@ const GameAudio=(()=>{
       tone(2900+Math.random()*300,at,.25,.03,'triangle');
     }
   }
+  // A soft, slowly swelling hum marks a time of silence without breaking it.
+  function silence(){
+    if(!enabled||!ensure())return;
+    const now=ctx.currentTime;
+    for(const [f,gain] of [[196,.05],[294,.03],[392,.012]]){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0,now);
+      g.gain.linearRampToValueAtTime(gain,now+.7);
+      g.gain.exponentialRampToValueAtTime(.0001,now+3.2);
+      o.connect(g).connect(master);o.start(now);o.stop(now+3.3);
+    }
+  }
+  // A key turning, then the latch.
+  function unlock(){
+    if(!enabled||!ensure())return;
+    const now=ctx.currentTime;
+    noiseBurst(now,.05,2600,.5);noiseBurst(now+.18,.06,1800,.7);tone(140,now+.18,.12,.08,'triangle');
+  }
   function correct(){
     if(!enabled||!ensure())return;
     const now=ctx.currentTime;tone(660,now,.25,.08);tone(990,now+.1,.35,.08);
@@ -67,6 +86,6 @@ const GameAudio=(()=>{
     if(!enabled||!ensure())return;
     tone(1200,ctx.currentTime,.05,.03,'square');
   }
-  return {ensure,altarBell,sacristyBell,thurible,correct,wrong,tick,
+  return {ensure,altarBell,sacristyBell,thurible,silence,unlock,correct,wrong,tick,
     setEnabled(v){enabled=!!v;},get enabled(){return enabled;}};
 })();

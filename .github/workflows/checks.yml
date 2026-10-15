@@ -20,6 +20,7 @@ jobs:
           node --check mass-game-icons.js
           node --check mass-game-logic.js
           node --check mass-game-audio.js
+          node --check mass-game-view.js
           node --check mass-game.js
           node mass-scenarios.test.cjs
           node mass-features.test.cjs

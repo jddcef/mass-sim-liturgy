@@ -107,3 +107,36 @@ body.noSymbols .iconWrap { display:none; }
 #gameLog li.auto { color:#5d6b7a; }
 #gameQuestions[aria-pressed="false"] { background:#2f6f7a; color:#fff; border-color:#2f6f7a; }
 #decisionOptions button:hover, #decisionOptions button:focus-visible, #decisionOptions label:hover { outline:2px solid #3fd0e6; outline-offset:1px; }
+/* Round 5: role identity, side quests, camera pad and skip */
+#roleCard { display:flex; align-items:center; gap:10px; padding:6px 8px; margin-bottom:8px; border:1px solid #d9c7a2; border-radius:8px; background:#fffaf0; }
+#roleCard .rolePortrait { width:64px; height:54px; margin:0; flex:none; }
+#roleCard div { display:flex; flex-direction:column; line-height:1.2; }
+#roleCard strong { font:600 17px Georgia,serif; }
+#roleCard small { color:#6c5f4b; font-size:12px; }
+#decisionRole { display:inline-flex; align-items:center; gap:4px; padding:1px 8px 1px 3px; border-radius:10px; background:#efe3c8; color:#5a4518; font-weight:700; white-space:nowrap; }
+#decisionRole .iconWrap svg { width:16px; height:16px; }
+#decisionHead { justify-content:flex-start; }
+#decisionStep { flex:1; }
+#decisionPortrait { display:none; }
+@media (min-width:1150px) and (min-height:640px) {
+  #decision { padding-left:104px; }
+  #decisionPortrait { display:block; position:absolute; left:10px; top:12px; width:84px; }
+  #decisionPortrait .rolePortrait { width:84px; height:70px; }
+}
+#decision.sideQuest { background:#eef3fbf5; border-color:#4f6fa8; border-style:dashed; }
+#decision.sideQuest #decisionRole { background:#d6e2f5; color:#28467a; }
+#decision.sideQuest.right { border-color:#3f8a5a; }
+#decision.sideQuest.wrong { border-color:#b0473a; }
+#decisionSkip { margin-left:auto; background:transparent; border:1px dashed #4f6fa8; color:#28467a; }
+#cameraPad { position:absolute; right:10px; top:52px; z-index:3; display:grid; grid-template-columns:repeat(2,30px); gap:4px; padding:5px; border-radius:8px; background:#ffffffb8; box-shadow:0 2px 8px #0003; }
+#cameraPad button { width:30px; height:28px; padding:0; font-size:15px; line-height:1; }
+body.deciding #cameraPad { opacity:.75; }
+#transport .subtle { background:transparent; border:1px solid #c9b994; color:#6c5f4b; font-size:12px; padding:3px 8px; opacity:.8; }
+#transport .subtle:hover, #transport .subtle:focus-visible { opacity:1; }
+@media(max-width:900px) { #cameraPad { top:auto; bottom:8px; grid-template-columns:repeat(5,28px); } }
+/* Round 5: hints, direction arrow, first person */
+#decision.hinted #decisionHint { color:#0f7f91; font-weight:600; }
+#dirArrow { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); z-index:3; display:flex; flex-direction:column; align-items:center; pointer-events:none; color:#0f7f91; text-shadow:0 0 6px #fff, 0 0 12px #fff; }
+#dirArrow[hidden] { display:none; }
+#dirArrow span { font-size:54px; line-height:1; transition:transform .15s; }
+#dirArrow small { font:700 14px system-ui,sans-serif; background:#ffffffd0; padding:1px 8px; border-radius:8px; }

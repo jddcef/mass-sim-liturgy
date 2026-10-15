@@ -152,7 +152,19 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
   }
 }
 
-let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor;
+let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor, tabernacleBody=[], tabernacleMount=null, altarParts=[];
+const ALTAR_SIZES={small:.8,standard:1,large:1.3};
+function setAltarSize(size){
+  const factor=ALTAR_SIZES[size]||1;
+  altarParts.forEach(part=>{part.scale.x=factor;});
+}
+function setTabernacleStyle(style){
+  if(!tabernacleMount)return;
+  const mounting={projecting:'plinth',pillar:'pillar',ledge:'ledge',recessed:'recess'}[style]||'plinth';
+  for(const [name,group] of Object.entries(tabernacleMount))group.visible=name===mounting;
+  const back=mounting==='recess'?.75:0;
+  tabernacleBody.forEach(o=>{o.position.z=o.userData.z-back;});
+}
 function buildCrucifix(){
   crucifixGroup=new THREE.Group();
   box(crucifixGroup,0,0,0,.16,1.8,.12,'#5e432d');
@@ -216,7 +228,7 @@ function setWindowStyle(style){
 function setSanctuaryFloor(name){
   if(sanctuaryFloor)sanctuaryFloor.material=material(FLOOR_COLOURS[name]||FLOOR_COLOURS.sandstone);
 }
-const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind'};
+const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind',tabernacleStyle:'projecting',altarSize:'standard'};
 function readAppearance(){
   const a={...APPEARANCE_DEFAULTS};
   for(const key of Object.keys(a))if($('app_'+key))a[key]=$('app_'+key).value;
@@ -230,9 +242,11 @@ function applyAppearance(a){
   setCorpus(a.corpus!=='no');
   setWindowStyle(a.windows);
   setSanctuaryFloor(a.floor);
+  setAltarSize(a.altarSize);
+  setTabernacleStyle(a.tabernacleStyle);
   if(a.tabernacle!=='custom'){
-    churchLayout.tabernacle=({behind:[500,40],left:[137,85],right:[863,85]})[a.tabernacle]?.slice()||[500,40];
-    if(a.tabernacle==='behind'&&Math.hypot(churchLayout.chair[0]-500,churchLayout.chair[1]-40)<100)churchLayout.chair=[320,65];
+    churchLayout.tabernacle=({behind:[500,32],left:[137,32],right:[863,32]})[a.tabernacle]?.slice()||[500,32];
+    if(a.tabernacle==='behind'&&Math.hypot(churchLayout.chair[0]-500,churchLayout.chair[1]-32)<100)churchLayout.chair=[320,65];
     refreshFurniture();
     if(featuresReady)refreshLayoutFields();
   }
@@ -285,9 +299,11 @@ function buildChurch(){
   }
   let fixtureStart=scene.children.length;
   const altar=world([500,170]);
-  box(scene,altar.x,altar.y+.63,altar.z,3.5,1.15,1.1,'#bdab8f');
-  box(scene,altar.x,altar.y+1.26,altar.z,5.1,.16,1.6,'#fffae9');
-  box(scene,altar.x,altar.y+1.03,altar.z+.83,5.1,.4,.035,'#f5f0e4');
+  altarParts=[
+    box(scene,altar.x,altar.y+.63,altar.z,3.5,1.15,1.1,'#bdab8f'),
+    box(scene,altar.x,altar.y+1.26,altar.z,5.1,.16,1.6,'#fffae9'),
+    box(scene,altar.x,altar.y+1.03,altar.z+.83,5.1,.4,.035,'#f5f0e4')
+  ];
   collectFurniture('altar',fixtureStart);
   fixtureStart=scene.children.length;
   const ambo=world([200,245]);
@@ -332,8 +348,21 @@ function buildChurch(){
   }
   fixtureStart=scene.children.length;
   const tab=world([137,85]);
-  box(scene,tab.x,tab.y+.6,tab.z,1.4,1.2,1,'#7f3433');
-  box(scene,tab.x,tab.y+1.23,tab.z,1.7,.14,1.25,'#e5d7bc');
+  // Mountings: a projecting plinth, a wall recess, a wall ledge or a pillar; see setTabernacleStyle.
+  const mount={plinth:new THREE.Group(),pillar:new THREE.Group(),ledge:new THREE.Group(),recess:new THREE.Group()};
+  box(mount.plinth,tab.x,tab.y+.6,tab.z,1.4,1.2,1,'#7f3433');
+  box(mount.plinth,tab.x,tab.y+1.23,tab.z,1.7,.14,1.25,'#e5d7bc');
+  cylinder(mount.pillar,tab.x,tab.y+.62,tab.z,.3,.36,1.1,'#e5d7bc');
+  box(mount.pillar,tab.x,tab.y+.06,tab.z,.9,.12,.9,'#cbbd9f');
+  box(mount.pillar,tab.x,tab.y+1.23,tab.z,1.15,.14,.95,'#e5d7bc');
+  box(mount.ledge,tab.x,tab.y+1.23,tab.z-.12,1.5,.12,.8,'#e5d7bc');
+  for(const dx of [-.5,.5])box(mount.ledge,tab.x+dx,tab.y+.98,tab.z-.36,.14,.4,.3,'#cbbd9f');
+  box(mount.recess,tab.x,tab.y+1.29,tab.z-.42,1.5,.1,.3,'#e5d7bc');
+  for(const dx of [-.72,.72])box(mount.recess,tab.x+dx,tab.y+1.8,tab.z-.45,.16,1.2,.14,'#e5d7bc');
+  box(mount.recess,tab.x,tab.y+2.45,tab.z-.45,1.6,.18,.16,'#e5d7bc');
+  sphere(mount.recess,tab.x,tab.y+2.62,tab.z-.45,.08,'#d4af37');
+  for(const group of Object.values(mount))scene.add(group);
+  const body=scene.children.length;
   box(scene,tab.x,tab.y+1.7,tab.z,.95,.8,.7,'#c59a3f');
   tabernacleDoor=new THREE.Group();
   tabernacleDoor.position.set(tab.x-.38,tab.y+1.7,tab.z+.37);
@@ -345,6 +374,9 @@ function buildChurch(){
   for(const side of [-1,1])cylinder(scene,tab.x+side*.48,tab.y+1.7,tab.z+.38,.04,.05,.87,'#e3bc62');
   cylinder(scene,tab.x,tab.y+2.16,tab.z,.27,.52,.18,'#c59a3f');
   sphere(scene,tab.x,tab.y+2.31,tab.z,.055,'#fff1ba');
+  tabernacleBody=scene.children.slice(body);
+  tabernacleBody.forEach(o=>{o.userData.z=o.position.z;});
+  tabernacleMount=mount;
   sphere(scene,tab.x+.76,tab.y+1.95,tab.z+.15,.09,'#df4735');
   cylinder(scene,tab.x+.76,tab.y+1.75,tab.z+.15,.025,.025,.3,'#c59a3f');
   collectFurniture('tabernacle',fixtureStart);
@@ -383,7 +415,7 @@ function makeObjects(){
       const handle=mesh(new THREE.TorusGeometry(.2,.025,6,16,Math.PI),'#8a6540',g,0,.15,0);
       handle.rotation.z=0;
       box(g,0,.22,0,.16,.015,.12,'#d4af37',false);
-    }else if(name==='ciborium'){
+    }else if(name.startsWith('ciborium')){
       cylinder(g,0,.025,0,.12,.12,.04,'#c59a3f');
       cylinder(g,0,.13,0,.03,.03,.2,'#c59a3f');
       cylinder(g,0,.29,0,.18,.08,.18,'#e3bc62');
@@ -411,10 +443,34 @@ function makeObjects(){
       for(const x of [-.2,1.2])box(g,x,.014,0,.018,.004,1.4,'#a6a195',false);
       for(const x of [.25,.75])box(g,x,.013,0,.009,.002,1.38,'#dedbd3',false);
       for(const z of [-.25,.25])box(g,.5,.013,z,1.38,.002,.009,'#dedbd3',false);
+    }else if(name==='gospels'){
+      box(g,0,.035,0,.4,.07,.52,'#e8dcc0');
+      box(g,0,.006,0,.42,.012,.54,'#c9a13e');
+      box(g,0,.068,0,.42,.012,.54,'#d9b44a');
+      box(g,0,.08,0,.05,.012,.34,'#b8861f');
+      box(g,0,.08,-.04,.24,.012,.05,'#b8861f');
+      for(const [x,z] of [[-.13,-.18],[.13,-.18],[-.13,.18],[.13,.18]])sphere(g,x,.078,z,.022,'#b3262d',false);
+      sphere(g,0,.085,-.04,.026,'#2f5fa8',false);
     }else{
-      box(g,0,.035,0,.38,.07,.5,name==='gospels'?'#c5a34f':'#913b33');
-      box(g,0,.075,0,.045,.008,.3,'#f0d085');
-      box(g,0,.08,-.03,.18,.008,.04,'#f0d085');
+      // Roman Missal: deep red binding, gilt page edges and coloured ribbons; it lies open while in use at the altar.
+      const closed=new THREE.Group();g.add(closed);
+      box(closed,0,.035,0,.38,.07,.5,'#efe5c8');
+      box(closed,0,.006,0,.4,.012,.52,'#7e1d27');
+      box(closed,0,.066,0,.4,.012,.52,'#8e2430');
+      box(closed,-.19,.035,0,.02,.07,.52,'#6d1820');
+      box(closed,0,.075,0,.03,.006,.18,'#d4af37');
+      box(closed,0,.075,-.02,.12,.006,.03,'#d4af37');
+      for(const [x,c] of [[-.06,'#2e7d4f'],[0,'#b3262d'],[.06,'#e0b43a']])box(closed,x,.02,.27,.018,.01,.12,c,false);
+      const open=new THREE.Group();open.visible=false;g.add(open);
+      box(open,0,.05,0,.62,.1,.36,'#6b4a2f');
+      for(const side of [-1,1]){
+        const leaf=new THREE.Group();leaf.position.set(0,.12,0);leaf.rotation.z=side*-.08;open.add(leaf);
+        box(leaf,side*.19,0,0,.38,.012,.5,'#8e2430');
+        box(leaf,side*.18,.018,0,.35,.025,.47,'#f7f0dc');
+        for(let i=0;i<7;i++)box(leaf,side*.18,.032,-.17+i*.055,.27,.003,.012,i===0?'#b3262d':'#6c6658',false);
+      }
+      for(const [x,c] of [[-.04,'#2e7d4f'],[.02,'#b3262d']])box(open,x,.14,.27,.016,.008,.12,c,false);
+      g.userData.closed=closed;g.userData.open=open;
     }
   }
   const smokeMaterial=new THREE.MeshBasicMaterial({color:'#ddd9d0',transparent:true,opacity:.18,depthWrite:false});
@@ -545,7 +601,8 @@ function updatePeople(step,phase){
       const t=(progress3d-start)/duration;
       if(t>0&&t<1){
         const side=p[0]<500?-1:1;
-        const station=special.emhc&&i%2?[620,318]:special.bothKinds?(i%2?[530,318]:[470,318]):[500,318];
+        const stations=[...(special.bothKinds||special.deaconHosts?[[470,318],[530,318]]:[[500,318]]),...(special.emhc?[[620,318]]:[])];
+        const station=stations[(i/3)%stations.length];
         const aisle=side<0?487:513,outer=side<0?112:888;
         if(t<.43)p=along([p,[aisle,p[1]],[aisle,340],station],t/.43);
         else if(t<.55){p=station;receiving=true;}
@@ -632,6 +689,10 @@ function renderFrame(dt=1/60){
     object.position.y=objectHeight(name,state,p);
     object.rotation.set(0,0,0);
     if((name==='gospels'||name==='missal')&&state.by)object.rotation.x=-Math.PI/2;
+    if(name==='missal'){
+      const open=!state.by&&Math.abs(p[0]-500)<110&&p[1]>130&&p[1]<210;
+      object.userData.open.visible=open;object.userData.closed.visible=!open;
+    }
     if(state.by&&name==='thurible')object.rotation.z=Math.sin(elapsed*5)*.25;
   }
   const raised=(step.raise||[]).find(([,a,b])=>progress3d>=a&&progress3d<=b);
@@ -685,7 +746,8 @@ function renderFrame(dt=1/60){
   updateTraining();
   updateFollow(dt);
   controls.update();
-  renderer.render(scene,camera3d);
+  if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
+  if(typeof gameRender!=='function'||!gameRender())renderer.render(scene,camera3d);
 }
 
 function showStep(){
@@ -836,7 +898,7 @@ function initialise(){
   applyAppearance(readAppearance());
   for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion',...Object.keys(APPEARANCE_DEFAULTS).map(k=>'app_'+k)])if($(id))$(id).onchange=applySetup;
   $('camera').onchange=event=>setCamera(event.target.value);
-  $('resetCamera').onclick=()=>setCamera(cameraMode);
+  $('resetCamera').onclick=()=>setCamera($('camera').value);
   $('play3d').onclick=()=>{
     if(!playing3d&&cur3d===STEPS.length-1&&progress3d>=1)jump(0);
     setPlaying(!playing3d);

@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -26,6 +27,22 @@ GROUP = [
     ("bf_isabella", 0.99, 0.095, -0.8),
 ]
 DEFAULT_GROUP_SIZE = 4
+# English-voice pronunciation of Greek liturgical words, given as phonemes because
+# espeak reads Kyrie as KY-ree and Christe as Christ. Captions and manifest keys stay unchanged.
+PHONEMES = {
+    "Kyrie, eleison.": "kˈɪəɹieɪ, eɪlˈeɪɪsɒn.",
+    "Christe, eleison.": "kɹˈɪsteɪ, eɪlˈeɪɪsɒn.",
+}
+
+
+def spoken_form(text, language):
+    """Return (input, is_phonemes) for the engine; captions are never changed."""
+    if language == "en" and text in PHONEMES:
+        return PHONEMES[text], True
+    if language == "en":
+        # Capitalised rubric text (the words of consecration) would be spelled out: IT -> I.T.
+        text = re.sub(r"\b[A-Z]{2,}\b", lambda match: match.group(0).lower(), text)
+    return text, False
 
 class ModelInputSession:
     """Normalize exported input types; kokoro-onnx 0.4.9 mis-types speed."""
@@ -107,15 +124,16 @@ def main():
         filename = destination.name
         if not destination.exists():
             phoneme_language = "la" if language == "la" else "en-gb"
+            spoken, is_phonemes = spoken_form(text, language)
             if role == "ppl":
                 layers = []
                 for voice, speed, delay, pan in group:
-                    samples, rate = engine.create(text, voice=voice, speed=1, lang=phoneme_language)
+                    samples, rate = engine.create(spoken, voice=voice, speed=1, lang=phoneme_language, is_phonemes=is_phonemes)
                     samples = vary_speed(samples, speed)
                     layers.append((samples, delay, pan))
                 samples = mix_group(layers, rate)
             else:
-                samples, rate = engine.create(text, voice=VOICES[role], speed=1, lang=phoneme_language)
+                samples, rate = engine.create(spoken, voice=VOICES[role], speed=1, lang=phoneme_language, is_phonemes=is_phonemes)
                 samples = vary_speed(samples, 0.95)
             if not len(samples) or not np.isfinite(samples).all():
                 raise ValueError(f"Invalid generated audio for {key}")
@@ -123,8 +141,10 @@ def main():
                 wav = Path(temporary) / "clip.wav"
                 sf.write(wav, samples, rate, subtype="PCM_16")
                 pending = destination.with_name(filename + ".pending.mp3")
+                # Prayers said quietly or in a low voice get a softer, hushed tone.
+                hush = ["-af", "highpass=f=220,lowpass=f=3400,volume=0.5"] if job.get("quiet") else []
                 subprocess.run(
-                    ["ffmpeg", "-v", "error", "-y", "-i", str(wav), "-codec:a", "libmp3lame",
+                    ["ffmpeg", "-v", "error", "-y", "-i", str(wav), *hush, "-codec:a", "libmp3lame",
                      "-b:a", "96k", str(pending)], check=True
                 )
                 pending.replace(destination)
