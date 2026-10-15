@@ -23,7 +23,8 @@ const game={
   soundCues:[],soundIndex:0,lastElapsed:-1,
   walkers:{},overrides:{},player:null,seatIndex:-1,
   markers:[],tokens:[],placed:new Set(),hideProps:false,hideMinisters:false,
-  checklist:[],book:null,clock:0,mcPos:MC_HOME.slice(),afterWalk:null
+  checklist:[],book:null,clock:0,mcPos:MC_HOME.slice(),afterWalk:null,
+  questions:true,autoCount:0,highlight:null,cross:null
 };
 
 // ---------- small helpers ----------
@@ -200,6 +201,7 @@ function buildSetupForm(){
       else field.value=value;
     }
   }catch{}
+  if(typeof applyAppearance==='function'&&figures.P)applyAppearance(readAppearance());
   form.addEventListener('change',previewNotes);
   form.addEventListener('submit',event=>{event.preventDefault();startGame(readForm());});
   previewNotes();
@@ -219,7 +221,8 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    lapses:saved.lapses,detail:saved.detail,level:saved.level,seed:Math.floor(Math.random()*1e6)
+    crucifix:saved.crucifix,crossStand:saved.crossStand,
+    lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   return {role:saved.role||'P',level:saved.level||'choice',sound:saved.sound!==false,raw};
 }
@@ -261,7 +264,7 @@ function resetGameState(){
   }
   congregation.forEach(person=>{person.figure.root.visible=true;});
   Object.assign(game,{phase:'setup',stops:[],active:null,lapse:null,duties:[],soundCues:[],lastElapsed:-1,walkers:{},overrides:{},
-    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard()});
+    facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[]});
   $('gameLog').replaceChildren();
   $('gameChecklist').hidden=true;
   $('bookModal').hidden=true;
@@ -276,7 +279,10 @@ function startGame(config){
   syncSoundButton();
   resetGameState();
   const {options,notes}=normaliseGameOptions(config.role,{...config.raw,level:config.level});
-  Object.assign(game,{role:config.role,level:config.level,options,notes,seed:options.seed});
+  Object.assign(game,{role:config.role,level:config.level,options,notes,seed:options.seed,questions:!GAME_LEVELS[config.level].watch});
+  game.cross=setCrossPlaces(options);
+  document.body.classList.toggle('noSymbols',options.symbols===false);
+  syncQuestionsButton();
   $('deacon').checked=options.deacon;$('lector').checked=options.lector;
   $('serverCount').value=String(options.serverCount);
   $('incense').checked=options.incense;$('bothKinds').checked=options.bothKinds;
@@ -323,6 +329,8 @@ function describeCelebration(){
   parts.push({A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
   parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
   if(o.solemnBlessing)parts.push('Solemn Blessing');
+  if(o.crucifix!=='wall')parts.push('crucifix: '+CRUCIFIX_PLACES[o.crucifix].name.toLowerCase());
+  if(o.crossStand!=='right')parts.push('cross stand: '+CROSS_STANDS[o.crossStand].name.toLowerCase());
   return parts.join(', ')+'.';
 }
 function setupPlayerFigure(){
@@ -377,6 +385,11 @@ function ask(decision){
   return new Promise(resolve=>{
     closeDecision();
     const active={decision,resolve,attempt:1,started:performance.now(),finished:false,gen:game.gen,lastTick:99};
+    if(!game.questions){
+      // Questions off: the duty is done for the player after a short pause, without scoring.
+      active.timer=setTimeout(()=>autoResolve(active),350);
+      return;
+    }
     game.active=active;
     renderDecision(active);
   });
@@ -397,21 +410,26 @@ function renderDecision(active){
     checklist:'Tick everything that should be done, then press Finished.'
   };
   let hint=d.hint||hints[d.input]||'';
-  if(game.level==='guided'&&!d.hint)hint='Guided: press the button to do it.';
-  if(d.input==='options'&&d.options.some(o=>o.at)&&game.level!=='guided')hint='Click an answer, or its marker on the floor.';
+  if(isGuided(game.level)&&!d.hint)hint='Guided: press the button to do it.';
+  if(d.input==='options'&&d.options.some(o=>o.at)&&!isGuided(game.level))hint='Click an answer, or its marker on the floor.';
   $('decisionHint').textContent=hint;
   const list=$('decisionOptions');
   list.className=d.input==='palette'?'palette':d.input==='checklist'?'checklist':'';
   list.replaceChildren();
   const buttons=d.input==='options'||d.input==='palette'?d.options:(d.extraOptions||[]);
   buttons.forEach((option,i)=>{
-    const button=el('button',{type:'button'},[el('span',{className:'key',textContent:i<9?String(i+1):''}),(game.level==='guided'&&option.correct?'▶ ':'')+option.label]);
+    const button=el('button',{type:'button'},[el('span',{className:'key',textContent:i<9?String(i+1):''}),iconNode(GameIcons.iconFor(option.label,iconKind(d,option))),(isGuided(game.level)&&option.correct?'▶ ':'')+option.label]);
     button.dataset.value=JSON.stringify(optionValue(option));
+    linkHighlight(button,()=>highlightTarget(option,option.label));
     button.onclick=()=>answer(optionValue(option),button);
     list.append(button);
   });
   if(d.input==='checklist'){
-    for(const item of d.items)list.append(el('label',{},[el('input',{type:'checkbox',value:item.id}),item.name]));
+    for(const item of d.items){
+      const row=el('label',{},[el('input',{type:'checkbox',value:item.id}),iconNode(GameIcons.iconFor(item.name)),item.name]);
+      linkHighlight(row,()=>highlightTarget(item.places?.[0]?{at:placeById(item.places[0])?.at}:null,item.name));
+      list.append(row);
+    }
   }
   $('decisionFinish').hidden=d.input!=='checklist';
   $('decisionFinish').onclick=()=>answer([...list.querySelectorAll('input:checked')].map(x=>x.value));
@@ -423,7 +441,7 @@ function renderDecision(active){
   $('decisionTimer').firstElementChild.style.width='100%';
   $('decisionTimer').classList.remove('low');
   clearMarkers();
-  if(d.input==='options'&&game.level!=='guided'){
+  if(d.input==='options'&&!isGuided(game.level)){
     for(const option of d.options)if(option.at)addMarker(option.at,option.label,optionValue(option));
   }
   if(d.input==='book')openBook();
@@ -466,8 +484,11 @@ function finish(active,result){
   box.className=(box.className.replace(/\b(right|wrong)\b/g,'')+(result.correct?' right':' wrong')).trim();
   for(const button of $('decisionOptions').querySelectorAll('button')){
     const option=d.options?.find(o=>JSON.stringify(optionValue(o))===button.dataset.value);
-    if(option?.correct)button.classList.add('correct');
     button.disabled=true;
+    if(option?.correct){
+      button.classList.add('correct');
+      if(!result.correct){button.disabled=false;button.onclick=()=>done();}
+    }
   }
   $('decisionTimer').hidden=true;
   const message=result.correct
@@ -476,12 +497,12 @@ function finish(active,result){
   $('decisionFeedback').replaceChildren(message.trim()+' ',el('span',{className:'ref',textContent:d.ref?'('+d.ref+')':''}),points?el('strong',{textContent:' '+(points>0?'+':'')+points}):'');
   logResult(d,result.correct,outcome,points);
   if(d.input==='book'&&result.correct)$('bookModal').hidden=true;
-  const done=()=>{
+  function done(){
     if(game.active!==active)return;
     closeDecision();
     active.resolve(outcome);
-  };
-  if(result.correct)active.timer=setTimeout(done,game.level==='guided'?450:900);
+  }
+  if(result.correct)active.timer=setTimeout(done,isGuided(game.level)?450:900);
   else{
     $('decisionContinue').hidden=false;
     $('decisionContinue').onclick=done;
@@ -496,6 +517,21 @@ function closeDecision(){
   $('decision').hidden=true;
   document.body.classList.remove('deciding');
   clearMarkers();
+  setHighlight(null);
+}
+function autoResolve(active){
+  if(active.finished||active.gen!==game.gen)return;
+  active.finished=true;
+  clearTimeout(active.timer);
+  const d=active.decision;
+  const value=autoAnswer(d);
+  game.autoCount++;
+  const shown=d.input==='checklist'?d.items.filter(i=>i.needed).length+' tasks done':displayAnswer(value);
+  logLine('▶ '+(d.title?d.title+': ':'')+shown,'auto');
+  if(d.input==='checklist')for(const item of d.items)if(item.needed)markChecklist(item.id,'done');
+  if(!['cue','nudge'].includes(d.kind)&&game.phase!=='pre')toast('You: '+shown,false,1800);
+  if(game.active===active)closeDecision();
+  active.resolve({correct:true,attempt:1,remaining:0,raw:value,answer:shown,auto:true});
 }
 function updateDecisionTimer(){
   const active=game.active;
@@ -507,6 +543,70 @@ function updateDecisionTimer(){
   const seconds=Math.ceil(left*active.decision.timer);
   if(seconds<=3&&seconds<active.lastTick&&seconds>0){active.lastTick=seconds;GameAudio.tick();}
   if(left<=0)finish(active,{correct:false,timedOut:true,answer:null});
+}
+
+// ---------- symbols and hover highlights ----------
+function iconNode(name){
+  const span=el('span',{className:'iconWrap'});
+  if(name)span.innerHTML=GameIcons.svg(name);
+  return span;
+}
+function iconKind(d,option){
+  if(option.role)return 'role';
+  if(d.kind==='say'||d.input==='book')return 'say';
+  if(d.kind==='posture')return 'posture';
+  return d.kind;
+}
+// Resolves what an answer refers to in the church: a plan point, a minister or a prop.
+function highlightTarget(option,text){
+  if(option?.at)return {point:option.at};
+  if(option?.role&&figures[option.role])return {figure:option.role};
+  const target=GameIcons.targetFor(text);
+  if(!target)return null;
+  if(target.cross){
+    const cross=game.cross;
+    if(cross?.kind==='crucifix')return {point:[cross.at[0],cross.at[1]+12]};
+    return objects.cross?{object:'cross'}:null;
+  }
+  if(target.prop&&objects[target.prop])return {object:target.prop};
+  if(target.place){const place=placeById(target.place);return place?{point:place.at}:null;}
+  return null;
+}
+let highlightMesh=null;
+function setHighlight(target){
+  game.highlight=target||null;
+  if(!target&&highlightMesh)highlightMesh.visible=false;
+}
+function linkHighlight(node,resolve){
+  const show=()=>setHighlight(resolve());
+  node.addEventListener('mouseenter',show);
+  node.addEventListener('focus',()=>{if(node.matches(':focus-visible'))show();});
+  node.addEventListener('mouseleave',()=>setHighlight(null));
+  node.addEventListener('blur',()=>setHighlight(null));
+}
+function updateHighlight(now){
+  const target=game.highlight;
+  if(!target){if(highlightMesh)highlightMesh.visible=false;return;}
+  if(!highlightMesh){
+    highlightMesh=new THREE.Group();
+    const glow={color:'#3fd0e6',transparent:true,depthTest:false,side:THREE.DoubleSide};
+    const ring=new THREE.Mesh(new THREE.RingGeometry(.42,.6,40),new THREE.MeshBasicMaterial({...glow,opacity:.95}));
+    ring.rotation.x=-Math.PI/2;ring.renderOrder=6;
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,3.2,16,1,true),new THREE.MeshBasicMaterial({...glow,opacity:.22}));
+    beam.position.y=1.6;beam.renderOrder=5;
+    highlightMesh.add(ring,beam);
+    highlightMesh.userData.ring=ring;
+    scene.add(highlightMesh);
+  }
+  let position;
+  if(target.point)position=world(target.point);
+  else if(target.figure)position=figures[target.figure].root.position.clone();
+  else if(target.object)position=objects[target.object].position.clone();
+  if(!position){highlightMesh.visible=false;return;}
+  highlightMesh.visible=true;
+  highlightMesh.position.set(position.x,position.y+.05,position.z);
+  const pulse=1+.22*Math.sin(now*6);
+  highlightMesh.userData.ring.scale.set(pulse,pulse,pulse);
 }
 
 // ---------- floor markers ----------
@@ -583,11 +683,11 @@ function logLine(text,className=''){
 }
 function logResult(d,correct,outcome,points){
   const text=(correct?'✓ ':'✗ ')+(d.title?d.title+': ':'')+(correct?displayAnswer(d.correct):'expected '+displayAnswer(d.correct)+(outcome.timedOut?' (time ran out)':', you chose '+outcome.answer));
-  $('gameLog').prepend(el('li',{className:correct?'right':'wrong'},[text+' ',el('span',{className:'ref',textContent:d.ref?'('+d.ref+')':''}),points?' '+(points>0?'+':'')+points:'']));
+  $('gameLog').prepend(el('li',{className:correct?'right':'wrong'},[iconNode(GameIcons.iconFor(displayAnswer(d.correct),iconKind(d,{}))),text+' ',el('span',{className:'ref',textContent:d.ref?'('+d.ref+')':''}),points?' '+(points>0?'+':'')+points:'']));
 }
 function setChecklist(items){
   const list=$('gameChecklist');
-  list.replaceChildren(...items.map(item=>el('li',{textContent:item.name,dataset:{id:item.id}})));
+  list.replaceChildren(...items.map(item=>el('li',{dataset:{id:item.id}},[iconNode(GameIcons.iconFor(item.name)),item.name])));
   list.hidden=!items.length;
 }
 function markChecklist(id,state){
@@ -600,7 +700,7 @@ function taskDecision(task,stage){
   const level=game.level;
   const d={...task,stage,title:task.title||stage,level,attempts:GAME_LEVELS[level].attempts,timer:decisionTimer(level,task.kind),input:'options'};
   d.options=(task.options||[]).map(o=>({...o}));
-  if(level==='guided')d.options=d.options.filter(o=>o.correct);
+  if(isGuided(level))d.options=d.options.filter(o=>o.correct);
   if(task.kind==='place'){
     d.options.forEach(o=>{if(!o.at){const place=GAME_PLACES.find(p=>p.name===o.label);if(place)o.at=place.at;}});
     if(task.target)d.options.forEach(o=>{if(o.correct)o.at=task.target;});
@@ -743,7 +843,7 @@ function placeDecision(item){
     options=[{label:NOT_NEEDED,correct:true},{label:tempting.name,correct:false,at:tempting.at},...shuffled(pool,random).slice(0,2).map(p=>({label:p.name,correct:false,at:p.at}))];
   }
   options=shuffled(options,random);
-  if(level==='guided')options=options.filter(o=>o.correct);
+  if(isGuided(level))options=options.filter(o=>o.correct);
   return {id:'setup:'+item.id,kind:'place',stage:'Before Mass: sacristan',title:item.name,prompt:item.name+': where does it go?',
     places:item.needed?item.places:[],correct:item.needed?right.name:NOT_NEEDED,ref:item.ref,explain:item.reason||'',
     level,attempts:GAME_LEVELS[level].attempts,timer:decisionTimer(level,'place'),
@@ -783,7 +883,7 @@ async function runPackAway(gen){
   for(const item of items){
     const correct=item.needed?'Do it now':'Leave it';
     let options=[{label:'Do it now',correct:item.needed},{label:'Leave it',correct:!item.needed}];
-    if(game.level==='guided')options=options.filter(o=>o.correct);
+    if(isGuided(game.level))options=options.filter(o=>o.correct);
     const outcome=await ask({id:'pack:'+item.id,kind:'task',stage:'After Mass: sacristan',title:item.name,prompt:item.name+'?',correct,options,ref:item.ref,explain:item.reason||'',
       level:game.level,attempts:1,timer:decisionTimer(game.level,'task'),input:'options'});
     if(gen!==game.gen)return;
@@ -821,6 +921,7 @@ function beginMass(){
 async function runStop(stop){
   game.busy=true;
   const gen=game.gen;
+  const snapshot={stop,board:JSON.parse(JSON.stringify(game.board)),autoCount:game.autoCount,logLen:$('gameLog').children.length};
   if(stop.type==='decision'){
     const d=buildDecision(stop.duty,game.level,game.seed,game.allDuties);
     if(stop.duty.type==='move')d.explain='You go to '+placeFor(stop.duty.to,GAME_ROLES[game.role].actor).name+'.';
@@ -835,14 +936,38 @@ async function runStop(stop){
   }
   if(gen!==game.gen)return;
   stop.done=true;
+  game.history.push(snapshot);
   game.busy=false;
+}
+// Takes the player back to the previous decision, undoing its score and log entry.
+function redoPrevious(){
+  if(game.phase!=='mass'||!game.history.length){toast('There is no earlier step to redo yet.');return;}
+  const entry=game.history.pop();
+  game.gen++;
+  closeDecision();
+  $('bookModal').hidden=true;
+  setHighlight(null);
+  game.busy=false;game.lapse=null;
+  Object.assign(game.board,entry.board);
+  game.autoCount=entry.autoCount;
+  const log=$('gameLog');
+  while(log.children.length>entry.logLen)log.firstElementChild.remove();
+  const index=game.stops.indexOf(entry.stop);
+  game.stops.forEach((stop,i)=>{if(i>=index)stop.done=false;});
+  let step=0;
+  while(step<STEPS.length-1&&stepStart[step+1]<=entry.stop.time)step++;
+  jump(step,Math.min(1,(entry.stop.time-stepStart[step])/STEPS[step].dur));
+  game.lastElapsed=entry.stop.time-1e-6;
+  setPlaying(true);
+  updateScore();
+  toast('Back one step: '+STEPS[step].title+'.');
 }
 async function lapseStop(lapse,gen){
   game.lapse=lapse;
   const d=nudgeDecision(lapse,game.level,game.visible);
   const who=ROLE_NAMES[lapse.role];
   d.explain='Due now for the '+who.toLowerCase()+': '+lapse.expected+'.';
-  if(game.level==='guided')d.options=d.options.filter(o=>o.correct);
+  if(isGuided(game.level))d.options=d.options.filter(o=>o.correct);
   if(game.level==='timed'||game.level==='expert')d.prompt='The celebration has stalled. Who needs a discreet reminder?';
   if(game.level==='expert')d.hint='Click the minister who has missed their duty.';
   d.stage=STEPS[cur3d].part+' / something is wrong';
@@ -894,17 +1019,23 @@ function finishGame(){
   game.phase='summary';
   setPlaying(false);
   const board=game.board,grade=gradeBoard(board);
+  const watched=board.decisions===0;
   $('summaryScore').textContent=board.points+' points of '+board.possible+' ('+grade.percent+'%). '+board.correct+' of '+board.decisions+' right, '+board.firstTry+' first time'+(board.timeouts?', '+board.timeouts+' timed out':'')+(board.lapsesCaught+board.lapsesMissed?'. Lapses caught: '+board.lapsesCaught+' of '+(board.lapsesCaught+board.lapsesMissed):'')+'.';
   $('summaryVerdict').textContent=grade.verdict;
+  if(watched){
+    $('summaryScore').textContent='Watched from start to finish: '+game.autoCount+' duties were done for you, so there is no score.';
+    $('summaryVerdict').textContent='Choose another level to be asked questions.';
+  }else if(game.autoCount)$('summaryScore').textContent+=' Questions were off for '+game.autoCount+' duties (not scored).';
   const rows=board.log.map(entry=>el('tr',{className:entry.correct?'right':'wrong'},[
     el('td',{textContent:entry.kind==='penalty'?'−':entry.correct?'✓':'✗'}),
+    el('td',{},[iconNode(GameIcons.iconFor(typeof entry.expected==='string'?entry.expected:entry.title||'',entry.kind))]),
     el('td',{textContent:entry.title||''}),
     el('td',{textContent:entry.kind==='penalty'?'':entry.correct?displayAnswer(entry.expected):'Expected: '+displayAnswer(entry.expected)+(entry.timedOut?' (time ran out)':'. You: '+(entry.answer??''))}),
     el('td',{className:'small',textContent:entry.ref||''}),
     el('td',{textContent:String(entry.points??0)})]));
   $('summaryLog').replaceChildren(el('table',{},[el('tbody',{},rows)]));
   const scores=loadScores();
-  scores.push({role:game.role,level:game.level,percent:grade.percent,points:board.points,date:new Date().toLocaleDateString()});
+  if(!watched)scores.push({role:game.role,level:game.level,percent:grade.percent,points:board.points,date:new Date().toLocaleDateString()});
   scores.sort((a,b)=>b.percent-a.percent||b.points-a.points);
   try{localStorage.setItem(SCORES_KEY,JSON.stringify(scores.slice(0,10)));}catch{}
   showHighScores();
@@ -969,6 +1100,7 @@ function gameBeforeRender(dt,positions){
     else{figure.root.rotation.y+=2.3;figure.torso.rotation.x=-.15;}
   }
   updateDecisionTimer();
+  updateHighlight(now);
   if(game.phase==='mass'){
     const elapsed=currentElapsed();
     if(game.options&&GameAudio.enabled)for(const cue of game.soundCues){
@@ -991,7 +1123,7 @@ function gameBeforeRender(dt,positions){
       const lines=[el('p',{},[el('strong',{textContent:'Now: '}),STEPS[cur3d].title])];
       if(stop&&game.level!=='expert'&&stop.type!=='lapse'){
         const title=STEPS[(stop.duty||stop.cue).step].title;
-        lines.push(el('p',{className:'next',textContent:'Your next moment: '+title+(game.level==='guided'&&stop.duty?' ('+stop.duty.text+')':'')}));
+        lines.push(el('p',{className:'next',textContent:'Your next moment: '+title+(isGuided(game.level)&&stop.duty?' ('+stop.duty.text+')':'')}));
       }
       $('gameNow').replaceChildren(...lines);
     }
@@ -1021,6 +1153,10 @@ function gamePick(raycaster){
 }
 
 // ---------- start-up ----------
+function syncQuestionsButton(){
+  $('gameQuestions').textContent=game.questions?'Questions on':'Questions off (watching)';
+  $('gameQuestions').setAttribute('aria-pressed',String(game.questions));
+}
 function syncSoundButton(){
   $('gameSound').textContent=GameAudio.enabled?'Sound on':'Sound off';
   $('gameSound').setAttribute('aria-pressed',String(GameAudio.enabled));
@@ -1038,6 +1174,13 @@ function initialiseGame(){
   $('gameBookButton').onclick=()=>openBook();
   $('gameSound').onclick=()=>{GameAudio.setEnabled(!GameAudio.enabled);if(GameAudio.enabled)GameAudio.ensure();syncSoundButton();};
   $('gameRestart').onclick=showSetup;
+  $('gameRedo').onclick=redoPrevious;
+  $('gameQuestions').onclick=()=>{
+    game.questions=!game.questions;
+    syncQuestionsButton();
+    if(!game.questions&&game.active&&!game.active.finished)autoResolve(game.active);
+    toast(game.questions?'Questions are back on from your next duty.':'Questions off: just watch. Your duties are done for you.');
+  };
   $('bookClose').onclick=()=>{$('bookModal').hidden=true;};
   $('bookPrev').onclick=()=>renderBookPage(Number($('bookPage').value)-1);
   $('bookNext').onclick=()=>renderBookPage(Number($('bookPage').value)+1);

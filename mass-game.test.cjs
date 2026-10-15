@@ -3,7 +3,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 
 const context=vm.createContext({assert,console});
-for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js']){
+for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game-icons.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),context,{filename:file});
 }
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
@@ -236,5 +236,165 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(G('placeFor')([1100,160]).id,'sacristy');
   const route=G('routeBetween')([300,500],[700,100]);
   assert.ok(route.length>1);
+}
+// ---- watch level, questions off ----
+{
+  const levels=G('GAME_LEVELS');
+  assert.equal(Object.keys(levels)[0],'watch');assert.ok(levels.watch.watch);
+  assert.ok(G('isGuided')('watch'));assert.ok(G('isGuided')('guided'));assert.ok(!G('isGuided')('choice'));
+  const {options,scenario}=setup('P',{lapses:true});
+  same(G('planLapses')({playerRole:'P',level:'watch',seed:4,visible:scenario.visible}),[],'no lapses when watching');
+  const auto=G('autoAnswer'),check=G('checkAnswer');
+  for(const level of ['choice','expert','timed'])for(const role of ['P','S','T','L','D']){
+    const {options:o}=setup(role,{});
+    const duties=G('deriveDuties')(role,STEPS,o);
+    for(const duty of duties){
+      const d=G('buildDecision')(duty,level,7,duties);
+      assert.ok(check(d,auto(d)),'autoAnswer must be correct: '+role+' '+level+' '+d.title);
+    }
+  }
+  const items=G('sacristanSetup')(options,scenario.team||[]);
+  same(auto({input:'checklist',items}),items.filter(i=>i.needed).map(i=>i.id));
+  assert.equal(auto({kind:'nudge',correctRoles:['C1'],options:[]}),'C1');
+}
+
+// ---- crucifix and processional-cross placement ----
+{
+  const CP=G('CRUCIFIX_PLACES'),CS=G('CROSS_STANDS'),inc=G('incensedCross'),circ=G('altarCircuit');
+  for(const crucifix of Object.keys(CP))for(const crossStand of Object.keys(CS)){
+    const c=inc({crucifix,crossStand});
+    assert.equal(c.kind,CP[crucifix].nearAltar?'crucifix':'processional',crucifix);
+    if(c.kind==='processional')same(c.at,CS[crossStand].at);
+    const circuit=circ(c.stop);
+    assert.notEqual(circuit.end,'FL','circuit must not end where it began');
+    assert.ok(circuit.path.length>=4);
+    for(const incense of [true,false])for(const serverCount of [1,3,5]){
+      const {options,scenario}=setup('P',{crucifix,crossStand,incense,serverCount});
+      void scenario;
+      const stand=STEPS.find(s=>s.key===39)?.props?.cross?.find(e=>e.at);
+      if(stand&&serverCount>=2)same(stand.at,CS[crossStand].at,'cross returns to its stand');
+      const step=STEPS.find(s=>s.key===2);
+      if(!options.incense){assert.ok(!step,'no incensing step without incense');continue;}
+      same(step.cross.at,c.at);
+      const holders=step.props.thurible.map(e=>e.by);
+      assert.equal(holders[0],'P');assert.notEqual(holders[1],'P','thurible returned');
+      assert.ok(step.acts.P.some(a=>/incenses the cross/.test(a[0])));
+    }
+  }
+  // GAME_PLACES follows the stand; the incensing spot wins over the washing stand.
+  const cross=G('setCrossPlaces')({crucifix:'none',crossStand:'left'});
+  assert.equal(cross.kind,'processional');
+  assert.equal(G('placeFor')(cross.stop).id,'beforeCross');
+  same(G('GAME_PLACES').find(p=>p.id==='crossStand').at,[330,142]);
+  G('setCrossPlaces')({crucifix:'wall',crossStand:'right'});
+  assert.equal(G('GAME_PLACES').filter(p=>p.id==='beforeCross').length,1);
+  const norm=G('normaliseGameOptions')('P',{crucifix:'bogus',crossStand:'nowhere'}).options;
+  assert.equal(norm.crucifix,'wall');assert.equal(norm.crossStand,'right');
+}
+
+// ---- symbols ----
+{
+  const I=G('GameIcons');
+  assert.equal(I.iconFor('Ring the bell'),'bell');
+  assert.equal(I.iconFor('Cruet of wine'),'cruets');
+  same(I.targetFor('Incense the crucifix'),{cross:true});
+  same(I.targetFor('Chalice with purificator'),{prop:'chalice'});
+  assert.equal(I.iconFor('Thurifer','role'),'person');
+  for(const [,icon] of I.RULES)assert.ok(I.PATHS[icon],'icon '+icon+' has a drawing');
+  assert.match(I.svg('bell'),/^<svg[^>]*>.*<\/svg>$/s);
+  for(const item of G('sacristanSetup')(setup('SAC',{}).options,[]))assert.ok(I.iconFor(item.name),'icon for '+item.name);
+}
+// ---- round 3: the Sign of the Cross is its own decision, not hidden behind the walk to the chair ----
+{
+  const {options}=setup('P',{});
+  const key=G('selectDecisionDuties')(G('deriveDuties')('P',STEPS,options),'key');
+  const index=STEPS.findIndex(s=>s.title==='Sign of the Cross');
+  const greeting=STEPS.findIndex(s=>s.title==='Greeting');
+  assert.ok(index>=0&&index<greeting,'the Sign of the Cross comes before the Greeting');
+  const here=key.filter(d=>d.step===index);
+  assert.ok(here.some(d=>d.type==='move'),'moves to the chair');
+  assert.ok(here.some(d=>d.type==='act'&&/signs/.test(d.text)),'signs himself');
+  assert.ok(here.some(d=>d.type==='say'&&/Father/.test(d.text)),'speaks the words before the Greeting');
+  const actions=key.filter(d=>d.type!=='move'&&d.type!=='posture');
+  assert.equal(new Set(actions.map(d=>d.step+':'+d.type)).size,actions.length,'one gesture and spoken line at each key moment');
+}
+
+// ---- round 3: season colours ----
+{
+  const day=d=>JSON.parse(JSON.stringify(run('liturgicalDay(new Date('+JSON.stringify(d+'T12:00:00')+'))')));
+  assert.equal(day('2025-12-07').colour,'purple');
+  assert.equal(day('2025-12-14').colour,'rose');
+  assert.equal(day('2026-02-22').colour,'purple');
+  assert.equal(day('2026-03-15').colour,'rose');
+  assert.equal(day('2026-03-29').colour,'red');
+  assert.equal(day('2026-04-05').colour,'white');
+  assert.equal(day('2026-05-24').colour,'red');
+  assert.equal(day('2026-08-02').colour,'green');
+  assert.equal(day('2026-01-11').season,'Christmas');
+  assert.equal(day('2026-11-22').colour,'white');
+  assert.equal(run('easterSunday(2026).toDateString()'),'Sun Apr 05 2026');
+  assert.equal(run('easterSunday(2025).toDateString()'),'Sun Apr 20 2025');
+  assert.equal(run('nextSunday(new Date(2026,9,14)).toDateString()'),'Sun Oct 18 2026');
+  assert.equal(run('nextSunday(new Date(2026,9,18)).toDateString()'),'Sun Oct 18 2026');
+}
+// ---- controller regressions: revealed answer and score rollback ----
+{
+  const ui=vm.createContext({
+    assert,console,scene:null,clearTimeout:()=>{},performance:{now:()=>100},
+    document:{body:{classList:{remove:()=>{}}},createElement:()=>({append:()=>{}})},
+    GameAudio:{correct:()=>{},wrong:()=>{}}
+  });
+  for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game.js']){
+    vm.runInContext(fs.readFileSync(file,'utf8'),ui,{filename:file});
+  }
+  vm.runInContext(`
+    const nodes={
+      decision:{className:'',hidden:false},
+      decisionOptions:{buttons:[],querySelectorAll(){return this.buttons;}},
+      decisionTimer:{hidden:false},
+      decisionFeedback:{replaceChildren(){}},
+      decisionContinue:{hidden:true,focus(){}},
+      bookModal:{hidden:false},
+      gameLog:{children:[1,2,3],get firstElementChild(){return {remove:()=>this.children.shift()};}}
+    };
+    const $=id=>nodes[id];
+    updateScore=()=>{};logResult=()=>{};clearMarkers=()=>{};setHighlight=()=>{};toast=()=>{};
+    let jumped,playing,resolved=0;
+    jump=(...args)=>{jumped=args;};setPlaying=value=>{playing=value;};
+    const options=[{label:'correct',correct:true},{label:'wrong'}];
+    nodes.decisionOptions.buttons=options.map(o=>({
+      dataset:{value:JSON.stringify(o.label)},disabled:false,classList:{add(){}}
+    }));
+    const active={finished:false,decision:{options,correct:'correct',attempts:2,noScore:true},
+      started:100,attempt:3,resolve:()=>resolved++};
+    game.active=active;game.level='choice';
+    finish(active,{correct:false,answer:'wrong'});
+    assert.equal(nodes.decisionOptions.buttons[0].disabled,false);
+    assert.equal(nodes.decisionOptions.buttons[1].disabled,true);
+    assert.equal(nodes.decisionContinue.hidden,false);
+    nodes.decisionOptions.buttons[0].onclick();
+    assert.equal(resolved,1);
+    assert.equal(game.active,null);
+    nodes.decisionContinue.onclick();
+    assert.equal(resolved,1,'stale Continue cannot resolve twice');
+
+    const prior={time:2,done:true},later={time:4,done:true};
+    const oldBoard=createScoreboard();
+    game.phase='mass';game.gen=3;game.stops=[prior,later];game.autoCount=4;
+    game.history=[{stop:prior,board:oldBoard,autoCount:1,logLen:1}];
+    game.board.points=200;game.board.log.push({correct:true});
+    game.active={timer:1};game.busy=true;game.lapse={role:'S'};
+    nodes.bookModal.hidden=false;
+    redoPrevious();
+    assert.equal(game.gen,4);
+    assert.equal(game.history.length,0);
+    assert.equal(JSON.stringify(game.board),JSON.stringify(oldBoard));
+    assert.equal(game.autoCount,1);
+    assert.equal(nodes.gameLog.children.length,1);
+    assert.equal(prior.done,false);assert.equal(later.done,false);
+    assert.equal(game.active,null);assert.equal(game.lapse,null);assert.equal(game.busy,false);
+    assert.equal(nodes.bookModal.hidden,true);
+    assert.equal(jumped[0],0);assert.equal(playing,true);
+  `,ui);
 }
 console.log('mass-game tests passed');
