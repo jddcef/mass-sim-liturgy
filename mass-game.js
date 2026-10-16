@@ -62,9 +62,11 @@ function relabel(figure,text){
 }
 function disposeSprite(sprite){
   scene.remove(sprite);
+  sprite.parent?.remove(sprite);
   const index=sceneLabels.indexOf(sprite);
   if(index>=0)sceneLabels.splice(index,1);
-  sprite.material.map?.dispose();sprite.material.dispose();
+  if(sprite.isSprite){sprite.material.map?.dispose();sprite.material.dispose();}
+  else sprite.traverse(o=>o.geometry?.dispose());
 }
 function unlayout(mapped){
   let q=mapped.slice();
@@ -142,6 +144,7 @@ function buildGameScene(){
   }
   figures.PEW.root.scale.set(.78,.78,.78);
   figures.PEW.root.userData.baseScale=.78;
+  buildVestments();
   for(const sprite of sceneLabels)sprite.scale.multiplyScalar(LABEL_SCALE);
 }
 
@@ -240,9 +243,28 @@ function buildSetupForm(){
   }catch{}
   if(typeof applyAppearance==='function'&&figures.P)applyAppearance(readAppearance());
   form.addEventListener('change',previewNotes);
+  decorateOptions(form);
   form.addEventListener('submit',event=>{event.preventDefault();startGame(readForm());});
   previewNotes();
   showHighScores();
+}
+// A symbol beside each setup option, so the long list can be scanned by eye.
+const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
+  reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
+  solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
+  crucifix:'crucifix',crossStand:'cross',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',
+  app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
+  recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk'};
+function decorateOptions(form){
+  for(const head of form.querySelectorAll('.optionHead[data-icon]'))head.insertAdjacentHTML('afterbegin','<span class="iconWrap">'+GameIcons.svg(head.dataset.icon,20)+'</span>');
+  for(const [name,icon] of Object.entries(OPTION_ICONS)){
+    const field=form.elements[name];
+    const label=field?.closest?.('label');
+    if(!label||label.querySelector('.optIcon'))continue;
+    const span=el('span',{className:'iconWrap optIcon'});
+    span.innerHTML=GameIcons.svg(icon);
+    label.prepend(span);
+  }
 }
 function readForm(){
   const f=$('setupForm').elements;
@@ -262,7 +284,7 @@ function readForm(){
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false});
-  return {role:saved.role||'P',level:saved.level||'choice',firstPerson:saved.firstPerson===true,sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
+  return {role:saved.role||'P',level:saved.level||'choice',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
 const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people'};
 function rolePortrait(role){
@@ -349,6 +371,8 @@ function startGame(config){
   game.team=scenario.team;game.visible=scenario.visible;
   setupPlayerFigure();
   game.soundCues=deriveSoundCues(STEPS,stepStart);
+  hangVestments('rail');
+  if(game.role!=='SAC')hangVestments('worn',['P','D','S'].filter(vestmentNeeded));
   scheduleStops();
   const info=GAME_ROLES[game.role];
   $('gameBadge').textContent='You: '+info.name+' / '+GAME_LEVELS[game.level].name;
@@ -361,6 +385,7 @@ function startGame(config){
   for(const note of notes)logLine(note,'note');
   logLine('Celebration: '+describeCelebration(),'note');
   setCamera('player');
+  setFirstPersonView(config.fpView);
   setFirstPerson(game.firstPersonChoice);
   runPreMass(game.gen);
   if(GAME_ROLES[game.role].start==='sacristy'&&!(game.role==='SAC'&&options.openChurch)&&!gameView.firstPerson){
@@ -859,6 +884,7 @@ async function runPreMass(gen){
     let walking=null;
     if(game.role==='PEW')walking=npcWalk();
     for(const task of tasks){
+      if(task.id==='line'&&task.places.includes('procession'))ringForProcession();
       const outcome=await ask(taskDecision(task,'Before Mass'));
       if(gen!==game.gen)return;
       await afterPreTask(task,outcome,gen);
@@ -872,6 +898,13 @@ async function runPreMass(gen){
   }
   if(gen!==game.gen)return;
   beginMass();
+}
+// Rings the sacristy bell for the procession once (where that custom is chosen).
+function ringForProcession(){
+  const cue=game.options.bells.start&&game.soundCues.find(c=>c.type==='sacristyBell'&&!c.rung);
+  if(!cue)return;
+  cue.rung=true;
+  if(GameAudio.enabled)GameAudio.sacristyBell();
 }
 async function afterPreTask(task,outcome,gen){
   const key=GAME_ROLES[game.role].actor||game.role;
@@ -951,17 +984,163 @@ async function runOpening(gen){
   }
   // The others arrive only once the sacristan has set everything out (cleared in runPreMass).
 }
-// Small boxes on the cupboard shelves, one for each thing the sacristan may take out.
+// Small models of the things the sacristan takes out of the cupboard (judgement call: simple
+// recognisable shapes, roughly to scale with the shelves rather than to the figures).
+const GOLD='#c9a64a',SILVER='#b9bec4',LINEN='#f6f3ea',GLASS='#cfe3ea';
+function miniModel(id){
+  const g=new THREE.Group();
+  const cup=(x,z,lid)=>{
+    cylinder(g,x,.015,z,.05,.06,.03,GOLD);cylinder(g,x,.07,z,.012,.012,.09,GOLD);cylinder(g,x,.15,z,.055,.025,.08,GOLD);
+    if(lid){sphere(g,x,.2,z,.05,GOLD).scale.y=.5;sphere(g,x,.235,z,.012,GOLD);}
+  };
+  const book=(colour,trim,thick=.045)=>{box(g,0,thick/2,0,.13,thick,.17,colour);box(g,.003,thick/2,0,.12,thick*.8,.165,'#efe6cc');box(g,0,thick+.002,0,.03,.004,.1,trim);box(g,0,thick+.002,-.01,.07,.004,.022,trim);};
+  const candle=(x,z,h=.2)=>{cylinder(g,x,.015,z,.03,.04,.03,GOLD);cylinder(g,x,.03+h/2,z,.012,.012,h,'#fbf6e6');};
+  const cruet=(x,z,colour)=>{cylinder(g,x,.06,z,.025,.035,.12,colour);cylinder(g,x,.14,z,.012,.018,.04,GLASS);};
+  const cross=(h,staff)=>{
+    if(staff){cylinder(g,0,.015,0,.04,.05,.03,'#6e5236');cylinder(g,0,h/2,0,.008,.008,h,GOLD);}
+    box(g,0,h+.06,0,.012,.13,.012,GOLD);box(g,0,h+.08,0,.08,.012,.012,GOLD);
+  };
+  const bell=(x,z,colour,r=.04)=>{cylinder(g,x,.03,z,r*.45,r,.06,colour);cylinder(g,x,.09,z,.008,.008,.07,'#6e5236');};
+  switch(id){
+    case 'altarCloth':case 'corporal':
+      for(let i=0;i<(id==='corporal'?1:3);i++)box(g,0,.01+i*.022,0,.15,.02,.15,LINEN);
+      if(id==='corporal')box(g,0,.022,0,.02,.002,.06,'#b8202a');
+      break;
+    case 'altarCandles':candle(0,-.04);candle(0,.04);break;
+    case 'procCandles':candle(0,-.04,.26);candle(0,.04,.26);break;
+    case 'altarCross':cross(.12,true);break;
+    case 'procCross':cross(.28,true);break;
+    case 'gospels':case 'gospelsAltar':book('#9b1c2c',GOLD,.05);break;
+    case 'lectionary':book('#2f5d3a',GOLD,.06);break;
+    case 'missal':book('#5a2617','#e7c96a',.06);box(g,.04,.03,.09,.01,.002,.04,'#b8202a');break;
+    case 'chalice':case 'chalice2':cup(0,0,false);box(g,0,.195,0,.1,.006,.1,LINEN);break;
+    case 'ciborium':case 'emhcVessel':cup(0,0,true);break;
+    case 'commPlate':cylinder(g,0,.01,0,.07,.07,.01,GOLD);box(g,0,.01,.09,.025,.008,.05,GOLD);break;
+    case 'water':cruet(0,0,GLASS);break;
+    case 'wine':cruet(0,0,'#7a1f2b');break;
+    case 'lavabo':cylinder(g,0,.025,0,.08,.05,.05,SILVER);cylinder(g,0,.11,.03,.02,.035,.1,SILVER);box(g,0,.006,-.06,.09,.01,.05,LINEN);break;
+    case 'collectionBasket':cylinder(g,0,.04,0,.08,.065,.08,'#9b7442');box(g,0,.02,.12,.02,.02,.1,'#6e5236');break;
+    case 'aspersory':cylinder(g,0,.05,0,.055,.045,.1,SILVER);cylinder(g,.02,.15,0,.006,.006,.16,SILVER).rotation.z=.4;sphere(g,.05,.22,0,.018,SILVER);break;
+    case 'thurible':
+      sphere(g,0,.07,0,.05,SILVER).scale.y=.8;cylinder(g,0,.13,0,.012,.035,.05,SILVER);
+      for(const x of [-.02,.02])cylinder(g,x,.21,0,.003,.003,.14,'#8a8f94');
+      sphere(g,0,.03,.1,.035,SILVER).scale.set(1,.6,1.6);break;
+    case 'altarBell':for(const z of [-.04,0,.04])bell(0,z,GOLD,.03);break;
+    case 'sacristyBell':bell(0,0,'#b08d3c',.05);break;
+    case 'lamp':cylinder(g,0,.05,0,.04,.03,.1,'#b8202a');cylinder(g,0,.12,0,.005,.005,.06,GOLD);break;
+    case 'hosts':box(g,0,.04,0,.12,.08,.1,'#d8c27a');sphere(g,0,.09,0,.02,GOLD);break;
+    default:box(g,0,.07,0,.14,.14,.14,'#d8c27a');
+  }
+  g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+  return g;
+}
+function greyOut(model){
+  model.traverse(o=>{if(o.isMesh)o.material=material('#8f8579');});
+}
+// Objects on the cupboard shelves; vestments instead hang on the rail.
 function fillCupboard(items){
   const base=world([1205,190]);
-  return items.map((item,i)=>{
-    const row=i%4,col=Math.floor(i/4);
-    const mesh=box(scene,base.x-.1,.32+.5+row*.45+.08,base.z-.62+col*.2,.14,.14,.14,item.needed?'#d8c27a':'#b7a99a');
-    mesh.userData.item=item.id;
-    game.tokens.push(mesh);
-    return mesh;
+  let slot=0;
+  return items.map(item=>{
+    if(VESTMENT_ITEMS[item.id])return game.vestments[VESTMENT_ITEMS[item.id]].mesh;
+    const row=slot%4,col=Math.floor(slot/4);slot++;
+    const model=miniModel(item.id);
+    model.position.set(base.x-.12,.32+.52+row*.45,base.z-.62+col*.2);
+    model.rotation.y=Math.PI/2;
+    model.userData.item=item.id;
+    scene.add(model);
+    game.tokens.push(model);
+    return model;
   });
 }
+
+// ---------- vestments: hanging rail and vesting stand ----------
+const VESTMENT_ITEMS={vestP:'P',vestD:'D',vestS:'S'};
+const VESTMENT_RAIL=[1085,250],VESTMENT_RAIL_FRONT=[1085,215],VESTING_STAND=[1040,95],VESTING_STAND_FRONT=[1050,130];
+function vestmentModel(kind){
+  const g=new THREE.Group();
+  box(g,0,0,0,.42,.025,.025,'#6e5236');
+  cylinder(g,0,.06,0,.008,.008,.1,SILVER);
+  const alb=box(g,0,-.6,.02,.4,1.15,.04,LINEN);
+  alb.userData.part='alb';
+  if(kind!=='S'){
+    // Chasuble (rounded, sleeveless) or dalmatic (squarer, with short sleeves) in the day's colour; the front faces -z.
+    const outer=kind==='P'?cylinder(g,0,-.48,-.02,.2,.34,.9,'#2e6b3a'):box(g,0,-.45,-.02,.48,.84,.03,'#2e6b3a');
+    if(kind==='P')outer.scale.z=.12;
+    if(kind==='D')for(const side of [-1,1])box(g,side*.33,-.17,-.02,.2,.22,.03,'#2e6b3a').userData.part='outer';
+    outer.userData.part='outer';
+    box(g,0,-.12,-.05,.06,.3,.01,GOLD);
+  }
+  g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+  return g;
+}
+function buildVestments(){
+  const rail=world(VESTMENT_RAIL);
+  box(scene,rail.x,.32+1.95,rail.z,2.4,.04,.04,'#7d6040');
+  for(const side of [-1,1])box(scene,rail.x+side*1.18,.32+1.0,rail.z,.05,1.95,.05,'#6e5236');
+  const stand=world(VESTING_STAND);
+  for(const side of [-1,1]){
+    box(scene,stand.x+side*.75,.32+.85,stand.z,.05,1.7,.05,'#8a6a45');
+    box(scene,stand.x+side*.75,.32+.02,stand.z,.05,.04,.5,'#8a6a45');
+  }
+  box(scene,stand.x,.32+1.65,stand.z,1.55,.05,.05,'#8a6a45');
+  box(scene,stand.x,.32+.9,stand.z,1.55,.04,.04,'#8a6a45');
+  scene.add(label('Vestments',world(VESTMENT_RAIL,2.7)));
+  scene.add(label('Vesting stand',world(VESTING_STAND,2.3)));
+  game.vestments={};
+  ['P','D','S'].forEach((kind,i)=>{
+    const mesh=vestmentModel(kind);
+    game.vestments[kind]={mesh,rail:new THREE.Vector3(rail.x-.75+i*.75,.32+1.9,rail.z+.05),stand:new THREE.Vector3(stand.x-.5+i*.5,.32+1.62,stand.z)};
+    scene.add(mesh);
+  });
+  hangVestments('rail');
+}
+// 'rail' (before setup and after pack-away), 'stand' (laid out), or 'worn' (hidden: the ministers are vested).
+function hangVestments(where,kinds=['P','D','S']){
+  if(!game.vestments)return;
+  const colours={P:figures.P?.body.material.color,D:figures.D?.body.material.color};
+  for(const kind of kinds){
+    const v=game.vestments[kind];
+    if(game.carrying===v.mesh){figures.SAC.root.remove(v.mesh);game.carrying=null;}
+    if(v.mesh.parent!==scene)scene.add(v.mesh);
+    v.mesh.visible=where!=='worn';
+    v.mesh.scale.set(1,1,1);
+    v.mesh.rotation.set(0,where==='stand'?Math.PI:0,0);
+    if(where!=='worn')v.mesh.position.copy(v[where]);
+    v.mesh.traverse(o=>{if(o.isMesh&&o.userData.part==='outer'&&colours[kind])o.material=material('#'+colours[kind].getHexString());});
+    v.where=where;
+  }
+}
+function vestmentNeeded(kind){
+  return kind==='P'||(kind==='D'&&game.options.deacon)||(kind==='S'&&game.team.length>0);
+}
+// The sacristan walks to the rail, takes the vestment and lays it out on the vesting stand.
+async function layOutVestment(kind,gen,speed){
+  const v=game.vestments[kind];
+  await walk('SAC',game.overrides.SAC,VESTMENT_RAIL_FRONT,speed);
+  if(gen!==game.gen)return;
+  carry(v.mesh);
+  await walk('SAC',game.overrides.SAC,VESTING_STAND_FRONT,speed);
+  if(gen!==game.gen)return;
+  hangVestments('stand',[kind]);
+}
+// After Mass: from the vesting stand back onto the rail.
+async function hangUpVestments(gen){
+  for(const kind of ['P','D','S']){
+    const v=game.vestments[kind];
+    if(v.where!=='stand')continue;
+    await walk('SAC',game.overrides.SAC,VESTING_STAND_FRONT);
+    if(gen!==game.gen)return;
+    carry(v.mesh);
+    await walk('SAC',game.overrides.SAC,VESTMENT_RAIL_FRONT);
+    if(gen!==game.gen)return;
+    hangVestments('rail',[kind]);
+  }
+}
+function followSacristan(){
+  if(game.role==='SAC'&&!firstPersonActive()&&cameraMode!=='player')setCamera('player');
+}
+
 async function runSacristanSetup(gen){
   const training=!!game.options.openChurch;
   const items=training?cupboardOrder(sacristanSetup(game.options,game.team)):sacristanSetup(game.options,game.team);
@@ -978,20 +1157,27 @@ async function runSacristanSetup(gen){
     toast('Everything is in the cupboard. Take one thing at a time.');
   }
   for(const [index,item] of items.entries()){
-    if(training&&distance(game.overrides.SAC,CUPBOARD)>8){
+    const vest=VESTMENT_ITEMS[item.id];
+    if(training&&!vest&&distance(game.overrides.SAC,CUPBOARD)>8){
       await walk('SAC',game.overrides.SAC,CUPBOARD,240);
       if(gen!==game.gen)return;
     }
     const decision=placeDecision(item);
     if(training){
-      decision.prompt='From the cupboard: '+item.name+'. Where does it go?';
+      decision.prompt=(vest?'From the vestment rail: ':'From the cupboard: ')+item.name+'. Where does it go?';
       setHighlight({mesh:shelf[index]});
-    }
+    }else setHighlight(vest?{mesh:game.vestments[vest].mesh}:null);
     const outcome=await ask(decision);
     if(gen!==game.gen)return;
     markChecklist(item.id,outcome.correct?'done':'missed');
     if(!item.needed){
-      if(training)shelf[index].material.color.set('#8f8579');
+      if(training&&!vest)greyOut(shelf[index]);
+      continue;
+    }
+    followSacristan();
+    if(vest){
+      await layOutVestment(vest,gen,training?240:undefined);
+      if(gen!==game.gen)return;
       continue;
     }
     const place=placeById(item.places[0]);
@@ -1064,6 +1250,9 @@ async function runPackAway(gen){
   game.checklist=items;
   setChecklist(items);
   setPhase('After Mass: putting away','The ministers have gone. Put everything away (GIRM 105).');
+  // The ministers have taken off their vestments and left them on the vesting stand.
+  hangVestments('stand',['P','D','S'].filter(vestmentNeeded));
+  followSacristan();
   await walk('SAC',game.overrides.SAC||SACRISTAN_SEAT,[860,300]);
   if(gen!==game.gen)return;
   if(game.level==='expert'){
@@ -1085,7 +1274,10 @@ async function runPackAway(gen){
     if(gen!==game.gen)return;
     void outcome;
     for(const [id,props] of Object.entries(PACK_PROPS))if(items.find(i=>i.id===id)?.needed)props.forEach(p=>game.hideProps.add(p));
+    followSacristan();
     await walk('SAC',game.overrides.SAC,SACRISTY);
+    if(gen!==game.gen)return;
+    if((outcome.raw||[]).includes?.('vestments'))await hangUpVestments(gen);
     return;
   }
   for(const item of items){
@@ -1103,6 +1295,8 @@ async function runPackAway(gen){
     if(gen!==game.gen)return;
     markChecklist(item.id,outcome.correct?'done':'missed');
     if(item.needed){
+      followSacristan();
+      if(item.id==='vestments'){await hangUpVestments(gen);continue;}
       const place=placeById(item.places[0]);
       await walk('SAC',game.overrides.SAC,place.id==='sacristy'?[1060,180]:[place.at[0],place.at[1]+(place.at[1]<300?28:0)]);
       if(gen!==game.gen)return;
@@ -1120,6 +1314,7 @@ function beginMass(){
   for(const token of game.tokens)disposeSprite(token);
   game.tokens=[];
   game.hideProps.clear();
+  hangVestments('worn',['P','D','S'].filter(vestmentNeeded));
   $('gameChecklist').hidden=true;
   game.phase='mass';
   game.lastElapsed=-1;
@@ -1138,6 +1333,9 @@ async function runStop(stop){
   game.busy=true;
   const gen=game.gen;
   const snapshot={stop,board:JSON.parse(JSON.stringify(game.board)),autoCount:game.autoCount,timerAllowance:game.timerAllowance,logLen:$('gameLog').children.length};
+  const bell=preProcessionBell(game.soundCues,stop.time,stepStart[1]);
+  // The sacristy bell signals the start of the procession, so it sounds as this question opens.
+  if(bell)ringForProcession();
   if(stop.type==='decision'){
     const d=buildDecision(stop.duty,game.level,game.seed,game.allDuties);
     if(stop.duty.type==='move')d.explain='You go to '+placeFor(stop.duty.to,GAME_ROLES[game.role].actor).name+'.';
@@ -1179,6 +1377,7 @@ function redoPrevious(){
   while(step<STEPS.length-1&&stepStart[step+1]<=entry.stop.time)step++;
   jump(step,Math.min(1,(entry.stop.time-stepStart[step])/STEPS[step].dur));
   game.lastElapsed=entry.stop.time-1e-6;
+  rewindCues(game.soundCues,entry.stop.time);
   setPlaying(true);
   updateScore();
   toast('Back one step: '+STEPS[step].title+'.');
@@ -1332,7 +1531,8 @@ function gameBeforeRender(dt,positions){
   if(game.phase==='mass'){
     const elapsed=currentElapsed();
     if(game.options&&GameAudio.enabled)for(const cue of game.soundCues){
-      if(cue.time>game.lastElapsed&&cue.time<=elapsed+1e-6){
+      if(cue.time>game.lastElapsed&&cue.time<=elapsed+1e-6&&!cue.rung){
+        if(cue.type==='sacristyBell')cue.rung=true;
         const rate=Number($('rate').value)||1;
         if(cue.type==='bell')GameAudio.altarBell(Math.max(.8,Math.min(3,(cue.until-cue.time)/rate)));
         else if(cue.type==='sacristyBell')GameAudio.sacristyBell();
@@ -1451,6 +1651,12 @@ function initialiseGame(){
     if(['INPUT','SELECT','TEXTAREA'].includes(event.target.tagName))return;
     if(event.code==='ArrowLeft'||event.code==='ArrowRight'){event.stopImmediatePropagation();event.preventDefault();return;}
     if(event.code==='Space'&&game.phase!=='mass'){event.stopImmediatePropagation();event.preventDefault();return;}
+    if(event.key==='v'||event.key==='V'){
+      if(!$('gameSetup').hidden||!$('bookModal').hidden)return;
+      event.preventDefault();
+      cameraNudge('view');
+      return;
+    }
     if(event.key==='s'||event.key==='S'){
       if(!$('gameSetup').hidden||!$('bookModal').hidden)return;
       event.preventDefault();

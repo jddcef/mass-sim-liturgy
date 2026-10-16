@@ -54,6 +54,7 @@
         <button type="button" data-cam="panBack" title="Move back" aria-label="Move back">▼</button>
         <button type="button" data-cam="panLeft" title="Move left" aria-label="Move left">◀</button>
         <button type="button" data-cam="panRight" title="Move right" aria-label="Move right">▶</button>
+        <button type="button" data-cam="view" title="Switch view (V): first-person views, or the fixed cameras" aria-label="Switch view">👁</button>
       </div>
       <div id="sceneStatus">Loading 3D scene...</div>
       <div id="caption" aria-live="off"></div>
@@ -180,6 +181,7 @@
     <fieldset><legend>2. Level</legend><div id="levelCards" class="cards levels"></div></fieldset>
     <fieldset><legend>3. The celebration</legend>
       <div class="optionGrid">
+        <h3 class="optionHead" data-icon="people">Ministers</h3>
         <label><input type="checkbox" name="deacon" checked> Deacon</label>
         <label>Altar servers <select name="serverCount"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select></label>
         <label><input type="checkbox" name="lector" checked> Lay lector and psalmist</label>
@@ -188,11 +190,10 @@
         <label><input type="checkbox" name="collection" checked> Collection usher</label>
         <label><input type="checkbox" name="emhc"> Authorised EMHC assists when needed</label>
         <label><input type="checkbox" name="reservedCommunion"> Additional reserved hosts needed for Communion</label>
+        <label><input type="checkbox" name="deaconCommunion" checked> Deacon distributes Holy Communion</label>
+        <h3 class="optionHead" data-icon="book">Rites and options</h3>
         <label><input type="checkbox" name="incense" checked> Incense</label>
         <label><input type="checkbox" name="bothKinds"> Communion under both kinds</label>
-        <label><input type="checkbox" name="deaconCommunion" checked> Deacon distributes Holy Communion</label>
-        <label title="Sacristan only"><input type="checkbox" name="openChurch" checked> Sacristan training: open the locked church and set out from the cupboard</label>
-        <label title="Play through your own eyes; drag to look around"><input type="checkbox" name="firstPerson"> First-person view</label>
         <label><input type="checkbox" name="gloria" checked> Gloria</label>
         <label><input type="checkbox" name="creed" checked> Creed</label>
         <label><input type="checkbox" name="secondReading" checked> Second Reading</label>
@@ -201,9 +202,11 @@
         <label>Introductory rite <select name="introductory"><option value="A">Penitential Act (Confiteor) + Kyrie</option><option value="C">Penitential Act with invocations</option><option value="sprinkling">Blessing and sprinkling of water</option></select></label>
         <label>Music <select name="music"><option value="sung">Sung Mass</option><option value="said">Said Mass</option></select></label>
         <label>Eucharistic Prayer <select name="eucharisticPrayer"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select></label>
+        <h3 class="optionHead" data-icon="bell">Bells (local custom)</h3>
         <label><input type="checkbox" name="bellStart" checked> Sacristy bell as the procession sets out</label>
         <label><input type="checkbox" name="bellEpiclesis" checked> Altar bell before the consecration</label>
         <label><input type="checkbox" name="bellElevation" checked> Altar bell at the elevations</label>
+        <h3 class="optionHead" data-icon="church">The church</h3>
         <label>Crucifix <select name="crucifix"><option value="wall">On the wall behind the altar</option><option value="apse">In a recessed apse behind the altar</option><option value="wallLeft">On the back wall, to the left</option><option value="wallRight">On the back wall, to the right</option><option value="chapelLeft">In a recessed side chapel, left</option><option value="none">None (processional cross serves)</option></select></label>
         <label>Processional cross stand <select name="crossStand"><option value="right">Beside the altar, right</option><option value="left">Beside the altar, left</option><option value="backRight">Back of the sanctuary, right</option><option value="backLeft">Back of the sanctuary, left</option></select></label>
         <label>Crucifix body (corpus) <select id="app_corpus" name="app_corpus"><option value="yes" selected>With corpus</option><option value="no">Bare cross</option></select></label>
@@ -212,6 +215,7 @@
         <label>Tabernacle mounting <select id="app_tabernacleStyle" name="app_tabernacleStyle"><option value="projecting" selected>Fixed against the wall on a projecting plinth</option><option value="recessed">Recessed into the wall</option><option value="ledge">On a wall ledge</option><option value="pillar">On a pillar against the wall</option></select></label>
         <label>Altar size <select id="app_altarSize" name="app_altarSize"><option value="small">Small</option><option value="standard" selected>Standard</option><option value="large">Large</option></select></label>
         <label>Sanctuary floor <select id="app_floor" name="app_floor"><option value="sandstone" selected>Sandstone</option><option value="terracotta">Terracotta</option><option value="slate">Slate</option><option value="marble">Pale marble</option></select></label>
+        <h3 class="optionHead" data-icon="vestment">Vestments and robes</h3>
         <label>Priest and Deacon vestments <select id="app_vestment" name="app_vestment"><option value="season" selected>By season (next Sunday)</option><option value="green">Green</option><option value="purple">Violet</option><option value="white">White</option><option value="red">Red</option><option value="rose">Rose</option><option value="gold">Gold</option></select></label>
         <small id="vestmentNote" class="small"></small>
         <label>Servers' robes <select id="app_serverRobe" name="app_serverRobe"><option value="#fbfbf6" selected>White</option><option value="#efe6cf">Cream</option><option value="#9e2a2f">Red</option><option value="#2b2b2e">Black</option><option value="#2f4f86">Blue</option></select></label>
@@ -226,6 +230,9 @@
         <label><input type="checkbox" name="sound" checked> Bells and thurible sounds</label>
         <label><input type="checkbox" name="recordedAudio" checked> Play the generated recordings for spoken parts</label>
         <label><input type="checkbox" name="symbols" checked> Symbols beside answers (hover an answer to see where it is)</label>
+        <label title="Sacristan only"><input type="checkbox" name="openChurch" checked> Sacristan training: open the locked church and set out from the cupboard</label>
+        <label title="Play through your own eyes; drag to look around"><input type="checkbox" name="firstPerson"> First-person view</label>
+        <label title="Press V or the eye button to switch while playing">First-person camera <select id="fpView" name="fpView"><option value="shoulder" selected>Just above and behind you</option><option value="eyes">Through your eyes</option><option value="high">High behind you</option></select></label>
       </div>
     </fieldset>
     <p id="setupNotes" class="small" role="status"></p>

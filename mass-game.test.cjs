@@ -195,6 +195,16 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(cues.filter(c=>c.type==='bell').length>=2);
   assert.ok(cues.some(c=>c.type==='thurible'&&c.swings>=2));
   for(let i=1;i<cues.length;i++)assert.ok(cues[i].time>=cues[i-1].time);
+  // The sacristy bell sounds as a question opens just before the procession moves off.
+  const start=G('stepStart');
+  const bell=G('preProcessionBell')(cues,0,start[1]);
+  assert.equal(bell?.type,'sacristyBell');
+  assert.equal(G('preProcessionBell')(cues,start[1]+1,start[1]),null,'not for later questions');
+  assert.equal(G('preProcessionBell')(cues,bell.until+.5,start[1]),null,'not once the bell has passed');
+  bell.rung=true;
+  assert.equal(G('preProcessionBell')(cues,0,start[1]),null,'rings only once');
+  G('rewindCues')(cues,0);
+  assert.equal(G('preProcessionBell')(cues,0,start[1]),bell,'going back lets it ring again');
   setup('P',{incense:false,bells:{start:false,epiclesis:false,elevation:false}});
   cues=G('deriveSoundCues')(STEPS,G('stepStart'));
   assert.equal(cues.filter(c=>c.type!=='silence').length,0,'no bells or thurible');

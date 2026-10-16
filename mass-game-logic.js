@@ -593,6 +593,16 @@ function deriveSoundCues(steps=STEPS,startTimes){
   return cues.sort((a,b)=>a.time-b.time);
 }
 
+// The sacristy bell cue that should sound when a question opens just before the procession moves off.
+function preProcessionBell(cues,stopTime,firstStepEnd=Infinity){
+  if(!(stopTime<firstStepEnd))return null;
+  return (cues||[]).find(c=>c.type==='sacristyBell'&&c.key===0&&!c.rung&&stopTime<=c.until+1e-6)||null;
+}
+// After going back in time, bells from then on may ring again.
+function rewindCues(cues,time){
+  for(const cue of cues||[])if(cue.time>=time-1e-6)cue.rung=false;
+}
+
 // The player's book: today's texts plus omitted ones, grouped by part.
 function buildBook(sayRole,steps=STEPS){
   const used=new Set(steps.map(s=>s.key));
@@ -735,4 +745,4 @@ function nextQuestionStop(stops,current,requested){
   // Seeking never skips an unanswered decision: snap to the first upcoming stop.
   return requested>current?next:null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,buildBook,preMassTasks,postMassTasks};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks};

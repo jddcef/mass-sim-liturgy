@@ -133,7 +133,7 @@ const STEPS=[
  text:'The Offertory Chant begins. The Deacon and ministers bring the corporal, purificator, chalice, pall and Missal from the credence table and place them on the altar.',
  ref:'Order of Mass 21; GIRM 73–74, 139, 178',
  mv:{D:M([[262,232],[375,215],[375,122],ALT_D],0,.35),S:[M([[850,100]],0,.1),M([[640,152]],.18,.42),M([[850,100]],.62,.78),M([[805,78]],.8,.9)]},
- props:{corporal:[{by:'S',t:.11},{at:[500,168],a:.48,b:.56}],missal:[{by:'S',t:.11},{at:[450,160],a:.5,b:.58}],chalice:[{by:'S',t:.11},{at:[540,170],a:.52,b:.6}]},
+ props:{corporal:[{by:'S',t:.11},{at:[500,168],a:.48,b:.56}],missal:[{by:'S',t:.11},{at:[570,160],a:.5,b:.58}],chalice:[{by:'S',t:.11},{at:[540,170],a:.52,b:.6}]},
  acts:{D:[['spreads the corporal',.46,.6]]},
  say:[['ppl','♪ Offertory Chant ♪',.03,1]]},
 {part:'Liturgy of the Eucharist',title:'Presentation of the Gifts',dur:12,posture:'sit',
