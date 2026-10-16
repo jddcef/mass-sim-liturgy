@@ -131,3 +131,10 @@ Round six choices: the vestments on the rail and stand follow
 the vestment rail and vesting stand, the sacristy-bell moment, the cupboard models
 and the first-person camera views are common practice or judgement calls. The
 cupboard and vestment models are project-made simple geometry.
+
+Round seven choices: the reserved-hosts default is a user request, noting
+[GIRM 85](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/85)'s preference for hosts consecrated at the same Mass. The
+weekday preset omits the Gloria and Creed per [GIRM 53](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/53) and
+[GIRM 68](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/68). The screen operator's tracks are synthesised in the browser
+and the slides show placeholders only; no hymn texts or recordings are included.
+The monstrance, projector screen and operator desk are project-made simple geometry.

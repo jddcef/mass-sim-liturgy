@@ -600,7 +600,7 @@ function updatePeople(step,phase){
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const special=step.special?.type==='communion'?step.special:null;
   congregation.forEach((person,i)=>{
-    person.figure.root.visible=!reservedPew(person.home);
+    person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden;
     let p=person.home;
     let walking=false, receiving=false;
     if(special&&i%3===0){
@@ -841,12 +841,43 @@ function applySetup(){
   if(featuresReady){refreshTraining();refreshSpeechStatus();}
 }
 
+let sunLight=null, graphicsProfile=null;
+// Detail level: pixel ratio, shadows and crowd size. Antialiasing is fixed when the page loads.
+function applyGraphics(profile){
+  graphicsProfile=profile;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,profile.pixelRatio));
+  if(renderer.shadowMap.enabled!==profile.shadows){
+    renderer.shadowMap.enabled=profile.shadows;
+    scene.traverse(object=>{
+      if(!object.material)return;
+      for(const m of [].concat(object.material))m.needsUpdate=true;
+    });
+  }
+  if(sunLight&&sunLight.shadow.mapSize.x!==profile.shadowSize){
+    sunLight.shadow.mapSize.set(profile.shadowSize,profile.shadowSize);
+    if(sunLight.shadow.map){sunLight.shadow.map.dispose();sunLight.shadow.map=null;}
+  }
+  congregation.forEach((person,i)=>{
+    const hidden=typeof crowdVisible==='function'?!crowdVisible(i,profile.crowd):false;
+    person.figure.root.userData.gfxHidden=hidden;
+    if(hidden)person.figure.root.visible=false;
+  });
+  if(profile.textures&&typeof GraphicsDetail!=='undefined')for(const provider of GraphicsDetail.providers){
+    try{provider({scene,renderer,THREE});}catch(error){console.warn('Texture provider failed',error);}
+  }
+  if(renderer.domElement.parentNode){
+    const {width,height}=$('viewport').getBoundingClientRect();
+    renderer.setSize(width,height);
+  }
+}
+
 function initialise(){
   if(!THREE.OrbitControls)throw new Error('OrbitControls did not load. Keep the vendor folder beside this page.');
   scene=new THREE.Scene();
   scene.background=new THREE.Color('#ccd9de');
-  renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  const gfx=typeof GraphicsDetail!=='undefined'?GraphicsDetail.profile():{pixelRatio:2,shadows:true,shadowSize:1024,crowd:1,antialias:true};
+  renderer=new THREE.WebGLRenderer({antialias:gfx.antialias,alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,gfx.pixelRatio));
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=.9;
@@ -870,6 +901,7 @@ function initialise(){
   const sun=new THREE.DirectionalLight('#fff1d1',.9);
   sun.position.set(-8,18,8);
   sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
+  sunLight=sun;
   Object.assign(sun.shadow.camera,{left:-15,right:15,top:15,bottom:-15,near:1,far:50});
   sun.shadow.bias=-.001;
   scene.add(sun);
@@ -893,6 +925,11 @@ function initialise(){
     }
   }
   makeObjects();
+  applyGraphics(gfx);
+  if($('graphicsDetail')){
+    $('graphicsDetail').value=GraphicsDetail.storedChoice();
+    $('graphicsDetail').onchange=event=>{GraphicsDetail.store(event.target.value);applyGraphics(GraphicsDetail.profile(event.target.value));};
+  }
   const resize=()=>{
     const {width,height}=$('viewport').getBoundingClientRect();
     camera3d.aspect=width/height;

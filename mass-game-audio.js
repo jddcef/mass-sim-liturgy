@@ -86,6 +86,50 @@ const GameAudio=(()=>{
     if(!enabled||!ensure())return;
     tone(1200,ctx.currentTime,.05,.03,'square');
   }
-  return {ensure,altarBell,sacristyBell,thurible,silence,unlock,correct,wrong,tick,
-    setEnabled(v){enabled=!!v;},get enabled(){return enabled;}};
+  // Backing track for the screen operator: a soft organ-like chord loop, different for each part.
+  // Illustrative only: a parish would play its own licensed recordings.
+  let track=null;
+  const PROGRESSIONS=[[0,5,7,0],[0,9,5,7],[0,7,9,5],[0,4,5,7],[0,5,9,7]];
+  function startTrack(name='hymn'){
+    stopTrack(.2);
+    if(!enabled||!ensure())return;
+    let hash=0;for(const c of name)hash=(hash*31+c.charCodeAt(0))>>>0;
+    const root=174.6*Math.pow(2,(hash%5)/12),progression=PROGRESSIONS[hash%PROGRESSIONS.length];
+    const bus=ctx.createGain();bus.gain.setValueAtTime(0,ctx.currentTime);bus.gain.linearRampToValueAtTime(.9,ctx.currentTime+1.2);bus.connect(master);
+    const state={bus,name,bar:0,next:ctx.currentTime+.05,timer:null};
+    const chord=(semitone,at,length)=>{
+      for(const [interval,gain] of [[0,.035],[4,.022],[7,.022],[12,.014],[-12,.03]]){
+        const f=root*Math.pow(2,(semitone+interval+(interval===4&&semitone%12===9?-1:0))/12);
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type=interval===-12?'sine':'triangle';o.frequency.value=f;
+        g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(gain,at+.25);
+        g.gain.setValueAtTime(gain,at+length-.3);g.gain.linearRampToValueAtTime(0,at+length);
+        o.connect(g).connect(bus);o.start(at);o.stop(at+length+.05);
+      }
+    };
+    const schedule=()=>{
+      while(state.next<ctx.currentTime+2.5){
+        chord(progression[state.bar%progression.length],state.next,2.2);
+        state.next+=2.2;state.bar++;
+      }
+    };
+    schedule();
+    state.timer=setInterval(schedule,500);
+    track=state;
+  }
+  function stopTrack(fade=1.5){
+    if(!track)return;
+    const state=track;track=null;
+    clearInterval(state.timer);
+    if(ctx){
+      const now=ctx.currentTime;
+      state.bus.gain.cancelScheduledValues(now);
+      state.bus.gain.setValueAtTime(state.bus.gain.value,now);
+      state.bus.gain.linearRampToValueAtTime(0,now+fade);
+      setTimeout(()=>state.bus.disconnect(),(fade+3)*1000);
+    }
+  }
+  return {ensure,altarBell,sacristyBell,thurible,silence,unlock,correct,wrong,tick,startTrack,stopTrack,
+    get trackPlaying(){return track?.name||null;},
+    setEnabled(v){enabled=!!v;if(!enabled)stopTrack(.2);},get enabled(){return enabled;}};
 })();
