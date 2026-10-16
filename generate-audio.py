@@ -32,7 +32,11 @@ DEFAULT_GROUP_SIZE = 4
 PHONEMES = {
     "Kyrie, eleison.": "kˈɪəɹieɪ, eɪlˈeɪɪsɒn.",
     "Christe, eleison.": "kɹˈɪsteɪ, eɪlˈeɪɪsɒn.",
+    # A full stop after a short "Amen" ends in a release burst that sounds like "amet".
+    "Amen.": "ˌɑːmˈɛn,",
 }
+# Responses whose unvoiced tail (a breath or release burst after the last voiced sound) is cut.
+TRIM_TAIL = {"Amen."}
 
 
 def spoken_form(text, language):
@@ -78,6 +82,25 @@ def mix_group(layers, sample_rate):
     if peak <= 0 or not np.isfinite(peak):
         raise ValueError("Invalid or silent congregation mix")
     return mixed * (0.86 / peak)
+
+def trim_tail(samples, sample_rate, hop=0.01, fade=0.04):
+    """Cut noise after the last voiced frame (energy below 1 kHz) and fade out gently."""
+    size = int(hop * sample_rate)
+    low = []
+    for start in range(0, len(samples) - size, size):
+        frame = samples[start:start + size] * np.hanning(size)
+        spectrum = np.abs(np.fft.rfft(frame)) ** 2
+        low.append(spectrum[np.fft.rfftfreq(size, 1 / sample_rate) < 1000].sum())
+    low = np.asarray(low)
+    if not len(low) or low.max() <= 0:
+        return samples
+    voiced = np.where(low > 0.02 * low.max())[0]
+    end = min(len(samples), (voiced[-1] + 1) * size)
+    out = samples[:end].copy()
+    ramp = min(len(out), int(fade * sample_rate))
+    out[len(out) - ramp:] *= np.linspace(1, 0, ramp, dtype=np.float32)
+    return out
+
 
 def vary_speed(samples, speed):
     return np.interp(
@@ -129,11 +152,15 @@ def main():
                 layers = []
                 for voice, speed, delay, pan in group:
                     samples, rate = engine.create(spoken, voice=voice, speed=1, lang=phoneme_language, is_phonemes=is_phonemes)
+                    if language == "en" and text in TRIM_TAIL:
+                        samples = trim_tail(samples, rate)
                     samples = vary_speed(samples, speed)
                     layers.append((samples, delay, pan))
                 samples = mix_group(layers, rate)
             else:
                 samples, rate = engine.create(spoken, voice=VOICES[role], speed=1, lang=phoneme_language, is_phonemes=is_phonemes)
+                if language == "en" and text in TRIM_TAIL:
+                    samples = trim_tail(samples, rate)
                 samples = vary_speed(samples, 0.95)
             if not len(samples) or not np.isfinite(samples).all():
                 raise ValueError(f"Invalid generated audio for {key}")

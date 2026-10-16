@@ -496,6 +496,13 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(sanctus.mode,'track');
   assert.equal(cues.find(c=>c.part==='kyrie').mode,'acapella');
   assert.ok(cues.some(c=>c.part==='entrance'&&c.action==='stop'),'hymn tracks are faded out');
+  {
+    const at=key=>{let t=0;for(const s of STEPS){if(s.key===key)return t;t+=s.dur;}};
+    const stop=cues.find(c=>c.part==='entrance'&&c.action==='stop');
+    assert.ok(stop.time>at(2)&&stop.time<at(3),'entrance hymn runs through the incensation and ends before the Sign of the Cross');
+    assert.equal(cues.find(c=>c.part==='confiteor').key,5,'Confiteor slide at the Penitential Act');
+    assert.ok(cues.find(c=>c.part==='offertory').time<at(18),'offertory chant starts at the preparation of the altar');
+  }
   assert.ok(!cues.some(c=>c.part==='sanctus'&&c.action==='stop'),'only hymns fade at key detail');
   assert.ok(G('deriveMediaCues')(STEPS,null,av.options,'all').some(c=>c.part==='sanctus'&&c.action==='stop'));
   same(G('deriveMediaCues')(STEPS,null,{...av.options,projector:false}),[]);
@@ -605,5 +612,59 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     skipSideQuest(quest);
     assert.equal(skipped.skipped,true,'only once');
   `,ui);
+}
+// ---- round 8: nave seating, search index, next use, speech held for answers ----
+{
+  const setPewLayout=G('setPewLayout'),inPews=G('inPews'),routeBetween=G('routeBetween');
+  assert.equal(setPewLayout('full'),'full');
+  assert.ok(inPews([90,500]),'benches reach the side walls');
+  const route=routeBetween([90,500],[500,300]);
+  assert.equal(route[0][0],500,'leaves the benches by the centre aisle');
+  assert.ok(route.slice(0,-1).every(p=>p[0]===500),'no side aisle in this layout');
+  assert.equal(setPewLayout('aisles'),'aisles');
+  assert.ok(!inPews([90,500]),'side aisle by the wall again');
+  assert.equal(routeBetween([300,500],[200,300])[0][0],110,'side aisle used when it exists');
+
+  const index=G('buildSearchIndex')([{key:'P',name:'Priest'},{key:'S',name:'Altar server'},{key:'T',name:'Thurifer'}]);
+  const cats=new Set(index.map(e=>e.cat));
+  for(const c of G('SEARCH_CATEGORIES'))assert.ok(cats.has(c.id),'category has entries: '+c.id);
+  for(const c of G('SEARCH_CATEGORIES'))assert.ok(index.some(e=>e.cat===c.id&&e.main),'category has a main entry: '+c.id);
+  assert.ok(index.every(e=>G('GameIcons').PATHS[e.icon]),'every entry has a symbol');
+  const search=G('searchEntries');
+  same(search(index,'').length,0);
+  same(search(index,'chal').map(r=>r.entry.id)[0],'object:chalice');
+  same(search(index,'chal')[0].match,[0,4],'match range to highlight');
+  same(search(index,'incense').map(r=>r.entry.id),['object:thurible'],'keywords find synonyms');
+  assert.equal(search(index,'missal')[0].entry.id,'object:missal');
+  assert.ok(search(index,'server').some(r=>r.entry.id==='role:S'));
+
+  const next=G('nextUseFor'),find=id=>index.find(e=>e.id===id);
+  const thurible=next(find('object:thurible'),STEPS,0,0);
+  assert.equal(STEPS[thurible.step].props.thurible.length>0,true);
+  assert.match(thurible.what,/taken by the priest/);
+  const chalice=next(find('object:chalice'),STEPS,0,0);
+  assert.match(chalice.title,/Preparation/);
+  const later=next(find('object:chalice'),STEPS,chalice.step+1,0);
+  assert.ok(!later||later.step>chalice.step,'looks only forward');
+  const priest=next(find('role:P'),STEPS,0,0);
+  assert.equal(priest.step,0);assert.equal(priest.soon,true);
+  const ambo=next(find('place:ambo'),STEPS,0,0);
+  assert.match(ambo.title,/Reading/);
+  assert.equal(next(find('object:thurible'),STEPS,STEPS.length-1,1),null,'nothing after the end');
+}
+{
+  const ctx=vm.createContext({assert,console,scene:null,clearTimeout:()=>{},performance:{now:()=>100},document:{body:{classList:{remove:()=>{}}},createElement:()=>({append:()=>{}})}});
+  for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game.js'])vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file});
+  vm.runInContext(`
+    game.phase='mass';
+    game.stops=[{time:10,type:'decision',done:false},{time:30,type:'cue',done:false}];
+    assert.equal(speechHeld(10),true,'a line starting at an unanswered question waits');
+    assert.equal(speechHeld(12),true,'and so does a line after it');
+    assert.equal(speechHeld(5),false,'earlier lines play');
+    game.stops[0].done=true;
+    assert.equal(speechHeld(10),false,'plays once answered');
+    game.phase='pre';
+    assert.equal(speechHeld(40),false,'only during Mass');
+  `,ctx);
 }
 console.log('mass-game tests passed');

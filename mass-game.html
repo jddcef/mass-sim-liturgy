@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Holy Mass simulator - play a role</title>
+<title>Holy Mass simulator - play a role | Mass-Sim-Liturgy</title>
 <link rel="stylesheet" href="mass-3d.css">
 <link rel="stylesheet" href="mass-game.css">
 </head>
@@ -11,12 +11,17 @@
 <header>
   <div><h1>Holy Mass simulator</h1><span id="gameBadge">Choose a role to begin</span></div>
   <div id="headerTools">
+    <div id="searchBox">
+      <input id="gameSearch" type="search" placeholder="Find a person, object or place" aria-label="Find a person, object or place" aria-controls="searchPanel" aria-expanded="false" autocomplete="off">
+      <div id="searchPanel" hidden></div>
+    </div>
     <output id="gameScore" aria-live="polite">Score 0</output>
     <button id="gameBookButton" type="button" hidden>Open the book</button>
     <button id="gameQuestions" type="button" aria-pressed="true" title="Turn questions off to just watch: your duties are done for you">Questions on</button>
     <button id="gameSound" type="button" aria-pressed="true" aria-label="Sound on" title="Sound on (click to mute)">🔊</button>
     <button id="gameRedo" type="button" title="Go back and redo the previous step">↶ Redo previous</button>
     <button id="gameRestart" type="button">New game</button>
+    <button id="feedbackButton" type="button" title="Send anonymous feedback">💬 Feedback</button>
     <a href="mass-3d.html">3D explorer</a>
   </div>
 </header>
@@ -38,7 +43,7 @@
         </select></label>
         <label><input id="labels" type="checkbox" checked> Labels</label>
         <label title="Lower detail runs faster on small or older devices">Detail <select id="graphicsDetail"><option value="auto">Auto</option><option value="low">Low</option><option value="standard">Standard</option><option value="high">High</option></select></label>
-        <label title="Fade the rest of the church and light up who and what is moving now"><input id="highlightMode" type="checkbox"> Highlight action</label>
+        <label title="Fade the rest of the church and light up who and what is moving now"><input id="highlightMode" type="checkbox" checked> Highlight action</label>
         <label title="See through your own eyes; drag to look around"><input id="firstPerson" type="checkbox"> First person</label>
         <label title="Briefly see through your own eyes while you speak"><input id="speakerView" type="checkbox" checked> My view when I speak</label>
         <button id="resetCamera" type="button">Reset view</button>
@@ -218,6 +223,7 @@
         <label>Tabernacle <select id="app_tabernacle" name="app_tabernacle"><option value="behind" selected>Behind the altar</option><option value="left">Sanctuary left</option><option value="right">Sanctuary right</option><option value="custom">Keep custom layout position</option></select></label>
         <label>Tabernacle mounting <select id="app_tabernacleStyle" name="app_tabernacleStyle"><option value="projecting" selected>Fixed against the wall on a projecting plinth</option><option value="recessed">Recessed into the wall</option><option value="ledge">On a wall ledge</option><option value="pillar">On a pillar against the wall</option></select></label>
         <label>Altar size <select id="app_altarSize" name="app_altarSize"><option value="small">Small</option><option value="standard" selected>Standard</option><option value="large">Large</option></select></label>
+        <label>Nave seating <select id="app_nave" name="app_nave"><option value="aisles" selected>Side aisles by the walls</option><option value="full">Benches to the walls (centre aisle only)</option></select></label>
         <label>Sanctuary floor <select id="app_floor" name="app_floor"><option value="sandstone" selected>Sandstone</option><option value="terracotta">Terracotta</option><option value="slate">Slate</option><option value="marble">Pale marble</option></select></label>
         <label><input type="checkbox" name="projector"> Projector screen for hymns and Mass parts (Screen operator)</label>
         <h3 class="optionHead" data-icon="vestment">Vestments and robes</h3>
@@ -266,6 +272,17 @@
   </div>
 </div>
 
+<dialog id="feedbackDialog" aria-labelledby="feedbackTitle">
+  <form id="feedbackForm" method="dialog">
+    <h2 id="feedbackTitle">Feedback</h2>
+    <p class="small">Anonymous: no name or e-mail is asked for or sent.</p>
+    <label>About <select id="feedbackCategory"><option>Something is broken</option><option>Liturgical accuracy</option><option>Idea or suggestion</option><option>Other</option></select></label>
+    <label>Your note <textarea id="feedbackText" rows="6" maxlength="4000"></textarea></label>
+    <label><input id="feedbackContext" type="checkbox" checked> Include where I am in the game (role, level, step)</label>
+    <p id="feedbackStatus" class="small" aria-live="polite"></p>
+    <div class="dialogButtons"><button id="feedbackCancel" type="button">Close</button><button type="submit">Send</button></div>
+  </form>
+</dialog>
 <noscript>This game requires JavaScript and a browser with WebGL support.</noscript>
 <script src="vendor/three.min.js"></script>
 <script src="vendor/OrbitControls.js"></script>
@@ -280,6 +297,8 @@
 <script src="mass-graphics.js"></script>
 <script src="mass-3d.js"></script>
 <script src="mass-game-view.js"></script>
+<script src="feedback-config.js"></script>
+<script src="mass-game-ui.js"></script>
 <script src="mass-game.js"></script>
 </body>
 </html>

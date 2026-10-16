@@ -1,0 +1,101 @@
+# Development guide and resume checklist
+
+Read this first when starting a new session, human or AI. It explains how to
+pick up the work, the current status, and the steps each change goes through.
+What the product must do is specified in [`SPEC.md`](SPEC.md).
+
+## Start-of-session checklist
+
+- [ ] Read `docs/SPEC.md`, then this file, then the last round in
+      `docs/GAME-DECISIONS.md`. The next decision number is in
+      [Status](#status).
+- [ ] Run `git fetch` and check open PRs (`gh pr list`) and issues
+      (`gh issue list`). Merge `origin/main` into your branch if it moved.
+- [ ] Run the four tests (below) to confirm a green baseline before editing.
+- [ ] Note the user's request verbatim. Record any interpretation of an
+      ambiguous request as a decision.
+
+## Per-change checklist
+
+- [ ] Put pure rules in `mass-game-logic.js`, export them through
+      `module.exports`, and test them in `mass-game.test.cjs`.
+- [ ] For a new script, add its `<script>` tag in the right order and a
+      `node --check` line in `.github/workflows/checks.yml`.
+- [ ] Put any markup a script needs at startup **before** the script tags.
+- [ ] When setup defaults change, bump `SETUP_VERSION` in `mass-game.js` and
+      decide how older saves migrate.
+- [ ] Run the tests:
+      ```
+      node mass-scenarios.test.cjs
+      node mass-features.test.cjs
+      node mass-assets.test.cjs
+      node mass-game.test.cjs
+      ```
+- [ ] Play it through in a real browser via `file://`: no console errors, and
+      the new behaviour seen working. Automated checks used puppeteer-core
+      with Edge (headless) and screenshots; such harness scripts are not
+      committed.
+- [ ] Log decisions in `docs/GAME-DECISIONS.md` (`R<n>`: question, choice,
+      alternatives, source). Cite GIRM paragraphs through magisterium.com
+      links.
+- [ ] Update the README ("Play now" for players, the game section for
+      details) and `docs/SOURCES.md` if sources changed.
+- [ ] Commit with the trailer
+      `Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>`,
+      push, open a PR and confirm CI is green.
+- [ ] Update [Status](#status) below.
+
+## Conventions and pitfalls
+
+- Files are UTF-8 without BOM, with LF line endings (`.gitattributes`
+  normalises them). On Windows, write files with
+  `[IO.File]::WriteAllText(path, text, (New-Object Text.UTF8Encoding $false))`.
+- Scripts are classic and share globals, so avoid accidental name clashes
+  across files.
+- `material()` in `mass-3d.js` is cached and shared. Clone a material before
+  changing it per mesh.
+- Plan coordinates convert to world coordinates with `world([x,y])`
+  (SCALE .025; plan x 500 is world 0).
+- `mass-3d.css` styles `header span`. Panels placed inside the header must
+  reset `color` and `font-size`.
+- Audio pipeline: `prepare-audio.cjs`, then `generate-audio.py`, then
+  `snapshot-audio.cjs`, which writes `audio/audio-manifest.js` and
+  `audio/index.csv`. The README section "Pre-generated AI audio" has the
+  details, and `mass-assets.test.cjs` checks the references.
+- Never reproduce full copyrighted liturgical texts (SPEC C3).
+- Don't stop desktop applications you did not start without asking the user.
+
+## Status
+
+The repository is `jddcef/mass-sim-liturgy`, renamed from
+`roman-mass-explorer`. GitHub Pages serves `main` at
+<https://jddcef.github.io/mass-sim-liturgy/>. The working branch has been
+`jddcef-holy-mass-simulator-game`; merge `main` into it after each PR merges.
+
+**Next decision number: R83.**
+
+| Round | PR | Content |
+|---|---|---|
+| 1 | #2 | Playable simulator: roles, four levels, options, lapses, M.C., sacristan, bells and thurible |
+| 2–3 | #3 | Watch mode, symbols, varied heights, incensation detail, cross and crucifix placement, outfits, liturgical colours, redo, windows and floor |
+| 4 | #4 | Recorded audio in the game, homily place, collection, EMHC, reserved hosts, readers, timeline jump, speed slider |
+| 5 | #5 | Role card, side quests, camera pad, speaker view, highlight, first person, sacristan training, audio fixes |
+| 6 | #6 | Cupboard models, vestment rail and stand, first-person views, figure eyes |
+| 7 | #7 | Presets, role switching, screen operator, monstrance, detail levels, sound icon, cancel New game |
+| 8 | #8 | Search and index card, hover tips, feedback, wall fade, nave seating, audio timing, rename |
+| docs | #8 | Player-facing README opening, `SPEC.md`, this guide, Copilot instructions |
+
+### Open items and backlog
+
+- [ ] Issue #1: regenerate the congregation audio with the four-voice mix.
+- [ ] Owner: create a Formspree or Basin form and set `FEEDBACK_ENDPOINT` in
+      `feedback-config.js`.
+- [ ] Owner review of judgement calls in `GAME-DECISIONS.md`, especially
+      R77 (reading of "nave without side aisles").
+- [ ] Latin audio pack is partial.
+- [ ] Future: an Exposition, Adoration and Benediction scenario (the
+      monstrance is already in the cupboard).
+- [ ] Future: high-detail textures (the "High" detail hook exists in
+      `mass-graphics.js`).
+- [ ] Future: a full first-person mode for every role, extending today's
+      first person with hints.

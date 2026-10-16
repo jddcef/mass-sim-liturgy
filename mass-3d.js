@@ -161,6 +161,35 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
   }
 }
 
+// Walls fade to see-through while they stand between the camera and what it looks at.
+const fadingWalls=[];
+function markWall(mesh){
+  mesh.material=mesh.material.clone();
+  mesh.material.transparent=true;
+  fadingWalls.push({mesh,box:null});
+  return mesh;
+}
+function updateWallFade(){
+  if(!fadingWalls.length)return;
+  const from=camera3d.position,to=controls.target;
+  const length=from.distanceTo(to);
+  const ray=new THREE.Ray(from.clone(),to.clone().sub(from).normalize());
+  const hit=new THREE.Vector3();
+  for(const wall of fadingWalls){
+    if(!wall.box)wall.box=new THREE.Box3().setFromObject(wall.mesh);
+    const blocking=wall.box.containsPoint(from)||(!!ray.intersectBox(wall.box,hit)&&hit.distanceTo(from)<length-.05);
+    const opacity=blocking?.14:1;
+    const m=wall.mesh.material;
+    if(m.opacity!==opacity){m.opacity=opacity;m.depthWrite=!blocking;m.needsUpdate=true;}
+  }
+}
+const pewGroups=[];
+let naveStyle='aisles';
+function setNaveStyle(style){
+  naveStyle=style==='full'?'full':'aisles';
+  pewGroups.forEach(g=>{g.visible=g.userData.nave===naveStyle;});
+  if(typeof setPewLayout==='function')setPewLayout(naveStyle);
+}
 let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor, tabernacleBody=[], tabernacleMount=null, altarParts=[];
 const ALTAR_SIZES={small:.8,standard:1,large:1.3};
 function setAltarSize(size){
@@ -237,7 +266,7 @@ function setWindowStyle(style){
 function setSanctuaryFloor(name){
   if(sanctuaryFloor)sanctuaryFloor.material=material(FLOOR_COLOURS[name]||FLOOR_COLOURS.sandstone);
 }
-const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind',tabernacleStyle:'projecting',altarSize:'standard'};
+const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind',tabernacleStyle:'projecting',altarSize:'standard',nave:'aisles'};
 function readAppearance(){
   const a={...APPEARANCE_DEFAULTS};
   for(const key of Object.keys(a))if($('app_'+key))a[key]=$('app_'+key).value;
@@ -252,6 +281,7 @@ function applyAppearance(a){
   setWindowStyle(a.windows);
   setSanctuaryFloor(a.floor);
   setAltarSize(a.altarSize);
+  setNaveStyle(a.nave);
   setTabernacleStyle(a.tabernacleStyle);
   if(a.tabernacle!=='custom'){
     churchLayout.tabernacle=({behind:[500,32],left:[137,32],right:[863,32]})[a.tabernacle]?.slice()||[500,32];
@@ -296,7 +326,7 @@ function buildChurch(){
   for(let x=-12;x<=12;x+=1.5)box(scene,x,.008,3.5,.012,.014,13,'#cbc1af',false);
   for(let z=-2.5;z<=10.5;z+=1.5)box(scene,0,.009,z,24,.015,.012,'#cbc1af',false);
   // Cutaway walls leave the nave open to inspection from every camera.
-  box(scene,0,2.6,-10.7,23,5.2,.28,'#c4b69d');
+  markWall(box(scene,0,2.6,-10.7,23,5.2,.28,'#c4b69d'));
   box(scene,0,4.6,-10.52,5,.2,.1,'#967749');
   buildCrucifix();
   for(const side of [-1,1]){
@@ -347,13 +377,20 @@ function buildChurch(){
   cylinder(scene,stand.x,stand.y+.62,stand.z,.03,.03,1.24,'#665544');
   box(scene,stand.x,stand.y+1.26,stand.z,.65,.04,.4,'#795738');
   scene.children.slice(fixtureStart).forEach(child=>furnitureGroups.chair.add(child));
-  for(let y=356;y<=700;y+=34){
-    for(const x of [295,705]){
-      const w=world([x,y+12]);
-      box(scene,w.x,.48,w.z,7.8,.11,.38,'#8f6842',false);
-      box(scene,w.x,.72,w.z+.18,7.8,.48,.08,'#9f784e',false);
-      for(const dx of [-3.5,3.5])box(scene,w.x+dx,.23,w.z,.1,.46,.3,'#795638',false);
+  // Two bench sets: with side aisles (default), or full-width benches reaching the side walls.
+  for(const [style,centres,width] of [['aisles',[295,705],7.8],['full',[255,745],9.8]]){
+    const group=new THREE.Group();
+    for(let y=356;y<=700;y+=34){
+      for(const x of centres){
+        const w=world([x,y+12]);
+        box(group,w.x,.48,w.z,width,.11,.38,'#8f6842',false);
+        box(group,w.x,.72,w.z+.18,width,.48,.08,'#9f784e',false);
+        for(const dx of [-width/2+.4,width/2-.4])box(group,w.x+dx,.23,w.z,.1,.46,.3,'#795638',false);
+      }
     }
+    group.userData.nave=style;
+    scene.add(group);
+    pewGroups.push(group);
   }
   fixtureStart=scene.children.length;
   const tab=world([137,85]);
@@ -600,7 +637,7 @@ function updatePeople(step,phase){
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const special=step.special?.type==='communion'?step.special:null;
   congregation.forEach((person,i)=>{
-    person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden;
+    person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&(!person.outer||naveStyle==='full');
     let p=person.home;
     let walking=false, receiving=false;
     if(special&&i%3===0){
@@ -615,7 +652,7 @@ function updatePeople(step,phase){
         const aisle=side<0?487:513,outer=side<0?112:888;
         if(t<.43)p=along([p,[aisle,p[1]],[aisle,340],station],t/.43);
         else if(t<.55){p=station;receiving=true;}
-        else p=along([station,[outer,330],[outer,p[1]],person.home],(t-.55)/.45);
+        else p=naveStyle==='full'?along([station,[aisle,340],[aisle,p[1]],person.home],(t-.55)/.45):along([station,[outer,330],[outer,p[1]],person.home],(t-.55)/.45);
         walking=!receiving;
       }
     }
@@ -756,6 +793,7 @@ function renderFrame(dt=1/60){
   updateFollow(dt);
   controls.update();
   if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
+  updateWallFade();
   if(typeof gameRender!=='function'||!gameRender())renderer.render(scene,camera3d);
 }
 
@@ -922,6 +960,17 @@ function initialise(){
       figure.root.scale.set(height,height,height);
       figure.root.userData.baseScale=height;
       congregation.push({home:[x,y],figure});
+    }
+  }
+  // Extra people at the wall ends of full-width benches; shown only in that nave style.
+  for(let y=356;y<=700;y+=68){
+    for(const x of [110,890]){
+      const i=congregation.length;
+      const figure=makeFigure(['#7b6d8f','#5f7d6a','#a0805f'][i%3],['#c99970','#8a5538','#deb28c'][i%3],null);
+      const height=i%4===1?.55:.74+(i*11%13)/100;
+      figure.root.scale.set(height,height,height);
+      figure.root.userData.baseScale=height;
+      congregation.push({home:[x,y],figure,outer:true});
     }
   }
   makeObjects();
