@@ -20,24 +20,71 @@ const GameAudio=(()=>{
     g.gain.exponentialRampToValueAtTime(.0001,start+decay);
     o.connect(g).connect(master);o.start(start);o.stop(start+decay+.05);
   }
-  // Inharmonic partials give a small handbell its metallic ring.
-  function strike(f,at,decay,gain){
-    [[1,1],[2.76,.5],[5.4,.25],[8.93,.12]].forEach(([m,a])=>tone(f*m,at,decay/Math.sqrt(m),gain*a));
+  // Bells: modal synthesis of cast bronze. Each partial is a pair of slightly
+  // detuned modes (the bell is never perfectly round), which gives the slow
+  // shimmer of a real bell. A clapper transient and a small church reverb
+  // stop it sounding electronic.
+  let room=null;
+  function reverb(){
+    if(room)return room;
+    const seconds=2.6,frames=Math.ceil(ctx.sampleRate*seconds),ir=ctx.createBuffer(2,frames,ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const data=ir.getChannelData(ch);
+      for(let i=0;i<frames;i++){const x=i/frames;data[i]=(Math.random()*2-1)*Math.pow(1-x,2.2)*(i<ctx.sampleRate*.012?.25:1);}
+    }
+    const convolver=ctx.createConvolver(),wet=ctx.createGain(),input=ctx.createGain(),tone=ctx.createBiquadFilter();
+    convolver.buffer=ir;wet.gain.value=.32;
+    // Stone rooms swallow the very top end; this also softens the attack.
+    tone.type='lowpass';tone.frequency.value=7200;tone.Q.value=.5;
+    input.connect(tone);tone.connect(master);tone.connect(convolver).connect(wet).connect(master);
+    room=input;
+    return room;
   }
+  // [frequency ratio, amplitude, decay ratio]: a small cast handbell
+  // (altar bell cluster) and a larger church-type bell (sacristy bell).
+  const HANDBELL=[[1,1,1],[2.32,.42,.62],[4.25,.2,.38],[6.63,.1,.24],[9.38,.05,.16]];
+  const TOWER=[[.5,.55,1.25],[1,.8,1],[1.19,.45,.82],[1.5,.25,.6],[2,.5,.52],[2.51,.18,.36],[2.66,.14,.32],[3.01,.1,.26],[4.17,.05,.18]];
+  function strike(f,at,decay,gain,modes=HANDBELL){
+    const out=reverb(),bell=ctx.createGain();bell.gain.value=gain;bell.connect(out);
+    for(const [ratio,amp,dr] of modes){
+      const freq=f*ratio,life=decay*dr;
+      if(freq>16000)continue;
+      for(const split of [-1,1]){
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.frequency.value=freq*(1+split*(.0007+ratio*.0002));
+        g.gain.setValueAtTime(0,at);
+        g.gain.linearRampToValueAtTime(amp*.5,at+.0015+.0006*ratio);
+        g.gain.setTargetAtTime(0,at+.002,life/5);
+        o.connect(g).connect(bell);o.start(at);o.stop(at+life+.1);
+      }
+    }
+    // The clapper's metallic tick.
+    const frames=Math.ceil(ctx.sampleRate*.02),buffer=ctx.createBuffer(1,frames,ctx.sampleRate),data=buffer.getChannelData(0);
+    for(let i=0;i<frames;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/frames,6);
+    const src=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();
+    src.buffer=buffer;bp.type='bandpass';bp.frequency.value=Math.min(9000,f*3.1);bp.Q.value=2.5;g.gain.value=.35;
+    src.connect(bp).connect(g).connect(bell);src.start(at);
+  }
+  // A cluster of four small bells on one handle, shaken: each shake sets
+  // a couple of bells ringing with uneven force, the earlier ones still sounding.
+  const CLUSTER=[1568,1760,1976,2349];
   function altarBell(duration=1.6){
     if(!enabled||!ensure())return;
-    const now=ctx.currentTime,shakes=Math.max(3,Math.round(duration*7));
+    const now=ctx.currentTime+.02,shakes=Math.max(4,Math.round(duration*9));
     for(let i=0;i<shakes;i++){
-      const at=now+i*.14+Math.random()*.03;
-      [1650,1980,2350].forEach((f,n)=>strike(f*(1+(Math.random()-.5)*.01),at+n*.012,1.1,.07));
+      const at=now+i*.11+Math.random()*.035,fadeOut=i>shakes-4?(shakes-i)/4:1;
+      const order=[0,1,2,3].sort(()=>Math.random()-.5);
+      for(let n=0;n<2+(Math.random()<.4?1:0);n++){
+        const f=CLUSTER[order[n]]*(1+(Math.random()-.5)*.002);
+        strike(f,at+n*(.006+Math.random()*.02),1.9,(.05+Math.random()*.05)*fadeOut);
+      }
     }
   }
   function sacristyBell(){
     if(!enabled||!ensure())return;
-    const now=ctx.currentTime;
-    strike(700,now,3.2,.22);strike(700,now+.9,3.2,.16);
-  }
-  function noiseBurst(at,length,freq,gain){
+    const now=ctx.currentTime+.02;
+    strike(587,now,4.5,.2,TOWER);strike(587,now+1.05,4.5,.14,TOWER);
+  }  function noiseBurst(at,length,freq,gain){
     const frames=Math.ceil(ctx.sampleRate*length),buffer=ctx.createBuffer(1,frames,ctx.sampleRate),data=buffer.getChannelData(0);
     for(let i=0;i<frames;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/frames,3);
     const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),g=ctx.createGain();

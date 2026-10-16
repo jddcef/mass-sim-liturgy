@@ -72,7 +72,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 <https://jddcef.github.io/mass-sim-liturgy/>. The working branch has been
 `jddcef-holy-mass-simulator-game`; merge `main` into it after each PR merges.
 
-**Next decision number: R83.**
+**Next decision number: R85.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -84,6 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 | 7 | #7 | Presets, role switching, screen operator, monstrance, detail levels, sound icon, cancel New game |
 | 8 | #8 | Search and index card, hover tips, feedback, wall fade, nave seating, audio timing, rename |
 | docs | #8 | Player-facing README opening, `SPEC.md`, this guide, Copilot instructions |
+| 9 | (this PR) | More natural bell synthesis, compact phone layout with fold-away menus |
 
 ### Open items and backlog
 

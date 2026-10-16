@@ -326,8 +326,10 @@ mutes speech and effects; the setup checkbox can disable recordings separately.
 The second reader shares the Lector's recorded voice, and the EMHC shares the
 recorded Communion formula. Missing clips are reported in the speech controls.
 Effects (altar bell, sacristy bell, thurible chains, right/wrong cues) are
-synthesised in the browser. Everything plays offline. Bell customs vary by place,
+synthesised in the browser (bells are modelled from real bell partials with a little church reverb). Everything plays offline. Bell customs vary by place,
 so each bell is optional.
+
+On a phone, the top menu folds into a ☰ button, and the camera controls fold into 🎥 and ✥ buttons in the corners of the 3D view. Tap anywhere else to fold them away again.
 
 ### Views, controls and training modes
 

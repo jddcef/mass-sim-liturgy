@@ -248,8 +248,68 @@ function initialiseFeedback(){
   });
 }
 
+// ---------- compact (phone) layout ----------
+// On narrow screens the header tools, camera options and camera pad each
+// shrink to a single icon button; tapping elsewhere (the church, a question)
+// folds an open panel away again.
+const COMPACT_QUERY='(max-width: 900px)';
+const compactPanels=[];
+function addCollapsible(panel,{id,icon,label,host,closeOnAction}){
+  if(!panel)return;
+  const toggle=el('button',{id,type:'button',className:'compactToggle',textContent:icon,title:label});
+  toggle.setAttribute('aria-label',label);
+  toggle.setAttribute('aria-controls',panel.id);
+  (host||panel.parentElement).insertBefore(toggle,host?host.firstChild:panel);
+  const entry={panel,toggle,closeOnAction};
+  const set=open=>{
+    panel.classList.toggle('collapsed',!open);
+    toggle.classList.toggle('open',open);
+    toggle.setAttribute('aria-expanded',String(open));
+  };
+  entry.set=set;
+  toggle.addEventListener('click',()=>{
+    const open=panel.classList.contains('collapsed');
+    if(open)compactPanels.forEach(other=>{if(other!==entry)other.set(false);});
+    set(open);
+  });
+  if(closeOnAction)panel.addEventListener('click',event=>{
+    if(!document.body.classList.contains('compactUi'))return;
+    const button=event.target.closest('button,a');
+    if(button&&!button.closest('#searchBox'))set(false);
+  });
+  set(false);
+  compactPanels.push(entry);
+}
+function collapseCompactPanels(except){
+  compactPanels.forEach(entry=>{if(entry!==except)entry.set(false);});
+}
+function initialiseCompactUi(){
+  const viewport=$('viewport');
+  addCollapsible($('headerTools'),{id:'toolsToggle',icon:'☰',label:'Menu: search, sound, questions, new game',closeOnAction:true});
+  addCollapsible($('cameraBar'),{id:'cameraBarToggle',icon:'🎥',label:'View options',host:viewport});
+  addCollapsible($('cameraPad'),{id:'cameraPadToggle',icon:'✥',label:'Camera controls: zoom, turn and move',host:viewport});
+  const media=window.matchMedia?window.matchMedia(COMPACT_QUERY):null;
+  const apply=()=>{
+    const compact=!!media?.matches;
+    document.body.classList.toggle('compactUi',compact);
+    if(compact)collapseCompactPanels();
+  };
+  apply();
+  media?.addEventListener?.('change',apply);
+  document.addEventListener('pointerdown',event=>{
+    if(!document.body.classList.contains('compactUi'))return;
+    compactPanels.forEach(entry=>{
+      if(entry.panel.classList.contains('collapsed'))return;
+      if(entry.panel.contains(event.target)||entry.toggle.contains(event.target))return;
+      // Keep the menu open while its search results or the feedback dialog are in use.
+      if(event.target.closest?.('#searchPanel,dialog'))return;
+      entry.set(false);
+    });
+  },true);
+}
 function initialiseGameUi(){
   initialiseHoverTips();
   initialiseSearch();
   initialiseFeedback();
+  initialiseCompactUi();
 }
