@@ -38,6 +38,11 @@ body.game #layout { height:calc(100dvh - 64px); grid-template-columns:minmax(0,1
 #decisionFeedback .ref { color:#685e50; font-size:12px; }
 #gameToast { position:absolute; top:70px; left:50%; transform:translateX(-50%); z-index:4; max-width:80%; padding:8px 16px; border-radius:8px; background:#253f32ed; color:#fff7e4; font-size:14px; pointer-events:none; }
 #gameToast.bad { background:#6c2a22ed; }
+#mediaWarning { position:absolute; top:112px; left:50%; transform:translateX(-50%); z-index:4; width:min(360px,80%); padding:6px 12px 8px; border-radius:8px; background:#1d2c4fe6; color:#f6efd9; font-size:13px; pointer-events:none; display:grid; gap:5px; }
+#mediaWarning[hidden] { display:none; }
+#mediaWarning .label::before { content:'🎵 '; }
+#mediaWarning .track { height:7px; border-radius:4px; background:#ffffff30; overflow:hidden; }
+#mediaWarning .fill { display:block; height:100%; width:0; background:linear-gradient(90deg,#e7c46a,#f08a3c); }
 body.game #caption { bottom:auto; top:64px; }
 body.game.deciding #caption { display:none; }
 

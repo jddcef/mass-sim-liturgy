@@ -45,12 +45,22 @@ const GAME_ICON_PATHS={
   church:'M12 2v4 M10 4h4 M5 21V11l7-5 7 5v10z M10 21v-5h4v5',
   check:'M5 12l5 5 9-10',
   none:'M12 4a8 8 0 1 1 0 16a8 8 0 1 1 0-16 M6.5 6.5l11 11',
-  collection:'M3 10h18l-3 11H6z M7 10V6a5 5 0 0 1 10 0v4 M9 14h6 M12 12v6'
+  collection:'M3 10h18l-3 11H6z M7 10V6a5 5 0 0 1 10 0v4 M9 14h6 M12 12v6',
+  screen:'M3 4h18v12H3z M12 16v3 M8 21h8 M7 8h10 M7 11h7',
+  play:'M7 4l13 8-13 8z',
+  stop:'M6 6h12v12H6z',
+  monstrance:'M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8 M12 1v2 M12 13v2 M5 8H3 M21 8h-2 M7 3l1.5 1.5 M17 3l-1.5 1.5 M7 13l1.5-1.5 M17 13l-1.5-1.5 M12 15v4 M8 21h8 M10 19h4',
+  calendar:'M4 5h16v16H4z M4 10h16 M8 3v4 M16 3v4 M8 14h3v3H8z',
+  speaker:'M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11',
+  graphics:'M3 5h18v14H3z M3 15l5-5 4 4 3-3 6 6'
 };
 
 // Ordered: the first matching rule wins, so specific phrases come before general words.
 const GAME_ICON_RULES=[
   [/not needed|leave it|nothing to do/,'none',null],
+  [/fade out/,'stop',null],
+  [/backing track/,'play',null],
+  [/lyrics|words on the screen|slide/,'screen',null],
   [/collection|money|usher|other offerings/,'collection',{prop:'collection'}],
   [/^do it now/,'check',null],
   [/sign of the cross|blesses|blessing|signs (himself|the)|makes the sign/,'bless',null],

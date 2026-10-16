@@ -14,9 +14,10 @@ const ROLE_BLURBS={
   E:'An authorised extraordinary minister: wait until after the Priest receives Communion, then assist when needed.',
   MC:'Master of Ceremonies: direct the liturgy, cue every minister and catch mistakes.',
   SAC:'Prepare everything before Mass and put it away afterwards.',
-  PEW:'Arrive, find a seat and take your part: postures, responses and acclamations.'
+  PEW:'Arrive, find a seat and take your part: postures, responses and acclamations.',
+  AV:'Screen operator: show the right slide and start or fade each backing track on cue.'
 };
-const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'}};
+const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
 const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
 
@@ -109,6 +110,14 @@ function buildGameScene(){
   for(const side of [-1,1])box(scene,cupboard.x,.32+.9,cupboard.z+side*.78,.6,1.8,.05,'#6e5236');
   for(const y of [.05,.5,.95,1.4,1.78])box(scene,cupboard.x,.32+y,cupboard.z,.6,.04,1.6,'#7d6040');
   scene.add(Object.assign(label('Cupboard',world([1205,190],2.35)),{}));
+  // Kept for Exposition and Benediction (a separate liturgy); not part of Mass setup.
+  const monstrance=monstranceModel();
+  monstrance.position.set(cupboard.x-.04,.32+.07,cupboard.z+.45);
+  monstrance.scale.setScalar(.78);
+  monstrance.userData.tip='Monstrance (for Exposition and Benediction, not used at Mass)';
+  scene.add(monstrance);
+  game.monstrance=monstrance;
+  buildProjection();
   // Doors the sacristan unlocks and opens in the training opening; open the rest of the time.
   const hinge=new THREE.Group();
   hinge.position.copy(world([1222,130]));hinge.position.x+=.07;
@@ -221,9 +230,9 @@ function walk(key,from,to,speed){
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 // ---------- setup form ----------
-const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores';
+const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores',SETUP_VERSION=7;
 function buildSetupForm(){
-  const roleOrder=['P','D','S','X','C1','T','L','L2','U','E','MC','SAC','PEW'];
+  const roleOrder=['P','D','S','X','C1','T','L','L2','U','E','MC','SAC','PEW','AV'];
   $('roleCards').replaceChildren(...roleOrder.map(id=>el('label',{},[
     el('input',{type:'radio',name:'role',value:id,checked:id==='P'}),
     rolePortrait(id),el('strong',{textContent:GAME_ROLES[id].name}),ROLE_BLURBS[id]])));
@@ -233,6 +242,8 @@ function buildSetupForm(){
   const form=$('setupForm');
   try{
     const saved=JSON.parse(localStorage.getItem(SETUP_KEY)||'null');
+    // Older saves predate the new defaults (bell on, reserved hosts on): let those defaults apply.
+    if(saved&&!(saved._v>=SETUP_VERSION)){delete saved.bellStart;delete saved.reservedCommunion;delete saved.preset;}
     if(saved)for(const [name,value] of Object.entries(saved)){
       const field=form.elements[name];
       if(!field)continue;
@@ -243,10 +254,42 @@ function buildSetupForm(){
   }catch{}
   if(typeof applyAppearance==='function'&&figures.P)applyAppearance(readAppearance());
   form.addEventListener('change',previewNotes);
+  form.addEventListener('change',event=>{
+    if(event.target.name==='preset')choosePreset(event.target.value);
+    else syncPreset();
+  });
   decorateOptions(form);
   form.addEventListener('submit',event=>{event.preventDefault();startGame(readForm());});
+  $('cancelSetup').onclick=cancelSetup;
+  syncPreset();
   previewNotes();
   showHighScores();
+}
+// Presets fill in the celebration fields; any later edit shows "Custom".
+function formValues(){
+  const values={};
+  for(const field of $('setupForm').elements){
+    if(!field.name||field.type==='radio'||field.type==='submit')continue;
+    values[field.name]=field.type==='checkbox'?field.checked:field.value;
+  }
+  return values;
+}
+function choosePreset(id){
+  const preset=GAME_PRESETS[id];
+  if(!preset){$('presetNote').textContent='Your own choice of options.';return;}
+  const form=$('setupForm').elements;
+  for(const [name,value] of Object.entries(preset.fields)){
+    const field=form[name];
+    if(!field)continue;
+    if(field.type==='checkbox')field.checked=!!value;else field.value=String(value);
+  }
+  $('presetNote').textContent=preset.blurb;
+  previewNotes();
+}
+function syncPreset(){
+  const id=matchingPreset(formValues());
+  $('gamePreset').value=id;
+  $('presetNote').textContent=GAME_PRESETS[id]?.blurb||'Your own choice of options.';
 }
 // A symbol beside each setup option, so the long list can be scanned by eye.
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
@@ -254,9 +297,9 @@ const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',read
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
   crucifix:'crucifix',crossStand:'cross',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
-  recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk'};
+  recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
-  for(const head of form.querySelectorAll('.optionHead[data-icon]'))head.insertAdjacentHTML('afterbegin','<span class="iconWrap">'+GameIcons.svg(head.dataset.icon,20)+'</span>');
+  for(const head of form.querySelectorAll('[data-icon]'))head.insertAdjacentHTML('afterbegin','<span class="iconWrap">'+GameIcons.svg(head.dataset.icon,20)+'</span>');
   for(const [name,icon] of Object.entries(OPTION_ICONS)){
     const field=form.elements[name];
     const label=field?.closest?.('label');
@@ -268,7 +311,7 @@ function decorateOptions(form){
 }
 function readForm(){
   const f=$('setupForm').elements;
-  const saved={};
+  const saved={_v:SETUP_VERSION};
   for(const field of f){
     if(!field.name||field.type==='submit')continue;
     if(field.type==='radio'){if(field.checked)saved[field.name]=field.value;}
@@ -283,10 +326,10 @@ function readForm(){
     crucifix:saved.crucifix,crossStand:saved.crossStand,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
-  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false});
+  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false,projector:saved.projector===true});
   return {role:saved.role||'P',level:saved.level||'choice',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
-const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people'};
+const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people',AV:'screen'};
 function rolePortrait(role){
   const badge=ROLE_ICONS[role];
   const image=el('span',{className:'rolePortrait',role:'img'});
@@ -334,10 +377,13 @@ function resetGameState(){
     }else relabel(figure,ROLE_NAMES[game.labelled.key]||game.labelled.key);
     game.labelled=null;
   }
-  congregation.forEach(person=>{person.figure.root.visible=true;});
+  congregation.forEach(person=>{person.figure.root.visible=!person.figure.root.userData.gfxHidden;});
   Object.assign(game,{phase:'setup',stops:[],active:null,lapse:null,duties:[],soundCues:[],lastElapsed:-1,walkers:{},overrides:{},
     facing:{},kneel:{},hidden:new Set(),placed:new Set(),hideProps:new Set(),checklist:[],seatIndex:-1,busy:false,mcPos:MC_HOME.slice(),board:createScoreboard(),autoCount:0,highlight:null,history:[],timerAllowance:0,emptyChurch:false,hintTarget:null,carrying:null});
   setDoors(true,true);
+  GameAudio.stopTrack(.3);
+  if($('mediaWarning'))$('mediaWarning').hidden=true;
+  if(game.projection){game.projection.slideKey=null;showSlide(null);}
   resetGameView();
   $('gameLog').replaceChildren();
   $('gameChecklist').hidden=true;
@@ -360,6 +406,7 @@ function startGame(config){
   const {options,notes}=normaliseGameOptions(config.role,{...config.raw,level:config.level});
   Object.assign(game,{role:config.role,level:config.level,options,notes,seed:options.seed,questions:!GAME_LEVELS[config.level].watch});
   game.cross=setCrossPlaces(options);
+  setProjection(!!options.projector);
   document.body.classList.toggle('noSymbols',options.symbols===false);
   syncQuestionsButton();
   $('deacon').checked=options.deacon;$('lector').checked=options.lector;
@@ -374,14 +421,7 @@ function startGame(config){
   hangVestments('rail');
   if(game.role!=='SAC')hangVestments('worn',['P','D','S'].filter(vestmentNeeded));
   scheduleStops();
-  const info=GAME_ROLES[game.role];
-  $('gameBadge').textContent='You: '+info.name+' / '+GAME_LEVELS[game.level].name;
-  $('gameRoleNote').textContent=ROLE_BLURBS[game.role];
-  $('roleCard').hidden=false;
-  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:GAME_LEVELS[game.level].name+' level'})]));
-  $('gameBookButton').hidden=!info.book;
-  $('gameBookButton').textContent='Open the '+(info.book||'book');
-  game.book=info.sayRole?buildBook(info.sayRole):null;
+  applyRoleUI();
   for(const note of notes)logLine(note,'note');
   logLine('Celebration: '+describeCelebration(),'note');
   setCamera('player');
@@ -399,6 +439,72 @@ function startGame(config){
       controls.update();
     });
   }
+}
+function applyRoleUI(){
+  const info=GAME_ROLES[game.role];
+  $('gameBadge').textContent='You: '+info.name+' / '+GAME_LEVELS[game.level].name;
+  $('gameRoleNote').textContent=ROLE_BLURBS[game.role];
+  $('roleCard').hidden=false;
+  const picker=el('select',{id:'switchRole',title:'Take over another role from here on (between moments, during Mass)'});
+  picker.setAttribute('aria-label','Switch to another role');
+  picker.append(el('option',{value:'',textContent:'⇄ Switch role…'}));
+  for(const role of switchableRoles(game.visible||new Set(),game.options))if(role!==game.role)picker.append(el('option',{value:role,textContent:GAME_ROLES[role].name}));
+  picker.onchange=()=>{const role=picker.value;picker.value='';if(role)switchRole(role);};
+  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:GAME_LEVELS[game.level].name+' level'}),picker]));
+  syncSwitchRole();
+  $('gameBookButton').hidden=!info.book;
+  $('gameBookButton').textContent='Open the '+(info.book||'book');
+  game.book=info.sayRole?buildBook(info.sayRole):null;
+}
+function canSwitchRole(){return game.phase==='mass'&&!game.active&&!game.busy&&!game.lapse&&!Object.keys(game.walkers).length;}
+function syncSwitchRole(){
+  const picker=$('switchRole');
+  if(!picker)return;
+  const ok=canSwitchRole();
+  if(picker.disabled===ok)picker.disabled=!ok;
+}
+// Hand the player's part back to the simulation and take over another minister from this moment on.
+function switchRole(role){
+  if(!canSwitchRole()||role===game.role||!GAME_ROLES[role])return;
+  const oldRole=game.role,oldKey=GAME_ROLES[oldRole].actor||oldRole;
+  if(game.labelled){
+    const figure=game.labelled.figure;
+    if(game.labelled.congregant){
+      figure.root.remove(figure.label);
+      const index=sceneLabels.indexOf(figure.label);
+      if(index>=0)sceneLabels.splice(index,1);
+      figure.label=null;
+    }else relabel(figure,roleLabel(game.labelled.key));
+    game.labelled=null;
+  }
+  // The extra figures stay in the church at their usual places; a parishioner stays seated.
+  if(oldRole==='MC'){game.mcPos=MC_HOME.slice();}
+  if(oldRole==='PEW')game.seatIndex=-1;
+  void oldKey;
+  game.role=role;
+  if(role==='MC')game.overrides.MC=game.mcPos.slice();
+  if(role==='SAC')game.overrides.SAC=SACRISTAN_SEAT.slice();
+  if(role==='AV')game.overrides.AV=AV_DESK.slice();
+  if(role==='PEW'){
+    let best=-1;
+    congregation.forEach((person,i)=>{if(!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&person.figure.root.visible&&(best<0||distance(person.home,[395,560])<distance(congregation[best].home,[395,560])))best=i;});
+    game.seatIndex=best;
+  }
+  setupPlayerFigure();
+  if(role==='PEW'&&game.seatIndex>=0){
+    relabel(figures.PEW,'Parishioner');
+    const person=congregation[game.seatIndex];
+    relabel(person.figure,'You: Parishioner');
+    game.labelled={key:'PEW',figure:person.figure,congregant:true};
+    figures.player=person.figure;
+  }
+  scheduleStops();
+  game.stops=stopsFrom(game.stops,currentElapsed());
+  game.history=[];
+  applyRoleUI();
+  logLine('You switch roles: from '+GAME_ROLES[oldRole].name+' to '+GAME_ROLES[role].name+'.','note');
+  toast('You are now the '+GAME_ROLES[role].name+'. Your duties continue from here.');
+  if(cameraMode==='player'||gameView.firstPerson)setCamera('player');
 }
 function describeCelebration(){
   const o=game.options,parts=[];
@@ -433,12 +539,17 @@ function setupPlayerFigure(){
 }
 
 // ---------- stops during Mass ----------
-const STOP_ORDER={lapse:0,cue:1,decision:2};
+const STOP_ORDER={lapse:0,cue:1,media:2,decision:3};
 function stepTime(step,t){return stepStart[step]+t*STEPS[step].dur;}
 function scheduleStops(){
   const stops=[];
   const detail=game.options.detail;
-  if(game.role==='MC'){
+  game.mediaCues=deriveMediaCues(STEPS,stepStart,game.options,detail);
+  if(game.role==='AV'){
+    game.allDuties=[];
+    game.duties=game.mediaCues.map(cue=>({...cue,t:(cue.time-stepStart[cue.step])/STEPS[cue.step].dur}));
+    for(const cue of game.mediaCues)stops.push({time:cue.time,type:'media',cue});
+  }else if(game.role==='MC'){
     game.duties=deriveCues(game.visible,STEPS,detail);
     for(const cue of game.duties)stops.push({time:stepTime(cue.step,cue.t),type:'cue',cue});
   }else{
@@ -848,7 +959,7 @@ function taskDecision(task,stage){
 }
 const roleStart=()=>{
   const actor=GAME_ROLES[game.role].actor;
-  return actor?starts[0].pos[actor]:game.role==='MC'?MC_START:null;
+  return actor?starts[0].pos[actor]:game.role==='MC'?MC_START:game.role==='AV'?AV_DESK:null;
 };
 function ministersOnStage(){return ['P','D','X','C1','C2','T','S',...(game.options.lectorProcession?['L']:[])].filter(r=>game.visible.has(r));}
 
@@ -860,6 +971,8 @@ async function runPreMass(gen){
   if(game.role==='MC'){game.overrides.MC=SACRISTY_SLOTS[8].slice();game.facing.MC=Math.PI;}
   if(game.role==='SAC'){game.overrides.SAC=game.options.openChurch?SACRISTAN_ARRIVAL.slice():[1190,205];game.facing.SAC=Math.PI;}
   if(game.role==='PEW'){game.overrides.PEW=OUTSIDE.slice();game.facing.PEW=Math.PI;}
+  if(game.role==='AV'){game.overrides.AV=[540,805];game.facing.AV=Math.PI;}
+  else if(game.options.projector){game.overrides.AV=AV_DESK.slice();game.facing.AV=Math.PI;}
   for(const role of ['L','L2','U','E'])if(game.visible.has(role)&&!ministers.includes(role)){
     game.overrides[role]=HOME[role].slice();game.facing[role]=Math.PI;
   }
@@ -878,13 +991,12 @@ async function runPreMass(gen){
     toast('Everything is ready. The ministers line up.');
     await Promise.all([npcWalk(),walk('SAC',game.overrides.SAC,seat)]);
   }else{
-    const where=game.role==='PEW'?'You arrive outside the church.':['L','L2','U','E'].includes(game.role)&&!ministers.includes(game.role)?'You prepare your ministry and take your place with the congregation.':'You are in the sacristy with the other ministers.';
+    const where=game.role==='PEW'?'You arrive outside the church.':game.role==='AV'?'You come in early to set up the screen at the back of the church.':['L','L2','U','E'].includes(game.role)&&!ministers.includes(game.role)?'You prepare your ministry and take your place with the congregation.':'You are in the sacristy with the other ministers.';
     setPhase('Before Mass',where);
     const tasks=preMassTasks(game.role,game.options,game.team,roleStart());
     let walking=null;
-    if(game.role==='PEW')walking=npcWalk();
+    if(game.role==='PEW'||game.role==='AV')walking=npcWalk();
     for(const task of tasks){
-      if(task.id==='line'&&task.places.includes('procession'))ringForProcession();
       const outcome=await ask(taskDecision(task,'Before Mass'));
       if(gen!==game.gen)return;
       await afterPreTask(task,outcome,gen);
@@ -897,14 +1009,22 @@ async function runPreMass(gen){
     }
   }
   if(gen!==game.gen)return;
+  // The bell rings once everyone has gathered at the entrance, just before the procession moves off.
+  if(ringForProcession()){
+    toast('🔔 The procession has gathered at the entrance: the bell rings.');
+    logLine('The bell rings: the procession is ready to set out.','note');
+    await wait(1600);
+    if(gen!==game.gen)return;
+  }
   beginMass();
 }
 // Rings the sacristy bell for the procession once (where that custom is chosen).
 function ringForProcession(){
   const cue=game.options.bells.start&&game.soundCues.find(c=>c.type==='sacristyBell'&&!c.rung);
-  if(!cue)return;
+  if(!cue)return false;
   cue.rung=true;
   if(GameAudio.enabled)GameAudio.sacristyBell();
+  return true;
 }
 async function afterPreTask(task,outcome,gen){
   const key=GAME_ROLES[game.role].actor||game.role;
@@ -928,7 +1048,7 @@ async function afterPreTask(task,outcome,gen){
 }
 async function takeSeat(point,gen){
   let best=-1;
-  congregation.forEach((person,i)=>{if(!reservedPew(person.home)&&(best<0||distance(person.home,point)<distance(congregation[best].home,point)))best=i;});
+  congregation.forEach((person,i)=>{if(!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&(best<0||distance(person.home,point)<distance(congregation[best].home,point)))best=i;});
   const person=congregation[best];
   person.figure.root.visible=false;
   game.hidden.add(best);
@@ -1055,6 +1175,27 @@ function fillCupboard(items){
 }
 
 // ---------- vestments: hanging rail and vesting stand ----------
+// A sunburst monstrance: foot, stem with knop, rays round a glass luna. Faces -x (out of the cupboard).
+function monstranceModel(){
+  const g=new THREE.Group();
+  cylinder(g,0,.012,0,.06,.075,.024,GOLD);
+  cylinder(g,0,.11,0,.012,.018,.18,GOLD);
+  cylinder(g,0,.12,0,.026,.026,.03,GOLD);
+  const centre=.3;
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.045,.01,6,20),material(GOLD));
+  ring.position.set(0,centre,0);ring.rotation.y=Math.PI/2;g.add(ring);
+  const luna=new THREE.Mesh(new THREE.CircleGeometry(.04,16),material('#f4efe0'));
+  luna.position.set(-.004,centre,0);luna.rotation.y=-Math.PI/2;g.add(luna);
+  for(let i=0;i<16;i++){
+    const a=i/16*Math.PI*2,long=i%2?.07:.11;
+    const ray=box(g,0,centre+Math.sin(a)*(.055+long/2),Math.cos(a)*(.055+long/2),.008,long,.012,GOLD,false);
+    ray.rotation.x=-a+Math.PI/2;
+  }
+  box(g,0,centre+.18,0,.008,.05,.008,GOLD,false);
+  box(g,0,centre+.19,0,.008,.008,.035,GOLD,false);
+  g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+  return g;
+}
 const VESTMENT_ITEMS={vestP:'P',vestD:'D',vestS:'S'};
 const VESTMENT_RAIL=[1085,250],VESTMENT_RAIL_FRONT=[1085,215],VESTING_STAND=[1040,95],VESTING_STAND_FRONT=[1050,130];
 function vestmentModel(kind){
@@ -1349,6 +1490,8 @@ async function runStop(stop){
     d.explain=stop.cue.correctRoles.map(r=>ROLE_NAMES[r]).join(' / ')+': '+stop.cue.text+'.';
     const outcome=await ask(d);
     if(gen===game.gen&&outcome.correct)toast('You cue the '+roleLabel(stop.cue.correctRoles[0]).toLowerCase()+'.');
+  }else if(stop.type==='media'){
+    await mediaStop(stop.cue,gen);
   }else{
     await lapseStop(stop.lapse,gen);
   }
@@ -1378,6 +1521,8 @@ function redoPrevious(){
   jump(step,Math.min(1,(entry.stop.time-stepStart[step])/STEPS[step].dur));
   game.lastElapsed=entry.stop.time-1e-6;
   rewindCues(game.soundCues,entry.stop.time);
+  GameAudio.stopTrack(.4);
+  if(game.projection)game.projection.slideKey=null;
   setPlaying(true);
   updateScore();
   toast('Back one step: '+STEPS[step].title+'.');
@@ -1399,11 +1544,122 @@ async function lapseStop(lapse,gen){
   toast(outcome.correct?'A quiet word: the '+who.toLowerCase()+' carries on.':'The '+who.toLowerCase()+' realises and carries on, a little late.',!outcome.correct);
 }
 
+// ---------- screen operator: projection screen, slides and backing tracks ----------
+const SCREEN_AT=[925,330],SLIDE_W=512,SLIDE_H=288;
+function buildProjection(){
+  const group=new THREE.Group();
+  const at=world(SCREEN_AT);
+  group.position.set(at.x,0,at.z);
+  group.rotation.y=-.45;
+  for(const side of [-1,1])box(group,side*1.25,1.6,-.05,.05,3.2,.05,'#3b3b3b');
+  box(group,0,3.48,-.05,2.62,.08,.08,'#3b3b3b');
+  box(group,0,2.7,-.03,2.56,1.5,.02,'#202020',false);
+  const canvas=document.createElement('canvas');
+  canvas.width=SLIDE_W;canvas.height=SLIDE_H;
+  const texture=new THREE.CanvasTexture(canvas);
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(2.46,1.38),new THREE.MeshBasicMaterial({map:texture}));
+  face.position.set(0,2.7,-.01);
+  group.add(face);
+  group.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+  scene.add(group);
+  const desk=new THREE.Group(),d=world(AV_DESK);
+  desk.position.set(d.x,0,d.z-.45);
+  box(desk,0,.72,0,1.3,.05,.6,'#6e5236');
+  for(const x of [-.6,.6])for(const z of [-.25,.25])box(desk,x,.36,z,.05,.72,.05,'#5a4330');
+  box(desk,.15,.76,.08,.42,.02,.28,'#2b2b2b');
+  const lid=box(desk,.15,.9,-.07,.42,.28,.02,'#2b2b2b');
+  lid.rotation.x=.25;
+  box(desk,-.35,.76,0,.3,.03,.2,'#444');
+  desk.traverse(o=>{if(o.isMesh)o.castShadow=false;});
+  scene.add(desk);
+  game.projection={group,desk,canvas,texture,slideKey:null};
+  drawSlide(null);
+  setProjection(false);
+}
+function setProjection(on){
+  if(!game.projection)return;
+  game.projection.group.visible=on;
+  game.projection.desk.visible=on;
+}
+// Slides show the part's title and how it is sung; the words themselves are only indicated (illustrative).
+function drawSlide(cue){
+  const p=game.projection;
+  if(!p)return;
+  const g=p.canvas.getContext('2d');
+  const grad=g.createLinearGradient(0,0,0,SLIDE_H);
+  grad.addColorStop(0,'#1d2c4f');grad.addColorStop(1,'#0e1528');
+  g.fillStyle=grad;g.fillRect(0,0,SLIDE_W,SLIDE_H);
+  g.textAlign='center';g.fillStyle='#f6efd9';
+  if(!cue||cue.action==='stop'){
+    g.font='bold 34px Georgia, serif';
+    g.fillText('✠',SLIDE_W/2,110);
+    g.font='26px Georgia, serif';
+    g.fillText(cue?'':'Welcome',SLIDE_W/2,165);
+  }else{
+    g.font='bold 30px Georgia, serif';
+    g.fillText(cue.title,SLIDE_W/2,70,SLIDE_W-30);
+    g.font='italic 19px Georgia, serif';
+    g.fillStyle='#e7c46a';
+    g.fillText({track:'♪ With music: please sing',acapella:'♪ Sung unaccompanied',slide:'All say:'}[cue.mode]||'',SLIDE_W/2,108);
+    g.fillStyle='rgba(246,239,217,.55)';
+    for(let i=0;i<4;i++)g.fillRect(70+(i%2)*30,140+i*28,SLIDE_W-140-(i%2)*60,10);
+    g.font='13px sans-serif';g.fillStyle='rgba(246,239,217,.6)';
+    g.fillText('(the words would appear here)',SLIDE_W/2,268);
+  }
+  p.texture.needsUpdate=true;
+}
+function showSlide(cue){
+  const p=game.projection;
+  const key=cue?cue.id:'blank';
+  if(!p||p.slideKey===key)return;
+  p.slideKey=key;
+  drawSlide(cue);
+}
+// With a simulated operator, slides change by themselves at the right moments.
+function updateAutoSlides(elapsed){
+  if(!game.options?.projector||game.role==='AV'||!game.mediaCues)return;
+  let last=null;
+  for(const cue of game.mediaCues)if(cue.time<=elapsed+1e-6)last=cue;
+  showSlide(last);
+}
+// The warning bar fills as the next part approaches.
+function updateMediaWarning(elapsed){
+  const bar=$('mediaWarning');
+  if(!bar)return;
+  const stop=game.role==='AV'&&game.phase==='mass'?game.stops.find(s=>!s.done&&s.type==='media'):null;
+  const lead=stop?stop.time-elapsed:Infinity;
+  const show=!!stop&&lead<=MEDIA_WARNING&&lead>-1;
+  if(bar.hidden===show)bar.hidden=!show;
+  if(!show)return;
+  const fraction=Math.max(0,Math.min(1,1-lead/MEDIA_WARNING));
+  bar.querySelector('.fill').style.width=(fraction*100).toFixed(1)+'%';
+  const text=(stop.cue.action==='stop'?'Ending soon: ':'Coming up: ')+stop.cue.title;
+  const label=bar.querySelector('.label');
+  if(label.textContent!==text)label.textContent=text;
+}
+async function mediaStop(cue,gen){
+  const d=mediaDecision(cue,game.level,game.seed,game.mediaCues);
+  d.stage=STEPS[cue.step].part+' / screen and music';
+  const outcome=await ask(d);
+  if(gen!==game.gen)return;
+  // The right thing happens either way; a wrong or late answer just means it starts late.
+  if(cue.action==='stop'){
+    GameAudio.stopTrack(1.5);
+    showSlide({...cue});
+  }else{
+    showSlide(cue);
+    if(cue.mode==='track')GameAudio.startTrack(cue.part);
+    else GameAudio.stopTrack(.6);
+  }
+  if(!outcome.correct&&!outcome.auto&&!outcome.skipped)toast(cue.action==='stop'?'The music fades, a little late.':'The '+cue.title+' starts, a little late.',true,1800);
+}
+
 // ---------- after Mass ----------
 async function startPost(){
   if(game.phase!=='mass')return;
   game.phase='post';
   setPlaying(false);
+  GameAudio.stopTrack(3);
   const gen=game.gen;
   const actor=GAME_ROLES[game.role].actor;
   setPhase('After Mass',game.role==='PEW'?'The ministers have gone out.':'The ministers return to the sacristy.');
@@ -1440,6 +1696,7 @@ async function startPost(){
 function finishGame(){
   game.phase='summary';
   setPlaying(false);
+  GameAudio.stopTrack(2);
   const board=game.board,grade=gradeBoard(board);
   const watched=board.decisions===0;
   $('summaryScore').textContent=board.points+' points of '+board.possible+' ('+grade.percent+'%). '+board.correct+' of '+board.decisions+' right, '+board.firstTry+' first time'+(board.timeouts?', '+board.timeouts+' timed out':'')+(board.lapsesCaught+board.lapsesMissed?'. Lapses caught: '+board.lapsesCaught+' of '+(board.lapsesCaught+board.lapsesMissed):'')+'.';
@@ -1490,16 +1747,21 @@ function gameBeforeRender(dt,positions){
       if(!game.walkers.SAC)tweenTowards('SAC',target,dt*(playing3d?1:0));
       game.facing.SAC=Math.PI;
     }
+    if(game.overrides.AV&&!game.walkers.AV){
+      const a=layoutPoint(game.overrides.AV),b=layoutPoint([500,170]);
+      game.facing.AV=Math.atan2(b[0]-a[0],b[1]-a[1]);
+    }
   }
   for(const key of Object.keys(EXTRA_FIGURES))if(!game.overrides[key])figures[key].root.visible=false;
   for(const [key,p] of Object.entries(game.overrides)){
     if(!figures[key])continue;
     const base=positions[key];
     placeFigure(key,p,now);
-    if(game.phase==='mass'&&(key==='MC'||key==='SAC')&&!game.walkers[key]){
+    if(game.phase==='mass'&&(key==='MC'||key==='SAC'||key==='AV')&&!game.walkers[key]){
       const posture=postureAt(cur3d,progress3d).name;
-      const atRest=distance(p,key==='MC'?MC_HOME:SACRISTAN_SEAT)<6;
-      pose(figures[key],posture==='kneel'?'kneel':posture==='sit'&&atRest?'sit':'stand','',now,false);
+      const atRest=distance(p,{MC:MC_HOME,SAC:SACRISTAN_SEAT,AV:AV_DESK}[key])<6;
+      // The screen operator stays standing at the desk, ready to change slides, but kneels with everyone.
+      pose(figures[key],posture==='kneel'?'kneel':posture==='sit'&&atRest&&key!=='AV'?'sit':'stand','',now,false);
       if(key==='SAC')figures[key].root.rotation.y=Math.PI;
     }
     if(base){
@@ -1528,8 +1790,11 @@ function gameBeforeRender(dt,positions){
   }
   updateDecisionTimer();
   updateHighlight(now);
+  syncSwitchRole();
   if(game.phase==='mass'){
     const elapsed=currentElapsed();
+    updateAutoSlides(elapsed);
+    updateMediaWarning(elapsed);
     if(game.options&&GameAudio.enabled)for(const cue of game.soundCues){
       if(cue.time>game.lastElapsed&&cue.time<=elapsed+1e-6&&!cue.rung){
         if(cue.type==='sacristyBell')cue.rung=true;
@@ -1588,14 +1853,28 @@ function syncQuestionsButton(){
   $('gameQuestions').setAttribute('aria-pressed',String(game.questions));
 }
 function syncSoundButton(){
-  $('gameSound').textContent=GameAudio.enabled?'Sound on':'Sound off';
-  $('gameSound').setAttribute('aria-pressed',String(GameAudio.enabled));
+  const on=GameAudio.enabled,button=$('gameSound');
+  button.textContent=on?'🔊':'🔇';
+  button.setAttribute('aria-pressed',String(on));
+  button.setAttribute('aria-label',on?'Sound on':'Sound off');
+  button.title=on?'Sound on (click to mute)':'Sound off (click to unmute)';
 }
 function showSetup(){
+  const inGame=game.phase&&game.phase!=='setup'&&game.phase!=='summary'&&!!game.role;
+  game.resumePlaying=inGame&&playing3d;
+  game.resumeSummary=game.phase==='summary';
   setPlaying(false);
   $('summaryModal').hidden=true;
+  $('cancelSetup').hidden=!(inGame||game.resumeSummary);
   $('gameSetup').hidden=false;
   previewNotes();showHighScores();
+}
+// Close the setup sheet without starting a new game: carry on where you were.
+function cancelSetup(){
+  if($('gameSetup').hidden||$('cancelSetup').hidden)return;
+  $('gameSetup').hidden=true;
+  if(game.resumeSummary&&game.phase==='summary'){$('summaryModal').hidden=false;return;}
+  if(game.resumePlaying&&game.phase==='mass'&&!game.active)setPlaying(true);
 }
 function initialiseGame(){
   if(!scene)return;
@@ -1648,6 +1927,7 @@ function initialiseGame(){
   },true);
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&!$('bookModal').hidden){$('bookModal').hidden=true;event.preventDefault();return;}
+    if(event.key==='Escape'&&!$('gameSetup').hidden&&!$('cancelSetup').hidden){cancelSetup();event.preventDefault();return;}
     if(['INPUT','SELECT','TEXTAREA'].includes(event.target.tagName))return;
     if(event.code==='ArrowLeft'||event.code==='ArrowRight'){event.stopImmediatePropagation();event.preventDefault();return;}
     if(event.code==='Space'&&game.phase!=='mass'){event.stopImmediatePropagation();event.preventDefault();return;}

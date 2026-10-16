@@ -315,6 +315,20 @@ so each bell is optional.
   the wall by default; recessed, on a ledge or on a pillar). Short fixed texts
   are fully voiced; quiet prayers sound softer; a soft tone marks the silences
   after the homily and after Communion.
+- **Presets**: "Sunday Mass" (default), "Weekday Mass" (no Gloria or Creed,
+  no servers, said) or "Solemnity". Changing any option shows "Custom".
+- **Screen operator** (optional role, adds a projector and screen): a warning
+  bar fills before each part, then you have a few seconds to start the
+  backing track, show the slide, or leave it a cappella. Tracks are simple
+  synthesised chords and slides show placeholders, not real lyrics.
+- **Switch role**: use the menu on the role card between questions to carry
+  on as a different minister.
+- **New game** can be cancelled (button or **Esc**) to return to the game.
+  The 🔊 button mutes all sound. **Detail** (Auto, Low, Standard, High) suits
+  low-spec devices. The start bell (on by default) rings once the procession
+  has gathered at the entrance. Reserved hosts are used and reposed by
+  default. The cupboard also holds a monstrance for a future Exposition scenario.
+
 ## Repository checks
 
 ```text

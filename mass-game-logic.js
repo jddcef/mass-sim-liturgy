@@ -24,7 +24,8 @@ const GAME_ROLES={
   E:{name:'Extraordinary minister of Holy Communion',actor:'E',sayRole:'E',start:'pew',book:'Communion ministry card'},
   MC:{name:'Master of Ceremonies',actor:null,start:'sacristy',director:true,nudges:true},
   SAC:{name:'Sacristan',actor:null,start:'sacristy'},
-  PEW:{name:'Member of the congregation',actor:null,sayRole:'ppl',start:'outside',book:'Pew missal'}
+  PEW:{name:'Member of the congregation',actor:null,sayRole:'ppl',start:'outside',book:'Pew missal'},
+  AV:{name:'Screen operator',actor:null,start:'desk'}
 };
 
 const GAME_DEFAULT_OPTIONS={
@@ -32,8 +33,8 @@ const GAME_DEFAULT_OPTIONS={
   gloria:true,creed:true,secondReading:true,introductory:'A',music:'sung',
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:true,epiclesis:true,elevation:true},
-  readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:false,deaconCommunion:true,openChurch:true,
-  crucifix:'wall',crossStand:'right',
+  readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,openChurch:true,
+  crucifix:'wall',crossStand:'right',projector:false,
   lapses:true,detail:'key',symbols:true,seed:1
 };
 
@@ -43,9 +44,11 @@ const OUTSIDE=[500,960];
 const MC_HOME=[578,46];
 const MC_START=[535,795];
 const SACRISTAN_SEAT=[905,745];
+const AV_DESK=[860,792];
 const PEW_ZONE=[[150,350,450,715],[550,350,850,715]];
 
 const GAME_PLACES=[
+  {id:'avDesk',name:"the screen operator's desk at the back",at:AV_DESK,r:30},
   {id:'sacristy',name:'the sacristy',at:SACRISTY,r:115},
   {id:'outside',name:'outside the church doors',at:OUTSIDE,r:60},
   {id:'stoup',name:'the holy-water stoup by the door',at:[440,866],r:28},
@@ -112,6 +115,8 @@ function normaliseGameOptions(role,raw={}){
   if(role==='L'&&!o.lector){o.lector=true;notes.push('A lay lector was added because you are playing the lector.');}
   if(role==='L2'){o.lector=true;o.readerCount=2;notes.push('Two readers are selected for the second-reader role.');}
   if(role==='U')o.collection=true;
+  if(role==='AV'&&!o.projector){o.projector=true;notes.push('A projector and screen were added because you are the screen operator.');}
+  o.projector=!!o.projector;
   if(role==='E'){o.emhc=true;notes.push('An authorised EMHC assists when genuinely needed; this is not assumed at every Mass.');}
   o.readerCount=Number(o.readerCount)===2?2:1;
   if(role==='L2'&&!o.secondReading){o.secondReading=true;notes.push('Second Reading enabled for the second reader.');}
@@ -134,8 +139,125 @@ function normaliseGameOptions(role,raw={}){
 }
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
+}
+
+// Celebration presets for the setup sheet. Field names match the form; editing any field afterwards
+// makes the choice "custom". Weekday: no Gloria or Creed outside feasts and solemnities (GIRM 53, 68),
+// and usually said, with no servers (judgement call: a quiet weekday Mass for the Priest to practise).
+const GAME_PRESETS={
+  sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, five servers, incense, Gloria and Creed, two readings.',fields:{
+    deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
+    bellStart:true,bellEpiclesis:true,bellElevation:true}},
+  weekday:{name:'Weekday Mass',blurb:'Said, no servers or Deacon, no Gloria or Creed, one reading: practice for the Priest.',fields:{
+    deacon:false,serverCount:'0',lector:false,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:false,bothKinds:false,gloria:false,creed:false,secondReading:false,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'said',eucharisticPrayer:'II',
+    bellStart:false,bellEpiclesis:false,bellElevation:false}},
+  solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
+    deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
+    bellStart:true,bellEpiclesis:true,bellElevation:true}}
+};
+// The form fields a preset controls; a preset is "current" only while all of them still match.
+function applyPreset(id,current={}){
+  const preset=GAME_PRESETS[id];
+  return preset?{...current,...preset.fields,preset:id}:{...current,preset:'custom'};
+}
+function matchingPreset(values){
+  for(const [id,preset] of Object.entries(GAME_PRESETS)){
+    if(Object.entries(preset.fields).every(([k,v])=>values[k]===undefined||String(values[k])===String(v)))return id;
+  }
+  return 'custom';
+}
+
+// Roles that can be taken over during Mass: anyone present in this celebration, plus the
+// M.C., sacristan and a parishioner (who are always there) and the screen operator with a projector.
+function switchableRoles(visible,options={}){
+  const roles=Object.keys(GAME_ROLES).filter(role=>{
+    const actor=GAME_ROLES[role].actor;
+    if(actor)return visible.has(actor);
+    if(role==='AV')return !!options.projector;
+    return true;
+  });
+  return roles;
+}
+// After a role switch, everything already past is done; the new role's duties start from now.
+function stopsFrom(stops,elapsed){
+  for(const stop of stops)stop.done=stop.time<elapsed-1e-4;
+  return stops.filter(stop=>!stop.done);
+}
+
+// Screen operator: slides and backing tracks. Parts with a "track" need the music started;
+// "acapella" parts only need the lyrics slide; said parts show a slide of the people's words.
+// Which parts use a track is a judgement call: parishes vary widely.
+const MEDIA_PARTS=[
+  {key:0,id:'entrance',title:'Entrance hymn',sung:'track',hymn:true},
+  {key:4,id:'confiteor',title:'I confess (Confiteor)',sung:'slide',said:'slide'},
+  {key:6,id:'kyrie',title:'Kyrie',sung:'acapella',said:'slide'},
+  {key:7,id:'gloria',title:'Gloria',sung:'track',said:'slide'},
+  {key:10,id:'psalm',title:'Responsorial Psalm',sung:'acapella',said:'slide'},
+  {key:12,id:'alleluia',title:'Gospel Acclamation',sung:'track',said:'slide'},
+  {key:15,id:'creed',title:'Creed',sung:'slide',said:'slide'},
+  {key:18,id:'offertory',title:'Offertory hymn',sung:'track',hymn:true},
+  {key:24,id:'sanctus',title:'Sanctus (Holy, Holy, Holy)',sung:'track',said:'slide'},
+  {key:28,id:'mystery',title:'The Mystery of Faith',sung:'track',said:'slide'},
+  {key:30,id:'amen',title:'Great Amen',sung:'acapella'},
+  {key:31,id:'pater',title:"Lord's Prayer",sung:'acapella',said:'slide'},
+  {key:33,id:'agnus',title:'Agnus Dei (Lamb of God)',sung:'track',said:'slide'},
+  {key:35,id:'communion',title:'Communion hymn',sung:'track',hymn:true},
+  {key:40,id:'recessional',title:'Recessional hymn',sung:'track',hymn:true}
+];
+// Seconds of warning before a part, then the window (in seconds) to start it.
+const MEDIA_WINDOW={watch:0,guided:0,choice:10,timed:6,expert:6};
+const MEDIA_WARNING=8;
+function deriveMediaCues(steps=STEPS,startTimes,options={},detail='key'){
+  if(!options.projector)return [];
+  const sung=options.music!=='said';
+  const cues=[];
+  let clock=0;
+  steps.forEach((step,i)=>{
+    const start=startTimes?startTimes[i]:clock;
+    clock=start+step.dur;
+    let part=MEDIA_PARTS.find(p=>p.key===step.key);
+    if(part&&step.key===4&&options.introductory==='sprinkling')part={key:4,id:'asperges',title:'Asperges / Vidi aquam',sung:'track',said:'slide'};
+    else if(part&&step.key===4&&options.introductory==='C')part={key:4,id:'invocations',title:'Lord, have mercy (invocations)',sung:'slide',said:'slide'};
+    if(!part)return;
+    const mode=sung?part.sung:part.said;
+    if(!mode)return;
+    const base={step:i,key:step.key,title:part.title,part:part.id,ref:step.ref};
+    cues.push({...base,id:'media:'+part.id+':start',action:'start',mode,time:start,hymn:!!part.hymn});
+    // A track is faded out when its part ends; at "key" detail only the hymns ask for it.
+    if(mode==='track'&&(part.hymn||detail==='all'))cues.push({...base,id:'media:'+part.id+':stop',action:'stop',mode,time:start+step.dur*.97,hymn:!!part.hymn});
+  });
+  return cues;
+}
+const MEDIA_ACTIONS={
+  track:part=>'▶ Play the '+part+' backing track with its lyrics',
+  acapella:part=>'Show the '+part+' lyrics only (sung unaccompanied)',
+  slide:part=>'Show the '+part+' words on the screen'
+};
+function mediaDecision(cue,level,seed=1,all=[]){
+  const random=seededRandom('media|'+seed+'|'+cue.id);
+  const rules=GAME_LEVELS[level]||GAME_LEVELS.choice;
+  const window=MEDIA_WINDOW[level]??10;
+  const base={id:cue.id,kind:'media',title:cue.title,ref:cue.mode==='track'?'Judgement call (parish music practice); GIRM 39-41':'GIRM 39-41; judgement call',
+    level,attempts:rules.attempts,input:'options',timer:window,duty:cue,cue};
+  if(cue.action==='stop'){
+    const correct='■ Fade out the '+cue.title+' track now';
+    const options=[correct,'Leave it playing into the next part','Turn the volume up','Skip to the next slide and leave the music'].map(label=>({label,correct:label===correct}));
+    return {...base,prompt:cue.title+' is ending. What do you do with the music?',correct,options:isGuided(level)?options.slice(0,1):shuffled(options,random).slice(0,rules.options||4),
+      explain:'Fade the track gently as the part ends, so it does not run over the next prayer.'};
+  }
+  const correct=MEDIA_ACTIONS[cue.mode](cue.title);
+  const others=all.filter(c=>c.action==='start'&&c.part!==cue.part).map(c=>MEDIA_ACTIONS[c.mode](c.title));
+  const wrongMode=Object.entries(MEDIA_ACTIONS).filter(([mode])=>mode!==cue.mode).map(([,f])=>f(cue.title));
+  const pool=[...wrongMode,...shuffled(others,random).slice(0,3),'Wait: nothing to start yet'];
+  const want=level==='expert'?6:(rules.options||4)-1;
+  const options=isGuided(level)?[{label:correct,correct:true}]:shuffled([correct,...pickDistractors(correct,pool,want,random)],random).map(label=>({label,correct:label===correct}));
+  const how={track:'it is accompanied, so the backing track starts with the lyrics',acapella:'it is sung unaccompanied, so show the lyrics but no track',slide:'the people say it, so show the words only'}[cue.mode];
+  return {...base,prompt:'Up next: '+cue.title+'. Start it now.',correct,options,explain:cue.title+': '+how+'.'};
 }
 
 function placeFor(point,role){
@@ -658,6 +780,15 @@ function preMassTasks(role,options,team=serverTeam(options.serverCount),startPos
       target:HOME[role],places:[place],correct:seat.name,options:[{label:seat.name,correct:true},{label:'the back of the church (procession line)',correct:false},{label:'the altar',correct:false}]});
     return tasks;
   }
+  if(role==='AV'){
+    tasks.push({id:'prepare',kind:'task',prompt:'Before Mass, how do you prepare the screen?',ref:'Judgement call (parish practice); GIRM 39-41 on singing',
+      correct:"Load today's slides and backing tracks in the order of Mass and test the sound",options:shuffled([
+        "Load today's slides and backing tracks in the order of Mass and test the sound",'Play music loudly while people pray before Mass','Leave the projector off until the Gospel','Put the slides in alphabetical order'],seededRandom('avprep')).map(label=>({label,correct:label.startsWith('Load')}))});
+    const desk=GAME_PLACES.find(p=>p.id==='avDesk');
+    tasks.push({id:'line',kind:'place',prompt:'Go to the operator desk.',ref:'Judgement call (parish practice)',target:AV_DESK,places:['avDesk'],correct:desk.name,
+      options:shuffled([{label:desk.name,correct:true},{label:'the credence table',correct:false},{label:'the ambo',correct:false},{label:'the back of the church (procession line)',correct:false}],seededRandom('avline'))});
+    return tasks;
+  }
   if(role==='PEW'){
     tasks.push({id:'stoup',kind:'place',prompt:'You arrive at the church. Where do you go first?',ref:'Custom: signing oneself with holy water on entering',places:['stoup'],correct:'the holy-water stoup by the door',
       options:[{label:'the holy-water stoup by the door',correct:true},{label:"the celebrant's chair",correct:false},{label:'the credence table',correct:false}]});
@@ -683,6 +814,11 @@ function postMassTasks(role,options){
     const correct=role==='U'?'Secure the collection according to parish procedures':role==='E'?'Leave the vessels for the Priest, Deacon or instituted acolyte to purify':'Check that the Lectionary is put away if that is your task';
     return [{id:'close',kind:'task',prompt:'After the exit procession, what is your closing task?',ref:'GIRM 105, 162, 196, 279; local practice',correct,
       options:[correct,'Leave during the final blessing','Take sacred vessels home'].map((label,i)=>({label,correct:i===0}))}];
+  }
+  if(role==='AV'){
+    const correct='Fade out, show a blank or welcome slide, then shut down the projector';
+    return [{id:'close',kind:'task',prompt:'The recessional hymn has ended. What do you do?',ref:'Judgement call (parish practice)',correct,
+      options:shuffled([correct,'Leave the last hymn looping','Switch off mid-verse as the Priest reaches the door','Start the next Mass\'s slides now'],seededRandom('avclose')).map(label=>({label,correct:label===correct}))}];
   }
   if(role==='PEW'){
     tasks.push({id:'leave',kind:'task',prompt:'Mass has ended. When do you leave?',ref:'GIRM 90, 169 (judgement call on custom)',correct:'After the ministers have gone out (and the hymn has ended)',

@@ -458,11 +458,85 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(nudge.options.find(o=>o.correct).role,'C2');
 }
 // ---- controller regressions: revealed answer and score rollback ----
+// ---- round 7: presets, reserved hosts, role switching, screen operator, graphics ----
+{
+  const presets=G('GAME_PRESETS');
+  assert.ok(presets.sunday&&presets.weekday);
+  const weekday=G('applyPreset')('weekday',{deacon:true,gloria:true});
+  assert.equal(weekday.gloria,false);assert.equal(weekday.creed,false);assert.equal(weekday.serverCount,'0');assert.equal(weekday.preset,'weekday');
+  assert.equal(G('matchingPreset')(presets.weekday.fields),'weekday');
+  assert.equal(G('matchingPreset')(presets.sunday.fields),'sunday');
+  assert.equal(G('matchingPreset')({...presets.sunday.fields,gloria:false}),'custom');
+  assert.equal(G('applyPreset')('nope',{a:1}).preset,'custom');
+  // Weekday preset as the priest: a valid Mass with no Gloria or Creed decisions.
+  const {options:wk}=setup('P',{...presets.weekday.fields,level:'choice'});
+  assert.equal(wk.serverCount,0);assert.equal(wk.gloria,false);
+  assert.equal(G('normaliseGameOptions')('P',{}).options.reservedCommunion,true,'reserved hosts by default');
+  // Bell at the start is on by default.
+  assert.equal(G('normaliseGameOptions')('P',{}).options.bells.start,true);
+
+  const visible=new Set(['P','D','S','L']);
+  const roles=G('switchableRoles')(visible,{projector:false});
+  assert.ok(roles.includes('P')&&roles.includes('MC')&&roles.includes('SAC')&&roles.includes('PEW'));
+  assert.ok(!roles.includes('AV'),'no screen operator without a projector');
+  assert.ok(!roles.includes('T'),'absent ministers cannot be taken over');
+  assert.ok(G('switchableRoles')(visible,{projector:true}).includes('AV'));
+  const stops=[{time:1},{time:5},{time:9}];
+  same(G('stopsFrom')(stops,5).map(s=>s.time),[5,9]);
+  assert.equal(stops[0].done,true);
+
+  const av=G('normaliseGameOptions')('AV',{projector:false,music:'sung'});
+  assert.equal(av.options.projector,true);assert.ok(av.notes.some(n=>/projector/.test(n)));
+  const scen=buildScenario(G('scenarioRequest')(av.options));
+  const starts=[];let clock=0;for(const step of scen.steps||STEPS){starts.push(clock);clock+=step.dur;}
+  const cues=G('deriveMediaCues')(STEPS,null,av.options,'key');
+  assert.ok(cues.length>5);
+  assert.ok(cues.every((c,i)=>i===0||c.time>=cues[i-1].time),'cues in time order');
+  const sanctus=cues.find(c=>c.part==='sanctus'&&c.action==='start');
+  assert.equal(sanctus.mode,'track');
+  assert.equal(cues.find(c=>c.part==='kyrie').mode,'acapella');
+  assert.ok(cues.some(c=>c.part==='entrance'&&c.action==='stop'),'hymn tracks are faded out');
+  assert.ok(!cues.some(c=>c.part==='sanctus'&&c.action==='stop'),'only hymns fade at key detail');
+  assert.ok(G('deriveMediaCues')(STEPS,null,av.options,'all').some(c=>c.part==='sanctus'&&c.action==='stop'));
+  same(G('deriveMediaCues')(STEPS,null,{...av.options,projector:false}),[]);
+  const said=G('deriveMediaCues')(STEPS,null,{...av.options,music:'said'});
+  assert.ok(said.every(c=>c.mode==='slide'),'said Mass: words only');
+  assert.ok(!said.some(c=>c.part==='entrance'),'no hymns at a said Mass');
+  const sprinkle=G('deriveMediaCues')(STEPS,null,{...av.options,introductory:'sprinkling'});
+  assert.ok(sprinkle.some(c=>c.part==='asperges'&&c.mode==='track'));
+  for(const level of ['guided','choice','timed','expert']){
+    for(const cue of cues){
+      const d=G('mediaDecision')(cue,level,7,cues);
+      assert.equal(d.options.filter(o=>o.correct).length,1,cue.id+' '+level);
+      assert.equal(d.options.find(o=>o.correct).label,d.correct);
+      assert.equal(new Set(d.options.map(o=>o.label)).size,d.options.length,'no duplicate options');
+      if(level==='guided')assert.equal(d.options.length,1);
+      if(level==='timed')assert.ok(d.timer>0&&d.timer<=G('MEDIA_WINDOW').choice);
+    }
+  }
+  assert.ok(G('MEDIA_WARNING')>0);
+  G('setCrossPlaces')(av.options);
+  const pre=G('preMassTasks')('AV',av.options),post=G('postMassTasks')('AV',av.options);
+  assert.equal(pre.find(t=>t.id==='line').correct,"the screen operator's desk at the back",'desk even after the cross places are set');
+  assert.ok(pre.some(t=>t.places&&t.places.includes('avDesk')));
+  assert.ok(post.length>=1);
+  assert.ok(G('GAME_PLACES').some(p=>p.id==='avDesk'));
+
+  const gfx=require('./mass-graphics.js');
+  assert.equal(gfx.chooseGraphicsProfile('low').id,'low');
+  assert.equal(gfx.chooseGraphicsProfile('auto',{deviceMemory:2,cores:2,width:800}).id,'low');
+  assert.equal(gfx.chooseGraphicsProfile('auto',{deviceMemory:8,cores:8,width:1600,height:900}).id,'standard');
+  assert.equal(gfx.chooseGraphicsProfile('high').id,'high');
+  assert.equal(gfx.crowdVisible(5,1),true);
+  const shown=Array.from({length:100},(_,i)=>gfx.crowdVisible(i,.5)).filter(Boolean).length;
+  assert.ok(shown>35&&shown<65,'about half the crowd at 50%');
+}
+// ---- controller regressions: revealed answer and score rollback ----
 {
   const ui=vm.createContext({
     assert,console,scene:null,clearTimeout:()=>{},performance:{now:()=>100},
     document:{body:{classList:{remove:()=>{}}},createElement:()=>({append:()=>{}})},
-    GameAudio:{correct:()=>{},wrong:()=>{}}
+    GameAudio:{correct:()=>{},wrong:()=>{},stopTrack:()=>{},startTrack:()=>{}}
   });
   for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game.js']){
     vm.runInContext(fs.readFileSync(file,'utf8'),ui,{filename:file});
