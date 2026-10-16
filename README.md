@@ -1,12 +1,57 @@
 # Mass-Sim-Liturgy
 
-Mass-Sim-Liturgy (formerly Roman Mass Explorer) is a set of offline pages for learning
-the Roman Rite: an animated walk-through, a 3D explorer and a role-playing Holy Mass
-simulator game. The repository is `jddcef/mass-sim-liturgy`.
+Learn the Roman Rite of the Mass by taking part in it. Choose a role, such as
+Priest, altar server, Master of Ceremonies or Sacristan. Then walk through a
+whole Mass in a 3D church, answering what you should do or say next.
 
-Development decisions, sources and director documentation are in **`docs`**.
-`docs/director-script.json` preserves the complete baseline animation script.
+## Play now
 
+**[▶ Play the Holy Mass simulator](https://jddcef.github.io/mass-sim-liturgy/mass-game.html)**
+
+It runs in any modern browser on a computer or tablet. There is nothing to install
+and no account. Other pages:
+
+- [3D Mass explorer](https://jddcef.github.io/mass-sim-liturgy/mass-3d.html):
+  watch the Mass from any angle, with server training cues.
+- [Floor-plan animation](https://jddcef.github.io/mass-sim-liturgy/mass-animation.html):
+  the original 2D overview.
+
+### How to start
+
+1. Pick a **preset**: Sunday Mass, Weekday Mass or Solemnity. You can also
+   change any option yourself.
+2. Pick a **role** and a **level**:
+   - **Watch**: no questions.
+   - **Guided**: click to go along.
+   - **Choice**: pick from a few answers.
+   - **Timed**: as Choice, with a countdown.
+   - **Expert**: find the place and the words yourself.
+3. Press **Start**. Drag to look around and scroll to zoom. Use the search box
+   to find any person or object.
+4. Use the **Questions** button to turn questions off and just watch, and the
+   🔊 button for sound.
+
+Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
+It is anonymous.
+
+This is an illustrative teaching aid, not a substitute for the approved Missal,
+ceremonial training or local custom. Prayer texts are short paraphrases.
+
+## For developers
+
+Everything runs from local files (`file://`) with no build step or server. To
+work on it offline, clone the repository and open `mass-game.html`.
+
+- [`docs/SPEC.md`](docs/SPEC.md): what the project does and must keep doing.
+- [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md): the resume checklist, project
+  status and workflow for new contributors and AI sessions.
+- [`docs/GAME-DECISIONS.md`](docs/GAME-DECISIONS.md) and
+  [`docs/DECISIONS.md`](docs/DECISIONS.md): the decision logs.
+- [`docs/SOURCES.md`](docs/SOURCES.md): sources and licences.
+- [`docs/DIRECTOR.md`](docs/DIRECTOR.md): the director's notes.
+  `docs/director-script.json` preserves the complete baseline animation script.
+
+## 3D explorer
 Open **mass-3d.html** in a modern browser for the interactive 3D version.
 Everything is local; no server, installation, account or internet connection is
 needed. Keep the JavaScript, stylesheet and `vendor` folder beside the HTML.
@@ -206,8 +251,8 @@ in a role. The decisions made while building it are logged for review in
    sprinkling rite, sung or said, Eucharistic Prayer I-IV, Solemn Blessing,
    gifts procession, collection, one or two readers, optional lector processions,
    EMHC assistance, additional reserved hosts, bells (start, epiclesis,
-   elevations) and minister lapses. Sacristy bell and collection are on by
-   default; lector processions, EMHC and additional reserved hosts are off.
+   elevations) and minister lapses. Sacristy bell, start bell, collection and reserved hosts from the tabernacle
+   are on by default; lector processions and EMHC are off.
    If your role needs something (for example the thurifer needs incense), the
    setup adds it and says so. You can also place the **crucifix** (on the wall
    behind the altar, in a recessed apse, on the back wall to the left or right,
@@ -266,8 +311,8 @@ are received at the offertory; other offerings stay off the altar. After the
 Priest incenses the gifts, cross and altar, the Deacon (or server) incenses the
 Priest, then the people. Optional EMHC assistance assumes proper deputation
 and genuine need, starts after the Priest's Communion, and does not include
-purification. Communion from hosts consecrated at this Mass remains preferred;
-additional reserved hosts can be fetched by the Deacon or Priest if selected.
+purification. Reserved hosts are fetched from the tabernacle and reposed by default (an
+option); GIRM 85 prefers hosts consecrated at the same Mass.
 
 - **Priest / Deacon**: other ministers occasionally miss a duty or do the wrong
   thing; the celebration stalls until you nudge the right person.
