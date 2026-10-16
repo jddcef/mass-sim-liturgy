@@ -178,3 +178,28 @@ body.deciding #cameraPad { opacity:.75; }
 .dialogButtons { display:flex; justify-content:flex-end; gap:8px; }
 @media(max-width:900px) { #gameSearch { width:150px; } }
 #searchPanel span:not(.iconWrap) { color:inherit; font-size:inherit; }
+
+/* Round 9: compact phone layout. Header tools, view options and the camera
+   pad each fold into one icon button; tapping elsewhere folds them away. */
+.compactToggle { display:none; }
+body.compactUi header { position:relative; height:auto; min-height:48px; padding:6px 10px; }
+body.compactUi header h1 { font-size:18px; line-height:1.15; }
+body.compactUi #gameBadge { display:block; max-width:62vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:11px; }
+body.compactUi .compactToggle { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; padding:0; font-size:20px; line-height:1; border-radius:10px; flex:none; }
+body.compactUi #toolsToggle { background:#3a444b; color:#fff5dc; border-color:#5d6a72; }
+body.compactUi .compactToggle.open { background:#e7d3a6; color:#2a241b; }
+body.compactUi #headerTools { position:absolute; top:100%; right:6px; left:auto; z-index:30; width:min(320px,calc(100vw - 12px)); flex-direction:column; align-items:stretch; gap:8px; padding:10px; border-radius:0 0 10px 10px; background:#242b30; box-shadow:0 8px 20px #0006; }
+body.compactUi #headerTools.collapsed, body.compactUi #cameraBar.collapsed, body.compactUi #cameraPad.collapsed { display:none; }
+body.compactUi #headerTools button { padding:9px 10px; font-size:15px; text-align:left; }
+body.compactUi #headerTools a { display:block; padding:4px 2px; }
+body.compactUi #gameSearch { width:100%; }
+body.compactUi #searchPanel { left:0; right:0; width:auto; max-height:60dvh; }
+body.compactUi #gameScore { order:-1; }
+body.compactUi #cameraBarToggle { position:absolute; left:8px; bottom:8px; z-index:4; background:#fffaf1e6; }
+body.compactUi #cameraPadToggle { position:absolute; right:8px; bottom:8px; z-index:4; background:#fffaf1e6; }
+body.compactUi #cameraBar { top:auto; bottom:56px; left:8px; right:8px; width:auto; gap:8px 12px; z-index:5; }
+body.compactUi #cameraPad { top:auto; bottom:56px; right:8px; z-index:5; grid-template-columns:repeat(4,40px); gap:6px; }
+body.compactUi #cameraPad button { width:40px; height:38px; font-size:18px; }
+body.compactUi #hint { display:none; }
+body.compactUi #caption { bottom:56px; width:calc(100% - 112px); font-size:13px; padding:6px 10px; }
+@media(max-width:600px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; } .cards .rolePortrait { width:64px; height:54px; } .cards small, .cards p { font-size:12px; line-height:1.25; } }
