@@ -1,4 +1,8 @@
-# Mass animation
+# Mass-Sim-Liturgy
+
+Mass-Sim-Liturgy (formerly Roman Mass Explorer) is a set of offline pages for learning
+the Roman Rite: an animated walk-through, a 3D explorer and a role-playing Holy Mass
+simulator game. The repository is `jddcef/mass-sim-liturgy`.
 
 Development decisions, sources and director documentation are in **`docs`**.
 `docs/director-script.json` preserves the complete baseline animation script.
@@ -329,6 +333,22 @@ so each bell is optional.
   has gathered at the entrance. Reserved hosts are used and reposed by
   default. The cupboard also holds a monstrance for a future Exposition scenario.
 
+- **Search** (the box in the header): type to find a person, object or place,
+  or click the box to browse categories (Roles, Sacred vessels, Books,
+  Processional items, Gifts, Linens, Furniture and places), each with
+  **More** for the full list. Hover a result to fly the camera there and
+  highlight it; click it to pin an index card saying what that role does
+  next, or when the object or place is next needed. **Esc** closes it.
+- **Hover** over a person or object for about half a second to see what it is.
+- **Nave seating** (Church options): with side aisles (default) or benches
+  running to the side walls with only a centre aisle.
+- Walls between the camera and what it is looking at fade out, so you can
+  still see in when the camera is pulled back behind a wall.
+- **💬 Feedback** sends an anonymous note (no name or e-mail). To receive
+  notes online, create a free form at a service such as
+  [Formspree](https://formspree.io) and paste its endpoint URL into
+  `feedback-config.js` (`FEEDBACK_ENDPOINT`). Until then the note is copied
+  to the clipboard and offered as a text file to send by hand.
 ## Repository checks
 
 ```text

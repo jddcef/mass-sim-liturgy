@@ -3,7 +3,7 @@
 // player's role speaks, a highlight mode that fades everything except what is happening now,
 // and skipping the line or action in progress. Loaded before mass-game.js.
 
-const gameView={firstPerson:false,yaw:0,pitch:-.18,fov:null,drag:null,highlightOn:false,speaker:null,spokenDone:new Set(),dim:null,boost:null,lit:new Set(),lastProps:new Map()};
+const gameView={firstPerson:false,yaw:0,pitch:-.18,fov:null,drag:null,highlightOn:true,speaker:null,spokenDone:new Set(),dim:null,boost:null,lit:new Set(),lastProps:new Map()};
 
 // ---------- camera pad ----------
 function cameraNudge(action){

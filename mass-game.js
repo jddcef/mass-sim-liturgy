@@ -99,9 +99,9 @@ function buildGameScene(){
   const annex=world(SACRISTY);
   box(scene,annex.x,.16,annex.z,5.6,.32,5.8,'#d8ccb2',false);
   box(scene,(12.4+annex.x-2.8)/2,.16,world([1000,215]).z,1.6,.32,1.5,'#d8ccb2',false);
-  box(scene,annex.x,.8,annex.z-2.9,5.6,1.3,.15,'#b9aa8d');
-  box(scene,annex.x+2.8,.8,annex.z,.15,1.3,5.8,'#b9aa8d');
-  box(scene,annex.x,.8,annex.z+2.9,5.6,1.3,.15,'#b9aa8d');
+  markWall(box(scene,annex.x,.8,annex.z-2.9,5.6,1.3,.15,'#b9aa8d'));
+  markWall(box(scene,annex.x+2.8,.8,annex.z,.15,1.3,5.8,'#b9aa8d'));
+  markWall(box(scene,annex.x,.8,annex.z+2.9,5.6,1.3,.15,'#b9aa8d'));
   const vesting=world([1150,72]);
   box(scene,vesting.x,.32+.48,vesting.z,2.6,.08,.8,'#8a6a45');
   box(scene,vesting.x,.32+.22,vesting.z,2.4,.44,.7,'#6e5236');
@@ -139,8 +139,8 @@ function buildGameScene(){
   box(scene,crucifix.x,2.0,crucifix.z+.1,.45,.06,.05,'#795b34');
   scene.add(Object.assign(label('Sacristy',world(SACRISTY,2.5)),{}));
   box(scene,0,-.15,12.6,8.6,.3,3.2,'#cfc6b4',false);
-  for(const side of [-1,1])box(scene,side*1.4,1.4,11.05,.25,2.8,.3,'#a39172');
-  box(scene,0,2.9,11.05,3.05,.25,.3,'#a39172');
+  for(const side of [-1,1])markWall(box(scene,side*1.4,1.4,11.05,.25,2.8,.3,'#a39172'));
+  markWall(box(scene,0,2.9,11.05,3.05,.25,.3,'#a39172'));
   const stoup=world([440,866]);
   cylinder(scene,stoup.x,.55,stoup.z,.05,.07,1.1,'#9d9282');
   cylinder(scene,stoup.x,1.12,stoup.z,.2,.12,.1,'#c8d9d9');
@@ -295,7 +295,7 @@ function syncPreset(){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',
+  crucifix:'crucifix',crossStand:'cross',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -563,6 +563,12 @@ function scheduleStops(){
   game.stops=stops;
 }
 function nextStop(){return game.stops.find(stop=>!stop.done);}
+// A spoken line waits while a question at or before its start is still open (mass-speech.js).
+function speechHeld(time){
+  if(game.phase!=='mass')return false;
+  const stop=nextStop();
+  return !!stop&&stop.time<=time+1e-3;
+}
 function gameTimeLimit(elapsed){
   if(game.phase==='setup')return elapsed;
   if(game.phase!=='mass')return currentElapsed();
@@ -1881,6 +1887,7 @@ function initialiseGame(){
   buildGameScene();
   buildSetupForm();
   initialiseGameView();
+  initialiseGameUi();
   $('gameBookButton').onclick=()=>openBook();
   $('gameSound').onclick=()=>{
     GameAudio.setEnabled(!GameAudio.enabled);

@@ -221,6 +221,8 @@ function interceptSpeech(nextElapsed){
       if(start>nextElapsed||end<now)continue;
       const id=[step.key,event.index,event.role,pack.id].join(':');
       if(spokenCues.has(id))continue;
+      // The game holds a line until the player has answered the question that comes before it.
+      if(typeof speechHeld==='function'&&speechHeld(start))return nextElapsed;
       spokenCues.add(id);
       const text=speechText(event.source,pack);
       if(!text)continue;

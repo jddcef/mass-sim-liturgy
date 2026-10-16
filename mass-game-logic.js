@@ -194,20 +194,20 @@ function stopsFrom(stops,elapsed){
 // Which parts use a track is a judgement call: parishes vary widely.
 const MEDIA_PARTS=[
   {key:0,id:'entrance',title:'Entrance hymn',sung:'track',hymn:true},
-  {key:4,id:'confiteor',title:'I confess (Confiteor)',sung:'slide',said:'slide'},
+  {key:5,id:'confiteor',title:'I confess (Confiteor)',sung:'slide',said:'slide'},
   {key:6,id:'kyrie',title:'Kyrie',sung:'acapella',said:'slide'},
   {key:7,id:'gloria',title:'Gloria',sung:'track',said:'slide'},
   {key:10,id:'psalm',title:'Responsorial Psalm',sung:'acapella',said:'slide'},
   {key:12,id:'alleluia',title:'Gospel Acclamation',sung:'track',said:'slide'},
   {key:15,id:'creed',title:'Creed',sung:'slide',said:'slide'},
-  {key:18,id:'offertory',title:'Offertory hymn',sung:'track',hymn:true},
+  {key:17,id:'offertory',title:'Offertory hymn',sung:'track',hymn:true},
   {key:24,id:'sanctus',title:'Sanctus (Holy, Holy, Holy)',sung:'track',said:'slide'},
   {key:28,id:'mystery',title:'The Mystery of Faith',sung:'track',said:'slide'},
   {key:30,id:'amen',title:'Great Amen',sung:'acapella'},
   {key:31,id:'pater',title:"Lord's Prayer",sung:'acapella',said:'slide'},
   {key:33,id:'agnus',title:'Agnus Dei (Lamb of God)',sung:'track',said:'slide'},
   {key:35,id:'communion',title:'Communion hymn',sung:'track',hymn:true},
-  {key:40,id:'recessional',title:'Recessional hymn',sung:'track',hymn:true}
+  {key:39,id:'recessional',title:'Recessional hymn',sung:'track',hymn:true}
 ];
 // Seconds of warning before a part, then the window (in seconds) to start it.
 const MEDIA_WINDOW={watch:0,guided:0,choice:10,timed:6,expert:6};
@@ -221,17 +221,37 @@ function deriveMediaCues(steps=STEPS,startTimes,options={},detail='key'){
     const start=startTimes?startTimes[i]:clock;
     clock=start+step.dur;
     let part=MEDIA_PARTS.find(p=>p.key===step.key);
-    if(part&&step.key===4&&options.introductory==='sprinkling')part={key:4,id:'asperges',title:'Asperges / Vidi aquam',sung:'track',said:'slide'};
-    else if(part&&step.key===4&&options.introductory==='C')part={key:4,id:'invocations',title:'Lord, have mercy (invocations)',sung:'slide',said:'slide'};
+    if(part&&step.key===5&&options.introductory==='sprinkling')part={key:5,id:'asperges',title:'Asperges / Vidi aquam',sung:'track',said:'slide'};
+    else if(part&&step.key===5&&options.introductory==='C')part={key:5,id:'invocations',title:'Lord, have mercy (invocations)',sung:'slide',said:'slide'};
     if(!part)return;
     const mode=sung?part.sung:part.said;
     if(!mode)return;
+    const span=chantSpan(steps,i,startTimes,start);
     const base={step:i,key:step.key,title:part.title,part:part.id,ref:step.ref};
-    cues.push({...base,id:'media:'+part.id+':start',action:'start',mode,time:start,hymn:!!part.hymn});
-    // A track is faded out when its part ends; at "key" detail only the hymns ask for it.
-    if(mode==='track'&&(part.hymn||detail==='all'))cues.push({...base,id:'media:'+part.id+':stop',action:'stop',mode,time:start+step.dur*.97,hymn:!!part.hymn});
+    cues.push({...base,id:'media:'+part.id+':start',action:'start',mode,time:part.hymn&&span?span.start:start,hymn:!!part.hymn});
+    // A track is faded out when its chant ends (the entrance chant runs on through the reverence
+    // and incensation, ending before the Sign of the Cross); at "key" detail only hymns ask for it.
+    if(mode==='track'&&(part.hymn||detail==='all')){
+      const end=span?span.end:start+step.dur;
+      const last=span?span.last:i;
+      cues.push({...base,step:last,key:steps[last].key,id:'media:'+part.id+':stop',action:'stop',mode,time:end-Math.min(.4,steps[last].dur*.03),hymn:!!part.hymn});
+    }
   });
   return cues;
+}
+// Where the people's sung line (♪) of step i starts and, continuing through following steps, ends.
+function chantSpan(steps,i,startTimes,start){
+  const startOf=j=>{if(startTimes)return startTimes[j];let t=start;for(let k=i;k<j;k++)t+=steps[k].dur;return t;};
+  const sung=step=>(step.say||[]).find(line=>line[0]==='ppl'&&/♪/.test(line[1]));
+  const first=sung(steps[i]);
+  if(!first)return null;
+  let last=i,line=first;
+  while(last+1<steps.length){
+    const next=sung(steps[last+1]);
+    if(!next||next[1]!==first[1]||next[2]>.05||line[3]<.97)break;
+    last++;line=next;
+  }
+  return {start:start+first[2]*steps[i].dur,end:startOf(last)+line[3]*steps[last].dur,last};
 }
 const MEDIA_ACTIONS={
   track:part=>'▶ Play the '+part+' backing track with its lyrics',
@@ -274,6 +294,13 @@ function placeFor(point,role){
   if(point[1]>840)return {id:'door',name:'the church door',at:[500,860],r:40};
   return {id:'nave',name:'a place in the nave',at:point,r:40};
 }
+// 'aisles' keeps side aisles by the walls; 'full' runs the benches to the walls (centre aisle only).
+let pewLayout='aisles';
+function setPewLayout(style){
+  pewLayout=style==='full'?'full':'aisles';
+  PEW_ZONE.splice(0,PEW_ZONE.length,...(pewLayout==='full'?[[60,350,450,715],[550,350,940,715]]:[[150,350,450,715],[550,350,850,715]]));
+  return pewLayout;
+}
 function inPews(point){
   return PEW_ZONE.some(([l,t,r,b])=>point[0]>=l&&point[0]<=r&&point[1]>=t&&point[1]<=b);
 }
@@ -283,10 +310,10 @@ function routeBetween(from,to){
   const crossesPews=[from,to].some(inPews)||
     (Math.max(from[1],to[1])>350&&Math.min(from[1],to[1])<715&&
      !(Math.abs(from[0]-500)<45&&Math.abs(to[0]-500)<45)&&
-     !(from[0]>870&&to[0]>870)&&!(from[0]<130&&to[0]<130));
+     !(pewLayout==='aisles'&&from[0]>870&&to[0]>870)&&!(pewLayout==='aisles'&&from[0]<130&&to[0]<130));
   if(!crossesPews)return [to];
   const middle=(from[0]+to[0])/2;
-  const aisle=middle<300?110:middle>700?890:500;
+  const aisle=pewLayout==='full'?500:middle<300?110:middle>700?890:500;
   const top=Math.min(from[1],to[1]);
   const startY=inPews(from)?from[1]:Math.max(350,Math.min(715,from[1]));
   const endY=inPews(to)?to[1]:Math.max(345,Math.min(720,to[1]));
@@ -881,4 +908,94 @@ function nextQuestionStop(stops,current,requested){
   // Seeking never skips an unanswered decision: snap to the first upcoming stop.
   return requested>current?next:null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks};
+// ---------- search index (round 8) ----------
+const SEARCH_CATEGORIES=[
+  {id:'roles',name:'Roles',icon:'person'},
+  {id:'vessels',name:'Sacred vessels',icon:'chalice'},
+  {id:'books',name:'Books',icon:'book'},
+  {id:'processional',name:'Processional items and bell',icon:'cross'},
+  {id:'gifts',name:'Gifts and collection',icon:'cruets'},
+  {id:'linens',name:'Linens',icon:'linen'},
+  {id:'places',name:'Furniture and places',icon:'altar'}
+];
+const SEARCH_OBJECTS={
+  chalice:{name:'Chalice',cat:'vessels',icon:'chalice',main:true,also:'cup precious blood'},
+  ciborium:{name:'Ciborium',cat:'vessels',icon:'ciborium',main:true,also:'hosts communion'},
+  ciborium2:{name:'Ciborium of reserved hosts',cat:'vessels',icon:'ciborium',also:'tabernacle reserved sacrament'},
+  ewer:{name:'Lavabo ewer, bowl and towel',cat:'vessels',icon:'lavabo',main:true,also:'washing of hands'},
+  missal:{name:'Roman Missal',cat:'books',icon:'book',main:true,also:'sacramentary prayers'},
+  gospels:{name:'Book of the Gospels',cat:'books',icon:'gospels',main:true,also:'evangeliary'},
+  cross:{name:'Processional cross',cat:'processional',icon:'cross',main:true,also:'crucifix'},
+  cand1:{name:'Processional candle (first)',cat:'processional',icon:'candle',main:true,also:'acolyte candles torch'},
+  cand2:{name:'Processional candle (second)',cat:'processional',icon:'candle',also:'acolyte candles torch'},
+  thurible:{name:'Thurible',cat:'processional',icon:'thurible',main:true,also:'incense censer'},
+  bell:{name:'Altar bell',cat:'processional',icon:'bell',also:'sanctus bells'},
+  bread:{name:'Bread for the offertory',cat:'gifts',icon:'host',main:true,also:'hosts gifts'},
+  wine:{name:'Wine and water cruets',cat:'gifts',icon:'cruets',main:true,also:'gifts'},
+  collection:{name:'Collection basket',cat:'gifts',icon:'collection',main:true,also:'offering money'},
+  corporal:{name:'Corporal',cat:'linens',icon:'linen',main:true,also:'altar linen'}
+};
+const SEARCH_PLACES={altar:['altar',true],ambo:['ambo',true],chair:['chair',true],credence:['credence',true],tabernacle:['tabernacle',true],
+  crossStand:['cross',false],serverBench:['chair',false],washStand:['lavabo',false],sanctuaryStep:['walk',false],giftTable:['cruets',false],
+  sacristy:['sacristy',false],stoup:['water',false],avDesk:['screen',false],door:['door',false]};
+
+// Entries for the search box: roles present in this Mass, objects and furniture.
+function buildSearchIndex(roles){
+  const entries=[];
+  for(const {key,name,icon} of roles||[])entries.push({id:'role:'+key,kind:'role',key,name,cat:'roles',icon:icon||'person',main:['P','D','S','MC','SAC','L'].includes(key),keywords:name.toLowerCase()});
+  for(const [key,o] of Object.entries(SEARCH_OBJECTS))entries.push({id:'object:'+key,kind:'object',key,name:o.name,cat:o.cat,icon:o.icon,main:!!o.main,keywords:(o.name+' '+(o.also||'')).toLowerCase()});
+  for(const [key,[icon,main]] of Object.entries(SEARCH_PLACES)){
+    const place=GAME_PLACES.find(p=>p.id===key);
+    if(!place)continue;
+    const name=place.name.replace(/^the /,'');
+    entries.push({id:'place:'+key,kind:'place',key,name:name[0].toUpperCase()+name.slice(1),cat:'places',icon,main,keywords:name.toLowerCase(),at:place.at,r:place.r});
+  }
+  return entries;
+}
+
+// Ranks matches: name prefix, word prefix, name substring, then keyword substring.
+function searchEntries(entries,query){
+  const q=String(query||'').trim().toLowerCase();
+  if(!q)return [];
+  const out=[];
+  for(const entry of entries){
+    const name=entry.name.toLowerCase();
+    const at=name.indexOf(q);
+    let rank=at===0?0:at>0&&/[\s(,'-]/.test(name[at-1])?1:at>0?2:entry.keywords.includes(q)?3:-1;
+    if(rank<0)continue;
+    out.push({entry,rank,match:at>=0?[at,q.length]:null});
+  }
+  return out.sort((a,b)=>a.rank-b.rank||(b.entry.main-a.entry.main)||a.entry.name.localeCompare(b.entry.name));
+}
+
+// What the role does next, or when the object/place is next used, from the current point.
+function nextUseFor(entry,steps,index,progress){
+  const list=x=>!x?[]:Array.isArray(x)?x:[x];
+  const label=role=>(typeof ACTORS!=='undefined'&&ACTORS[role]?.name.split(/[,(]/)[0].trim())||role;
+  for(let i=Math.max(0,index);i<steps.length;i++){
+    const step=steps[i],after=i===index?progress:-1;
+    if(entry.kind==='role'){
+      const act=(step.acts?.[entry.key]||[]).find(([text,a])=>text&&a>after&&!/^(stands|sits|kneels)$/.test(text));
+      const line=(step.say||[]).find(([role,,a])=>role===entry.key&&a>after);
+      const move=list(step.mv?.[entry.key]).find(s=>s.a>after);
+      const t=Math.min(act?act[1]:2,line?line[2]:2,move?move.a:2);
+      if(t>1)continue;
+      const what=act&&act[1]===t?act[0]:line&&line[2]===t?'says “'+line[1]+'”':'moves to '+placeFor(move.p[move.p.length-1],entry.key).name.replace(/^your /,'their ');
+      return {step:i,title:step.title,what,soon:i===index};
+    }
+    if(entry.kind==='object'){
+      const use=(step.props?.[entry.key]||[]).find(u=>(u.t??u.a)>after);
+      if(!use)continue;
+      const what=use.by?'taken by the '+label(use.by).toLowerCase():'placed at '+placeFor(use.at).name;
+      return {step:i,title:step.title,what,soon:i===index};
+    }
+    if(entry.kind==='place'){
+      for(const [role,segments] of Object.entries(step.mv||{})){
+        const move=list(segments).find(s=>s.a>after&&Math.hypot(s.p[s.p.length-1][0]-entry.at[0],s.p[s.p.length-1][1]-entry.at[1])<=entry.r);
+        if(move)return {step:i,title:step.title,what:'the '+label(role).toLowerCase()+' goes there',soon:i===index};
+      }
+    }
+  }
+  return null;
+}
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS};

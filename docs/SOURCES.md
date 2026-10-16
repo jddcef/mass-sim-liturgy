@@ -138,3 +138,7 @@ weekday preset omits the Gloria and Creed per [GIRM 53](https://www.magisterium.
 [GIRM 68](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/68). The screen operator's tracks are synthesised in the browser
 and the slides show placeholders only; no hymn texts or recordings are included.
 The monstrance, projector screen and operator desk are project-made simple geometry.
+
+Round eight choices: the entrance hymn stopping before the Sign of the Cross follows
+[GIRM 47](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/47) (the chant accompanies the procession). Search, hover tips,
+wall fading, nave seating and the feedback dialog are interface choices and need no liturgical source.
