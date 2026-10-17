@@ -54,6 +54,11 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
   across files.
 - `material()` in `mass-3d.js` is cached and shared. Clone a material before
   changing it per mesh.
+- `mass-materials.js` applies finishes only to explicitly tagged meshes.
+  Pass the optional surface kind to `box`/`cylinder`, or use `finishSurface`.
+  Supply a new base material to `finishSurface` when changing a surface colour.
+  Do not mutate cached textures or infer a finish from a colour. Texture
+  providers are High-only and should return a cleanup function.
 - Plan coordinates convert to world coordinates with `world([x,y])`
   (SCALE .025; plan x 500 is world 0).
 - `mass-3d.css` styles `header span`. Panels placed inside the header must
@@ -72,7 +77,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 <https://jddcef.github.io/mass-sim-liturgy/>. The working branch has been
 `jddcef-holy-mass-simulator-game`; merge `main` into it after each PR merges.
 
-**Next decision number: R85.**
+**Next decision number: R89.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -85,6 +90,19 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 | 8 | #8 | Search and index card, hover tips, feedback, wall fade, nave seating, audio timing, rename |
 | docs | #8 | Player-facing README opening, `SPEC.md`, this guide, Copilot instructions |
 | 9 | (this PR) | More natural bell synthesis, compact phone layout with fold-away menus |
+| 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
+
+Round 10 was exercised in Edge through `file://` on all three pages, including
+all sanctuary floors, repeated quality switches, layouts, appearance changes,
+wall fading, first-person material clones and a complete accelerated Sacristan
+Watch run (opening, setup, Mass and pack-away). Browser checks reported no
+console errors or external requests; texture/material counts stayed constant
+after warming and repeating the quality/floor combinations. This is not a
+performance claim for physical low-spec hardware. Simulated low-memory mobile
+startup selected Auto/Low and created no surface textures, finish-material
+variants or reflection environment. All script syntax checks and all four
+Node suites pass on Node 22. No commit, push or PR was requested, so remote CI
+has not been run for this change.
 
 ### Open items and backlog
 
@@ -96,7 +114,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 - [ ] Latin audio pack is partial.
 - [ ] Future: an Exposition, Adoration and Benediction scenario (the
       monstrance is already in the cupboard).
-- [ ] Future: high-detail textures (the "High" detail hook exists in
-      `mass-graphics.js`).
+- [x] Local surface textures on Standard and High (round 10); Low stays
+      untextured and the High-only extension hook remains available.
 - [ ] Future: a full first-person mode for every role, extending today's
       first person with hints.

@@ -40,6 +40,7 @@ Classic scripts load in this order and share globals:
 | `mass-features.js` | Church-layout editor and presets; server training cues. |
 | `mass-speech.js`, `audio/` | Browser voices or pre-generated MP3s (`audio/audio-manifest.js`, `audio/index.csv`). |
 | `mass-graphics.js` | Detail levels and quality settings. |
+| `mass-materials.js` | Deterministic offline surface textures, physical texture sizing, cached stone/wood/metal finishes and reversible detail changes. |
 | `mass-3d.js` | Three.js church, figures, poses, props, cameras, playback, appearance, wall fading, nave seating. Exposes optional hooks (`gameBeforeRender`, `gamePick`, `gameTimeLimit`, `gameCameraTarget`, `gameCameraOverride`). |
 | `mass-game-icons.js` | SVG icon set (`GameIcons`). |
 | `mass-game-logic.js` | **Pure, Node-testable game rules**: options and presets, roles, decision derivation, choices, scoring, timers, lapses and M.C. detection, sacristan checklists, routes, media cues, search index. |

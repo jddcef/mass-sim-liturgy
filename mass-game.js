@@ -97,18 +97,18 @@ function figureRole(raycaster){
 // ---------- extra scenery: sacristy annex, narthex, stoup ----------
 function buildGameScene(){
   const annex=world(SACRISTY);
-  box(scene,annex.x,.16,annex.z,5.6,.32,5.8,'#d8ccb2',false);
-  box(scene,(12.4+annex.x-2.8)/2,.16,world([1000,215]).z,1.6,.32,1.5,'#d8ccb2',false);
+  box(scene,annex.x,.16,annex.z,5.6,.32,5.8,'#d8ccb2',false,'stone');
+  box(scene,(12.4+annex.x-2.8)/2,.16,world([1000,215]).z,1.6,.32,1.5,'#d8ccb2',false,'stone');
   markWall(box(scene,annex.x,.8,annex.z-2.9,5.6,1.3,.15,'#b9aa8d'));
   markWall(box(scene,annex.x+2.8,.8,annex.z,.15,1.3,5.8,'#b9aa8d'));
   markWall(box(scene,annex.x,.8,annex.z+2.9,5.6,1.3,.15,'#b9aa8d'));
   const vesting=world([1150,72]);
-  box(scene,vesting.x,.32+.48,vesting.z,2.6,.08,.8,'#8a6a45');
-  box(scene,vesting.x,.32+.22,vesting.z,2.4,.44,.7,'#6e5236');
+  box(scene,vesting.x,.32+.48,vesting.z,2.6,.08,.8,'#8a6a45',true,'wood');
+  box(scene,vesting.x,.32+.22,vesting.z,2.4,.44,.7,'#6e5236',true,'wood');
   const cupboard=world([1205,190]);
-  box(scene,cupboard.x+.22,.32+.9,cupboard.z,.16,1.8,1.6,'#6e5236');
-  for(const side of [-1,1])box(scene,cupboard.x,.32+.9,cupboard.z+side*.78,.6,1.8,.05,'#6e5236');
-  for(const y of [.05,.5,.95,1.4,1.78])box(scene,cupboard.x,.32+y,cupboard.z,.6,.04,1.6,'#7d6040');
+  box(scene,cupboard.x+.22,.32+.9,cupboard.z,.16,1.8,1.6,'#6e5236',true,'wood');
+  for(const side of [-1,1])box(scene,cupboard.x,.32+.9,cupboard.z+side*.78,.6,1.8,.05,'#6e5236',true,'wood');
+  for(const y of [.05,.5,.95,1.4,1.78])box(scene,cupboard.x,.32+y,cupboard.z,.6,.04,1.6,'#7d6040',true,'wood');
   scene.add(Object.assign(label('Cupboard',world([1205,190],2.35)),{}));
   // Kept for Exposition and Benediction (a separate liturgy); not part of Mass setup.
   const monstrance=monstranceModel();
@@ -121,24 +121,24 @@ function buildGameScene(){
   // Doors the sacristan unlocks and opens in the training opening; open the rest of the time.
   const hinge=new THREE.Group();
   hinge.position.copy(world([1222,130]));hinge.position.x+=.07;
-  const leaf=box(hinge,0,.32+.65,.5,.07,1.3,1.0,'#4f3920');
+  const leaf=box(hinge,0,.32+.65,.5,.07,1.3,1.0,'#4f3920',true,'wood');
   leaf.userData.door=true;
   scene.add(hinge);
   game.doors={sacristy:hinge,main:[]};
   for(const side of [-1,1]){
     const pivot=new THREE.Group();
     pivot.position.set(side*1.275,0,11.05);
-    box(pivot,-side*.64,1.38,0,1.25,2.72,.08,'#5b3f22');
-    box(pivot,-side*1.1,1.3,.06,.05,.25,.04,'#c9a64a');
+    box(pivot,-side*.64,1.38,0,1.25,2.72,.08,'#5b3f22',true,'wood');
+    box(pivot,-side*1.1,1.3,.06,.05,.25,.04,'#c9a64a',true,'gold');
     scene.add(pivot);
     game.doors.main.push(pivot);
   }
   setDoors(true,true);
   const crucifix=world([1110,44]);
-  box(scene,crucifix.x,1.8,crucifix.z+.1,.06,.9,.05,'#795b34');
-  box(scene,crucifix.x,2.0,crucifix.z+.1,.45,.06,.05,'#795b34');
+  box(scene,crucifix.x,1.8,crucifix.z+.1,.06,.9,.05,'#795b34',true,'wood');
+  box(scene,crucifix.x,2.0,crucifix.z+.1,.45,.06,.05,'#795b34',true,'wood');
   scene.add(Object.assign(label('Sacristy',world(SACRISTY,2.5)),{}));
-  box(scene,0,-.15,12.6,8.6,.3,3.2,'#cfc6b4',false);
+  box(scene,0,-.15,12.6,8.6,.3,3.2,'#cfc6b4',false,'stone');
   for(const side of [-1,1])markWall(box(scene,side*1.4,1.4,11.05,.25,2.8,.3,'#a39172'));
   markWall(box(scene,0,2.9,11.05,3.05,.25,.3,'#a39172'));
   const stoup=world([440,866]);
@@ -1116,17 +1116,17 @@ const GOLD='#c9a64a',SILVER='#b9bec4',LINEN='#f6f3ea',GLASS='#cfe3ea';
 function miniModel(id){
   const g=new THREE.Group();
   const cup=(x,z,lid)=>{
-    cylinder(g,x,.015,z,.05,.06,.03,GOLD);cylinder(g,x,.07,z,.012,.012,.09,GOLD);cylinder(g,x,.15,z,.055,.025,.08,GOLD);
-    if(lid){sphere(g,x,.2,z,.05,GOLD).scale.y=.5;sphere(g,x,.235,z,.012,GOLD);}
+    cylinder(g,x,.015,z,.05,.06,.03,GOLD,'gold');cylinder(g,x,.07,z,.012,.012,.09,GOLD,'gold');cylinder(g,x,.15,z,.055,.025,.08,GOLD,'gold');
+    if(lid){finishSurface(sphere(g,x,.2,z,.05,GOLD),'gold').scale.y=.5;finishSurface(sphere(g,x,.235,z,.012,GOLD),'gold');}
   };
   const book=(colour,trim,thick=.045)=>{box(g,0,thick/2,0,.13,thick,.17,colour);box(g,.003,thick/2,0,.12,thick*.8,.165,'#efe6cc');box(g,0,thick+.002,0,.03,.004,.1,trim);box(g,0,thick+.002,-.01,.07,.004,.022,trim);};
-  const candle=(x,z,h=.2)=>{cylinder(g,x,.015,z,.03,.04,.03,GOLD);cylinder(g,x,.03+h/2,z,.012,.012,h,'#fbf6e6');};
+  const candle=(x,z,h=.2)=>{cylinder(g,x,.015,z,.03,.04,.03,GOLD,'gold');cylinder(g,x,.03+h/2,z,.012,.012,h,'#fbf6e6');};
   const cruet=(x,z,colour)=>{cylinder(g,x,.06,z,.025,.035,.12,colour);cylinder(g,x,.14,z,.012,.018,.04,GLASS);};
   const cross=(h,staff)=>{
-    if(staff){cylinder(g,0,.015,0,.04,.05,.03,'#6e5236');cylinder(g,0,h/2,0,.008,.008,h,GOLD);}
-    box(g,0,h+.06,0,.012,.13,.012,GOLD);box(g,0,h+.08,0,.08,.012,.012,GOLD);
+    if(staff){cylinder(g,0,.015,0,.04,.05,.03,'#6e5236','wood');cylinder(g,0,h/2,0,.008,.008,h,GOLD,'gold');}
+    box(g,0,h+.06,0,.012,.13,.012,GOLD,true,'gold');box(g,0,h+.08,0,.08,.012,.012,GOLD,true,'gold');
   };
-  const bell=(x,z,colour,r=.04)=>{cylinder(g,x,.03,z,r*.45,r,.06,colour);cylinder(g,x,.09,z,.008,.008,.07,'#6e5236');};
+  const bell=(x,z,colour,r=.04)=>{cylinder(g,x,.03,z,r*.45,r,.06,colour,'gold');cylinder(g,x,.09,z,.008,.008,.07,'#6e5236','wood');};
   switch(id){
     case 'altarCloth':case 'corporal':
       for(let i=0;i<(id==='corporal'?1:3);i++)box(g,0,.01+i*.022,0,.15,.02,.15,LINEN);
@@ -1141,16 +1141,16 @@ function miniModel(id){
     case 'missal':book('#5a2617','#e7c96a',.06);box(g,.04,.03,.09,.01,.002,.04,'#b8202a');break;
     case 'chalice':case 'chalice2':cup(0,0,false);box(g,0,.195,0,.1,.006,.1,LINEN);break;
     case 'ciborium':case 'emhcVessel':cup(0,0,true);break;
-    case 'commPlate':cylinder(g,0,.01,0,.07,.07,.01,GOLD);box(g,0,.01,.09,.025,.008,.05,GOLD);break;
+    case 'commPlate':cylinder(g,0,.01,0,.07,.07,.01,GOLD,'gold');box(g,0,.01,.09,.025,.008,.05,GOLD,true,'gold');break;
     case 'water':cruet(0,0,GLASS);break;
     case 'wine':cruet(0,0,'#7a1f2b');break;
-    case 'lavabo':cylinder(g,0,.025,0,.08,.05,.05,SILVER);cylinder(g,0,.11,.03,.02,.035,.1,SILVER);box(g,0,.006,-.06,.09,.01,.05,LINEN);break;
+    case 'lavabo':cylinder(g,0,.025,0,.08,.05,.05,SILVER,'silver');cylinder(g,0,.11,.03,.02,.035,.1,SILVER,'silver');box(g,0,.006,-.06,.09,.01,.05,LINEN);break;
     case 'collectionBasket':cylinder(g,0,.04,0,.08,.065,.08,'#9b7442');box(g,0,.02,.12,.02,.02,.1,'#6e5236');break;
-    case 'aspersory':cylinder(g,0,.05,0,.055,.045,.1,SILVER);cylinder(g,.02,.15,0,.006,.006,.16,SILVER).rotation.z=.4;sphere(g,.05,.22,0,.018,SILVER);break;
+    case 'aspersory':cylinder(g,0,.05,0,.055,.045,.1,SILVER,'silver');cylinder(g,.02,.15,0,.006,.006,.16,SILVER,'silver').rotation.z=.4;finishSurface(sphere(g,.05,.22,0,.018,SILVER),'silver');break;
     case 'thurible':
-      sphere(g,0,.07,0,.05,SILVER).scale.y=.8;cylinder(g,0,.13,0,.012,.035,.05,SILVER);
-      for(const x of [-.02,.02])cylinder(g,x,.21,0,.003,.003,.14,'#8a8f94');
-      sphere(g,0,.03,.1,.035,SILVER).scale.set(1,.6,1.6);break;
+      finishSurface(sphere(g,0,.07,0,.05,SILVER),'silver').scale.y=.8;cylinder(g,0,.13,0,.012,.035,.05,SILVER,'silver');
+      for(const x of [-.02,.02])cylinder(g,x,.21,0,.003,.003,.14,'#8a8f94','silver');
+      finishSurface(sphere(g,0,.03,.1,.035,SILVER),'silver').scale.set(1,.6,1.6);break;
     case 'altarBell':for(const z of [-.04,0,.04])bell(0,z,GOLD,.03);break;
     case 'sacristyBell':bell(0,0,'#b08d3c',.05);break;
     case 'lamp':cylinder(g,0,.05,0,.04,.03,.1,'#b8202a');cylinder(g,0,.12,0,.005,.005,.06,GOLD);break;
@@ -1161,7 +1161,11 @@ function miniModel(id){
   return g;
 }
 function greyOut(model){
-  model.traverse(o=>{if(o.isMesh)o.material=material('#8f8579');});
+  model.traverse(o=>{
+    if(!o.isMesh)return;
+    delete o.userData.surfaceType;
+    o.material=material('#8f8579');
+  });
 }
 // Objects on the cupboard shelves; vestments instead hang on the rail.
 function fillCupboard(items){
@@ -1184,21 +1188,22 @@ function fillCupboard(items){
 // A sunburst monstrance: foot, stem with knop, rays round a glass luna. Faces -x (out of the cupboard).
 function monstranceModel(){
   const g=new THREE.Group();
-  cylinder(g,0,.012,0,.06,.075,.024,GOLD);
-  cylinder(g,0,.11,0,.012,.018,.18,GOLD);
-  cylinder(g,0,.12,0,.026,.026,.03,GOLD);
+  cylinder(g,0,.012,0,.06,.075,.024,GOLD,'gold');
+  cylinder(g,0,.11,0,.012,.018,.18,GOLD,'gold');
+  cylinder(g,0,.12,0,.026,.026,.03,GOLD,'gold');
   const centre=.3;
   const ring=new THREE.Mesh(new THREE.TorusGeometry(.045,.01,6,20),material(GOLD));
   ring.position.set(0,centre,0);ring.rotation.y=Math.PI/2;g.add(ring);
+  finishSurface(ring,'gold');
   const luna=new THREE.Mesh(new THREE.CircleGeometry(.04,16),material('#f4efe0'));
   luna.position.set(-.004,centre,0);luna.rotation.y=-Math.PI/2;g.add(luna);
   for(let i=0;i<16;i++){
     const a=i/16*Math.PI*2,long=i%2?.07:.11;
-    const ray=box(g,0,centre+Math.sin(a)*(.055+long/2),Math.cos(a)*(.055+long/2),.008,long,.012,GOLD,false);
+    const ray=box(g,0,centre+Math.sin(a)*(.055+long/2),Math.cos(a)*(.055+long/2),.008,long,.012,GOLD,false,'gold');
     ray.rotation.x=-a+Math.PI/2;
   }
-  box(g,0,centre+.18,0,.008,.05,.008,GOLD,false);
-  box(g,0,centre+.19,0,.008,.008,.035,GOLD,false);
+  box(g,0,centre+.18,0,.008,.05,.008,GOLD,false,'gold');
+  box(g,0,centre+.19,0,.008,.008,.035,GOLD,false,'gold');
   g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
   return g;
 }
@@ -1206,8 +1211,8 @@ const VESTMENT_ITEMS={vestP:'P',vestD:'D',vestS:'S'};
 const VESTMENT_RAIL=[1085,250],VESTMENT_RAIL_FRONT=[1085,215],VESTING_STAND=[1040,95],VESTING_STAND_FRONT=[1050,130];
 function vestmentModel(kind){
   const g=new THREE.Group();
-  box(g,0,0,0,.42,.025,.025,'#6e5236');
-  cylinder(g,0,.06,0,.008,.008,.1,SILVER);
+  box(g,0,0,0,.42,.025,.025,'#6e5236',true,'wood');
+  cylinder(g,0,.06,0,.008,.008,.1,SILVER,'silver');
   const alb=box(g,0,-.6,.02,.4,1.15,.04,LINEN);
   alb.userData.part='alb';
   if(kind!=='S'){
@@ -1223,15 +1228,15 @@ function vestmentModel(kind){
 }
 function buildVestments(){
   const rail=world(VESTMENT_RAIL);
-  box(scene,rail.x,.32+1.95,rail.z,2.4,.04,.04,'#7d6040');
-  for(const side of [-1,1])box(scene,rail.x+side*1.18,.32+1.0,rail.z,.05,1.95,.05,'#6e5236');
+  box(scene,rail.x,.32+1.95,rail.z,2.4,.04,.04,'#7d6040',true,'wood');
+  for(const side of [-1,1])box(scene,rail.x+side*1.18,.32+1.0,rail.z,.05,1.95,.05,'#6e5236',true,'wood');
   const stand=world(VESTING_STAND);
   for(const side of [-1,1]){
-    box(scene,stand.x+side*.75,.32+.85,stand.z,.05,1.7,.05,'#8a6a45');
-    box(scene,stand.x+side*.75,.32+.02,stand.z,.05,.04,.5,'#8a6a45');
+    box(scene,stand.x+side*.75,.32+.85,stand.z,.05,1.7,.05,'#8a6a45',true,'wood');
+    box(scene,stand.x+side*.75,.32+.02,stand.z,.05,.04,.5,'#8a6a45',true,'wood');
   }
-  box(scene,stand.x,.32+1.65,stand.z,1.55,.05,.05,'#8a6a45');
-  box(scene,stand.x,.32+.9,stand.z,1.55,.04,.04,'#8a6a45');
+  box(scene,stand.x,.32+1.65,stand.z,1.55,.05,.05,'#8a6a45',true,'wood');
+  box(scene,stand.x,.32+.9,stand.z,1.55,.04,.04,'#8a6a45',true,'wood');
   scene.add(label('Vestments',world(VESTMENT_RAIL,2.7)));
   scene.add(label('Vesting stand',world(VESTING_STAND,2.3)));
   game.vestments={};
@@ -1570,8 +1575,8 @@ function buildProjection(){
   scene.add(group);
   const desk=new THREE.Group(),d=world(AV_DESK);
   desk.position.set(d.x,0,d.z-.45);
-  box(desk,0,.72,0,1.3,.05,.6,'#6e5236');
-  for(const x of [-.6,.6])for(const z of [-.25,.25])box(desk,x,.36,z,.05,.72,.05,'#5a4330');
+  box(desk,0,.72,0,1.3,.05,.6,'#6e5236',true,'wood');
+  for(const x of [-.6,.6])for(const z of [-.25,.25])box(desk,x,.36,z,.05,.72,.05,'#5a4330',true,'wood');
   box(desk,.15,.76,.08,.42,.02,.28,'#2b2b2b');
   const lid=box(desk,.15,.9,-.07,.42,.28,.02,'#2b2b2b');
   lid.rotation.x=.25;

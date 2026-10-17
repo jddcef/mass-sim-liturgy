@@ -457,6 +457,105 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   same(nudge.options.map(o=>o.label),['Candle-bearer 1','Candle-bearer 2','Server']);
   assert.equal(nudge.options.find(o=>o.correct).role,'C2');
 }
+// ---- offline materials and reversible detail ----
+{
+  const {SURFACE_FINISHES,surfaceTextureSize,surfaceSample}=require('./mass-materials.js');
+  const {GRAPHICS_PROFILES,GraphicsDetail}=require('./mass-graphics.js');
+  assert.equal(surfaceTextureSize(GRAPHICS_PROFILES.low),0);
+  assert.equal(surfaceTextureSize(GRAPHICS_PROFILES.standard),256);
+  assert.equal(surfaceTextureSize(GRAPHICS_PROFILES.high),512);
+  assert.ok(SURFACE_FINISHES.gold.metalness>.5);
+  assert.ok(SURFACE_FINISHES.marble.roughness<SURFACE_FINISHES.sandstone.roughness);
+  for(const kind of Object.keys(SURFACE_FINISHES)){
+    const values=new Set();
+    for(let i=0;i<24;i++){
+      const u=(i+.37)/24,v=(i*7+.61)/24;
+      const sample=surfaceSample(kind,u,v);
+      assert.deepEqual(sample,surfaceSample(kind,u,v),'deterministic '+kind);
+      assert.ok(sample.value>=0&&sample.value<=1&&sample.height>=0&&sample.height<=1);
+      for(const periodic of [surfaceSample(kind,u+1,v),surfaceSample(kind,u,v+1)]){
+        assert.ok(Math.abs(periodic.value-sample.value)<1e-10,'seamless '+kind);
+        assert.ok(Math.abs(periodic.height-sample.height)<1e-10,'seamless bump '+kind);
+      }
+      values.add(sample.value.toFixed(5));
+    }
+    assert.ok(values.size>8,'visible variation in '+kind);
+  }
+  assert.throws(()=>surfaceSample('invalid',0,0),/Unknown surface/);
+  let installed=0,removed=0;
+  GraphicsDetail.addTextureProvider(()=>{installed++;return ()=>removed++;});
+  GraphicsDetail.applyTextureProviders({},true);
+  GraphicsDetail.applyTextureProviders({},true);
+  assert.equal(installed,1,'providers install only once');
+  GraphicsDetail.applyTextureProviders({},false);
+  assert.equal(removed,1,'providers release High-only resources');
+  GraphicsDetail.applyTextureProviders({},false);
+  GraphicsDetail.applyTextureProviders({},true);
+  assert.equal(installed,2);
+  GraphicsDetail.applyTextureProviders({},false);
+  GraphicsDetail.providers.length=0;
+
+  const THREE=require('./vendor/three.min.js');
+  const canvases=[];
+  const ctx=vm.createContext({THREE,document:{createElement:()=>{
+    const canvas={getContext:()=>({
+      createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),
+      putImageData:image=>{canvas.image=image;}
+    })};
+    canvases.push(canvas);return canvas;
+  }}});
+  vm.runInContext(fs.readFileSync('mass-materials.js','utf8'),ctx);
+  const surfaces=vm.runInContext('ChurchMaterials',ctx);
+  surfaces.reflection=()=>null;
+  const scene=new THREE.Scene(),renderer={capabilities:{getMaxAnisotropy:()=>2}};
+  const base=new THREE.MeshStandardMaterial({color:'#e5d7bc',roughness:.78});
+  const floor=new THREE.Mesh(new THREE.BoxGeometry(22,.34,7.5),base);
+  scene.add(floor);
+  surfaces.assign(floor,'marble');
+  assert.equal(floor.material,base,'Low retains untextured base');
+  const pos=floor.geometry.attributes.position,uv=floor.geometry.attributes.uv;
+  for(let i=0;i<uv.count;i++)if(floor.geometry.attributes.normal.getY(i)>.5){
+    assert.ok(Math.abs(uv.getX(i)-pos.getX(i)/1.5)<1e-6);
+    assert.ok(Math.abs(uv.getY(i)-pos.getZ(i)/1.5)<1e-6,'square slabs use physical dimensions');
+  }
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.standard);
+  const standard=floor.material;
+  assert.equal(standard.map.image.width,256);
+  assert.equal(standard.map.encoding,THREE.sRGBEncoding);
+  assert.equal(standard.bumpMap.encoding,THREE.LinearEncoding);
+  assert.equal(standard.map.anisotropy,2,'anisotropy bounded by GPU support');
+  assert.equal(standard.map.wrapS,THREE.RepeatWrapping);
+  assert.equal(base.map,null,'shared colour material is never mutated');
+  assert.ok(new Set(canvases[0].image.data).size>16,'texture contains actual pixel detail');
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.high);
+  assert.equal(floor.material.map.image.width,512);
+  const count=surfaces.materials.size;
+  floor.userData.fadeMaterial=floor.material.clone();
+  floor.material=floor.userData.fadeMaterial;
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.low);
+  assert.equal(floor.material,floor.userData.fadeMaterial,'active first-person fade survives switches');
+  assert.equal(floor.material.map,null);
+  assert.equal(floor.material.opacity,.22);
+  assert.equal(floor.userData.solidMaterial,base);
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.standard);
+  assert.equal(floor.userData.solidMaterial,standard);
+  assert.equal(floor.material.map,standard.map);
+  floor.material=floor.userData.solidMaterial;
+  for(let i=0;i<5;i++)for(const profile of Object.values(GRAPHICS_PROFILES))surfaces.configure(scene,renderer,profile);
+  assert.equal(surfaces.materials.size,count,'switching reuses cached materials');
+  assert.equal(surfaces.textures.size,2,'one texture pair per recipe and resolution');
+  const late=new THREE.Mesh(new THREE.BoxGeometry(2,.1,.5),base);
+  scene.add(late);surfaces.assign(late,'wood');
+  assert.ok(late.material.map,'new scene extras inherit the current profile');
+  delete late.userData.surfaceType;late.material=base;
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.low);
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.standard);
+  assert.equal(late.material,base,'disabled cupboard objects remain grey');
+  surfaces.assign(floor,'slate',base);
+  assert.equal(floor.userData.surfaceType,'slate');
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.low);
+  assert.equal(floor.material,base,'appearance changes retain an untextured fallback');
+}
 // ---- controller regressions: revealed answer and score rollback ----
 // ---- round 7: presets, reserved hosts, role switching, screen operator, graphics ----
 {

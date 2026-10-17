@@ -1,13 +1,13 @@
 'use strict';
 // Graphics detail levels shared by the 3D explorer and the game. Pure: tested in Node.
-// "auto" picks Low on small or modest devices. "High" reserves a hook for richer textures later:
-// a texture pack can register with GraphicsDetail.addTextureProvider(fn) and is only called on High.
+// "auto" picks Low on small or modest devices. Standard and High use local surface textures.
+// Optional High-only providers can return a cleanup function for switching back down.
 
 const GRAPHICS_KEY='massGraphics';
 const GRAPHICS_PROFILES={
   low:{id:'low',name:'Low (fast, for small or older devices)',pixelRatio:1,shadows:false,shadowSize:512,crowd:.5,antialias:false,textures:false},
-  standard:{id:'standard',name:'Standard',pixelRatio:2,shadows:true,shadowSize:1024,crowd:1,antialias:true,textures:false},
-  high:{id:'high',name:'High (sharper; extra textures when installed)',pixelRatio:3,shadows:true,shadowSize:2048,crowd:1,antialias:true,textures:true}
+  standard:{id:'standard',name:'Standard (textured)',pixelRatio:2,shadows:true,shadowSize:1024,crowd:1,antialias:true,textures:true},
+  high:{id:'high',name:'High (sharper textures and shadows)',pixelRatio:3,shadows:true,shadowSize:2048,crowd:1,antialias:true,textures:true}
 };
 function chooseGraphicsProfile(choice='auto',device={}){
   if(GRAPHICS_PROFILES[choice])return GRAPHICS_PROFILES[choice];
@@ -23,7 +23,19 @@ function crowdVisible(index,share){
 }
 const GraphicsDetail={
   providers:[],
+  activeProviders:new Map(),
   addTextureProvider(fn){this.providers.push(fn);},
+  applyTextureProviders(context,enabled){
+    if(!enabled){
+      for(const cleanup of this.activeProviders.values())if(typeof cleanup==='function')cleanup();
+      this.activeProviders.clear();
+      return;
+    }
+    for(const provider of this.providers)if(!this.activeProviders.has(provider)){
+      try{this.activeProviders.set(provider,provider(context));}
+      catch(error){console.warn('Texture provider failed',error);}
+    }
+  },
   storedChoice(){
     try{return (typeof localStorage!=='undefined'&&localStorage.getItem(GRAPHICS_KEY))||'auto';}catch{return 'auto';}
   },

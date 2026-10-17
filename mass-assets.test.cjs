@@ -11,6 +11,18 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
     if(!asset.startsWith('#')&&!/^https?:/.test(asset)){
       assert.ok(fs.existsSync(asset),html+' references missing '+asset);
     }
+    for(const html of ['mass-3d.html','mass-game.html']){
+      const scripts=[...read(html).matchAll(/<script\b([^>]*)src="([^"]+)"([^>]*)>/g)];
+      const names=scripts.map(match=>match[2]);
+      assert.ok(names.indexOf('mass-materials.js')>names.indexOf('mass-graphics.js'));
+      assert.ok(names.indexOf('mass-materials.js')<names.indexOf('mass-3d.js'));
+      for(const script of scripts){
+        assert.ok(!/type\s*=\s*["']module/.test(script[1]+script[3]),'classic scripts only');
+        assert.ok(!/^https?:/.test(script[2]),'scripts stay local');
+      }
+    }
+    assert.ok(!/\bfetch\s*\(|TextureLoader|https?:\/\//.test(read('mass-materials.js')),'materials need no network or local file fetch');
+    assert.ok(read('.github/workflows/checks.yml').includes('node --check mass-materials.js'));
   }
 }
 const context=vm.createContext({});

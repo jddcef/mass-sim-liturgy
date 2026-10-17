@@ -21,6 +21,12 @@ External pages may change; the project does not bundle a full copyrighted Missal
 - [Three.js](https://github.com/mrdoob/three.js), version 0.128.0.
 - [OrbitControls at r128](https://github.com/mrdoob/three.js/blob/r128/examples/js/controls/OrbitControls.js).
 - MIT notice retained in `vendor/THREE-LICENSE.txt`.
+- Surface textures in `mass-materials.js` are project-generated canvas artwork:
+  periodic noise, marble veins and slab joints, stone variation and wood grain.
+  The small reflection environment is also drawn locally. No photographs,
+  downloaded texture packs, HDR images or additional third-party assets are
+  bundled or requested. Standard uses 256-pixel textures and High uses
+  512-pixel textures; Low uses the original untextured materials.
 
 ## Static audio
 

@@ -20,22 +20,23 @@ const material=color=>{
   return materials.get(color);
 };
 
-function mesh(geometry,color,parent,x=0,y=0,z=0,shadow=true){
+function mesh(geometry,color,parent,x=0,y=0,z=0,shadow=true,surface=null){
   const m=new THREE.Mesh(geometry,material(color));
   m.position.set(x,y,z);
   m.castShadow=shadow;
   m.receiveShadow=true;
   parent.add(m);
+  if(surface)finishSurface(m,surface);
   return m;
 }
-function box(parent,x,y,z,w,h,d,color,shadow=true){
-  return mesh(new THREE.BoxGeometry(w,h,d),color,parent,x,y,z,shadow);
+function box(parent,x,y,z,w,h,d,color,shadow=true,surface=null){
+  return mesh(new THREE.BoxGeometry(w,h,d),color,parent,x,y,z,shadow,surface);
 }
 function sphere(parent,x,y,z,r,color,shadow=true){
   return mesh(new THREE.SphereGeometry(r,10,8),color,parent,x,y,z,shadow);
 }
-function cylinder(parent,x,y,z,top,bottom,height,color){
-  return mesh(new THREE.CylinderGeometry(top,bottom,height,12),color,parent,x,y,z);
+function cylinder(parent,x,y,z,top,bottom,height,color,surface=null){
+  return mesh(new THREE.CylinderGeometry(top,bottom,height,12),color,parent,x,y,z,true,surface);
 }
 function label(text,position){
   const canvas=document.createElement('canvas');
@@ -205,8 +206,8 @@ function setTabernacleStyle(style){
 }
 function buildCrucifix(){
   crucifixGroup=new THREE.Group();
-  box(crucifixGroup,0,0,0,.16,1.8,.12,'#5e432d');
-  box(crucifixGroup,0,.35,.02,1.1,.13,.16,'#5e432d');
+  box(crucifixGroup,0,0,0,.16,1.8,.12,'#5e432d',true,'wood');
+  box(crucifixGroup,0,.35,.02,1.1,.13,.16,'#5e432d',true,'wood');
   box(crucifixGroup,0,.9,.02,.2,.05,.13,'#d7b565',false);
   // The corpus: head with crown, outstretched arms, torso, loincloth and legs.
   corpusGroup=new THREE.Group();
@@ -264,7 +265,9 @@ function setWindowStyle(style){
   scene.add(windowsGroup);
 }
 function setSanctuaryFloor(name){
-  if(sanctuaryFloor)sanctuaryFloor.material=material(FLOOR_COLOURS[name]||FLOOR_COLOURS.sandstone);
+  if(!sanctuaryFloor)return;
+  const kind=Object.hasOwn(FLOOR_COLOURS,name)?name:'sandstone';
+  finishSurface(sanctuaryFloor,kind,material(FLOOR_COLOURS[kind]));
 }
 const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind',tabernacleStyle:'projecting',altarSize:'standard',nave:'aisles'};
 function readAppearance(){
@@ -319,9 +322,9 @@ function placeCrucifix(id){
 }
 
 function buildChurch(){
-  box(scene,0,-.16,0,25,.3,22,'#ded4c0',false);
-  sanctuaryFloor=box(scene,0,.14,-7.1,22,.34,7.5,'#c2a27a',false);
-  box(scene,0,.07,-3.3,21,.16,.22,'#c6b99e',false);
+  box(scene,0,-.16,0,25,.3,22,'#ded4c0',false,'stone');
+  sanctuaryFloor=box(scene,0,.14,-7.1,22,.34,7.5,'#c2a27a',false,'sandstone');
+  box(scene,0,.07,-3.3,21,.16,.22,'#c6b99e',false,'stone');
   box(scene,0,.025,3.65,1.18,.04,14.3,'#923f38',false);
   for(let x=-12;x<=12;x+=1.5)box(scene,x,.008,3.5,.012,.014,13,'#cbc1af',false);
   for(let z=-2.5;z<=10.5;z+=1.5)box(scene,0,.009,z,24,.015,.012,'#cbc1af',false);
@@ -339,35 +342,35 @@ function buildChurch(){
   let fixtureStart=scene.children.length;
   const altar=world([500,170]);
   altarParts=[
-    box(scene,altar.x,altar.y+.63,altar.z,3.5,1.15,1.1,'#bdab8f'),
+    box(scene,altar.x,altar.y+.63,altar.z,3.5,1.15,1.1,'#bdab8f',true,'stone'),
     box(scene,altar.x,altar.y+1.26,altar.z,5.1,.16,1.6,'#fffae9'),
     box(scene,altar.x,altar.y+1.03,altar.z+.83,5.1,.4,.035,'#f5f0e4')
   ];
   collectFurniture('altar',fixtureStart);
   fixtureStart=scene.children.length;
   const ambo=world([200,245]);
-  box(scene,ambo.x,ambo.y+.63,ambo.z,1.2,1.25,.6,'#94714a');
-  const lectern=box(scene,ambo.x,ambo.y+1.3,ambo.z,.95,.09,.8,'#b18a5c');
+  box(scene,ambo.x,ambo.y+.63,ambo.z,1.2,1.25,.6,'#94714a',true,'wood');
+  const lectern=box(scene,ambo.x,ambo.y+1.3,ambo.z,.95,.09,.8,'#b18a5c',true,'wood');
   lectern.rotation.x=-.22;
   collectFurniture('ambo',fixtureStart);
   fixtureStart=scene.children.length;
   const credence=world([866,130]);
   box(scene,credence.x,credence.y+1,credence.z,2,.1,1.5,'#f3e7ce');
-  for(const dx of [-.8,.8])box(scene,credence.x+dx,credence.y+.5,credence.z,.1,1,.9,'#80623e');
+  for(const dx of [-.8,.8])box(scene,credence.x+dx,credence.y+.5,credence.z,.1,1,.9,'#80623e',true,'wood');
   collectFurniture('credence',fixtureStart);
   fixtureStart=scene.children.length;
   const wash=world([650,142]);
-  box(scene,wash.x,wash.y+.85,wash.z,.9,.06,.6,'#ab8b60');
-  cylinder(scene,wash.x,wash.y+.4,wash.z,.07,.07,.85,'#80623e');
-  cylinder(scene,wash.x,wash.y+.9,wash.z,.18,.11,.1,'#c8d9d9');
+  box(scene,wash.x,wash.y+.85,wash.z,.9,.06,.6,'#ab8b60',true,'wood');
+  cylinder(scene,wash.x,wash.y+.4,wash.z,.07,.07,.85,'#80623e','wood');
+  cylinder(scene,wash.x,wash.y+.9,wash.z,.18,.11,.1,'#c8d9d9','silver');
   const washingStand=scene.children.slice(fixtureStart);
   washingStand.forEach(child=>furnitureGroups.altar.add(child));
   for(const [p,width] of [[CHAIR,1],[DCHAIR,.8],[[700,55],4]]){
     fixtureStart=scene.children.length;
     const w=world(p);
-    box(scene,w.x,w.y+.45,w.z,width,.18,.7,'#795738');
-    box(scene,w.x,w.y+1,w.z-.25,width,1.2,.1,'#795738');
-    for(const dx of [-width*.4,width*.4])box(scene,w.x+dx,w.y+.2,w.z,.1,.4,.65,'#5e432d');
+    box(scene,w.x,w.y+.45,w.z,width,.18,.7,'#795738',true,'wood');
+    box(scene,w.x,w.y+1,w.z-.25,width,1.2,.1,'#795738',true,'wood');
+    for(const dx of [-width*.4,width*.4])box(scene,w.x+dx,w.y+.2,w.z,.1,.4,.65,'#5e432d',true,'wood');
     if(width===4)collectFurniture('ministers',fixtureStart);
     else if(width===1)collectFurniture('chair',fixtureStart);
     else scene.children.slice(fixtureStart).forEach(child=>furnitureGroups.chair.add(child));
@@ -375,7 +378,7 @@ function buildChurch(){
   fixtureStart=scene.children.length;
   const stand=world([545,82]);
   cylinder(scene,stand.x,stand.y+.62,stand.z,.03,.03,1.24,'#665544');
-  box(scene,stand.x,stand.y+1.26,stand.z,.65,.04,.4,'#795738');
+  box(scene,stand.x,stand.y+1.26,stand.z,.65,.04,.4,'#795738',true,'wood');
   scene.children.slice(fixtureStart).forEach(child=>furnitureGroups.chair.add(child));
   // Two bench sets: with side aisles (default), or full-width benches reaching the side walls.
   for(const [style,centres,width] of [['aisles',[295,705],7.8],['full',[255,745],9.8]]){
@@ -383,9 +386,9 @@ function buildChurch(){
     for(let y=356;y<=700;y+=34){
       for(const x of centres){
         const w=world([x,y+12]);
-        box(group,w.x,.48,w.z,width,.11,.38,'#8f6842',false);
-        box(group,w.x,.72,w.z+.18,width,.48,.08,'#9f784e',false);
-        for(const dx of [-width/2+.4,width/2-.4])box(group,w.x+dx,.23,w.z,.1,.46,.3,'#795638',false);
+        box(group,w.x,.48,w.z,width,.11,.38,'#8f6842',false,'wood');
+        box(group,w.x,.72,w.z+.18,width,.48,.08,'#9f784e',false,'wood');
+        for(const dx of [-width/2+.4,width/2-.4])box(group,w.x+dx,.23,w.z,.1,.46,.3,'#795638',false,'wood');
       }
     }
     group.userData.nave=style;
@@ -409,16 +412,16 @@ function buildChurch(){
   sphere(mount.recess,tab.x,tab.y+2.62,tab.z-.45,.08,'#d4af37');
   for(const group of Object.values(mount))scene.add(group);
   const body=scene.children.length;
-  box(scene,tab.x,tab.y+1.7,tab.z,.95,.8,.7,'#c59a3f');
+  box(scene,tab.x,tab.y+1.7,tab.z,.95,.8,.7,'#c59a3f',true,'gold');
   tabernacleDoor=new THREE.Group();
   tabernacleDoor.position.set(tab.x-.38,tab.y+1.7,tab.z+.37);
-  box(tabernacleDoor,.38,0,0,.76,.65,.04,'#e3bc62');
+  box(tabernacleDoor,.38,0,0,.76,.65,.04,'#e3bc62',true,'gold');
   box(tabernacleDoor,.38,.05,.04,.03,.35,.02,'#fff1ba');
   box(tabernacleDoor,.38,.12,.04,.22,.03,.02,'#fff1ba');
   sphere(tabernacleDoor,.66,0,.04,.025,'#7f3433',false);
   scene.add(tabernacleDoor);
-  for(const side of [-1,1])cylinder(scene,tab.x+side*.48,tab.y+1.7,tab.z+.38,.04,.05,.87,'#e3bc62');
-  cylinder(scene,tab.x,tab.y+2.16,tab.z,.27,.52,.18,'#c59a3f');
+  for(const side of [-1,1])cylinder(scene,tab.x+side*.48,tab.y+1.7,tab.z+.38,.04,.05,.87,'#e3bc62','gold');
+  cylinder(scene,tab.x,tab.y+2.16,tab.z,.27,.52,.18,'#c59a3f','gold');
   sphere(scene,tab.x,tab.y+2.31,tab.z,.055,'#fff1ba');
   tabernacleBody=scene.children.slice(body);
   tabernacleBody.forEach(o=>{o.userData.z=o.position.z;});
@@ -427,8 +430,8 @@ function buildChurch(){
   cylinder(scene,tab.x+.76,tab.y+1.75,tab.z+.15,.025,.025,.3,'#c59a3f');
   collectFurniture('tabernacle',fixtureStart);
   const gifts=world([621,770]);
-  box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60');
-  box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e');
+  box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60',true,'wood');
+  box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e',true,'wood');
   for(const [name,p] of [['Altar',[500,180]],['Ambo',[200,250]],['Chair',[500,55]],['Credence',[866,150]],['Tabernacle',[137,85]]]){
     const sprite=label(name,world(p,1.95));
     sprite.userData.fixture=name.toLowerCase();
@@ -443,33 +446,33 @@ function makeObjects(){
     objects[name]=g;
     scene.add(g);
     if(name==='cross'){
-      box(g,0,1,0,.055,2.1,.055,'#b58d40');
-      box(g,0,1.75,0,.65,.055,.055,'#b58d40');
+      box(g,0,1,0,.055,2.1,.055,'#b58d40',true,'gold');
+      box(g,0,1.75,0,.65,.055,.055,'#b58d40',true,'gold');
       sphere(g,0,1.82,.045,.055,'#bba583');
       box(g,0,1.64,.045,.04,.24,.04,'#bba583');
       box(g,0,1.72,.045,.36,.035,.04,'#bba583');
     }else if(name.startsWith('cand')){
-      cylinder(g,0,.17,0,.025,.05,.34,'#c6a15c');
+      cylinder(g,0,.17,0,.025,.05,.34,'#c6a15c','gold');
       cylinder(g,0,.46,0,.045,.045,.28,'#fff5dc');
       sphere(g,0,.63,0,.04,'#ffbf50');
     }else if(name==='chalice'){
-      cylinder(g,0,.01,0,.12,.12,.025,'#caa347');
-      cylinder(g,0,.12,0,.025,.025,.22,'#caa347');
-      cylinder(g,0,.26,0,.115,.035,.19,'#d4b563');
+      cylinder(g,0,.01,0,.12,.12,.025,'#caa347','gold');
+      cylinder(g,0,.12,0,.025,.025,.22,'#caa347','gold');
+      cylinder(g,0,.26,0,.115,.035,.19,'#d4b563','gold');
     }else if(name==='collection'){
       cylinder(g,0,.1,0,.2,.16,.2,'#8a6540');
       const handle=mesh(new THREE.TorusGeometry(.2,.025,6,16,Math.PI),'#8a6540',g,0,.15,0);
       handle.rotation.z=0;
       box(g,0,.22,0,.16,.015,.12,'#d4af37',false);
     }else if(name.startsWith('ciborium')){
-      cylinder(g,0,.025,0,.12,.12,.04,'#c59a3f');
-      cylinder(g,0,.13,0,.03,.03,.2,'#c59a3f');
-      cylinder(g,0,.29,0,.18,.08,.18,'#e3bc62');
-      cylinder(g,0,.4,0,.05,.19,.08,'#e3bc62');
-      box(g,0,.49,0,.018,.12,.018,'#c59a3f');
-      box(g,0,.51,0,.07,.018,.018,'#c59a3f');
+      cylinder(g,0,.025,0,.12,.12,.04,'#c59a3f','gold');
+      cylinder(g,0,.13,0,.03,.03,.2,'#c59a3f','gold');
+      cylinder(g,0,.29,0,.18,.08,.18,'#e3bc62','gold');
+      cylinder(g,0,.4,0,.05,.19,.08,'#e3bc62','gold');
+      box(g,0,.49,0,.018,.12,.018,'#c59a3f',true,'gold');
+      box(g,0,.51,0,.07,.018,.018,'#c59a3f',true,'gold');
     }else if(name==='bread'){
-      cylinder(g,0,.025,0,.18,.18,.025,'#cfb464');
+      cylinder(g,0,.025,0,.18,.18,.025,'#cfb464','gold');
       const host=cylinder(g,0,.055,0,.105,.105,.025,'#fffdf0');
       g.remove(host);
       scene.add(host);objects.host=host;
@@ -479,10 +482,10 @@ function makeObjects(){
         cylinder(g,dx,.2,0,.025,.025,.08,'#d7d9d3');
       }
     }else if(name==='ewer'){
-      cylinder(g,0,.1,0,.08,.1,.2,'#c2d5df');
+      cylinder(g,0,.1,0,.08,.1,.2,'#c2d5df','silver');
     }else if(name==='thurible'){
-      cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c');
-      sphere(g,0,-.4,0,.09,'#a9a6a0');
+      cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c','silver');
+      finishSurface(sphere(g,0,-.4,0,.09,'#a9a6a0'),'silver');
     }else if(name==='corporal'){
       box(g,.5,.006,0,1.5,.012,1.5,'#ffffff',false);
       for(const z of [-.7,.7])box(g,.5,.014,z,1.4,.004,.018,'#a6a195',false);
@@ -508,7 +511,7 @@ function makeObjects(){
       box(closed,0,.075,-.02,.12,.006,.03,'#d4af37');
       for(const [x,c] of [[-.06,'#2e7d4f'],[0,'#b3262d'],[.06,'#e0b43a']])box(closed,x,.02,.27,.018,.01,.12,c,false);
       const open=new THREE.Group();open.visible=false;g.add(open);
-      box(open,0,.05,0,.62,.1,.36,'#6b4a2f');
+      box(open,0,.05,0,.62,.1,.36,'#6b4a2f',true,'wood');
       for(const side of [-1,1]){
         const leaf=new THREE.Group();leaf.position.set(0,.12,0);leaf.rotation.z=side*-.08;open.add(leaf);
         box(leaf,side*.19,0,0,.38,.012,.5,'#8e2430');
@@ -525,8 +528,8 @@ function makeObjects(){
     scene.add(particle);smokeParticles.push(particle);
   }
   const bell=new THREE.Group();
-  cylinder(bell,0,.11,0,.03,.13,.2,'#caa347');
-  cylinder(bell,0,.24,0,.025,.025,.08,'#795b34');
+  cylinder(bell,0,.11,0,.03,.13,.2,'#caa347','gold');
+  cylinder(bell,0,.24,0,.025,.025,.08,'#795b34','wood');
   bell.position.copy(world([660,245]));
   scene.add(bell);objects.bell=bell;
 }
@@ -879,10 +882,12 @@ function applySetup(){
   if(featuresReady){refreshTraining();refreshSpeechStatus();}
 }
 
-let sunLight=null, graphicsProfile=null;
+let sunLight=null, skyLight=null, graphicsProfile=null;
 // Detail level: pixel ratio, shadows and crowd size. Antialiasing is fixed when the page loads.
 function applyGraphics(profile){
   graphicsProfile=profile;
+  if(skyLight)skyLight.intensity=profile.textures?.72:.85;
+  if(sunLight)sunLight.intensity=profile.textures?1.02:.9;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,profile.pixelRatio));
   if(renderer.shadowMap.enabled!==profile.shadows){
     renderer.shadowMap.enabled=profile.shadows;
@@ -900,9 +905,8 @@ function applyGraphics(profile){
     person.figure.root.userData.gfxHidden=hidden;
     if(hidden)person.figure.root.visible=false;
   });
-  if(profile.textures&&typeof GraphicsDetail!=='undefined')for(const provider of GraphicsDetail.providers){
-    try{provider({scene,renderer,THREE});}catch(error){console.warn('Texture provider failed',error);}
-  }
+  ChurchMaterials.configure(scene,renderer,profile);
+  if(typeof GraphicsDetail!=='undefined')GraphicsDetail.applyTextureProviders({scene,renderer,THREE},profile.id==='high');
   if(renderer.domElement.parentNode){
     const {width,height}=$('viewport').getBoundingClientRect();
     renderer.setSize(width,height);
@@ -935,7 +939,8 @@ function initialise(){
   controls.dampingFactor=.08;
   controls.minDistance=1.2;controls.maxDistance=55;
   controls.maxPolarAngle=Math.PI/2-.035;
-  scene.add(new THREE.HemisphereLight('#fff7e9','#8b8170',.85));
+  skyLight=new THREE.HemisphereLight('#fff7e9','#8b8170',.85);
+  scene.add(skyLight);
   const sun=new THREE.DirectionalLight('#fff1d1',.9);
   sun.position.set(-8,18,8);
   sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);

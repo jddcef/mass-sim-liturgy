@@ -34,6 +34,12 @@ and no account. Other pages:
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.
 
+For richer surfaces, use **Detail: Standard** or **High**. Under **The church**,
+choose **Sanctuary floor: Pale marble** for veined stone slabs, or sandstone,
+terracotta or slate. Wooden furnishings show grain and metal vessels have a
+soft sheen. All textures are generated locally, so they work offline.
+**Low** keeps flat finishes for slower devices; **Auto** chooses Low or Standard.
+
 This is an illustrative teaching aid, not a substitute for the approved Missal,
 ceremonial training or local custom. Prayer texts are short paraphrases.
 
@@ -376,7 +382,10 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   on as a different minister.
 - **New game** can be cancelled (button or **Esc**) to return to the game.
   The 🔊 button mutes all sound. **Detail** (Auto, Low, Standard, High) suits
-  low-spec devices. The start bell (on by default) rings once the procession
+  low-spec devices: Standard has local surface textures, High has sharper
+  textures and shadows, and Low disables textures and shadows. Switching
+  detail updates finishes immediately; antialiasing still needs a reload.
+  The start bell (on by default) rings once the procession
   has gathered at the entrance. Reserved hosts are used and reposed by
   default. The cupboard also holds a monstrance for a future Exposition scenario.
 
