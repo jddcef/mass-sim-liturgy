@@ -24,7 +24,7 @@ const context=vm.createContext({
     load(){}
   },recordings
 });
-for(const file of ['mass-rite.js','mass-scenarios.js','mass-features.js','mass-speech.js']){
+for(const file of ['mass-rite.js','mass-scenarios.js','mass-parishes.js','mass-features.js','mass-speech.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),context);
 }
 vm.runInContext(`
@@ -33,7 +33,13 @@ vm.runInContext(`
   assert.deepEqual(validateLayout(LAYOUT_DEFAULTS),LAYOUT_DEFAULTS);
   for(const preset of Object.values(LAYOUT_PRESETS)){
     assert.deepEqual(validateLayout(preset.positions),preset.positions);
+    churchLayout=structuredClone(preset.positions);
+    for(const p of Object.values(LAYOUT_DEFAULTS)){
+      const mapped=furniturePoint(p),restored=furnitureUnpoint(mapped);
+      assert.ok(Math.hypot(restored[0]-p[0],restored[1]-p[1])<.01,'fixture click inverse in '+preset.name);
+    }
   }
+  churchLayout=structuredClone(LAYOUT_DEFAULTS);
   for(const [name,p] of Object.entries(LAYOUT_DEFAULTS))assert.deepEqual(layoutPoint(p),p);
   const moved=structuredClone(LAYOUT_DEFAULTS);
   moved.altar=[540,180];
@@ -48,6 +54,54 @@ vm.runInContext(`
   assert.throws(()=>validateLayout(invalid));
   invalid.ambo=[Infinity,50];
   assert.throws(()=>validateLayout(invalid));
+  churchLayout=structuredClone(LAYOUT_DEFAULTS);
+  const profile=ChurchProfiles.base();
+  assert.deepEqual(ChurchProfiles.validate(profile),profile);
+  assert.deepEqual(ChurchProfiles.validate(JSON.parse(JSON.stringify(profile))),profile,'JSON round trip');
+  for(const mutate of [
+    p=>p.schemaVersion=2,p=>p.revision=0,p=>p.id='../bad',p=>p.name='',
+    p=>p.shell.id='unknown',p=>p.shell.wall='red',p=>p.shell.exterior='yes',
+    p=>p.extra=true,p=>p.fixtures.altar=[NaN,170],
+    p=>p.fixtures.ambo=p.fixtures.altar.slice(),p=>delete p.fixtures.chair,
+    p=>p.seating.leftEnd=600,p=>p.seating.front=200,
+    p=>p.doors.main=700,p=>p.routes.leftFront=[300,500],
+    p=>p.routes.centreBack=[Infinity,740],p=>p.routes.extra=[500,500]
+  ]){
+    const invalid=structuredClone(profile);mutate(invalid);
+    assert.throws(()=>ChurchProfiles.validate(invalid));
+  }
+  const changed=structuredClone(profile);
+  Object.assign(changed.seating,{left:190,leftEnd:420,right:580,rightEnd:820,front:385,back:685});
+  changed.fixtures.altar=[540,180];
+  ChurchProfiles.activate(changed);
+  churchLayout=structuredClone(changed.fixtures);
+  assert.deepEqual(layoutPoint([500,170]),[540,180]);
+  assert.deepEqual(layoutPoint([150,350]),[190,385]);
+  assert.deepEqual(layoutPoint([850,715]),[820,685]);
+  assert.deepEqual(layoutPoint([1222,130]),[1222,130],'sacristy remains in its prepared shell');
+  for(let y=0;y<=1000;y+=7)for(let x=0;x<=1250;x+=17){
+    const mapped=ChurchProfiles.mapNave([x,y]);
+    const restored=ChurchProfiles.mapNave(mapped,ChurchProfiles.active,true);
+    assert.ok(Math.hypot(x-restored[0],y-restored[1])<1e-6,'seating map is invertible');
+  }
+  for(const style of ['aisles','full']){
+    changed.seating.style=style;
+    for(const r of ChurchProfiles.checks(changed)){
+      assert.deepEqual(r.path[r.path.length-1],r.to);
+      const path=[r.from,...r.path];
+      for(let i=1;i<path.length;i++){
+        const seatedStart=i===1&&ChurchProfiles.zones(style).some(z=>path[0][0]>z[0]&&path[0][0]<z[2]&&path[0][1]>z[1]&&path[0][1]<z[3]);
+        if(!seatedStart)for(const z of ChurchProfiles.zones(style))assert.ok(!ChurchProfiles.crosses(path[i-1],path[i],z),'route avoids pew blocks except departing a row');
+      }
+    }
+  }
+  const prior=JSON.stringify(ChurchProfiles.active);
+  const bad=structuredClone(changed);bad.seating.front=100;
+  assert.throws(()=>ChurchProfiles.activate(bad));
+  assert.equal(JSON.stringify(ChurchProfiles.active),prior,'rejected profile does not replace active data');
+  const snapshot=ChurchProfiles.base();snapshot.name='Changed copy';
+  assert.notEqual(ChurchProfiles.base().name,snapshot.name,'published data is not mutated');
+  ChurchProfiles.activate(null);
   churchLayout=structuredClone(LAYOUT_DEFAULTS);
   for(let count=0;count<=5;count++){
     scenario=buildScenario({serverCount:count,deacon:true,lector:true,incense:true});

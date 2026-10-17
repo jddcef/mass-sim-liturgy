@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R98.**
+**Next decision number: R104.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -99,6 +99,7 @@ server for liturgical or Catholic questions and clarifications.
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
 | 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
+| 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
 
 Round 10 was exercised in Edge through `file://` on all three pages, including
 all sanctuary floors, repeated quality switches, layouts, appearance changes,
@@ -117,6 +118,32 @@ from setup and from the summary, "Prepare this celebration" sets the preset,
 a credited game updates the mark, the rank strip and the recommendation, Esc
 closes the Path, and at 390 px the list replaces the map. No console errors.
 All four Node suites pass. Not committed or pushed.
+
+Round 13 keeps the Legacy layout as the initial default and does not change
+existing setup, layout, score or Path storage keys. `mass-parishes.js` supplies
+pure profile validation, reversible seating coordinates and nave aisle routing;
+`mass-parish-editor.js` supplies maintainer authoring on both 3D pages. Profiles
+are strict versioned data for the fixed `rectangular-v1` shell, not arbitrary
+surveyed churches. `bundled` in `mass-parishes.js` is the maintainer-reviewed
+published profile list. New photographic/model assets require separate
+preparation and rights review.
+
+File-protocol browser checks in an isolated, self-exiting headless Edge instance
+covered draft preview/cancel, furniture and seating mapping, the exterior and
+animated route marker, working-copy persistence, full-profile export shape and
+import, rejected unsupported/oversize files, explicit storage failures,
+multiple-church selection, reload, Low/Standard/High switching, shifted-door
+placement, expert picking for a moved ambo, editing guards, phone-width layout
+and a complete accelerated Sacristan Watch run including opening and pack-away.
+The browser harness advanced the Mass clock through its normal stop limits and
+rendered walkers explicitly to avoid virtual-time frame throttling. Expected
+validation/storage errors were checked separately; there were no unexpected
+console errors or external page requests. All four Node suites and script
+syntax checks pass. Direct `file://` startup also passed without a file-access
+override; a cold Low startup created no surface textures with the profile shell
+enabled. There is no physical low-spec performance claim, and no
+real parish has yet been surveyed or recreated. Changes are local and
+uncommitted; no push, PR or remote CI run was requested.
 
 ### Open items and backlog
 
@@ -160,3 +187,10 @@ flowchart TD
       untextured and the High-only extension hook remains available.
 - [ ] Future: a full first-person mode for every role, extending today's
       first person with hints.
+- [ ] Parish pilot: collect one rights-cleared reference pack and measured/
+      estimated floor sketch; review a block model before adding custom
+      shell geometry, levels or irregular routing. The current template does
+      not prove every sanctuary movement is collision-free.
+- [ ] Later parish contributions: reviewed patch export/import using stable
+      object IDs, base revision and expected old values; no automatic upload
+      or patch merge exists yet. Full-profile JSON is the current handoff.

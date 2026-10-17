@@ -37,10 +37,12 @@ Classic scripts load in this order and share globals:
 |---|---|
 | `mass-rite.js` | Canonical baseline rite: `STEPS` (part, title, duration, posture, text, ref, movements, props, acts, smoke, say), roles, start positions, props, interpolation, `rebuildTimeline`. Plan of 1000 × 830 units. |
 | `mass-scenarios.js` | `buildScenario(options)` reassigns duties for deacon, lector, 0–5 servers, incense and both kinds. Steps keep their original index as `key`. |
+| `mass-parishes.js` | Versioned prepared-shell profiles, validation, reversible nave mapping and pure aisle routing. |
 | `mass-features.js` | Church-layout editor and presets; server training cues. |
 | `mass-speech.js`, `audio/` | Browser voices or pre-generated MP3s (`audio/audio-manifest.js`, `audio/index.csv`). |
 | `mass-graphics.js` | Detail levels and quality settings. |
 | `mass-materials.js` | Deterministic offline surface textures, physical texture sizing, cached stone/wood/metal finishes and reversible detail changes. |
+| `mass-parish-editor.js`, `mass-parish-editor.css` | Maintainer preparation mode, plan/3D route preview, local profile library, draft and full-profile JSON export/import. |
 | `mass-3d.js` | Three.js church, figures, poses, props, cameras, playback, appearance, wall fading, nave seating. Exposes optional hooks (`gameBeforeRender`, `gamePick`, `gameTimeLimit`, `gameCameraTarget`, `gameCameraOverride`). |
 | `mass-game-icons.js` | SVG icon set (`GameIcons`). |
 | `mass-game-logic.js` | **Pure, Node-testable game rules**: options and presets, roles, decision derivation, choices, scoring, timers, lapses and M.C. detection, sacristan checklists, routes, media cues, search index. |
@@ -107,6 +109,24 @@ startup must appear **before** the `<script>` tags in the HTML.
     tabernacle position and mounting, altar size.
   - Windows, floor, vestment colour (defaults to the season of the coming
     Sunday) and server robes.
+  - Parish preparation: a named profile separates church layout from the
+    celebration. The initial template has a fixed rectangular shell, one
+    sanctuary level and a right-hand sacristy. It supports six furniture
+    groups, bounded pew-block deformation, door leaves within prepared openings,
+    bounded aisle waypoints, colours and an optional simple exterior shell.
+    It does not model arbitrary buildings or guarantee collision-free sanctuary
+    choreography. No real parish survey or photographic assets are included.
+  - Maintainers edit a working copy, preview, save a draft, export/import full
+    versioned JSON, and explicitly apply locally. Cancel restores the previous
+    scene. Applied profiles form a local library; selecting a different church
+    retains the others. Profiles override legacy furniture/seating controls
+    while selected, not the Mass rules. Church changes are blocked during an
+    unfinished game. Existing saved settings are retained.
+  - New storage keys: `mass-parish-profile-v1`, `mass-parish-library-v1`,
+    `mass-parish-draft-v1`. File imports are limited to 64 KB and strictly
+    validated before use. Stable church and object IDs and content revisions
+    reserve a future reviewed-patch workflow; patch processing and online
+    submission are not implemented.
 
 ### 4.2 Phases
 

@@ -462,6 +462,7 @@ function inPews(point){
 
 // Straight lines, but through an aisle rather than across pews.
 function routeBetween(from,to){
+  if(typeof ChurchProfiles!=='undefined'&&ChurchProfiles.active)return ChurchProfiles.route(from,to);
   const crossesPews=[from,to].some(inPews)||
     (Math.max(from[1],to[1])>350&&Math.min(from[1],to[1])<715&&
      !(Math.abs(from[0]-500)<45&&Math.abs(to[0]-500)<45)&&

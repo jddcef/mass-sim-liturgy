@@ -51,7 +51,7 @@ function validateLayout(value){
   return result;
 }
 
-function layoutPoint(point){
+function furniturePoint(point){
   let weightSum=0,dx=0,dy=0;
   const full=[];
   for(const [name,[left,right,top,bottom]] of Object.entries(LAYOUT_ZONES)){
@@ -70,6 +70,34 @@ function layoutPoint(point){
   }
   const divisor=Math.max(1,weightSum);
   return [point[0]+dx/divisor,point[1]+dy/divisor];
+}
+
+function layoutPoint(point){
+  const p=furniturePoint(point);
+  return typeof ChurchProfiles==='undefined'?p:ChurchProfiles.mapNave(p);
+}
+
+function furnitureUnpoint(mapped){
+  // A moved fixture can overlap an unchanged part of the reference plan.
+  // Prefer its translated source zone before attempting the blended inverse.
+  const matches=[];
+  for(const [name,[left,right,top,bottom]] of Object.entries(LAYOUT_ZONES)){
+    const delta=churchLayout[name].map((n,i)=>n-LAYOUT_DEFAULTS[name][i]);
+    const p=mapped.map((n,i)=>n-delta[i]);
+    if(p[0]>=left&&p[0]<=right&&p[1]>=top&&p[1]<=bottom){
+      const result=furniturePoint(p);
+      if(Math.hypot(result[0]-mapped[0],result[1]-mapped[1])<.01){
+        matches.push({p,d:Math.hypot(mapped[0]-churchLayout[name][0],mapped[1]-churchLayout[name][1])});
+      }
+    }
+  }
+  if(matches.length)return matches.sort((a,b)=>a.d-b.d)[0].p;
+  let p=mapped.slice();
+  for(let i=0;i<10;i++){
+    const result=furniturePoint(p);
+    p=mapped.map((n,j)=>n-(result[j]-p[j]));
+  }
+  return p;
 }
 
 function collectFurniture(name,firstIndex){
@@ -115,6 +143,7 @@ function refreshLayoutFields(){
 }
 
 function commitLayout(candidate){
+  if(typeof ChurchProfiles!=='undefined'&&ChurchProfiles.active)throw new Error('Use the parish preparation editor to change this profile, or select Legacy layout first.');
   const validated=validateLayout(candidate);
   setPlaying(false);
   churchLayout=validated;

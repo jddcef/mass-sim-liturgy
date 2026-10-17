@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mass in 3D - rubric explorer | Mass-Sim-Liturgy</title>
 <link rel="stylesheet" href="mass-3d.css">
+<link rel="stylesheet" href="mass-parish-editor.css">
 </head>
 <body>
 <header>
@@ -89,6 +90,7 @@
       <p id="layoutStatus" class="small" role="status"></p>
       <p class="small">X runs left to right; depth runs from the sanctuary's back wall towards the nave. Furniture, nearby movement destinations, vessels and cameras move together. Positions stay within the sanctuary; paths are schematic and do not provide collision avoidance. Layout is saved in this browser; export for a portable copy.</p>
     </section>
+    <section id="parishTools"></section>
     <section>
       <h2>Celebration setup</h2>
       <div class="toggles">
@@ -152,11 +154,13 @@
 <script src="vendor/OrbitControls.js"></script>
 <script src="mass-rite.js"></script>
 <script src="mass-scenarios.js"></script>
+<script src="mass-parishes.js"></script>
 <script src="mass-features.js"></script>
 <script src="audio/audio-manifest.js"></script>
 <script src="mass-speech.js"></script>
 <script src="mass-graphics.js"></script>
 <script src="mass-materials.js"></script>
+<script src="mass-parish-editor.js"></script>
 <script src="mass-3d.js"></script>
 </body>
 </html>

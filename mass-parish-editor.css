@@ -1,0 +1,20 @@
+#parishEditor {
+  position: fixed; inset: .75rem .75rem .75rem auto;
+  margin: 0; width: min(540px, calc(100vw - 1.5rem)); max-height: calc(100dvh - 1.5rem);
+  box-sizing: border-box; overflow: auto; z-index: 110; padding: 1rem;
+  color: #24313b; background: #fffdf6; border: 2px solid #687c85;
+  border-radius: .5rem; box-shadow: 0 8px 35px #0005;
+}
+#parishEditor label { display: block; font-size: .9rem; }
+#parishEditor input:not([type=checkbox]), #parishEditor select { box-sizing: border-box; max-width: 100%; width: 100%; }
+#parishEditor .parishGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin: .7rem 0; }
+#parishEditor .parishActions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .7rem 0; }
+#parishPlan { display: block; width: 100%; background: #e6e9e4; margin-top: .7rem; }
+#parishPlan [data-parish-object] { cursor: pointer; }
+#parishEditorStatus { white-space: pre-wrap; }
+#parishEditor.parishCompact { inset: auto .75rem .75rem auto; }
+#parishEditor.parishCompact #parishForm > :not(h2):not(#parishToggle):not(#parishEditorStatus):not(.parishFinish) { display: none; }
+@media (max-width: 600px) {
+  #parishEditor { inset: .5rem; width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); }
+  #parishEditor.parishCompact { inset: auto .5rem .5rem; }
+}

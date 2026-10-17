@@ -128,6 +128,10 @@ disables training. Training cues are illustrative, not a complete checklist.
 
 ## Editable church layout
 
+The original controls below are the **Legacy layout**. For portable, named
+profiles, use **Parish preparation** in the explorer or the game's **Engine
+settings**, or **Prepare a parish** on the game setup sheet.
+
 Choose the altar, ambo, celebrant/deacon chairs, credence table, servers' bench
 or tabernacle. Edit **X** (left-right, 100-900) and **Depth** (back-front, 35-260),
 then apply. Related nearby destinations, vessels, labels and cameras follow the
@@ -146,6 +150,79 @@ Layouts are saved in this browser's local storage, subject to browser permission
 and file-URL storage behavior. Export/import a JSON file for a portable copy.
 **Default layout** restores the original arrangement without changing the
 original floor-plan animation.
+
+### Preparing parish profiles
+
+The first maintainer editor supports a **prepared rectangular church shell**,
+one sanctuary level and a right-hand sacristy. It is a starting template, not
+a measured recreation of any real church. Irregular plans, changing the shell
+dimensions, new openings, furniture rotation, different floor levels and
+extended outdoor routes need additional prepared geometry and navigation work.
+
+1. Open **Prepare a parish** before starting a game. Give the church a name
+   and a stable lowercase ID, such as `st-example`. Keep the ID when revising
+   the same church and increase its revision when publishing an update.
+2. Select furniture, a door or an aisle waypoint on the plan or in the list.
+   Edit its numeric coordinates. Furniture and its nearby standing places,
+   interaction targets, vessels, labels and cameras move together. Door leaves
+   can move only within the template's prepared openings.
+3. Adjust the pew block boundaries and seating style. The row count is fixed;
+   pews, seated people and nave movement coordinates change together. Waypoint
+   coordinates refer to the original plan; their transformed positions appear
+   on the preview. There are 40 reference-plan units per metre.
+4. Use the blue **Route preview** and **Preview in 3D**. The latter temporarily
+   applies the draft and shows a moving route marker in the scene. Nave routing
+   avoids pew blocks except for leaving/entering a row. The checks do **not**
+   prove every sanctuary movement, furniture clearance or scenario is safe.
+   **Show exterior shell** adds simple fading walls and a pitched roof.
+5. **Save working copy** stores one draft in this browser without applying it.
+   **Apply locally** adds or updates the named profile in the local library
+   and selects it. **Cancel** restores the church and camera used before
+   editing; explicitly saved drafts remain available. **Reset draft to
+   published** resets the working copy only, using the generic template when
+   no published profile has that ID.
+6. **Export full profile** downloads validated JSON for backup or manual
+   review. **Import full profile JSON** accepts files up to 64 KB into the
+   draft only; invalid files leave the current draft and church unchanged.
+   Imports are data, never executable scripts.
+
+The church selector keeps the published generic template, the Legacy layout,
+and up to 50 locally applied church profiles. Switching churches does not delete
+other local profiles. Layout selection is separate from celebration presets.
+While a profile is active its furniture and seating override the legacy layout
+and tabernacle/seating appearance controls; other appearance choices still
+apply. Legacy settings are retained when switching back. Church changes are
+blocked during an unfinished game.
+
+Browser storage is only a convenience, particularly under `file://`; export
+files for portable copies. The separate storage keys are
+`mass-parish-profile-v1`, `mass-parish-library-v1` and `mass-parish-draft-v1`.
+Existing layout, setup, score and Path keys are unchanged. There is no upload,
+account or automatic publication. A maintainer reviews exported JSON and
+incorporates approved data into the bundled classic-script profiles.
+
+**Later user contributions:** profiles already have stable church/object IDs,
+schema versions and revisions. A future patch format can record changed fields
+against a specific base revision with expected old values, so conflicts are
+reviewed instead of silently overwriting newer work. Patch export, patch import
+and online submission are **not implemented**. For now, send a full profile
+manually; new photos or models are separate attachments.
+
+### What to collect for a real parish
+
+Start with one pilot church: an annotated floor sketch, entrance-to-sanctuary
+and reverse views, corner views, sanctuary/sacristy coverage and exterior views.
+Mark doors, pew blocks, aisles, steps, furniture and actual minister routes.
+Measure overall and sanctuary dimensions, aisle and door widths, step heights
+and altar size; mark guesses as estimates. Add close views of the few features
+that make the church recognisable.
+
+Original-resolution photos are sufficient initially. Most are modelling
+references, not textures. Perspective/colour correction, privacy removal,
+texture preparation and any model simplification happen outside the editor.
+Confirm rights to distributed photographs and directly reproduced artwork,
+and avoid identifiable people and private notices. No photos or measured plans
+are bundled with the generic template.
 
 ## Speech and languages
 

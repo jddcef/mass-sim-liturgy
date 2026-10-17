@@ -3,12 +3,24 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 
 const context=vm.createContext({assert,console});
-for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game-icons.js']){
+for(const file of ['mass-rite.js','mass-scenarios.js','mass-parishes.js','mass-game-logic.js','mass-game-icons.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),context,{filename:file});
 }
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
 const run=code=>vm.runInContext(code,context);
 const G=name=>run(name);
+
+{
+  const profiles=G('ChurchProfiles');
+  for(const style of ['aisles','full']){
+    const p=profiles.base();p.seating.style=style;
+    profiles.activate(p);
+    for(const r of profiles.checks(p)){
+      same(G('routeBetween')(r.from,r.to),r.path,'game uses the same routes as the editor');
+    }
+  }
+  profiles.activate(null);
+}
 
 const buildScenario=G('buildScenario'), STEPS=G('STEPS');
 const setup=(role,raw={})=>{

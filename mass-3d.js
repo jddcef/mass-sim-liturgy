@@ -185,6 +185,7 @@ function updateWallFade(){
   }
 }
 const pewGroups=[];
+let parishExterior=null;
 let naveStyle='aisles';
 function setNaveStyle(style){
   naveStyle=style==='full'?'full':'aisles';
@@ -308,6 +309,7 @@ function applyAppearance(a){
     if(a.cincture!=='none')figure.cincture.children.forEach(part=>{part.material=material(a.cincture);});
     figure.pectoral.visible=role==='S'&&a.seniorCross!=='no';
   }
+  if(typeof refreshParishScene==='function')refreshParishScene();
 }
 // Moves the fixed crucifix (and its recess, if any) to the chosen place; 'none' hides it.
 function placeCrucifix(id){
@@ -329,7 +331,26 @@ function buildChurch(){
   for(let x=-12;x<=12;x+=1.5)box(scene,x,.008,3.5,.012,.014,13,'#cbc1af',false);
   for(let z=-2.5;z<=10.5;z+=1.5)box(scene,0,.009,z,24,.015,.012,'#cbc1af',false);
   // Cutaway walls leave the nave open to inspection from every camera.
-  markWall(box(scene,0,2.6,-10.7,23,5.2,.28,'#c4b69d'));
+  markWall(box(scene,0,2.6,-10.7,23,5.2,.28,'#c4b69d')).userData.parishBack=true;
+  parishExterior=new THREE.Group();
+  for(const side of [-1,1]){
+    const spans=side<0?[[12,868]]:[[12,180],[250,868]];
+    for(const [front,back] of spans){
+      const wall=markWall(box(parishExterior,side*11.6,2.6,((front+back)/2-440)*SCALE,.22,5.2,(back-front)*SCALE,'#c4b69d'));
+      wall.userData.parishColour='wall';
+    }
+    const roof=markWall(box(parishExterior,side*5.8,6.65,0,12,.18,21.8,'#70564c'));
+    roof.rotation.z=-side*.245;
+    roof.userData.parishColour='roof';
+  }
+  for(const side of [-1,1]){
+    const front=markWall(box(parishExterior,side*6.65,2.6,10.7,9.7,5.2,.22,'#c4b69d'));
+    front.userData.parishColour='wall';
+  }
+  const lintel=markWall(box(parishExterior,0,4,10.7,3.6,2.4,.22,'#c4b69d'));
+  lintel.userData.parishColour='wall';
+  parishExterior.visible=false;
+  scene.add(parishExterior);
   box(scene,0,4.6,-10.52,5,.2,.1,'#967749');
   buildCrucifix();
   for(const side of [-1,1]){
@@ -430,8 +451,8 @@ function buildChurch(){
   cylinder(scene,tab.x+.76,tab.y+1.75,tab.z+.15,.025,.025,.3,'#c59a3f');
   collectFurniture('tabernacle',fixtureStart);
   const gifts=world([621,770]);
-  box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60',true,'wood');
-  box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e',true,'wood');
+  anchorParishObject(box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60',true,'wood'),[621,770]);
+  anchorParishObject(box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e',true,'wood'),[621,770]);
   for(const [name,p] of [['Altar',[500,180]],['Ambo',[200,250]],['Chair',[500,55]],['Credence',[866,150]],['Tabernacle',[137,85]]]){
     const sprite=label(name,world(p,1.95));
     sprite.userData.fixture=name.toLowerCase();
@@ -797,6 +818,7 @@ function renderFrame(dt=1/60){
   controls.update();
   if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
   updateWallFade();
+  if(typeof updateParishPreview==='function')updateParishPreview(dt);
   if(typeof gameRender!=='function'||!gameRender())renderer.render(scene,camera3d);
 }
 
@@ -818,6 +840,7 @@ function jump(index,u=0){
   renderFrame();
 }
 function setPlaying(value){
+  if(value&&typeof parishEditorOpen==='function'&&parishEditorOpen())return;
   if(!value)resetSpeech();
   else if((speechUtterance||recording)&&!speechBusy)resetSpeech();
   playing3d=value;
@@ -996,6 +1019,7 @@ function initialise(){
   applySetup();
   initialiseFeatures();
   applyAppearance(readAppearance());
+  if(typeof initialiseParishEditor==='function')initialiseParishEditor();
   for(const id of ['deacon','serverCount','lector','incense','bothKinds','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion',...Object.keys(APPEARANCE_DEFAULTS).map(k=>'app_'+k)])if($(id))$(id).onchange=applySetup;
   $('camera').onchange=event=>setCamera(event.target.value);
   $('resetCamera').onclick=()=>setCamera($('camera').value);

@@ -70,9 +70,8 @@ function disposeSprite(sprite){
   else sprite.traverse(o=>o.geometry?.dispose());
 }
 function unlayout(mapped){
-  let q=mapped.slice();
-  for(let i=0;i<10;i++){const lp=layoutPoint(q);q=[mapped[0]-(lp[0]-q[0]),mapped[1]-(lp[1]-q[1])];}
-  return q;
+  if(typeof ChurchProfiles!=='undefined')mapped=ChurchProfiles.mapNave(mapped,ChurchProfiles.active,true);
+  return furnitureUnpoint(mapped);
 }
 function rayToPlan(raycaster){
   for(const height of [.32,0]){
@@ -100,7 +99,9 @@ function buildGameScene(){
   box(scene,annex.x,.16,annex.z,5.6,.32,5.8,'#d8ccb2',false,'stone');
   box(scene,(12.4+annex.x-2.8)/2,.16,world([1000,215]).z,1.6,.32,1.5,'#d8ccb2',false,'stone');
   markWall(box(scene,annex.x,.8,annex.z-2.9,5.6,1.3,.15,'#b9aa8d'));
-  markWall(box(scene,annex.x+2.8,.8,annex.z,.15,1.3,5.8,'#b9aa8d'));
+  for(const [front,back] of [[34,120],[180,266]]){
+    markWall(box(scene,annex.x+2.8,.8,world([1222,(front+back)/2]).z,.15,1.3,(back-front)*SCALE,'#b9aa8d'));
+  }
   markWall(box(scene,annex.x,.8,annex.z+2.9,5.6,1.3,.15,'#b9aa8d'));
   const vesting=world([1150,72]);
   box(scene,vesting.x,.32+.48,vesting.z,2.6,.08,.8,'#8a6a45',true,'wood');
@@ -155,6 +156,7 @@ function buildGameScene(){
   figures.PEW.root.userData.baseScale=.78;
   buildVestments();
   for(const sprite of sceneLabels)sprite.scale.multiplyScalar(LABEL_SCALE);
+  if(typeof refreshParishScene==='function')refreshParishScene();
 }
 
 // ---------- doors ----------
@@ -423,6 +425,10 @@ function resetGameState(){
   updateScore();
 }
 function startGame(config){
+  if(typeof parishEditorOpen==='function'&&parishEditorOpen()){
+    toast('Apply or cancel the parish draft before starting a game.',true);
+    return;
+  }
   $('gameSetup').hidden=true;
   $('summaryModal').hidden=true;
   GameAudio.setEnabled(config.sound);
@@ -1605,6 +1611,7 @@ function buildProjection(){
   group.add(face);
   group.traverse(o=>{if(o.isMesh)o.castShadow=false;});
   scene.add(group);
+  anchorParishObject(group,SCREEN_AT);
   const desk=new THREE.Group(),d=world(AV_DESK);
   desk.position.set(d.x,0,d.z-.45);
   box(desk,0,.72,0,1.3,.05,.6,'#6e5236',true,'wood');
@@ -1615,6 +1622,7 @@ function buildProjection(){
   box(desk,-.35,.76,0,.3,.03,.2,'#444');
   desk.traverse(o=>{if(o.isMesh)o.castShadow=false;});
   scene.add(desk);
+  anchorParishObject(desk,AV_DESK);
   game.projection={group,desk,canvas,texture,slideKey:null};
   drawSlide(null);
   setProjection(false);

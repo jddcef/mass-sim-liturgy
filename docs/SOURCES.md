@@ -27,6 +27,10 @@ External pages may change; the project does not bundle a full copyrighted Missal
   downloaded texture packs, HDR images or additional third-party assets are
   bundled or requested. Standard uses 256-pixel textures and High uses
   512-pixel textures; Low uses the original untextured materials.
+- The generic parish profile, SVG plan, route marker and simplified exterior
+  shell are project-generated. No supplied parish photos, scans, measured plans
+  or new third-party assets are included. Permission and attribution must be
+  reviewed before incorporating future photographic or model assets.
 
 ## Static audio
 
