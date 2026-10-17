@@ -18,9 +18,9 @@ and no account. Other pages:
 
 ### How to start
 
-1. Pick a **preset**: Sunday Mass, Weekday Mass or Solemnity. You can also
-   change any option yourself.
-2. Pick a **role** and a **level**:
+1. Pick a **preset**: Weekday Mass, Sunday Mass, Sunday Mass with incense or
+   Solemnity. You can also change any option yourself.
+2. Pick a **role** and your **involvement**:
    - **Watch**: no questions.
    - **Guided**: click to go along.
    - **Choice**: pick from a few answers.
@@ -30,6 +30,12 @@ and no account. Other pages:
    to find any person or object.
 4. Use the **Questions** button to turn questions off and just watch, and the
    🔊 button for sound.
+5. Open **✠ The Path** for a suggested order of celebrations, from a weekday
+   Mass towards the Easter Triduum. Serving each one (Choice or harder, 70% or
+   more, in any role) raises your **seniority**: Aspirant, Server, Senior
+   Server, Head Server, Master of Ceremonies and finally Master of Ceremonies of
+   the Triduum. Everything stays playable in any order. Celebrations marked
+   *In preparation* are planned but not in the game yet.
 
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.
@@ -241,7 +247,7 @@ in a role. The decisions made while building it are logged for review in
    Usher, extraordinary minister of Holy Communion (EMHC), Master of
    Ceremonies, Sacristan or a member of the congregation. Each has an
    illustrated role card.
-2. **Choose a level**:
+2. **Choose your involvement**:
    - **Watch**: no questions at all. Every duty is done for you, so you can
      simply follow the Mass from your role. No score is kept.
    - **Guided**: only the right action is shown; click it and you are moved along.
@@ -372,8 +378,16 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   the wall by default; recessed, on a ledge or on a pillar). Short fixed texts
   are fully voiced; quiet prayers sound softer; a soft tone marks the silences
   after the homily and after Communion.
-- **Presets**: "Sunday Mass" (default), "Weekday Mass" (no Gloria or Creed,
-  no servers, said) or "Solemnity". Changing any option shows "Custom".
+- **Presets**: "Weekday Mass" (no Gloria or Creed, no servers, said),
+  "Sunday Mass" (four servers, no incense), "Sunday Mass with incense"
+  (default, five servers with a thurifer) or "Solemnity". Changing any option
+  shows "Custom".
+- **The Path and seniority**: a map of celebrations in order of precedence
+  (on phones, a list). Each finished game is credited to the celebration whose
+  preset matches the final options: watching or Guided earns *Attended*,
+  Choice or harder with 70% or more earns *Served*, and Timed or Expert with
+  90% or more earns *Served with distinction*. Custom games are not credited.
+  Progress is kept in this browser only.
 - **Screen operator** (optional role, adds a projector and screen): a warning
   bar fills before each part, then you have a few seconds to start the
   backing track, show the slide, or leave it a cappella. Tracks are simple

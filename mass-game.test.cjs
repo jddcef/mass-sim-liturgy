@@ -766,4 +766,74 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.equal(speechHeld(40),false,'only during Mass');
   `,ctx);
 }
+// ---- round 10: the Path (celebrations and seniority) ----
+{
+  const presets=G('GAME_PRESETS'),match=G('matchingPreset');
+  assert.equal(match(presets.sunday.fields),'sunday');
+  assert.equal(match(presets.sundayIncense.fields),'sundayIncense');
+  assert.equal(presets.sunday.fields.incense,false);assert.equal(presets.sundayIncense.fields.incense,true);
+  // The setup form's defaults (incense on, five servers) still match a named preset.
+  assert.equal(match({...presets.sundayIncense.fields}),'sundayIncense');
+  const C=G('CELEBRATIONS'),byId=G('celebrationById'),avail=G('celebrationAvailable');
+  const ids=new Set(C.map(c=>c.id));
+  assert.equal(ids.size,C.length,'unique ids');
+  for(const c of C){
+    for(const a of c.after)assert.ok(ids.has(a),c.id+' follows a known celebration '+a);
+    assert.ok(G('PATH_BRANCHES')[c.branch],c.id+' has a branch');
+    assert.ok(c.at[0]>=0&&c.at[0]<=1000&&c.at[1]>=0&&c.at[1]<=1200,c.id+' is on the map');
+    assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
+    if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
+  }
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity'],'four celebrations are playable now');
+  assert.equal(avail(byId('easterVigil')),false);
+  // Every available celebration starts a valid Mass in every role.
+  for(const c of C.filter(avail))for(const role of Object.keys(G('GAME_ROLES')))setup(role,{...presets[c.preset].fields,serverCount:Number(presets[c.preset].fields.serverCount)});
+  // Seniority ranks have known requirements, in order.
+  for(const r of G('SENIORITY_RANKS'))for(const id of r.needs)assert.ok(ids.has(id),r.id+' needs '+id);
+  // Marks.
+  const mark=G('markFor');
+  assert.equal(mark({level:'watch',watched:true,percent:0}),'attended');
+  assert.equal(mark({level:'guided',percent:100}),'attended');
+  assert.equal(mark({level:'choice',percent:69}),'attended');
+  assert.equal(mark({level:'choice',percent:70}),'served');
+  assert.equal(mark({level:'choice',percent:100}),'served','distinction needs Timed or Expert');
+  assert.equal(mark({level:'expert',percent:95}),'distinction');
+  // Recording progress and seniority.
+  const record=G('recordCelebration'),rank=G('seniorityFor');
+  let p=G('emptyProgress')();
+  assert.equal(rank(p).id,'aspirant');
+  assert.equal(G('nextRecommended')(p).id,'feria');
+  assert.equal(record(p,{preset:'custom',role:'P',level:'choice',percent:100}),null,'custom options are not on the path');
+  let r=record(p,{preset:'weekday',role:'P',level:'watch',watched:true,percent:0});
+  p=r.progress;assert.equal(r.celebration.id,'feria');assert.equal(rank(p).id,'aspirant','watching does not raise seniority');
+  r=record(p,{preset:'weekday',role:'P',level:'choice',percent:80});
+  p=r.progress;assert.equal(r.rankBefore.id,'aspirant');assert.equal(r.rankAfter.id,'server');
+  r=record(p,{preset:'weekday',role:'P',level:'choice',percent:50});
+  p=r.progress;assert.equal(p.celebrations.feria.roles.P.mark,'served','a worse result keeps the best mark');
+  assert.equal(p.celebrations.feria.roles.P.best,80);assert.equal(p.celebrations.feria.roles.P.plays,3);
+  assert.equal(G('nextRecommended')(p).id,'dominica');
+  p=record(p,{preset:'sunday',role:'S',level:'timed',percent:75}).progress;
+  assert.equal(rank(p).id,'server','senior needs both Sundays');
+  p=record(p,{celebration:'dominicaIncense',role:'T',level:'expert',percent:92}).progress;
+  assert.equal(rank(p).id,'senior');
+  assert.equal(G('celebrationStatus')(p,'dominicaIncense').mark,'distinction');
+  p=record(p,{preset:'solemnity',role:'MC',level:'choice',percent:90}).progress;
+  assert.equal(rank(p).id,'head');
+  const next=G('nextRank')(p);
+  assert.equal(next.rank.id,'mc');assert.equal(next.ready,false,'the M.C. rank waits for celebrations in preparation');
+  assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
+  // Stored progress is cleaned on load.
+  const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
+  same(Object.keys(clean.celebrations),['feria']);same(Object.keys(clean.celebrations.feria.roles),['P']);
+  assert.equal(clean.celebrations.feria.roles.P.best,100);
+  assert.equal(G('normaliseProgress')('junk').celebrations&&Object.keys(G('normaliseProgress')(null).celebrations).length,0);
+  // The credited celebration follows the final options.
+  const pfo=G('presetForOptions');
+  const opts=(role,preset)=>G('normaliseGameOptions')(role,{...presets[preset].fields,serverCount:Number(presets[preset].fields.serverCount),readerCount:Number(presets[preset].fields.readerCount),
+    bells:{start:presets[preset].fields.bellStart,epiclesis:presets[preset].fields.bellEpiclesis,elevation:presets[preset].fields.bellElevation}}).options;
+  for(const id of Object.keys(presets))assert.equal(pfo(opts('P',id),id),id,id+' round-trips');
+  assert.equal(pfo(opts('T','sunday'),'sunday'),'sundayIncense','the thurifer brings incense to Sunday');
+  assert.equal(pfo(opts('E','weekday'),'weekday'),'weekday','an EMHC on a weekday still credits the weekday');
+  assert.equal(pfo(opts('E','weekday'),'custom'),'custom');
+}
 console.log('mass-game tests passed');

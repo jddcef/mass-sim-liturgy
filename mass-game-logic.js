@@ -147,7 +147,11 @@ function scenarioRequest(options){
 // makes the choice "custom". Weekday: no Gloria or Creed outside feasts and solemnities (GIRM 53, 68),
 // and usually said, with no servers (judgement call: a quiet weekday Mass for the Priest to practise).
 const GAME_PRESETS={
-  sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, five servers, incense, Gloria and Creed, two readings.',fields:{
+  sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, four servers (cross and candles), no incense, Gloria and Creed, two readings.',fields:{
+    deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:false,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
+    bellStart:true,bellEpiclesis:true,bellElevation:true}},
+  sundayIncense:{name:'Sunday Mass with incense',blurb:'Sung, Deacon, five servers with a thurifer, incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
     bellStart:true,bellEpiclesis:true,bellElevation:true}},
@@ -170,6 +174,157 @@ function matchingPreset(values){
     if(Object.entries(preset.fields).every(([k,v])=>values[k]===undefined||String(values[k])===String(v)))return id;
   }
   return 'custom';
+}
+// The preset a game's final options amount to, in the setup form's field names. When the role
+// forced a change (for example the Thurifer switches incense on), the options may match another
+// preset; if they match none, the celebration chosen in the form is credited.
+function presetForOptions(options,chosen){
+  const fields={deacon:options.deacon,serverCount:String(options.serverCount),lector:options.lector,readerCount:String(options.readerCount),
+    lectorProcession:options.lectorProcession,collection:options.collection,emhc:options.emhc,reservedCommunion:options.reservedCommunion,deaconCommunion:options.deaconCommunion,
+    incense:options.incense,bothKinds:options.bothKinds,gloria:options.gloria,creed:options.creed,secondReading:options.secondReading,giftsProcession:options.giftsProcession,
+    solemnBlessing:options.solemnBlessing,introductory:options.introductory,music:options.music,eucharisticPrayer:options.eucharisticPrayer,
+    bellStart:options.bells?.start,bellEpiclesis:options.bells?.epiclesis,bellElevation:options.bells?.elevation};
+  const id=matchingPreset(fields);
+  return id!=='custom'?id:GAME_PRESETS[chosen]?chosen:'custom';
+}
+
+// ---------- the Path: celebrations and seniority ----------
+// The path orders celebrations by liturgical precedence and ceremonial demand. Every celebration
+// that exists in the simulator can be played at any time ("soft" progression); the path only
+// recommends an order and awards seniority. `preset` links a celebration to GAME_PRESETS;
+// celebrations without one are "in preparation". `at` is a point on the 1000x1200 path map and
+// `colour` is the liturgical colour of the day (GIRM 346).
+const PATH_BRANCHES={
+  main:{name:'The Mass through the year'},
+  devotion:{name:'Eucharistic worship outside Mass'},
+  seasonal:{name:'Rites of the seasons'},
+  pontifical:{name:'With the Bishop'},
+  triduum:{name:'The Sacred Paschal Triduum'}
+};
+const CELEBRATIONS=[
+  {id:'feria',name:'Weekday Mass',precedence:'Feria',branch:'main',station:1,preset:'weekday',colour:'green',icon:'book',at:[500,80],after:[],
+    blurb:'A quiet said Mass on a weekday: no Gloria or Creed, one reading. The place to learn the order of Mass.'},
+  {id:'dominica',name:'Sunday Mass',precedence:"The Lord's Day",branch:'main',station:2,preset:'sunday',colour:'green',icon:'cross',at:[330,215],after:['feria'],
+    blurb:'The parish Sunday Mass: sung, with Deacon, readers, cross and candles, Gloria and Creed.'},
+  {id:'dominicaIncense',name:'Sunday Mass with incense',precedence:"The Lord's Day, solemnly",branch:'main',station:3,preset:'sundayIncense',colour:'green',icon:'thurible',at:[600,345],after:['dominica'],
+    blurb:'Sunday with a thurifer: incense at the entrance, the Gospel, the gifts and the elevations.'},
+  {id:'solemnity',name:'Solemnity',precedence:'Solemnity',branch:'main',station:4,preset:'solemnity',colour:'white',icon:'chalice',at:[390,480],after:['dominicaIncense'],
+    blurb:'A great feast: the Roman Canon and a Solemn Blessing, with the full team of servers.'},
+  {id:'pontifical',name:'Mass with the Bishop',precedence:'Pontifical Mass',branch:'main',station:5,colour:'white',icon:'vestment',at:[610,630],after:['solemnity'],
+    blurb:'The Bishop presides: mitre- and crozier-bearers wearing vimps, the book and candle (bugia), the Bishop\u2019s chaplain and M.C.'},
+  {id:'nativity',name:'Christmas Mass',precedence:'Solemnity of the Nativity',branch:'main',station:6,colour:'white',icon:'candle',at:[390,790],after:['pontifical'],
+    blurb:'Mass during the Night: the Christmas Proclamation, all kneel at "and by the Holy Spirit was incarnate", the blessing of the crib.'},
+  {id:'holyThursday',name:'Holy Thursday',precedence:'Evening Mass of the Lord\u2019s Supper',branch:'triduum',station:7,colour:'white',icon:'tabernacle',at:[300,1070],after:['nativity','palmSunday','corpusChristi','confirmation'],
+    blurb:'Bells at the Gloria then silence, the washing of feet, the transfer of the Blessed Sacrament to the altar of repose, the stripping of the altar.'},
+  {id:'goodFriday',name:'Good Friday',precedence:'Celebration of the Passion of the Lord',branch:'triduum',station:7,colour:'red',icon:'crucifix',at:[500,1070],after:['holyThursday'],
+    blurb:'Prostration in silence, the Passion, the Solemn Intercessions, the Adoration of the Cross and Communion from the reserved Sacrament.'},
+  {id:'easterVigil',name:'Easter Vigil',precedence:'The Easter Vigil in the Holy Night',branch:'triduum',station:7,colour:'white',icon:'candle',at:[700,1070],after:['goodFriday'],
+    blurb:'The new fire, the Paschal candle and the Exsultet, the readings, the Gloria with bells, Baptism and the renewal of promises.'},
+  {id:'adorationLay',name:'Adoration (lay-led)',precedence:'Exposition without Benediction',branch:'devotion',colour:'white',icon:'tabernacle',at:[820,225],after:['dominica'],
+    blurb:'An authorised lay minister exposes the Blessed Sacrament and later reposes it, without giving the blessing.'},
+  {id:'benediction',name:'Exposition and Benediction',precedence:'Exposition, Adoration and Benediction',branch:'devotion',colour:'white',icon:'bless',at:[820,420],after:['adorationLay','dominicaIncense'],
+    blurb:'Priest or Deacon in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
+  {id:'corpusChristi',name:'Corpus Christi procession',precedence:'Eucharistic procession',branch:'devotion',colour:'white',icon:'walk',at:[820,600],after:['benediction'],
+    blurb:'Outside the church: the canopy, torches, flower petals and bells, with Benediction at the altars on the way.'},
+  {id:'confirmation',name:'Confirmation Mass',precedence:'Pontifical Mass with Confirmation',branch:'pontifical',colour:'red',icon:'bless',at:[760,820],after:['pontifical'],
+    blurb:'The Bishop confirms: the candidates and sponsors, the chrism, and the Bishop\u2019s ministers.'},
+  {id:'candlemas',name:'Candlemas',precedence:'Presentation of the Lord',branch:'seasonal',colour:'white',icon:'candle',at:[140,565],after:['solemnity'],
+    blurb:'The blessing of candles and the procession into the church.'},
+  {id:'ashWednesday',name:'Ash Wednesday',precedence:'Beginning of Lent',branch:'seasonal',colour:'purple',icon:'sprinkler',at:[140,710],after:['candlemas'],
+    blurb:'The blessing and giving of ashes after the homily; no Gloria or Alleluia.'},
+  {id:'palmSunday',name:'Palm Sunday',precedence:'Palm Sunday of the Passion of the Lord',branch:'seasonal',colour:'red',icon:'walk',at:[140,855],after:['ashWednesday'],
+    blurb:'The blessing of palms, the procession, and the Passion read in parts.'}
+];
+// Seniority, in the manner of an altar servers' guild. A rank needs every listed celebration to
+// have been "served" (in any role). Ranks that depend on celebrations still in preparation wait.
+const SENIORITY_RANKS=[
+  {id:'aspirant',name:'Aspirant',needs:[],blurb:'Welcome to the sacristy.'},
+  {id:'server',name:'Server',needs:['feria'],blurb:'You know the order of Mass.'},
+  {id:'senior',name:'Senior Server',needs:['dominica','dominicaIncense'],blurb:'You can serve the Sunday Mass, with or without incense.'},
+  {id:'head',name:'Head Server',needs:['solemnity'],blurb:'You can lead the servers on a solemnity.'},
+  {id:'mc',name:'Master of Ceremonies',needs:['pontifical','nativity'],blurb:'You can direct a Mass with the Bishop and the Christmas liturgy.'},
+  {id:'triduum',name:'Master of Ceremonies of the Triduum',needs:['holyThursday','goodFriday','easterVigil'],blurb:'You have served the summit of the liturgical year.'}
+];
+// Marks for one celebration, from any role: attended (watched or guided), served (answered at
+// Choice or harder with at least SERVED_PERCENT), served with distinction (Timed or Expert, 90%+).
+const SERVED_PERCENT=70,DISTINCTION_PERCENT=90;
+const MARKS=['none','attended','served','distinction'];
+const MARK_NAMES={none:'Not yet',attended:'Attended',served:'Served',distinction:'Served with distinction'};
+const PROGRESS_VERSION=1;
+const celebrationById=id=>CELEBRATIONS.find(c=>c.id===id)||null;
+const celebrationAvailable=c=>!!(c&&c.preset&&GAME_PRESETS[c.preset]);
+function celebrationForPreset(presetId){
+  return CELEBRATIONS.find(c=>c.preset&&c.preset===presetId)||null;
+}
+function emptyProgress(){return {_v:PROGRESS_VERSION,celebrations:{}};}
+function normaliseProgress(raw){
+  const progress=emptyProgress();
+  if(!raw||typeof raw!=='object'||typeof raw.celebrations!=='object'||!raw.celebrations)return progress;
+  for(const [id,entry] of Object.entries(raw.celebrations)){
+    if(!celebrationById(id)||!entry||typeof entry.roles!=='object')continue;
+    const roles={};
+    for(const [role,r] of Object.entries(entry.roles)){
+      if(!GAME_ROLES[role]||!r)continue;
+      roles[role]={mark:MARKS.includes(r.mark)?r.mark:'none',best:Math.max(0,Math.min(100,Number(r.best)||0)),plays:Math.max(0,Number(r.plays)||0)};
+    }
+    progress.celebrations[id]={roles};
+  }
+  return progress;
+}
+function markFor(result){
+  if(result.watched||isGuided(result.level)||!GAME_LEVELS[result.level])return 'attended';
+  const percent=Number(result.percent)||0;
+  if(percent>=DISTINCTION_PERCENT&&(result.level==='timed'||result.level==='expert'))return 'distinction';
+  return percent>=SERVED_PERCENT?'served':'attended';
+}
+const betterMark=(a,b)=>MARKS.indexOf(a)>=MARKS.indexOf(b)?a:b;
+// Records a finished celebration. Returns {progress, entry, celebration, rankBefore, rankAfter}, or
+// null when the celebration is not on the path (for example "Custom" options).
+function recordCelebration(progress,result){
+  const celebration=celebrationById(result.celebration)||celebrationForPreset(result.preset);
+  if(!celebration||!celebrationAvailable(celebration)||!GAME_ROLES[result.role])return null;
+  const next=normaliseProgress(progress);
+  const rankBefore=seniorityFor(next);
+  const entry=next.celebrations[celebration.id]||(next.celebrations[celebration.id]={roles:{}});
+  const old=entry.roles[result.role]||{mark:'none',best:0,plays:0};
+  const mark=markFor(result);
+  const scored=!result.watched&&!isGuided(result.level);
+  entry.roles[result.role]={mark:betterMark(old.mark,mark),best:scored?Math.max(old.best,Number(result.percent)||0):old.best,plays:old.plays+1};
+  return {progress:next,mark,entry,celebration,rankBefore,rankAfter:seniorityFor(next)};
+}
+function celebrationStatus(progress,id){
+  const celebration=celebrationById(id);
+  const entry=progress?.celebrations?.[id];
+  let mark='none',best=0;
+  const roles=[];
+  for(const [role,r] of Object.entries(entry?.roles||{})){
+    mark=betterMark(mark,r.mark);best=Math.max(best,r.best||0);
+    if(MARKS.indexOf(r.mark)>=MARKS.indexOf('served'))roles.push(role);
+  }
+  return {id,available:celebrationAvailable(celebration),mark,best,servedRoles:roles,triedRoles:Object.keys(entry?.roles||{})};
+}
+const isServed=(progress,id)=>MARKS.indexOf(celebrationStatus(progress,id).mark)>=MARKS.indexOf('served');
+function seniorityFor(progress){
+  let rank=SENIORITY_RANKS[0];
+  for(const r of SENIORITY_RANKS){
+    if(r.needs.every(id=>isServed(progress,id)))rank=r;else break;
+  }
+  return rank;
+}
+// The next rank and what it still needs (null at the top).
+function nextRank(progress){
+  const current=SENIORITY_RANKS.indexOf(seniorityFor(progress));
+  const rank=SENIORITY_RANKS[current+1];
+  if(!rank)return null;
+  const missing=rank.needs.filter(id=>!isServed(progress,id));
+  return {rank,missing,ready:missing.every(id=>celebrationAvailable(celebrationById(id)))};
+}
+// The recommended next celebration: the first playable one on the main line not yet served,
+// then the side branches; null when everything playable is served.
+function nextRecommended(progress){
+  const playable=CELEBRATIONS.filter(celebrationAvailable);
+  const order=[...playable.filter(c=>c.branch==='main'||c.branch==='triduum'),...playable.filter(c=>c.branch!=='main'&&c.branch!=='triduum')];
+  return order.find(c=>!isServed(progress,c.id))||null;
 }
 
 // Roles that can be taken over during Mass: anyone present in this celebration, plus the
@@ -533,7 +688,7 @@ function penalise(board,points,reason,ref){
 }
 function gradeBoard(board){
   const percent=board.possible?Math.max(0,Math.round(board.points/board.possible*100)):0;
-  const verdict=percent>=90?'Exemplary: ready to serve at a solemn Mass.':percent>=75?'Well done: a few points to revise.':percent>=50?'Good start: practise the marked steps.':'Keep practising with the Guided level.';
+  const verdict=percent>=90?'Exemplary: ready to serve at a solemn Mass.':percent>=75?'Well done: a few points to revise.':percent>=50?'Good start: practise the marked steps.':'Keep practising with Guided involvement.';
   return {percent,verdict};
 }
 
@@ -998,4 +1153,4 @@ function nextUseFor(entry,steps,index,progress){
   }
   return null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended};

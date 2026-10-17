@@ -14,6 +14,9 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
 - [ ] Run the four tests (below) to confirm a green baseline before editing.
 - [ ] Note the user's request verbatim. Record any interpretation of an
       ambiguous request as a decision.
+- [ ] For liturgical or Catholic questions, consult the Magisterium MCP server
+      before relying on a claim; cite its supporting sources and ask the user
+      when they do not resolve an ambiguity.
 
 ## Per-change checklist
 
@@ -38,11 +41,13 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
 - [ ] Log decisions in `docs/GAME-DECISIONS.md` (`R<n>`: question, choice,
       alternatives, source). Cite GIRM paragraphs through magisterium.com
       links.
+- [ ] Make changes on a topic branch and submit them through a pull request.
+      Never commit directly to `main`; confirm CI is green on the PR.
 - [ ] Update the README ("Play now" for players, the game section for
       details) and `docs/SOURCES.md` if sources changed.
-- [ ] Commit with the trailer
+- [ ] When committing on the topic branch, use the trailer
       `Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>`,
-      push, open a PR and confirm CI is green.
+      then push and open the pull request.
 - [ ] Update [Status](#status) below.
 
 ## Conventions and pitfalls
@@ -74,10 +79,11 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
 
 The repository is `jddcef/mass-sim-liturgy`, renamed from
 `roman-mass-explorer`. GitHub Pages serves `main` at
-<https://jddcef.github.io/mass-sim-liturgy/>. The working branch has been
-`jddcef-holy-mass-simulator-game`; merge `main` into it after each PR merges.
+<https://jddcef.github.io/mass-sim-liturgy/>. Contributions use topic branches
+and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
+server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R89.**
+**Next decision number: R98.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -91,6 +97,8 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 | docs | #8 | Player-facing README opening, `SPEC.md`, this guide, Copilot instructions |
 | 9 | (this PR) | More natural bell synthesis, compact phone layout with fold-away menus |
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
+| 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
+| 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
 
 Round 10 was exercised in Edge through `file://` on all three pages, including
 all sanctuary floors, repeated quality switches, layouts, appearance changes,
@@ -104,6 +112,12 @@ variants or reflection environment. All script syntax checks and all four
 Node suites pass on Node 22. No commit, push or PR was requested, so remote CI
 has not been run for this change.
 
+Round 12 was exercised in Edge headless through `file://`: the Path opens
+from setup and from the summary, "Prepare this celebration" sets the preset,
+a credited game updates the mark, the rank strip and the recommendation, Esc
+closes the Path, and at 390 px the list replaces the map. No console errors.
+All four Node suites pass. Not committed or pushed.
+
 ### Open items and backlog
 
 - [ ] Issue #1: regenerate the congregation audio with the four-voice mix.
@@ -112,8 +126,36 @@ has not been run for this change.
 - [ ] Owner review of judgement calls in `GAME-DECISIONS.md`, especially
       R77 (reading of "nave without side aisles").
 - [ ] Latin audio pack is partial.
-- [ ] Future: an Exposition, Adoration and Benediction scenario (the
-      monstrance is already in the cupboard).
+- [ ] Roadmap for the Path (R96, R97). The celebrations are already on the map
+      as "In preparation"; adding a `preset` to a celebration in
+      `CELEBRATIONS` makes it playable and creditable.
+      1. Rite registry: replace the single `STEPS` list in `mass-rite.js` with
+         rites selected by the setup, so non-Mass rites can run.
+      2. Exposition and Benediction: lay-led Adoration (expose and repose,
+         no blessing) and the clergy form (cope, humeral veil, incense,
+         monstrance blessing). The monstrance is already in the cupboard.
+      3. Mass with the Bishop: mitre- and crozier-bearers in vimps, book and
+         bugia, chaplain; then Confirmation.
+      4. Christmas Mass, Candlemas, Ash Wednesday, Palm Sunday.
+      5. Corpus Christi: an outdoor procession (canopy, torches, petals,
+         Benediction at altars), which needs an outdoor scene.
+      6. The Triduum: Holy Thursday, Good Friday, the Easter Vigil.
+      7. Later: Vespers with Benediction, funerals, weddings, baptism.
+
+```mermaid
+flowchart TD
+  F[1 Weekday Mass] --> S[2 Sunday Mass] --> SI[3 Sunday with incense] --> SO[4 Solemnity]
+  SO --> B[5 Mass with the Bishop] --> N[6 Christmas]
+  S --> AL[Adoration, lay-led] --> EB[Exposition and Benediction] --> CC[Corpus Christi procession]
+  SI --> EB
+  SO --> CA[Candlemas] --> AW[Ash Wednesday] --> PS[Palm Sunday]
+  B --> CF[Confirmation]
+  N --> HT[Holy Thursday]
+  PS --> HT
+  CC --> HT
+  CF --> HT
+  HT --> GF[Good Friday] --> EV[Easter Vigil]
+```
 - [x] Local surface textures on Standard and High (round 10); Low stays
       untextured and the High-only extension hook remains available.
 - [ ] Future: a full first-person mode for every role, extending today's

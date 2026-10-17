@@ -261,6 +261,9 @@ function buildSetupForm(){
   decorateOptions(form);
   form.addEventListener('submit',event=>{event.preventDefault();startGame(readForm());});
   $('cancelSetup').onclick=cancelSetup;
+  PathView.initialise(prepareCelebration);
+  $('openPath').onclick=()=>PathView.open();
+  syncPathStrip();
   syncPreset();
   previewNotes();
   showHighScores();
@@ -327,7 +330,7 @@ function readForm(){
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false,projector:saved.projector===true});
-  return {role:saved.role||'P',level:saved.level||'choice',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
+  return {role:saved.role||'P',level:saved.level||'choice',preset:saved.preset||'custom',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
 const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people',AV:'screen'};
 function rolePortrait(role){
@@ -355,6 +358,34 @@ function showHighScores(){
   if(!scores.length){$('highScores').replaceChildren();return;}
   const rows=scores.slice(0,8).map(s=>el('tr',{},[el('td',{textContent:GAME_ROLES[s.role]?.name||s.role}),el('td',{textContent:GAME_LEVELS[s.level]?.name||s.level}),el('td',{textContent:s.percent+'%'}),el('td',{textContent:s.points+' pts'}),el('td',{textContent:s.date})]));
   $('highScores').replaceChildren(el('strong',{textContent:'Best results on this device'}),el('table',{},[el('tbody',{},rows)]));
+}
+// ---------- the Path (mass-game-path.js draws it) ----------
+function syncPathStrip(){
+  $('pathStripRank').textContent=PathView.rankLine(PathView.load());
+}
+function showPathResult(watched,percent){
+  const outcome=PathView.record({preset:game.preset,role:game.role,level:game.level,percent,watched});
+  if(!outcome){
+    $('summaryPath').textContent='Custom options are not on the Path. Choose a Kind of Mass to earn seniority.';
+    return;
+  }
+  const after=outcome.progress,next=nextRecommended(after);
+  let text='On the Path: '+outcome.celebration.name+' as '+GAME_ROLES[game.role].name+': '+MARK_NAMES[outcome.mark]+'.';
+  if(outcome.rankAfter.id!==outcome.rankBefore.id)text+=' Your seniority is now '+outcome.rankAfter.name+'. '+outcome.rankAfter.blurb;
+  if(outcome.mark==='attended'&&!watched&&!isGuided(game.level))text+=' Serve it with '+SERVED_PERCENT+'% or more to count towards seniority.';
+  else if(outcome.mark==='attended')text+=' Play at Choice or harder to count towards seniority.';
+  if(next&&next.id!==outcome.celebration.id)text+=' Recommended next: '+next.name+'.';
+  $('summaryPath').textContent=text;
+  syncPathStrip();
+}
+// Choosing a celebration on the Path fills in the setup form with its preset.
+function prepareCelebration(celebration){
+  if($('gameSetup').hidden)showSetup();
+  $('gamePreset').value=celebration.preset;
+  choosePreset(celebration.preset);
+  syncPreset();
+  $('gamePreset').closest('fieldset').scrollIntoView({block:'start',behavior:'smooth'});
+  toast(celebration.name+' is ready: choose your role and press Start.');
 }
 
 // ---------- starting a game ----------
@@ -405,6 +436,7 @@ function startGame(config){
   resetGameState();
   const {options,notes}=normaliseGameOptions(config.role,{...config.raw,level:config.level});
   Object.assign(game,{role:config.role,level:config.level,options,notes,seed:options.seed,questions:!GAME_LEVELS[config.level].watch});
+  game.preset=presetForOptions(options,config.preset);
   game.cross=setCrossPlaces(options);
   setProjection(!!options.projector);
   document.body.classList.toggle('noSymbols',options.symbols===false);
@@ -450,7 +482,7 @@ function applyRoleUI(){
   picker.append(el('option',{value:'',textContent:'⇄ Switch role…'}));
   for(const role of switchableRoles(game.visible||new Set(),game.options))if(role!==game.role)picker.append(el('option',{value:role,textContent:GAME_ROLES[role].name}));
   picker.onchange=()=>{const role=picker.value;picker.value='';if(role)switchRole(role);};
-  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:GAME_LEVELS[game.level].name+' level'}),picker]));
+  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:'Involvement: '+GAME_LEVELS[game.level].name}),picker]));
   syncSwitchRole();
   $('gameBookButton').hidden=!info.book;
   $('gameBookButton').textContent='Open the '+(info.book||'book');
@@ -1714,7 +1746,7 @@ function finishGame(){
   $('summaryVerdict').textContent=grade.verdict;
   if(watched){
     $('summaryScore').textContent='Watched from start to finish: '+game.autoCount+' duties were done for you, so there is no score.';
-    $('summaryVerdict').textContent='Choose another level to be asked questions.';
+    $('summaryVerdict').textContent='Choose another involvement (Guided or harder) to be asked questions.';
   }else if(game.autoCount)$('summaryScore').textContent+=' Questions were off for '+game.autoCount+' duties (not scored).';
   const rows=board.log.map(entry=>el('tr',{className:entry.correct?'right':'wrong'},[
     el('td',{textContent:entry.kind==='penalty'?'−':entry.correct?'✓':'✗'}),
@@ -1729,6 +1761,7 @@ function finishGame(){
   scores.sort((a,b)=>b.percent-a.percent||b.points-a.points);
   try{localStorage.setItem(SCORES_KEY,JSON.stringify(scores.slice(0,10)));}catch{}
   showHighScores();
+  showPathResult(watched,grade.percent);
   setPhase('Finished','See your results. Choose "Play again" or another role.');
   $('summaryModal').hidden=false;
   $('summaryAgain').focus({preventScroll:true});
@@ -1878,7 +1911,7 @@ function showSetup(){
   $('summaryModal').hidden=true;
   $('cancelSetup').hidden=!(inGame||game.resumeSummary);
   $('gameSetup').hidden=false;
-  previewNotes();showHighScores();
+  previewNotes();showHighScores();syncPathStrip();
 }
 // Close the setup sheet without starting a new game: carry on where you were.
 function cancelSetup(){
@@ -1915,6 +1948,7 @@ function initialiseGame(){
   $('bookPage').onchange=()=>renderBookPage(Number($('bookPage').value));
   $('summaryAgain').onclick=()=>startGame(readForm());
   $('summaryNew').onclick=showSetup;
+  $('summaryPathButton').onclick=()=>PathView.open();
   $('timeline').disabled=false;
   $('timeline').oninput=()=>{
     const stop=game.phase==='mass'?nextQuestionStop(game.stops,currentElapsed(),Number($('timeline').value)/10000*TOTAL):null;
@@ -1938,6 +1972,7 @@ function initialiseGame(){
     if(game.phase!=='mass'){event.stopImmediatePropagation();toast(game.phase==='setup'?'Choose a role first.':'The clock starts when Mass begins.');}
   },true);
   document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&PathView.isOpen()){PathView.close();event.preventDefault();return;}
     if(event.key==='Escape'&&!$('bookModal').hidden){$('bookModal').hidden=true;event.preventDefault();return;}
     if(event.key==='Escape'&&!$('gameSetup').hidden&&!$('cancelSetup').hidden){cancelSetup();event.preventDefault();return;}
     if(['INPUT','SELECT','TEXTAREA'].includes(event.target.tagName))return;
@@ -1961,6 +1996,6 @@ function initialiseGame(){
       if(button&&!button.disabled){event.preventDefault();button.click();}
     }
   },true);
-  setPhase('Choose your role','Pick a role, a level and the kind of celebration, then press Start.');
+  setPhase('Choose your role','Pick a role, your involvement and the kind of celebration, then press Start.');
 }
 initialiseGame();

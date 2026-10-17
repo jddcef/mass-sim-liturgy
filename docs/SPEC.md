@@ -27,7 +27,7 @@ It is illustrative. It is not an approved ceremonial, and it must say so.
 | C7 | All tests pass in Node 22 with no dependencies. CI (`.github/workflows/checks.yml`) syntax-checks every script and runs every test file. |
 | C8 | Sounds are synthesised with WebAudio or are small local files. No streaming. |
 | C9 | The game runs on low-spec devices by default ("Detail: Auto"), with headroom for higher detail. |
-| C10 | Saved settings survive upgrades. The localStorage keys `massGameSetup`, `massGameScores` and `mass-church-layout-v1` are kept, and `SETUP_VERSION` is bumped when defaults change. |
+| C10 | Saved settings survive upgrades. The localStorage keys `massGameSetup`, `massGameScores` and `mass-church-layout-v1` are kept (and `massGameProgress` for the Path), and `SETUP_VERSION` is bumped when defaults change. |
 
 ## 3. Architecture
 
@@ -46,6 +46,7 @@ Classic scripts load in this order and share globals:
 | `mass-game-logic.js` | **Pure, Node-testable game rules**: options and presets, roles, decision derivation, choices, scoring, timers, lapses and M.C. detection, sacristan checklists, routes, media cues, search index. |
 | `mass-game-audio.js` | WebAudio bells, thurible, cues and backing tracks. |
 | `mass-game-view.js` | Camera pad, highlight mode, first person, speaker view. |
+| `mass-game-path.js` | The Path map, list and detail panel (`PathView`), progress storage. |
 | `mass-game-ui.js` | Hover tips, search and index card, feedback dialog. |
 | `feedback-config.js` | `FEEDBACK_ENDPOINT` (empty means offline fallback). |
 | `mass-game.js` | Game controller: setup form, phases, questions, the Missal view, scene extras (sacristy, cupboard, doors). |
@@ -58,8 +59,9 @@ startup must appear **before** the `<script>` tags in the HTML.
 
 ### 4.1 Setup
 
-- **Presets**: Sunday Mass (default), Weekday Mass and Solemnity. Editing any
-  option shows "Custom".
+- **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
+  Mass with incense (default) and Solemnity. Editing any option shows
+  "Custom".
 - **Roles**:
   - Priest, Deacon and Server (book, bell and vessels)
   - Cross-bearer, Candle-bearer and Thurifer
@@ -69,7 +71,7 @@ startup must appear **before** the `<script>` tags in the HTML.
 
   If the chosen options do not suit the role, the options are adjusted and
   the change is stated.
-- **Levels**:
+- **Involvement** (formerly "Level"; the stored value is still `level`):
   - Watch: no questions.
   - Guided: the single right answer is shown.
   - Choice: pick one of a few answers, with two tries.
@@ -84,6 +86,22 @@ startup must appear **before** the `<script>` tags in the HTML.
     distributes.
   - Bells: start, epiclesis and elevations, sacristy bell.
   - Other: minister lapses, open-church training, projector.
+- **The Path** (`mass-game-path.js`, rules in `mass-game-logic.js`): a map
+  of celebrations (`CELEBRATIONS`) in order of precedence, with branches for
+  Eucharistic worship outside Mass, the seasons and the Bishop, converging on
+  the Triduum. On phones it is a list. Progression is soft: everything stays
+  playable and the Path only recommends an order.
+  - A finished game is credited to the celebration whose preset matches the
+    final options (`presetForOptions`), or else to the chosen preset. Custom
+    games are not credited.
+  - Marks per role, best kept: Attended (Watch or Guided), Served (Choice or
+    harder, at least 70%), Served with distinction (Timed or Expert, at least
+    90%).
+  - Seniority (`SENIORITY_RANKS`): Aspirant, Server, Senior Server, Head
+    Server, Master of Ceremonies, Master of Ceremonies of the Triduum. A rank
+    needs each listed celebration served in any role.
+  - Celebrations without a preset show "In preparation".
+  - Progress is stored in localStorage key `massGameProgress` (versioned).
 - **Church and appearance**:
   - Layout preset, nave seating, crucifix and processional-cross position,
     tabernacle position and mounting, altar size.

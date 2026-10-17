@@ -101,6 +101,58 @@ button.primary:hover { background:#36614c; }
 #summaryLog td { padding:4px 6px; border-bottom:1px solid #e3d8c4; vertical-align:top; }
 #summaryLog tr.wrong td:first-child { color:#b0473a; }
 #summaryLog tr.right td:first-child { color:#3f8a5a; }
+
+/* The Path: celebrations of the liturgical year and seniority */
+.pathStrip { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 8px; padding:6px 10px; border-radius:8px; background:#f6efdf; border:1px solid #e0d2b4; font-size:13px; }
+.pathNote { margin:10px 0 0; padding:8px 10px; border-left:4px solid #c9a64a; background:#faf4e6; font-size:14px; }
+.pathNote:empty { display:none; }
+.pathSheet { width:min(1100px,100%); }
+.pathRank { font:600 15px Georgia,serif; color:#5b4a26; margin:6px 0 10px; }
+.pathBody { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:16px; align-items:start; }
+.pathMap { background:radial-gradient(circle at 50% 0,#fffaf0,#f1e6cf); border:1px solid #dccdb0; border-radius:10px; max-height:70vh; overflow:auto; }
+.pathSvg { display:block; width:100%; height:auto; }
+.pathDetail { position:sticky; top:0; padding:10px 14px; border:1px solid #dccdb0; border-radius:10px; background:#fffaf1; font-size:14px; }
+.pathDetail h3 { font:600 19px Georgia,serif; margin:2px 0 4px; }
+.pathDetail .future { color:#7d7468; font-style:italic; }
+.pathEdge { fill:none; stroke:#c8b897; stroke-width:5; }
+.pathEdge.main { stroke:#b08e4a; stroke-width:12; stroke-linecap:round; }
+.pathEdge.future { stroke-dasharray:14 12; stroke:#cfc6b4; }
+.pathEdge.main.future { stroke:#d8cdb6; }
+.pathEdge.done { stroke:#5e8c62; }
+.pathBranch { font:italic 26px Georgia,serif; fill:#7b6a49; }
+.pathTriduum { fill:#efe2e0; stroke:#a8322b; stroke-width:2; stroke-dasharray:6 6; opacity:.6; }
+.pathNode { cursor:pointer; outline:none; }
+.pathDisc { fill:#fffdf6; stroke-width:7; }
+.pathIcon { fill:none; stroke:#5b4a26; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.pathNode.future .pathDisc { fill:#ece8df; stroke-dasharray:8 6; }
+.pathNode.future .pathIcon { stroke:#9a9184; }
+.pathNode.mark-attended .pathDisc { fill:#f6eedb; }
+.pathNode.mark-served .pathDisc, .pathNode.mark-distinction .pathDisc { fill:#e6f1e4; }
+.pathNode:hover .pathDisc, .pathNode:focus-visible .pathDisc { filter:drop-shadow(0 0 6px #4785a5); }
+.pathNode.selected .pathDisc { stroke-width:11; }
+.pathHalo { fill:none; stroke:#4785a5; stroke-width:4; stroke-dasharray:10 8; animation:pathTurn 12s linear infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes pathTurn { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) { .pathHalo { animation:none; } }
+.pathStation { fill:#7b2d26; }
+.pathStationText { fill:#fff; font:600 15px system-ui,sans-serif; }
+.pathTick { fill:#2f6b45; font:700 26px system-ui,sans-serif; }
+.pathName { font:600 21px Georgia,serif; fill:#2d2a26; paint-order:stroke; stroke:#fffaf0; stroke-width:6; }
+.pathSub { font:16px system-ui,sans-serif; fill:#6c6152; paint-order:stroke; stroke:#fffaf0; stroke-width:5; }
+.pathNode.future .pathName { fill:#7d7468; }
+.pathList { display:none; list-style:none; margin:10px 0 0; padding:0; }
+.pathListHead { font:600 14px Georgia,serif; color:#7b6a49; margin:12px 0 4px; }
+.pathListItem { display:flex; align-items:center; gap:8px; width:100%; text-align:left; margin:2px 0; background:#fffaf1; }
+.pathListItem.future { opacity:.65; }
+.pathListItem.recommended { border-color:#4785a5; }
+.pathListItem.mark-served, .pathListItem.mark-distinction { background:#e6f1e4; }
+.pathSwatch { width:14px; height:14px; border-radius:50%; border:4px solid; flex:none; }
+@media(max-width:900px) {
+  .pathBody { display:block; }
+  .pathMap { display:none; }
+  .pathList { display:block; }
+  .pathDetail { position:static; }
+  .pathStrip { flex-wrap:wrap; }
+}
 @media(max-width:900px) {
   body.game #layout { display:block; height:auto; }
   #decision { position:relative; left:auto; transform:none; width:auto; margin:8px; bottom:auto; }
