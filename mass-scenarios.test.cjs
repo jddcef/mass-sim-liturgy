@@ -96,3 +96,35 @@ vm.runInContext(
   }
   console.log('Passed 32 legacy scenarios, 96 server-count scenarios and '+frames+' sampled frames.');
 `,context);
+
+// Exposition, adoration and Benediction (mass-rite-exposition.js): every form samples valid frames.
+vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
+  let expFrames=0;
+  for(const minister of ['lay','priest'])for(let serverCount=0;serverCount<=3;serverCount++)for(const incense of [false,true]){
+    const {options,visible}=buildScenario({rite:'exposition',minister,serverCount,incense});
+    assert.equal(options.rite,'exposition');
+    assert.equal(options.incense,incense&&serverCount>=2);
+    assert.ok(visible.has(minister==='priest'?'P':'E'));
+    assert.equal(STEPS.some(s=>s.key==='exp:blessing'),minister==='priest');
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','kneel','face'])for(const role in step[field]||{})assert.ok(visible.has(role),minister+': hidden '+role+' in '+field+' of '+step.title);
+      for(const [role] of step.say||[])assert.ok(role==='ppl'||visible.has(role));
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const role in ACTORS){p[role]=actorAt(i,role,k/20);assert.ok(p[role].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite),'prop '+name);
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' for '+name+' in '+step.title);
+        }
+        assert.ok(Number.isFinite(postureAt(i,k/20).val));
+        expFrames++;
+      }
+    }
+  }
+  buildScenario({});
+  assert.equal(STEPS[0].key,0,'Mass is the default rite');
+  console.log('Passed 16 exposition scenarios and '+expFrames+' sampled frames.');
+`,context);

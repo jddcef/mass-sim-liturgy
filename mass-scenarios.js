@@ -2,12 +2,20 @@ const ORIGINAL_STEPS=JSON.parse(JSON.stringify(STEPS));
 const SERVER_ROLES=['X','C1','C2','T','S'];
 const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',ppl:'People'};
 
+// The rite registry: each rite builds its own STEPS and timeline. Mass is the default;
+// other rites (mass-rite-exposition.js) register themselves here and use string step keys,
+// so the numeric Mass keys used for special cases elsewhere never match them.
+const RITES={mass:{name:'Holy Mass',build:buildMassScenario}};
 function buildScenario(requested){
+  const rite=RITES[requested?.rite]||RITES.mass;
+  return rite.build(requested||{});
+}
+function buildMassScenario(requested){
   const serverCount=requested.serverCount??(requested.servers?5:0);
   if(!Number.isInteger(serverCount)||serverCount<0||serverCount>5){
     throw new RangeError('Server count must be an integer from 0 to 5.');
   }
-  const options={...requested,serverCount,servers:serverCount>0,incense:serverCount>0&&requested.incense,bothKinds:requested.deacon&&requested.bothKinds};
+  const options={...requested,rite:'mass',serverCount,servers:serverCount>0,incense:serverCount>0&&requested.incense,bothKinds:requested.deacon&&requested.bothKinds};
   // Optional elements; defaults reproduce the original baseline celebration.
   Object.assign(options,{
     gloria:requested.gloria??true,
