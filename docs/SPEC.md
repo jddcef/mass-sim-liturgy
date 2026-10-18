@@ -67,7 +67,8 @@ startup must appear **before** the `<script>` tags in the HTML.
 
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
   Mass with incense (default) and Solemnity. Outside Mass: Adoration
-  (lay-led, no blessing) and Exposition and Benediction (Priest). Editing any
+  (lay-led, no blessing) and Exposition and Benediction (Priest or Deacon, in
+  white cope, with the humeral veil for the blessing). Editing any
   option shows "Custom". Roles a rite does not have are refused with a message.
 - **Roles**:
   - Priest, Deacon and Server (book, bell and vessels)

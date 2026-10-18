@@ -142,11 +142,11 @@ function normaliseGameOptions(role,raw={}){
   return {options:o,notes};
 }
 
-// Exposition (mass-rite-exposition.js): a Priest gives Benediction; a lay minister exposes and
+// Exposition (mass-rite-exposition.js): a Priest or Deacon gives Benediction; a lay minister exposes and
 // reposes only (HCWEOM 91; CIC 943). Up to two servers: a server, and a thurifer when incense is used.
-const EXPOSITION_ROLES={lay:['E','S','T','PEW'],priest:['P','S','T','PEW']};
+const EXPOSITION_ROLES={lay:['E','S','T','PEW'],priest:['P','S','T','PEW'],deacon:['D','S','T','PEW']};
 function normaliseExposition(role,o,notes){
-  o.minister=o.minister==='priest'?'priest':'lay';
+  o.minister=EXPOSITION_ROLES[o.minister]?o.minister:'lay';
   if(!EXPOSITION_ROLES[o.minister].includes(role)){
     const names=EXPOSITION_ROLES[o.minister].map(r=>GAME_ROLES[r].name).join(', ');
     throw new RangeError('The '+GAME_ROLES[role].name+' has no part in this celebration. Choose one of: '+names+'.');
@@ -158,7 +158,7 @@ function normaliseExposition(role,o,notes){
     if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   }
   if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
-  Object.assign(o,{deacon:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
     music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
   if(!['key','all'].includes(o.detail))o.detail='key';
@@ -198,7 +198,9 @@ const GAME_PRESETS={
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
   benediction:{name:'Exposition and Benediction',blurb:'The Priest in cope exposes the Blessed Sacrament, incenses it, and blesses the people with the monstrance.',fields:{
-    rite:'exposition',minister:'priest',serverCount:'2',incense:true}}
+    rite:'exposition',minister:'priest',serverCount:'2',incense:true}},
+  benedictionDeacon:{name:'Exposition and Benediction (Deacon)',blurb:'The Deacon in cope exposes the Blessed Sacrament, incenses it, and blesses the people with the monstrance.',fields:{
+    rite:'exposition',minister:'deacon',serverCount:'2',incense:true}}
 };
 // The form fields a preset controls; a preset is "current" only while all of them still match.
 function applyPreset(id,current={}){
@@ -263,7 +265,7 @@ const CELEBRATIONS=[
   {id:'adorationLay',name:'Adoration (lay-led)',precedence:'Exposition without Benediction',branch:'devotion',colour:'white',icon:'tabernacle',at:[820,225],after:['dominica'],
     preset:'adorationLay',blurb:'An authorised lay minister exposes the Blessed Sacrament and later reposes it, without giving the blessing.'},
   {id:'benediction',name:'Exposition and Benediction',precedence:'Exposition, Adoration and Benediction',branch:'devotion',colour:'white',icon:'bless',at:[820,420],after:['adorationLay','dominicaIncense'],
-    preset:'benediction',blurb:'The Priest in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
+    preset:'benediction',alsoPresets:['benedictionDeacon'],blurb:'The Priest or Deacon in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
   {id:'corpusChristi',name:'Corpus Christi procession',precedence:'Eucharistic procession',branch:'devotion',colour:'white',icon:'walk',at:[820,600],after:['benediction'],
     blurb:'Outside the church: the canopy, torches, flower petals and bells, with Benediction at the altars on the way.'},
   {id:'confirmation',name:'Confirmation Mass',precedence:'Pontifical Mass with Confirmation',branch:'pontifical',colour:'red',icon:'bless',at:[760,820],after:['pontifical'],
@@ -294,7 +296,7 @@ const PROGRESS_VERSION=1;
 const celebrationById=id=>CELEBRATIONS.find(c=>c.id===id)||null;
 const celebrationAvailable=c=>!!(c&&c.preset&&GAME_PRESETS[c.preset]);
 function celebrationForPreset(presetId){
-  return CELEBRATIONS.find(c=>c.preset&&c.preset===presetId)||null;
+  return CELEBRATIONS.find(c=>c.preset&&(c.preset===presetId||(c.alsoPresets||[]).includes(presetId)))||null;
 }
 function emptyProgress(){return {_v:PROGRESS_VERSION,celebrations:{}};}
 function normaliseProgress(raw){
@@ -1080,12 +1082,15 @@ function devotionPreTasks(role,options,startPos){
   const tasks=[];
   const choose=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
     options:shuffled([correct,...wrong],seededRandom(role+id+'exp')).map(label=>({label,correct:label===correct}))});
-  if(role==='P')choose('vest','Vest for Exposition and Benediction. What do you put on?','HCWEOM 92','Alb (or cassock and surplice), white stole and white cope',
-    ['Alb, stole and chasuble','Alb, diagonal stole and dalmatic','Cassock only, without a stole']);
+  if(role==='P'||role==='D')choose('vest','Vest for Exposition and Benediction. What do you put on?','HCWEOM 92','Alb (or cassock and surplice), white stole and white cope',
+    [role==='P'?'Alb, stole and chasuble':'Alb, stole and chasuble, as for Mass','Alb, diagonal stole and dalmatic','Cassock only, without a stole']);
+  if(role==='D')choose('bless','May you, as Deacon, give the blessing with the monstrance?','HCWEOM 91, 99; CIC 943',
+    'Yes: the Priest or Deacon is the ordinary minister, and blesses with the humeral veil',
+    ['No: only a Priest may give Benediction','Only if the Bishop is present','Yes, but without the humeral veil']);
   if(role==='S'||role==='T')choose('vest','Vest to serve. What do you put on?','Custom; GIRM 339 by analogy','Alb (or cassock and surplice)',['Stole over the alb','Cope','Chasuble']);
   if(role==='T')choose('carry','What do you carry in?','HCWEOM 93','Thurible with burning incense',['The monstrance','The processional cross','Nothing']);
   if(role==='S')choose('prepare','What must be ready in the sanctuary?','HCWEOM 92, 99; custom',
-    options.minister==='priest'?'The humeral veil, and the bell if the parish rings it at the blessing':'Seats and the book of prayers for the adoration',
+    options.minister!=='lay'?'The humeral veil, and the bell if the parish rings it at the blessing':'Seats and the book of prayers for the adoration',
     ['The chalice and cruets','The Book of the Gospels on the altar','The collection baskets']);
   if(role==='E')choose('prepare','Before the exposition, what must be true?','HCWEOM 91; CIC 943',
     'I am authorised; I may expose and repose the Sacrament but not bless with it',
@@ -1105,6 +1110,7 @@ function devotionPostTasks(role,options){
     options:shuffled([{label:'the sacristy',correct:true},{label:'the altar',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'expwhere'))}];
   const close={
     P:'Take off the cope, humeral veil and stole and put them away',
+    D:'Take off the cope, humeral veil and stole and put them away',
     E:'Make sure the tabernacle is locked and the key is returned to its safe place',
     S:'Put the humeral veil and bell away and hang up your alb',
     T:'Put the charcoal safely in the sand bucket and hang up your alb'}[role];

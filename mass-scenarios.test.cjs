@@ -100,16 +100,19 @@ vm.runInContext(
 // Exposition, adoration and Benediction (mass-rite-exposition.js): every form samples valid frames.
 vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   let expFrames=0;
-  for(const minister of ['lay','priest'])for(let serverCount=0;serverCount<=3;serverCount++)for(const incense of [false,true]){
-    const {options,visible}=buildScenario({rite:'exposition',minister,serverCount,incense});
+  for(const minister of ['lay','priest','deacon'])for(let serverCount=0;serverCount<=3;serverCount++)for(const incense of [false,true]){
+    const {options,visible,vesture}=buildScenario({rite:'exposition',minister,serverCount,incense});
+    const M=EXPOSITION_MINISTERS[minister];
     assert.equal(options.rite,'exposition');
     assert.equal(options.incense,incense&&serverCount>=2);
-    assert.ok(visible.has(minister==='priest'?'P':'E'));
-    assert.equal(STEPS.some(s=>s.key==='exp:blessing'),minister==='priest');
+    assert.ok(visible.has(M));
+    assert.equal(STEPS.some(s=>s.key==='exp:blessing'),minister!=='lay');
+    assert.equal(vesture?.role,minister==='lay'?undefined:M,'the ordained minister wears the cope');
+    for(const step of STEPS)for(const role in step.veil||{})assert.equal(role,M,'only the minister wears the humeral veil');
     assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
     for(let i=0;i<STEPS.length;i++){
       const step=STEPS[i];
-      for(const field of ['mv','acts','kneel','face'])for(const role in step[field]||{})assert.ok(visible.has(role),minister+': hidden '+role+' in '+field+' of '+step.title);
+      for(const field of ['mv','acts','kneel','face','veil'])for(const role in step[field]||{})assert.ok(visible.has(role),minister+': hidden '+role+' in '+field+' of '+step.title);
       for(const [role] of step.say||[])assert.ok(role==='ppl'||visible.has(role));
       for(let k=0;k<=20;k++){
         const p={};
@@ -126,5 +129,5 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   assert.equal(STEPS[0].key,0,'Mass is the default rite');
-  console.log('Passed 16 exposition scenarios and '+expFrames+' sampled frames.');
+  console.log('Passed 24 exposition scenarios and '+expFrames+' sampled frames.');
 `,context);

@@ -797,6 +797,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
   same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','adorationLay','benediction'],'six celebrations are playable now');
+  assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
   for(const c of C.filter(avail))for(const role of Object.keys(G('GAME_ROLES'))){
@@ -840,7 +841,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(next.rank.id,'mc');assert.equal(next.ready,false,'the M.C. rank waits for celebrations in preparation');
   assert.equal(G('nextRecommended')(p).id,'adorationLay','then the devotions');
   p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
-  p=record(p,{preset:'benediction',role:'P',level:'choice',percent:90}).progress;
+  r=record(p,{preset:'benedictionDeacon',role:'D',level:'choice',percent:90});
+  assert.equal(r.celebration.id,'benediction');p=r.progress;
   assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
   // Stored progress is cleaned on load.
   const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
@@ -855,8 +857,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(pfo(opts('T','sunday'),'sunday'),'sundayIncense','the thurifer brings incense to Sunday');
   assert.equal(pfo(opts('E','weekday'),'weekday'),'weekday','an EMHC on a weekday still credits the weekday');
   assert.equal(pfo(opts('E','weekday'),'custom'),'custom');
-  for(const id of ['adorationLay','benediction']){
-    const role=presets[id].fields.minister==='priest'?'P':'E';
+  for(const id of ['adorationLay','benediction','benedictionDeacon']){
+    const role=G('EXPOSITION_ROLES')[presets[id].fields.minister][0];
     assert.equal(pfo(opts(role,id),id),id,id+' round-trips with its minister');
     assert.equal(pfo(opts('PEW',id),id),id,id+' round-trips from the pew');
   }
@@ -902,6 +904,20 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(norm('P',raw('benediction')).options.deacon,false);
   assert.throws(()=>norm('P',raw('adorationLay')),/has no part/);
   assert.throws(()=>norm('D',raw('benediction')),/has no part/);
+  // The Deacon form (HCWEOM 91-92, 99): the Deacon exposes, incenses and blesses, in cope and humeral veil.
+  const deacon=setup('D',raw('benedictionDeacon'));
+  same([...deacon.scenario.visible],['D','S','T']);
+  assert.equal(deacon.options.deacon,true);assert.equal(deacon.scenario.vesture.role,'D');
+  const blessing=STEPS.find(s=>s.key==='exp:blessing');
+  assert.ok(blessing.acts.D.some(([a])=>/blesses the people/.test(a))&&!blessing.acts.P);
+  same(Object.keys(blessing.veil),['D']);
+  assert.ok(STEPS.every(s=>!Object.keys(s.mv||{}).includes('P')),'no Priest in the Deacon form');
+  assert.ok(G('deriveDuties')('D',STEPS,deacon.options).length>0);
+  assert.throws(()=>norm('P',raw('benedictionDeacon')),/has no part/);
+  const dPre=G('devotionPreTasks')('D',deacon.options,[952,250]);
+  assert.ok(dPre[0].correct.includes('cope'));assert.ok(dPre.some(t=>t.id==='bless'&&/ordinary minister/.test(t.correct)));
+  assert.ok(G('devotionPostTasks')('D',{}).some(t=>/cope/.test(t.correct)));
+  assert.equal(priest.scenario.vesture.role,'P');assert.equal(lay.scenario.vesture,null,'the lay minister wears no cope');
   same(G('switchableRoles')(new Set(['P','S','T']),norm('P',raw('benediction')).options),['P','S','T','PEW']);
   // Before and after: cope for the Priest, the authorisation question for the lay minister.
   const pre=G('devotionPreTasks');

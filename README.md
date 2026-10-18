@@ -20,7 +20,8 @@ and no account. Other pages:
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
    incense, Solemnity, or outside Mass: Adoration led by a lay minister, or
-   Exposition and Benediction with the Priest. You can also change any option
+   Exposition and Benediction with the Priest or the Deacon. You can also
+   change any option
    yourself.
 2. Pick a **role** and your **involvement**:
    - **Watch**: no questions.
