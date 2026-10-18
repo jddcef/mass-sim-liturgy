@@ -74,6 +74,26 @@ function makeFigure(color,skin,role){
     // The alb reaches the ankles below the knee-length dalmatic.
     mesh(new THREE.CylinderGeometry(.3,.36,.6,12),'#f4f1e8',torso,0,-.27,0,true);
   }
+  let cope=null,veil=null;
+  if(role==='P'||role==='D'){
+    // Cope (open at the front, with gold orphreys and morse) and humeral veil, for Exposition (HCWEOM 92).
+    cope=new THREE.Group();
+    const gap=.42;
+    const cape=new THREE.Mesh(new THREE.CylinderGeometry(.27,.45,1.42,16,1,true,gap,Math.PI*2-gap*2),material('#f6f2e6'));
+    cape.position.y=.12;cape.castShadow=true;cope.add(cape);
+    for(const side of [-1,1]){
+      const band=box(cope,side*.18,.12,.37,.06,1.4,.02,'#d7b565',false,'gold');
+      band.rotation.x=-.12;band.rotation.z=side*-.1;
+    }
+    box(cope,0,.72,.25,.32,.2,.04,'#d7b565',false,'gold');
+    box(cope,0,.66,.29,.09,.07,.02,'#b8923e',false,'gold');
+    cope.visible=false;torso.add(cope);
+    veil=new THREE.Group();
+    box(veil,0,.62,0,.78,.08,.56,'#fbf8ef',false);
+    for(const side of [-1,1])box(veil,side*.36,.42,.08,.1,.42,.42,'#fbf8ef',false);
+    box(veil,0,.6,.29,.06,.06,.02,'#d7b565',false,'gold');
+    veil.visible=false;torso.add(veil);
+  }
   const head=new THREE.Group();
   torso.add(head);
   sphere(head,0,1.02,0,.18,skin,Boolean(role));
@@ -117,7 +137,7 @@ function makeFigure(color,skin,role){
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral};
+  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){
@@ -280,6 +300,17 @@ function recolour(figure,colour){
   figure.body.material=material(colour);
   for(const arm of figure.arms)arm.children[0].material=material(colour);
 }
+// Vesture for rites outside Mass: the minister in a white cope instead of the Mass vestments.
+function dressForRite(vesture){
+  for(const role of ['P','D']){
+    const figure=figures[role];
+    if(!figure?.cope)continue;
+    const dressed=vesture?.role===role&&!!vesture.cope;
+    figure.cope.visible=dressed;
+    if(!dressed)figure.veil.visible=false;
+    if(dressed)recolour(figure,vesture.colour);
+  }
+}
 function applyAppearance(a){
   setCorpus(a.corpus!=='no');
   setWindowStyle(a.windows);
@@ -297,6 +328,7 @@ function applyAppearance(a){
   const colour=a.vestment==='season'?day.hex:(VESTMENT_COLOURS[a.vestment]||VESTMENT_COLOURS.green).hex;
   recolour(figures.P,colour);
   recolour(figures.D,colour);
+  dressForRite(scenario?.vesture);
   const note=$('vestmentNote');
   if(note){
     const date=nextSunday(new Date()).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -765,6 +797,7 @@ function renderFrame(dt=1/60){
     const kneelingServer=SERVER_ROLES.includes(role)&&posture==='kneel'&&!walking;
     const kneeling=!walking&&(step.kneel?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     pose(figure,layInPew?posture:seated?'sit':kneelingServer||kneeling?'kneel':'stand',action,elapsed,walking,orans);
+    if(figure.veil)figure.veil.visible=(step.veil?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     if(action)actionTexts.push(ROLE_NAMES[role]+': '+action);
   }
   updatePeople(step,elapsed);

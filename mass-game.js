@@ -17,6 +17,14 @@ const ROLE_BLURBS={
   PEW:'Arrive, find a seat and take your part: postures, responses and acclamations.',
   AV:'Screen operator: show the right slide and start or fade each backing track on cue.'
 };
+// Role notes for Exposition and Benediction (HCWEOM 91-100).
+const DEVOTION_BLURBS={
+  P:'Minister of Exposition. In white cope, expose and incense the Blessed Sacrament, lead the adoration and give Benediction with the humeral veil.',
+  D:'Minister of Exposition. In white cope, expose and incense the Blessed Sacrament, lead the adoration and give Benediction with the humeral veil.',
+  E:'An authorised lay minister: expose the Blessed Sacrament, lead the prayer and repose it. You do not give the blessing.',
+  S:'Prepare the humeral veil and bell, kneel with the minister and assist at the blessing.',
+  T:'Thurible and boat: present the incense at the exposition and before the blessing.'
+};
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
 const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
@@ -492,7 +500,7 @@ function startGame(config){
 function applyRoleUI(){
   const info=GAME_ROLES[game.role];
   $('gameBadge').textContent='You: '+info.name+' / '+GAME_LEVELS[game.level].name;
-  $('gameRoleNote').textContent=ROLE_BLURBS[game.role];
+  $('gameRoleNote').textContent=(isDevotion()&&DEVOTION_BLURBS[game.role])||ROLE_BLURBS[game.role];
   $('roleCard').hidden=false;
   const picker=el('select',{id:'switchRole',title:'Take over another role from here on (between moments, during Mass)'});
   picker.setAttribute('aria-label','Switch to another role');
@@ -502,7 +510,7 @@ function applyRoleUI(){
   $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:'Involvement: '+GAME_LEVELS[game.level].name}),picker]));
   syncSwitchRole();
   $('gameBookButton').hidden=!info.book;
-  $('gameBookButton').textContent='Open the '+(info.book||'book');
+  $('gameBookButton').textContent='Open the '+(bookName()||'book');
   game.book=info.sayRole?buildBook(info.sayRole):null;
 }
 function canSwitchRole(){return game.phase==='mass'&&!game.active&&!game.busy&&!game.lapse&&!Object.keys(game.walkers).length;}
@@ -557,11 +565,13 @@ function switchRole(role){
 }
 // Mass, or a rite outside Mass such as Exposition (mass-rite-exposition.js).
 const isDevotion=()=>isDevotionRite(game.options);
+// Outside Mass the ministers read from the rite's book of prayers, not the Missal or Gospels.
+const bookName=()=>isDevotion()&&GAME_ROLES[game.role].book?'book of prayers for Exposition':GAME_ROLES[game.role].book;
 const riteWord=()=>isDevotion()?'Exposition':'Mass';
 function describeCelebration(){
   const o=game.options,parts=[];
   if(isDevotion()){
-    parts.push(o.minister==='priest'?'Exposition and Benediction with the Priest':'adoration led by a lay minister, without the blessing');
+    parts.push(o.minister==='lay'?'adoration led by a lay minister, without the blessing':'Exposition and Benediction with the '+(o.minister==='deacon'?'Deacon':'Priest'));
     parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s'));
     parts.push(o.incense?'incense':'no incense');
     return parts.join(', ')+'.';
@@ -947,7 +957,7 @@ function openBook(){
   select.replaceChildren(...game.book.map((page,i)=>el('option',{value:i,textContent:page.part})));
   const part=STEPS[cur3d]?.part;
   const index=Math.max(0,game.book.findIndex(page=>page.part===part));
-  $('bookTitle').textContent=GAME_ROLES[game.role].book;
+  $('bookTitle').textContent=bookName();
   renderBookPage(game.phase==='mass'?index:0);
   $('bookModal').hidden=false;
   $('bookClose').focus({preventScroll:true});
