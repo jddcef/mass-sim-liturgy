@@ -19,7 +19,7 @@ and no account. Other pages:
 ### How to start
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
-   incense, Solemnity, Mass with the Bishop, or outside Mass: Adoration led by a lay minister, or
+   incense, Solemnity, Mass with the Bishop, Confirmation Mass, or outside Mass: Adoration led by a lay minister, or
    Exposition and Benediction with the Priest or the Deacon. You can also
    change any option
    yourself.
@@ -477,7 +477,9 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   "Sunday Mass" (four servers, no incense), "Sunday Mass with incense"
   (default, five servers with a thurifer), "Solemnity" or "Mass with the
   Bishop" (the Bishop presides with mitre and pastoral staff, held by two
-  servers in vimps; the homily from the cathedra; the pontifical blessing).
+  servers in vimps; the homily from the cathedra; the pontifical blessing) or
+  "Confirmation Mass" (after the Gospel the candidates are presented, renew
+  their baptismal promises and are anointed with chrism by the Bishop; no Creed).
   Changing any option shows "Custom".
 - **The Path and seniority**: a map of celebrations in order of precedence
   (on phones, a list). Each finished game is credited to the celebration whose

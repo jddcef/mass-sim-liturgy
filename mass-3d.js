@@ -9,7 +9,7 @@ const materials=new Map();
 const SCALE=.025;
 // Servers are often of different ages; candle-bearers are drawn as younger children.
 // Relative figure heights: the Priest and Deacon are full-grown adults, servers vary in age.
-const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92,MB:.95,CB:.93};
+const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92,MB:.95,CB:.93,K:.86,SP:1};
 // Altar servers and the Bishop's bearers share the server's alb (or cassock and surplice).
 const ALB_ROLES=[...SERVER_ROLES,...BEARER_ROLES];
 const groundAt=p=>{const y=layoutPoint(p)[1];return y<295?.32:y<310?.32*(310-y)/15:0;};
@@ -570,6 +570,12 @@ function makeObjects(){
       }
     }else if(name==='ewer'){
       cylinder(g,0,.1,0,.08,.1,.2,'#c2d5df','silver');
+    }else if(name==='chrism'){
+      // The vessel of holy chrism: a small silver jar with a domed lid and a cross knob.
+      cylinder(g,0,.06,0,.055,.045,.12,'#cfd2d4','silver');
+      finishSurface(sphere(g,0,.13,0,.05,'#cfd2d4'),'silver');
+      box(g,0,.2,0,.012,.05,.012,'#d9b44a');
+      box(g,0,.205,0,.035,.012,.012,'#d9b44a');
     }else if(name==='thurible'){
       cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c','silver');
       finishSurface(sphere(g,0,-.4,0,.09,'#a9a6a0'),'silver');
@@ -736,7 +742,7 @@ function updateFollow(dt){
 }
 
 function reservedPew(point){
-  return ['L','L2','Ps','U','E'].some(role=>scenario.visible.has(role)&&Math.hypot(point[0]-HOME[role][0],point[1]-HOME[role][1])<25);
+  return ['L','L2','Ps','U','E','K','SP'].some(role=>scenario.visible.has(role)&&Math.hypot(point[0]-HOME[role][0],point[1]-HOME[role][1])<25);
 }
 
 function updatePeople(step,phase){

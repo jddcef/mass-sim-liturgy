@@ -66,8 +66,9 @@ startup must appear **before** the `<script>` tags in the HTML.
 ### 4.1 Setup
 
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
-  Mass with incense (default), Solemnity and Mass with the Bishop (mitre- and
-  crozier-bearers in vimps; also a "Bishop presides" option). Outside Mass: Adoration
+  Mass with incense (default), Solemnity, Mass with the Bishop (mitre- and
+  crozier-bearers in vimps; also a "Bishop presides" option) and Confirmation Mass
+  (the Bishop confirms after the Gospel; no Creed; a candidate and sponsor stand for all). Outside Mass: Adoration
   (lay-led, no blessing) and Exposition and Benediction (Priest or Deacon, in
   white cope, with the humeral veil for the blessing). Editing any
   option shows "Custom". Roles a rite does not have are refused with a message.

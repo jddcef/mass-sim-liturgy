@@ -796,7 +796,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','adorationLay','benediction'],'seven celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','adorationLay','benediction','confirmation'],'eight celebrations are playable now');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
@@ -845,6 +845,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
   r=record(p,{preset:'benedictionDeacon',role:'D',level:'choice',percent:90});
   assert.equal(r.celebration.id,'benediction');p=r.progress;
+  assert.equal(G('nextRecommended')(p).id,'confirmation','then the Confirmation Mass');
+  p=record(p,{preset:'confirmation',role:'CB',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
   // Stored progress is cleaned on load.
   const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
@@ -962,5 +964,31 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   const plain=setup('P',{...raw,bishop:false});
   assert.ok(!plain.scenario.visible.has('MB'));
   assert.equal(G('presetForOptions')(plain.options,'pontifical'),'pontifical','a changed preset still credits the chosen celebration');
+}
+// ---- round 18: Confirmation within Mass ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  let r=norm('S',{confirmation:true,bishop:false,creed:true,deacon:false,solemnBlessing:false});
+  assert.ok(r.options.bishop&&r.options.deacon&&!r.options.creed&&r.options.solemnBlessing,'the Bishop confirms; no Creed');
+  assert.ok(r.notes.some(n=>/Ordo Confirmationis 31/.test(n)));
+  assert.equal(norm('P',{}).options.confirmation,false);
+  assert.equal(norm('E',{rite:'exposition',confirmation:true}).options.confirmation,false,'not at Exposition');
+  const raw={...presets.confirmation.fields,serverCount:Number(presets.confirmation.fields.serverCount)};
+  const {options,scenario}=setup('D',raw);
+  assert.equal(G('presetForOptions')(options,'confirmation'),'confirmation');
+  assert.equal(G('celebrationForPreset')('confirmation').id,'confirmation');
+  assert.ok(scenario.visible.has('K')&&scenario.visible.has('SP'));
+  assert.ok(!STEPS.some(s=>s.key===15),'no Creed');
+  assert.ok(G('deriveDuties')('D',STEPS,options).some(d=>/chrism|candidates/.test(d.text)),'the Deacon presents the candidates and the chrism');
+  assert.ok(G('deriveDuties')('S',STEPS,options).some(d=>/pours water over the Bishop/.test(d.text)),'a server washes the Bishop\u2019s hands');
+  for(const role of ['MB','CB','P','PEW','MC','SAC'])setup(role,raw);
+  const items=G('sacristanSetup')(options);
+  assert.ok(items.some(i=>i.id==='chrism'&&i.needed&&i.places.includes('credence')));
+  assert.ok(G('sacristanPackAway')(options).some(i=>i.id==='chrismBack'&&i.needed));
+  assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>i.id==='chrism'&&i.needed));
+  assert.equal(G('GameIcons').iconFor('anoints the forehead with chrism, tracing the cross'),'chrism');
+  assert.ok(!G('deriveCues')(scenario.visible,STEPS).some(c=>c.role==='K'||c.role==='SP'),'the candidates are not cued as ministers');
+  assert.equal(G('presetForOptions')(setup('D',{...presets.pontifical.fields,serverCount:5}).options,'pontifical'),'pontifical','the plain Bishop\u2019s Mass is not Confirmation');
+  setup('P',{});assert.equal(STEPS[0].key,0);
 }
 console.log('mass-game tests passed');

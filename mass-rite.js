@@ -1,6 +1,6 @@
 // ---------- geometry ----------
 const ALT_P=[500,122], ALT_D=[452,122], CHAIR=[500,58], DCHAIR=[450,62], AMBO=[200,222];
-const HOME={P:CHAIR,D:DCHAIR,X:[640,55],C1:[680,55],C2:[720,55],T:[760,55],S:[805,78],L:[395,368],L2:[365,368],Ps:[335,368],U:[875,745],E:[735,402],G1:[600,745],G2:[640,745],MB:[372,62],CB:[408,62]};
+const HOME={P:CHAIR,D:DCHAIR,X:[640,55],C1:[680,55],C2:[720,55],T:[760,55],S:[805,78],L:[395,368],L2:[365,368],Ps:[335,368],U:[875,745],E:[735,402],G1:[600,745],G2:[640,745],MB:[372,62],CB:[408,62],K:[605,368],SP:[675,368]};
 const M=(p,a=0,b=0.6)=>({p,a,b});
 
 const ACTORS={
@@ -21,6 +21,9 @@ const ACTORS={
   // Mass with the Bishop only (mass-scenarios.js applyBishop): servers in vimps who carry the insignia.
   MB:{name:'Mitre-bearer (server in a vimp)',fill:'#fbfbf6',stroke:'#555',r:10,txt:'#333',only:'bishop'},
   CB:{name:'Crozier-bearer (server in a vimp)',fill:'#fbfbf6',stroke:'#555',r:10,txt:'#333',only:'bishop'},
+  // Confirmation within Mass only (mass-scenarios.js applyConfirmation): one pair stands for every candidate and sponsor.
+  K:{name:'Candidate for Confirmation',fill:'#b5524c',stroke:'#5a2624',r:9,txt:'#fff',only:'confirmation'},
+  SP:{name:'Sponsor',fill:'#6b6f86',stroke:'#333',r:9,txt:'#fff',only:'confirmation'},
 };
 
 // ---------- the rite: steps ----------
@@ -309,14 +312,17 @@ const PROP_DEF={
   // Exposition (mass-rite-exposition.js): the monstrance and the Sacrament in its lunette.
   monstrance:{off:[0,-16]},lunette:{off:[0,-16]},
   // Mass with the Bishop: the mitre and the pastoral staff (crozier).
-  mitre:{off:[0,0]},staff:{off:[-9,-4]}
+  mitre:{off:[0,0]},staff:{off:[-9,-4]},
+  // Confirmation: the vessel of holy chrism.
+  chrism:{off:[10,-8]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
   bread:{at:[612,770]},wine:{at:[632,770]},gospels:{by:'D'},cross:{by:'X'},cand1:{by:'C1'},cand2:{by:'C2'},thurible:{by:'T'},
   collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true},ciborium2:{at:[455,170],h:true},
   monstrance:{at:[500,160],h:true},lunette:{at:[137,85],h:true},
-  mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true}
+  mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true},
+  chrism:{at:[878,138],h:true}
 };
 
 // ---------- math helpers ----------

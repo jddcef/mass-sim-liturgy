@@ -99,7 +99,8 @@ server for liturgical or Catholic questions and clarifications.
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
 | 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
-| 17 | (this PR) | Mass with the Bishop: mitre- and crozier-bearers in vimps, mitre and pastoral staff in 3D, homily at the cathedra, pontifical blessing (R119–R126) |
+| 18 | (this PR) | Confirmation within Mass: candidate and sponsor, presentation, renewal of promises, laying on of hands, anointing with chrism, no Creed, Confirmation blessing (R127–R136) |
+| 17 | #13 | Mass with the Bishop: mitre- and crozier-bearers in vimps, mitre and pastoral staff in 3D, homily at the cathedra, pontifical blessing (R119–R126) |
 | 16 | #12 | Exposition and Benediction by a Deacon; white cope and humeral veil in 3D (R115–R118) |
 | 14 | #10 | Rite registry; lay-led Adoration and Exposition and Benediction with the Priest (R104–R110) |
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
@@ -179,7 +180,8 @@ parish material has been processed yet. The work is local and uncommitted.
          (`mass-rite-exposition.js`); the Deacon form, cope and humeral
          veil in round 16.
       3. ~~Mass with the Bishop~~ done in round 17 (mitre- and
-         crozier-bearers in vimps; R119–R126). Next: Confirmation.
+         crozier-bearers in vimps; R119–R126); ~~Confirmation~~ in round 18
+         (R127–R136).
       4. Christmas Mass, Candlemas, Ash Wednesday, Palm Sunday.
       5. Corpus Christi: an outdoor procession (canopy, torches, petals,
          Benediction at altars), which needs an outdoor scene.
