@@ -44,6 +44,9 @@ Classic scripts load in this order and share globals:
 | `mass-graphics.js` | Detail levels and quality settings. |
 | `mass-materials.js` | Deterministic offline surface textures, physical texture sizing, cached stone/wood/metal finishes and reversible detail changes. |
 | `mass-parish-editor.js`, `mass-parish-editor.css` | Maintainer preparation mode, plan/3D route preview, local profile library, draft and full-profile JSON export/import. |
+| `parish-intake.js`, `parish-intake.cjs` | Parish source intake: manifest, parish spec, review queue and decision formats; bearing rule; spec-to-profile draft; offline CLI (see `docs/PARISH-INTAKE.md`). |
+| `parish-review.html`, `parish-review.js`, `parish-review.css` | Offline bulk reviewer for `parishes/review-index.js`; exports decisions JSON. |
+| `parishes/` | Per-parish reference data (sources, derived images, spec, manifest, review). Not loaded by the simulator. |
 | `mass-3d.js` | Three.js church, figures, poses, props, cameras, playback, appearance, wall fading, nave seating. Exposes optional hooks (`gameBeforeRender`, `gamePick`, `gameTimeLimit`, `gameCameraTarget`, `gameCameraOverride`). |
 | `mass-game-icons.js` | SVG icon set (`GameIcons`). |
 | `mass-game-logic.js` | **Pure, Node-testable game rules**: options and presets, roles, decision derivation, choices, scoring, timers, lapses and M.C. detection, sacristan checklists, routes, media cues, search index. |

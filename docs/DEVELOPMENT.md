@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R111.**
+**Next decision number: R115.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -101,6 +101,7 @@ server for liturgical or Catholic questions and clarifications.
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
 | 14 | (this PR) | Rite registry; lay-led Adoration and Exposition and Benediction with the Priest (R104–R110) |
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
+| 15 | local, not published | Parish source intake: agent runbook, `parishes/` manifest and spec formats, Street View screening, draft profiles, offline bulk reviewer (R111–R114) |
 
 Round 10 was exercised in Edge through `file://` on all three pages, including
 all sanctuary floors, repeated quality switches, layouts, appearance changes,
@@ -145,6 +146,20 @@ override; a cold Low startup created no surface textures with the profile shell
 enabled. There is no physical low-spec performance claim, and no
 real parish has yet been surveyed or recreated. Changes are local and
 uncommitted; no push, PR or remote CI run was requested.
+
+Round 15 adds parish source intake (R111–R114). `docs/PARISH-INTAKE.md` is a
+runbook for an agent that prepares per-parish folders under `parishes/`, made
+up of a source manifest with statuses and reason codes, and a parish spec with
+per-value source and confidence. The agent screens Street View images with a
+bearing rule and a visual check, and builds a review queue. `parish-intake.cjs`
+(using `parish-intake.js`) provides the template, check, aim, draft, index and
+apply commands. `parish-review.html` is the offline bulk reviewer. The
+`mass-assets` suite covers formats, the bearing rule, draft conversion and a
+full CLI round trip in a temporary folder. The reviewer was checked in headless
+Edge through `file://` with sample data. It covered the contact sheet,
+one-by-one mode, Ctrl+Enter accept with comment, R reject, auto-advance, skip
+back to the sheet and saved decisions. All four Node suites pass. No real
+parish material has been processed yet. The work is local and uncommitted.
 
 ### Open items and backlog
 
@@ -191,6 +206,11 @@ flowchart TD
       estimated floor sketch; review a block model before adding custom
       shell geometry, levels or irregular routing. The current template does
       not prove every sanctuary movement is collision-free.
+- [ ] Parish intake (round 15): run the `docs/PARISH-INTAKE.md` agent over
+      the owner's material, review in `parish-review.html`, and apply the
+      decisions. Then extend the shell for spec fields that only reach the
+      report today: left/behind sacristy, cruciform or apsed plans, belfry
+      and roof pitch.
 - [ ] Later parish contributions: reviewed patch export/import using stable
       object IDs, base revision and expected old values; no automatic upload
       or patch merge exists yet. Full-profile JSON is the current handoff.

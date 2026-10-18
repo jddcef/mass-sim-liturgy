@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parish source review</title>
+<link rel="stylesheet" href="parish-review.css">
+</head>
+<body>
+<header>
+  <h1>Parish source review</h1>
+  <p id="progress" aria-live="polite"></p>
+  <div class="actions">
+    <button id="exportBtn" type="button">Export decisions</button>
+    <button id="clearBtn" type="button">Clear saved decisions</button>
+  </div>
+</header>
+<section id="filters" aria-label="Filters">
+  <label>Parish <select id="fParish"><option value="">All parishes</option></select></label>
+  <label>Type <select id="fType"><option value="">All types</option><option value="image">Images</option><option value="conflict">Conflicts</option><option value="gap">Gaps</option><option value="profile">Draft layouts</option></select></label>
+  <label>Agent suggestion <select id="fSuggestion"><option value="">Any</option><option value="check">Check</option><option value="reject">Reject</option><option value="accept">Accept</option></select></label>
+  <label>Show <select id="fState"><option value="open">Undecided</option><option value="decided">Decided</option><option value="">Everything</option></select></label>
+  <button id="startBtn" type="button">Review one by one</button>
+</section>
+<main>
+  <p id="empty" hidden></p>
+  <section id="sheet" aria-label="Contact sheet"></section>
+  <section id="step" hidden aria-label="Current item">
+    <div class="stepImage"><img id="sImg" alt=""><p id="sNoImg">No image for this item.</p></div>
+    <div class="stepText">
+      <p id="sPos"></p>
+      <h2 id="sTitle"></h2>
+      <p id="sParish"></p>
+      <p id="sQuestion" class="question"></p>
+      <p id="sSuggestion"></p>
+      <ul id="sReasons"></ul>
+      <p id="sDetails"></p>
+      <label for="sComment">Comment (optional)</label>
+      <textarea id="sComment" rows="3" placeholder="e.g. church visible on the left edge only"></textarea>
+      <div class="stepButtons">
+        <button id="acceptBtn" type="button" class="accept">Accept <kbd>A</kbd></button>
+        <button id="rejectBtn" type="button" class="reject">Reject <kbd>R</kbd></button>
+        <button id="skipBtn" type="button">Skip <kbd>S</kbd></button>
+        <button id="backBtn" type="button">Back <kbd>B</kbd></button>
+        <button id="sheetBtn" type="button">Contact sheet <kbd>Esc</kbd></button>
+      </div>
+      <p class="hint">Type a comment, then press Ctrl+Enter to accept with that comment.</p>
+      <p id="sDecision"></p>
+    </div>
+  </section>
+</main>
+<script src="parish-intake.js"></script>
+<script src="parishes/review-index.js"></script>
+<script src="parish-review.js"></script>
+</body>
+</html>
