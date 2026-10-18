@@ -130,4 +130,43 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   buildScenario({});
   assert.equal(STEPS[0].key,0,'Mass is the default rite');
   console.log('Passed 24 exposition scenarios and '+expFrames+' sampled frames.');
+  // Mass with the Bishop: the insignia pass between the Bishop and his bearers and are never left unheld.
+  let bishopFrames=0;
+  for(const solemnBlessing of [false,true])for(const serverCount of [1,5]){
+    const {options,visible}=buildScenario({bishop:true,serverCount,incense:true,solemnBlessing});
+    assert.ok(options.deacon&&options.lector,'the Bishop brings a Deacon and a reader');
+    assert.equal(ROLE_NAMES.P,'Bishop');
+    assert.ok(visible.has('MB')&&visible.has('CB'));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const holder=(key,name,u)=>{const i=idx(key),p={};for(const r in ACTORS)p[r]=actorAt(i,r,u);return propAt(i,name,u,p).by;};
+    for(let i=0;i<STEPS.length;i++)for(let k=0;k<=20;k++){
+      const p={};
+      for(const r in ACTORS)p[r]=actorAt(i,r,k/20);
+      for(const name of ['mitre','staff']){
+        const prop=propAt(i,name,k/20,p);
+        assert.ok(!prop.h&&['P','MB','CB'].includes(prop.by),name+' held in '+STEPS[i].title);
+        assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+      }
+      bishopFrames++;
+    }
+    assert.equal(holder(0,'mitre',.5),'P');assert.equal(holder(0,'staff',.5),'P');
+    assert.equal(holder(1,'mitre',.5),'MB');assert.equal(holder(1,'staff',.5),'CB');
+    assert.equal(holder(9,'mitre',.5),'P','seated with the mitre for the readings');
+    assert.equal(holder(13,'staff',.5),'P');assert.equal(holder(13,'mitre',.5),'MB');
+    assert.equal(holder(14,'mitre',.5),'P');assert.equal(holder(14,'staff',.5),'P');
+    assert.deepEqual(actorAt(idx(14),'P',.5).map(Math.round),CHAIR.map(Math.round),'the homily at the cathedra');
+    assert.equal(holder(38,'mitre',.9),'P');assert.equal(holder(38,'staff',.9),'P');
+    assert.equal(holder(39,'mitre',.7),'MB','the altar is kissed without the insignia');
+    assert.equal(holder(40,'mitre',.9),'P');assert.equal(holder(40,'staff',.9),'P');
+    assert.ok(STEPS[idx(4)].say.some(([r,t])=>r==='P'&&t==='Peace be with you.'));
+    assert.ok(STEPS.every(s=>!/\bPriest\b/.test(s.text)),'the rubrics name the Bishop');
+  }
+  const plain=buildScenario({serverCount:5,incense:true});
+  assert.equal(ROLE_NAMES.P,'Priest');
+  assert.ok(!plain.visible.has('MB')&&!plain.visible.has('CB'));
+  assert.ok(STEPS[STEPS.findIndex(s=>s.key===4)].say.some(([r,t])=>r==='P'&&t==='The Lord be with you.'));
+  assert.ok(!buildScenario({bishop:true,rite:'exposition',minister:'priest'}).visible.has('MB'),'no bearers at Exposition');
+  assert.equal(ROLE_NAMES.P,'Priest');
+  buildScenario({});
+  console.log('Passed 4 Mass with the Bishop scenarios and '+bishopFrames+' sampled frames.');
 `,context);

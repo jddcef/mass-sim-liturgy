@@ -66,13 +66,15 @@ startup must appear **before** the `<script>` tags in the HTML.
 ### 4.1 Setup
 
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
-  Mass with incense (default) and Solemnity. Outside Mass: Adoration
+  Mass with incense (default), Solemnity and Mass with the Bishop (mitre- and
+  crozier-bearers in vimps; also a "Bishop presides" option). Outside Mass: Adoration
   (lay-led, no blessing) and Exposition and Benediction (Priest or Deacon, in
   white cope, with the humeral veil for the blessing). Editing any
   option shows "Custom". Roles a rite does not have are refused with a message.
 - **Roles**:
   - Priest, Deacon and Server (book, bell and vessels)
   - Cross-bearer, Candle-bearer and Thurifer
+  - Mitre-bearer and Crozier-bearer (Mass with the Bishop only)
   - Lector 1 and 2
   - Usher, EMHC, Master of Ceremonies, Sacristan and Screen operator
   - Congregation

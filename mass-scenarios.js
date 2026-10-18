@@ -1,6 +1,8 @@
 const ORIGINAL_STEPS=JSON.parse(JSON.stringify(STEPS));
 const SERVER_ROLES=['X','C1','C2','T','S'];
-const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',ppl:'People'};
+// The Bishop's bearers (Mass with the Bishop only): servers in vimps who carry the mitre and the staff.
+const BEARER_ROLES=['MB','CB'];
+const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',MB:'Mitre-bearer',CB:'Crozier-bearer',ppl:'People'};
 
 // The rite registry: each rite builds its own STEPS and timeline. Mass is the default;
 // other rites (mass-rite-exposition.js) register themselves here and use string step keys,
@@ -8,9 +10,13 @@ const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'
 const RITES={mass:{name:'Holy Mass',build:buildMassScenario}};
 function buildScenario(requested){
   const rite=RITES[requested?.rite]||RITES.mass;
+  // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
+  ROLE_NAMES.P=rite===RITES.mass&&requested?.bishop?'Bishop':'Priest';
   return rite.build(requested||{});
 }
 function buildMassScenario(requested){
+  // The Bishop is assisted by a Deacon (Pontificales ritus 6) and the readings are read by readers.
+  if(requested.bishop)requested={...requested,deacon:true,lector:true};
   const serverCount=requested.serverCount??(requested.servers?5:0);
   if(!Number.isInteger(serverCount)||serverCount<0||serverCount>5){
     throw new RangeError('Server count must be an integer from 0 to 5.');
@@ -28,6 +34,7 @@ function buildMassScenario(requested){
     eucharisticPrayer:['I','II','III','IV'].includes(requested.eucharisticPrayer)?requested.eucharisticPrayer:'II',
     crucifix:CRUCIFIX_PLACES[requested.crucifix]?requested.crucifix:'wall',
     crossStand:CROSS_STANDS[requested.crossStand]?requested.crossStand:'right',
+    bishop:!!requested.bishop,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -43,6 +50,7 @@ function buildMassScenario(requested){
   if(!options.collection)visible.delete('U');
   if(!options.emhc)visible.delete('E');
   if(!options.deacon)visible.delete('D');
+  if(!options.bishop)BEARER_ROLES.forEach(a=>visible.delete(a));
   if(!options.servers)SERVER_ROLES.forEach(a=>visible.delete(a));
   const team=[
     [],['S'],['S','X'],['S','C1','C2'],
@@ -346,6 +354,7 @@ function buildMassScenario(requested){
 
   applyOptionalElements(steps,options,initialProps,find);
   applyParishMinistries(steps,options,initialPos,initialProps);
+  if(options.bishop)applyBishop(steps,options,initialProps);
 
   for(const s of steps){
     for(const field of ['mv','acts','orans']){
@@ -510,6 +519,132 @@ function applyParishMinistries(steps,options,initialPos,initialProps){
   if(options.emhc||options.reservedCommunion)purification.props.ciborium=[{by:ordinary,t:.02},{hide:true,t:.33}];
   purification.text='After distribution, the '+(options.deacon?'Deacon':'Priest')+' reposes remaining hosts in the tabernacle, closes it and genuflects. Remaining Precious Blood is consumed, never reserved. The sacred vessels are purified by the Priest, Deacon or instituted acolyte, not a lay EMHC. Sacred silence follows.';
   purification.ref='GIRM 163-164, 182-183, 192, 279';
+}
+
+// Mass with the Bishop. The Bishop wears the mitre and carries the pastoral staff in processions,
+// wears the mitre when seated, for the homily and for the blessing, and takes the staff for the
+// Gospel, the homily and the blessing (CB 59-60, judgement call to verify; Pontificales ritus 18-21).
+// Servers in vimps hold the insignia when he lays them aside; they are never put on the altar.
+function applyBishop(steps,options,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  initialProps.mitre={by:'P'};
+  initialProps.staff={by:'P'};
+  const MB_AT=[468,86],CB_AT=[532,86];
+  const prop=(step,name,...events)=>{
+    const list=((step.props??={})[name]??=[]);
+    list.push(...events);
+    list.sort((x,y)=>(x.t??x.a)-(y.t??y.a));
+  };
+  const act=(step,role,...items)=>{
+    const list=((step.acts??={})[role]??=[]);
+    list.push(...items);
+    list.sort((x,y)=>x[1]-y[1]);
+  };
+  const move=(step,role,...segments)=>{(step.mv??={})[role]=segments.length===1?segments[0]:segments;};
+  const vimp=' (hands covered by the vimp)';
+
+  const entrance=at(0);
+  move(entrance,'MB',M([[480,320],[500,274]],.2,.92));
+  move(entrance,'CB',M([[520,320],[558,274]],.2,.92));
+  const reverence=at(1);
+  reverence.acts.P=reverence.acts.P.map(a=>a[0]==='profound bow'?['profound bow',.08,.2]:a);
+  act(reverence,'P',['gives the staff and the mitre to the bearers',0,.07]);
+  act(reverence,'MB',['receives the mitre'+vimp,0,.07],['profound bow',.08,.2]);
+  act(reverence,'CB',['receives the pastoral staff'+vimp,0,.07],['profound bow',.08,.2]);
+  prop(reverence,'staff',{by:'CB',t:.03});
+  prop(reverence,'mitre',{by:'MB',t:.06});
+  move(reverence,'MB',M([[340,250],[330,120],HOME.MB],.3,.72));
+  move(reverence,'CB',M([[350,262],[345,110],HOME.CB],.32,.76));
+
+  const greeting=at(4);
+  if(greeting){
+    greeting.say=greeting.say.map(line=>line[0]==='P'&&line[1]==='The Lord be with you.'?['P','Peace be with you.',line[2],line[3]]:line);
+    greeting.text+=' A Bishop greets the people with "Peace be with you."';
+  }
+
+  // Seated for the readings, the Bishop wears the mitre.
+  const reading=at(9);
+  move(reading,'MB',M([MB_AT],0,.08),M([HOME.MB],.13,.22));
+  act(reading,'MB',['places the mitre on the Bishop'+vimp,.08,.12]);
+  prop(reading,'mitre',{by:'P',t:.1});
+  reading.text+=' The Bishop sits wearing the mitre.';
+
+  // He puts on incense and blesses the Deacon seated, then lays the mitre aside and takes the staff.
+  const acclamation=at(12);
+  move(acclamation,'MB',M([MB_AT],.44,.5),M([HOME.MB],.56,.66));
+  move(acclamation,'CB',M([CB_AT],.5,.57),M([HOME.CB],.63,.72));
+  act(acclamation,'MB',['takes the mitre'+vimp,.5,.55]);
+  act(acclamation,'CB',['hands the pastoral staff to the Bishop',.57,.62]);
+  act(acclamation,'P',['stands and takes the pastoral staff',.57,.62]);
+  prop(acclamation,'mitre',{by:'MB',t:.53});
+  prop(acclamation,'staff',{by:'P',t:.6});
+  acclamation.text+=' The Bishop lays aside the mitre, stands and takes the pastoral staff for the Gospel.';
+  const gospel=at(13);
+  gospel.acts.P=(gospel.acts.P||[]).map(a=>a[0]==='turns toward the ambo'?['turns toward the ambo, holding the pastoral staff',a[1],a[2]]:a);
+
+  // The homily from the cathedra, seated, with mitre and staff unless he decides otherwise.
+  const homily=at(14);
+  homily.mv.P=M([CHAIR],0,.28);
+  homily.homilyPlaces=[CHAIR.slice()];
+  homily.bishopSeated=true;
+  move(homily,'MB',M([MB_AT],.02,.12),M([HOME.MB],.18,.28),M([MB_AT],.84,.9),M([HOME.MB],.95,1));
+  move(homily,'CB',M([CB_AT],.84,.9),M([HOME.CB],.95,1));
+  homily.acts.P=[['receives the mitre and sits',.12,.17],['preaches seated at the cathedra, with mitre and pastoral staff',.3,.86],['gives back the staff and the mitre',.9,.94]];
+  act(homily,'MB',['places the mitre on the Bishop'+vimp,.12,.17],['takes the mitre'+vimp,.9,.94]);
+  act(homily,'CB',['takes the pastoral staff'+vimp,.9,.94]);
+  prop(homily,'mitre',{by:'P',t:.15},{by:'MB',t:.93});
+  prop(homily,'staff',{by:'CB',t:.91});
+  homily.text='The Book of the Gospels is taken to a fitting place. The Bishop gives the Homily seated at the cathedra, wearing the mitre and holding the pastoral staff, unless he decides otherwise. A brief period of silence follows.';
+  homily.ref+='; CB 142 (to verify)';
+
+  // Before the blessing the mitre-bearer comes to the chair.
+  const prayer=at(37);
+  move(prayer,'MB',M([MB_AT],.88,.98));
+  const blessing=at(38);
+  act(blessing,'MB',['places the mitre on the Bishop'+vimp,0,.05]);
+  prop(blessing,'mitre',{by:'P',t:.03});
+  blessing.acts.P=blessing.acts.P.map(a=>/blesses the people/.test(a[0])?['blesses the people, making the sign of the cross three times ✠ ✠ ✠',a[1],a[2]]:a);
+  act(blessing,'P',['receives the mitre',0,.05]);
+  const staffAt=options.solemnBlessing?.68:.54;
+  if(!options.solemnBlessing){
+    blessing.say=[['P','(brief announcements)',.05,.12],['P','The Lord be with you.',.13,.2],['ppl','And with your spirit.',.2,.27],
+      ['P','Blessed be the name of the Lord.',.29,.36],['ppl','Now and for ever.',.36,.42],
+      ['P','Our help is in the name of the Lord.',.43,.49],['ppl','Who made heaven and earth.',.49,.55],
+      ['P','May almighty God bless you, the Father, ✠ and the Son, ✠ and the Holy Spirit. ✠',.58,.84],['ppl','Amen.  (all sign themselves)',.86,.96]];
+    blessing.orans={P:[[.13,.2]]};
+    blessing.acts.P=blessing.acts.P.map(a=>/blesses the people/.test(a[0])?[a[0],.58,.84]:a);
+  }
+  move(blessing,'CB',M([CB_AT],staffAt-.1,staffAt-.02));
+  act(blessing,'CB',['hands the pastoral staff to the Bishop',staffAt-.02,staffAt+.03]);
+  act(blessing,'P',['takes the pastoral staff',staffAt-.02,staffAt+.03]);
+  prop(blessing,'staff',{by:'P',t:staffAt});
+  blessing.text=(options.solemnBlessing?blessing.text:'The Bishop receives the mitre and greets the people. In the pontifical blessing he says "Blessed be the name of the Lord" and "Our help is in the name of the Lord", and the people reply.')+
+    ' He takes the pastoral staff and blesses the people, making the sign of the cross three times.';
+  blessing.ref+='; CB 169 (to verify)';
+
+  // The insignia are laid aside to kiss the altar, then taken up again after the bow for the recession.
+  const dismissal=at(39);
+  act(dismissal,'P',['gives back the staff and the mitre',.3,.4]);
+  act(dismissal,'MB',['takes the mitre'+vimp,.33,.4]);
+  act(dismissal,'CB',['takes the pastoral staff'+vimp,.3,.36]);
+  prop(dismissal,'staff',{by:'CB',t:.33});
+  prop(dismissal,'mitre',{by:'MB',t:.37});
+  move(dismissal,'MB',M([[340,100],[340,250],[500,274]],.44,.8));
+  move(dismissal,'CB',M([[350,110],[350,262],[558,274]],.46,.82));
+  const recession=at(40);
+  act(recession,'P',['receives the mitre and the pastoral staff',.43,.5]);
+  act(recession,'MB',['profound bow',.3,.42],['places the mitre on the Bishop'+vimp,.43,.47]);
+  act(recession,'CB',['profound bow',.3,.42],['hands the pastoral staff to the Bishop',.46,.5]);
+  prop(recession,'mitre',{by:'P',t:.45});
+  prop(recession,'staff',{by:'P',t:.48});
+  move(recession,'MB',M([[480,312],[480,860]],.64,1));
+  move(recession,'CB',M([[520,312],[520,860]],.64,1));
+
+  entrance.text+=' The Bishop wears the mitre and carries the pastoral staff, followed by the servers who will hold them, wearing vimps.';
+  reverence.text+=' Before the bow the Bishop hands the staff and the mitre to their bearers; they are never placed on the altar.';
+  dismissal.text+=' The Bishop lays aside the mitre and staff to kiss the altar.';
+  recession.text+=' After the bow the Bishop receives the mitre and the pastoral staff.';
+  for(const step of steps)step.text=step.text.replace(/\bPriest\b/g,'Bishop');
 }
 
 function chooseHomilyPlace(point){

@@ -156,6 +156,7 @@ const gDyn=el('g',{});
 const AEL={};
 for(const a in ACTORS){
   const d=ACTORS[a];
+  if(d.only)continue; // Option-only ministers (the Bishop's bearers) are not in this baseline view.
   const g=el('g',{},gActors);
   const arms=el('path',{d:'',stroke:d.stroke,'stroke-width':3,fill:'none','stroke-linecap':'round'},g);
   const ring=el('circle',{r:d.r+5,fill:'none',stroke:'#8b1a1a','stroke-width':1.5,'stroke-dasharray':'3 3',opacity:0},g);
@@ -254,6 +255,7 @@ function render(){
   // actors
   const actsNow={};
   for(const a in ACTORS){
+    if(!AEL[a])continue;
     const e=AEL[a],p=pos[a];
     const act=((s.acts||{})[a]||[]).find(([l,x,y])=>u>=x&&u<=y);
     actsNow[a]=act;

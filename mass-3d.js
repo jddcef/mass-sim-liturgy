@@ -9,7 +9,9 @@ const materials=new Map();
 const SCALE=.025;
 // Servers are often of different ages; candle-bearers are drawn as younger children.
 // Relative figure heights: the Priest and Deacon are full-grown adults, servers vary in age.
-const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92};
+const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92,MB:.95,CB:.93};
+// Altar servers and the Bishop's bearers share the server's alb (or cassock and surplice).
+const ALB_ROLES=[...SERVER_ROLES,...BEARER_ROLES];
 const groundAt=p=>{const y=layoutPoint(p)[1];return y<295?.32:y<310?.32*(310-y)/15:0;};
 const world=(p,height=0)=>{
   const mapped=layoutPoint(p);
@@ -62,7 +64,7 @@ function makeFigure(color,skin,role){
   const torso=new THREE.Group();
   torso.position.y=.68;
   root.add(torso);
-  const cleric=role==='P'||role==='D'||SERVER_ROLES.includes(role);
+  const cleric=role==='P'||role==='D'||ALB_ROLES.includes(role);
   const body=mesh(new THREE.CylinderGeometry(cleric?.22:.19,role==='P'?.4:cleric?.36:.23,role==='P'?1.4:.82,12),color,torso,0,role==='P'?.14:.4,0,Boolean(role));
   if(role==='P'){
     box(torso,0,.15,.285,.055,1.2,.022,'#d7b565');
@@ -97,7 +99,7 @@ function makeFigure(color,skin,role){
   const head=new THREE.Group();
   torso.add(head);
   sphere(head,0,1.02,0,.18,skin,Boolean(role));
-  if(!SERVER_ROLES.includes(role))sphere(head,0,1.105,-.015,.15,'#4b3628',false).scale.set(1,.45,1);
+  if(!ALB_ROLES.includes(role))sphere(head,0,1.105,-.015,.15,'#4b3628',false).scale.set(1,.45,1);
   for(const side of [-1,1]){
     sphere(head,side*.062,1.045,.155,.034,'#fbfaf5',false).scale.set(1,.8,.5);
     sphere(head,side*.062,1.045,.17,.019,'#2a2019',false);
@@ -118,8 +120,24 @@ function makeFigure(color,skin,role){
     box(leg,0,-.56,.045,.13,.1,.24,'#322c26',Boolean(role));
     root.add(leg);legs.push(leg);
   }
-  let cincture=null,pectoral=null;
-  if(SERVER_ROLES.includes(role)){
+  let cincture=null,pectoral=null,vimp=null,bishop=null;
+  if(BEARER_ROLES.includes(role)){
+    // The vimp: a long white veil over the shoulders, its ends covering the hands.
+    vimp=new THREE.Group();
+    box(vimp,0,.66,-.02,.6,.06,.4,'#fbf8ef',false);
+    for(const side of [-1,1])box(vimp,side*.27,.4,.06,.08,.5,.3,'#fbf8ef',false);
+    torso.add(vimp);
+  }
+  if(role==='P'){
+    // The Bishop's zucchetto and pectoral cross, shown only when the Bishop presides.
+    bishop=new THREE.Group();
+    sphere(bishop,0,1.17,-.02,.12,'#7b2a6e',false).scale.set(1,.35,1);
+    box(bishop,0,.44,.3,.03,.13,.02,'#d7b565',false,'gold');
+    box(bishop,0,.47,.3,.09,.03,.02,'#d7b565',false,'gold');
+    box(bishop,0,.6,.27,.012,.24,.012,'#d7b565',false);
+    bishop.visible=false;torso.add(bishop);
+  }
+  if(ALB_ROLES.includes(role)){
     cincture=new THREE.Group();
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.3,.024,6,18),material('#ffffff'));
     ring.rotation.x=Math.PI/2;ring.position.set(0,.36,0);
@@ -137,7 +155,7 @@ function makeFigure(color,skin,role){
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil};
+  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){
@@ -329,12 +347,13 @@ function applyAppearance(a){
   recolour(figures.P,colour);
   recolour(figures.D,colour);
   dressForRite(scenario?.vesture);
+  figures.P.bishop.visible=!!scenario?.options?.bishop;
   const note=$('vestmentNote');
   if(note){
     const date=nextSunday(new Date()).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
     note.textContent='Next Sunday ('+date+'): '+day.name+', '+day.colourName.toLowerCase()+'. Simplified Sunday calendar; override for local feasts. Rose is optional.';
   }
-  for(const role of SERVER_ROLES){
+  for(const role of ALB_ROLES){
     const figure=figures[role];
     recolour(figure,a.serverRobe);
     figure.cincture.visible=a.cincture!=='none';
@@ -504,6 +523,21 @@ function makeObjects(){
       sphere(g,0,1.82,.045,.055,'#bba583');
       box(g,0,1.64,.045,.04,.24,.04,'#bba583');
       box(g,0,1.72,.045,.36,.035,.04,'#bba583');
+    }else if(name==='mitre'){
+      // Two peaks (front and back) of white cloth with gold bands; origin at the brow.
+      for(const z of [-.06,.06]){
+        const peak=box(g,0,.17,z,.3,.34,.03,'#f7f3e6',true);
+        peak.rotation.x=z>0?-.12:.12;
+        box(g,0,.17,z*1.25,.05,.34,.012,'#d7b565',false,'gold');
+      }
+      cylinder(g,0,.03,0,.16,.16,.06,'#d7b565','gold');
+      for(const side of [-1,1])box(g,side*.08,-.12,-.12,.04,.26,.01,'#d7b565',false,'gold');
+    }else if(name==='staff'){
+      // The pastoral staff: a tall pole with a gilt crook; origin at the foot.
+      cylinder(g,0,.95,0,.022,.022,1.9,'#b58d40','gold');
+      cylinder(g,0,1.92,0,.04,.04,.1,'#c9a24e','gold');
+      const crook=mesh(new THREE.TorusGeometry(.12,.022,8,20,Math.PI*1.4),'#c9a24e',g,.12,2.06,0,true,'gold');
+      crook.rotation.z=-.2;
     }else if(name.startsWith('cand')){
       cylinder(g,0,.17,0,.025,.05,.34,'#c6a15c','gold');
       cylinder(g,0,.46,0,.045,.045,.28,'#fff5dc');
@@ -648,7 +682,7 @@ function activityView(){
   const speakers=(step.say||[]).filter(([role,,a,b])=>
     role!=='ppl'&&available(role)&&progress3d>=a&&progress3d<=b);
   if(step.key===0||step.key===40){
-    const procession=['P','D',...SERVER_ROLES,'L'].filter(available);
+    const procession=['P','D',...SERVER_ROLES,...BEARER_ROLES,'L'].filter(available);
     point=new THREE.Vector3();
     procession.forEach(role=>point.add(figures[role].root.position));
     point.divideScalar(Math.max(1,procession.length)).add(new THREE.Vector3(0,1,0));
@@ -743,9 +777,9 @@ function updatePeople(step,phase){
 function objectHeight(name,state,p){
   if(state.by){
     const owner=figures[state.by];
-    return groundAt(p)+(name==='cross'?.2:owner.root.scale.y*1.28);
+    return groundAt(p)+(name==='cross'||name==='staff'?.2:owner.root.scale.y*1.28);
   }
-  if(name==='cross')return groundAt(p);
+  if(name==='cross'||name==='staff')return groundAt(p)+(name==='staff'?.05:0);
   if(name.startsWith('cand'))return groundAt(p)+1.35;
   if(name==='gospels'&&p[0]<260)return groundAt(p)+1.38;
   if(name==='missal'&&p[1]<100)return groundAt(p)+1.29;
@@ -793,8 +827,8 @@ function renderFrame(dt=1/60){
     const atSeat=Math.hypot(p[0]-HOME[role][0],p[1]-HOME[role][1])<15;
     const posture=postureAt(cur3d,progress3d).name;
     const layInPew=['L','L2','Ps','U','E'].includes(role)&&p[1]>310&&!walking;
-    const seated=posture==='sit'&&atSeat&&!walking&&!(role==='P'&&step.key===14);
-    const kneelingServer=SERVER_ROLES.includes(role)&&posture==='kneel'&&!walking;
+    const seated=posture==='sit'&&atSeat&&!walking&&!(role==='P'&&step.key===14&&!scenario.options.bishop);
+    const kneelingServer=ALB_ROLES.includes(role)&&posture==='kneel'&&!walking;
     const kneeling=!walking&&(step.kneel?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     pose(figure,layInPew?posture:seated?'sit':kneelingServer||kneeling?'kneel':'stand',action,elapsed,walking,orans);
     if(figure.veil)figure.veil.visible=(step.veil?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
@@ -815,6 +849,15 @@ function renderFrame(dt=1/60){
       object.userData.open.visible=open;object.userData.closed.visible=!open;
     }
     if(state.by&&name==='thurible')object.rotation.z=Math.sin(elapsed*5)*.25;
+    object.scale.setScalar(1);
+    if(name==='mitre'&&state.by==='P'&&object.visible){
+      // Worn: the mitre sits on the Bishop's head and follows his bows.
+      const head=figures.P.head;
+      figures.P.root.updateMatrixWorld(true);
+      head.localToWorld(object.position.set(0,1.1,-.01));
+      head.getWorldQuaternion(object.quaternion);
+      object.scale.setScalar(figures.P.root.scale.y);
+    }
     const blessing=state.by&&(name==='monstrance'||name==='lunette')&&(step.blessWith||[]).find(([a,b])=>progress3d>=a&&progress3d<=b);
     if(blessing){
       // Benediction: the monstrance traces the Sign of the Cross, up and down then left and right.
@@ -934,7 +977,7 @@ function applySetup(){
   $('serverAssignments').textContent=scenario.assignments.length
     ?scenario.assignments.join(' ')
     :'No servers: the Priest or Deacon handles the preparation.';
-  for(const role of SERVER_ROLES){
+  for(const role of ['P',...SERVER_ROLES]){
     const text=role==='T'&&!scenario.options.incense?'Assistant':ROLE_NAMES[role];
     // Labels are rebuilt only when the displayed duty changes.
     const figure=figures[role];
