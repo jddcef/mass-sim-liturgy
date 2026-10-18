@@ -31,6 +31,10 @@ External pages may change; the project does not bundle a full copyrighted Missal
   shell are project-generated. No supplied parish photos, scans, measured plans
   or new third-party assets are included. Permission and attribution must be
   reviewed before incorporating future photographic or model assets.
+- Material under `parishes/` (when added) is reference data supplied by the
+  owner. Each file's provenance and licence are recorded in its
+  `manifest.json`. Street View and satellite images are reference-only and
+  are not used as textures or shipped in the simulator.
 
 ## Static audio
 

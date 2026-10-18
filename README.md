@@ -226,6 +226,20 @@ Confirm rights to distributed photographs and directly reproduced artwork,
 and avoid identifiable people and private notices. No photos or measured plans
 are bundled with the generic template.
 
+### Preparing many parishes from existing material
+
+If you already have estimate cards, satellite images, Street View captures
+and interior photos, an agent can sort them by following
+[docs/PARISH-INTAKE.md](docs/PARISH-INTAKE.md). It builds one folder per parish
+under `parishes/` with a source manifest and a parish spec, with values such
+as dimensions, roof pitch, materials, belfry and fixture positions. It
+excludes or flags doubtful images, for example Street View taken from the
+wrong side of the street, and drafts a training layout. You then check every
+doubtful item in **`parish-review.html`**, which opens directly from the
+folder. Press A to accept, R to reject and S to skip, or press Ctrl+Enter to
+accept with a comment. Then export the decisions and give the file back to the
+agent (`node parish-intake.cjs apply <file>`).
+
 ## Speech and languages
 
 Enable **Speak during playback** and choose voices independently for the Priest,
