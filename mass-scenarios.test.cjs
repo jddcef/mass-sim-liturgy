@@ -169,4 +169,55 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   assert.equal(ROLE_NAMES.P,'Priest');
   buildScenario({});
   console.log('Passed 4 Mass with the Bishop scenarios and '+bishopFrames+' sampled frames.');
+  // Confirmation within Mass: the rite after the Gospel, the Creed omitted, the chrism always held or set down.
+  let confirmFrames=0;
+  for(const serverCount of [0,1,5])for(const eucharisticPrayer of ['I','III']){
+    const {options,visible}=buildScenario({confirmation:true,serverCount,incense:serverCount>0,eucharisticPrayer});
+    assert.ok(options.bishop&&options.deacon&&!options.creed&&options.solemnBlessing);
+    assert.equal(ROLE_NAMES.P,'Bishop');
+    assert.ok(visible.has('K')&&visible.has('SP'));
+    const keys=STEPS.map(s=>s.key);
+    assert.ok(!keys.includes(15),'the Creed is omitted (Ordo Confirmationis 31)');
+    for(const key of [13.5,14.2,14.4,14.6,14.8])assert.ok(keys.includes(key),'step '+key);
+    assert.deepEqual(keys.filter(k=>k>13&&k<16),[13.5,14,14.2,14.4,14.6,14.8]);
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const holder=(key,name,u)=>{const i=idx(key),p={};for(const r in ACTORS)p[r]=actorAt(i,r,u);return propAt(i,name,u,p);};
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),serverCount+': hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name of ['mitre','staff']){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(!prop.h&&['P','MB','CB'].includes(prop.by),name+' held in '+step.title);
+        }
+        const chrism=propAt(i,'chrism',k/20,p);
+        assert.ok(!chrism.h&&(chrism.by?visible.has(chrism.by):chrism.at),'chrism in '+step.title);
+        assert.ok(resolveProp(chrism,p,'chrism').every(Number.isFinite));
+        confirmFrames++;
+      }
+    }
+    assert.equal(holder(14.6,'chrism',.5).by,'D','the Deacon holds the chrism for the anointing');
+    assert.equal(holder(14.6,'mitre',.55).by,'P','the Bishop anoints wearing the mitre');
+    assert.equal(holder(14.4,'mitre',.7).by,'MB','the prayer without the mitre');
+    assert.equal(holder(14.8,'ewer',.5).by,serverCount?'S':'D');
+    assert.deepEqual(holder(40,'chrism',.5).at,[878,138],'the chrism is back at the credence');
+    assert.deepEqual(actorAt(idx(14.6),'K',.55).map(Math.round),[500,306],'the candidate before the Bishop');
+    assert.deepEqual(actorAt(idx(16),'K',0),HOME.K,'back in the pew');
+    assert.ok(STEPS[idx(14.6)].say.some(([r,t])=>r==='P'&&/be sealed with the Gift of the Holy Spirit/.test(t)));
+    assert.equal(/Hanc igitur/.test(STEPS[idx(25)].text),eucharisticPrayer==='I');
+    assert.ok(/Ordo Confirmationis 33/.test(STEPS[idx(38)].ref));
+    assert.ok(STEPS.every(s=>!/\bPriest\b/.test(s.text)),'the rubrics name the Bishop');
+  }
+  for(const requested of [{},{bishop:true},{rite:'exposition',minister:'priest'}]){
+    const {visible}=buildScenario(requested);
+    assert.ok(!visible.has('K')&&!visible.has('SP'),'candidates only at Confirmation');
+    assert.ok(STEPS.every(s=>![13.5,14.2,14.4,14.6,14.8].includes(s.key)),'no Confirmation steps');
+  }
+  buildScenario({});
+  console.log('Passed 6 Confirmation scenarios and '+confirmFrames+' sampled frames.');
 `,context);

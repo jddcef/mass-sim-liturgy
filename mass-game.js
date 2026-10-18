@@ -28,7 +28,7 @@ const DEVOTION_BLURBS={
   T:'Thurible and boat: present the incense at the exposition and before the blessing.'
 };
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
-const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell']};
+const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
 
 const game={
@@ -318,7 +318,7 @@ function syncPreset(){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -346,7 +346,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -1049,7 +1049,7 @@ async function runPreMass(gen){
   if(game.role==='PEW'){game.overrides.PEW=OUTSIDE.slice();game.facing.PEW=Math.PI;}
   if(game.role==='AV'){game.overrides.AV=[540,805];game.facing.AV=Math.PI;}
   else if(game.options.projector){game.overrides.AV=AV_DESK.slice();game.facing.AV=Math.PI;}
-  for(const role of ['L','L2','U','E'])if(game.visible.has(role)&&!ministers.includes(role)){
+  for(const role of ['L','L2','U','E','K','SP'])if(game.visible.has(role)&&!ministers.includes(role)){
     game.overrides[role]=HOME[role].slice();game.facing[role]=Math.PI;
   }
   const npcWalk=()=>Promise.all(ministers.filter(r=>r!==GAME_ROLES[game.role].actor).map((r,i)=>wait(i*350).then(()=>walk(r,game.overrides[r],starts[0].pos[r]))));

@@ -2,7 +2,7 @@ const ORIGINAL_STEPS=JSON.parse(JSON.stringify(STEPS));
 const SERVER_ROLES=['X','C1','C2','T','S'];
 // The Bishop's bearers (Mass with the Bishop only): servers in vimps who carry the mitre and the staff.
 const BEARER_ROLES=['MB','CB'];
-const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',MB:'Mitre-bearer',CB:'Crozier-bearer',ppl:'People'};
+const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',MB:'Mitre-bearer',CB:'Crozier-bearer',K:'Candidate',SP:'Sponsor',ppl:'People'};
 
 // The rite registry: each rite builds its own STEPS and timeline. Mass is the default;
 // other rites (mass-rite-exposition.js) register themselves here and use string step keys,
@@ -11,10 +11,13 @@ const RITES={mass:{name:'Holy Mass',build:buildMassScenario}};
 function buildScenario(requested){
   const rite=RITES[requested?.rite]||RITES.mass;
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
-  ROLE_NAMES.P=rite===RITES.mass&&requested?.bishop?'Bishop':'Priest';
+  ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
 }
 function buildMassScenario(requested){
+  // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
+  // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
+  if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
   // The Bishop is assisted by a Deacon (Pontificales ritus 6) and the readings are read by readers.
   if(requested.bishop)requested={...requested,deacon:true,lector:true};
   const serverCount=requested.serverCount??(requested.servers?5:0);
@@ -35,6 +38,7 @@ function buildMassScenario(requested){
     crucifix:CRUCIFIX_PLACES[requested.crucifix]?requested.crucifix:'wall',
     crossStand:CROSS_STANDS[requested.crossStand]?requested.crossStand:'right',
     bishop:!!requested.bishop,
+    confirmation:!!requested.confirmation,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -51,6 +55,7 @@ function buildMassScenario(requested){
   if(!options.emhc)visible.delete('E');
   if(!options.deacon)visible.delete('D');
   if(!options.bishop)BEARER_ROLES.forEach(a=>visible.delete(a));
+  if(!options.confirmation){visible.delete('K');visible.delete('SP');}
   if(!options.servers)SERVER_ROLES.forEach(a=>visible.delete(a));
   const team=[
     [],['S'],['S','X'],['S','C1','C2'],
@@ -355,6 +360,7 @@ function buildMassScenario(requested){
   applyOptionalElements(steps,options,initialProps,find);
   applyParishMinistries(steps,options,initialPos,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
+  if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
   for(const s of steps){
     for(const field of ['mv','acts','orans']){
@@ -645,6 +651,111 @@ function applyBishop(steps,options,initialProps){
   dismissal.text+=' The Bishop lays aside the mitre and staff to kiss the altar.';
   recession.text+=' After the bow the Bishop receives the mitre and the pastoral staff.';
   for(const step of steps)step.text=step.text.replace(/\bPriest\b/g,'Bishop');
+}
+
+// Confirmation within Mass (Ordo Confirmationis 20-33), after the Gospel: the presentation of the
+// candidates, the homily, the renewal of baptismal promises, the laying on of hands, the anointing
+// with chrism and the washing of the Bishop's hands; the universal prayer follows. One candidate (K)
+// and one sponsor (SP) stand for all of them. The Ordo does not say when the mitre is worn: here the
+// Bishop wears it seated and for the anointing, and lays it aside to pray (judgement call; CB to verify).
+function applyConfirmation(steps,options,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  initialProps.chrism={at:[878,138]};
+  const FRONT=[500,258],STATION=[500,306],BESIDE=[528,318],D_SIDE=[455,262],MB_SIDE=[468,236];
+  const toFront=(a,b)=>M([[625,90],[625,250],FRONT],a,b);
+  const toChair=(a,b)=>M([[625,250],[625,90],CHAIR],a,b);
+  const fromPew=(home,to,a,b)=>M([[513,home[1]],[506,330],to],a,b);
+  const toPew=(home,a,b)=>M([[506,330],[513,home[1]],home],a,b);
+  const vimp=' (hands covered by the vimp)';
+  const homily=at(14);
+  const presentation={key:13.5,part:'Liturgy of the Word',title:'Presentation of the Candidates',dur:14,posture:'sit',
+    text:'After the Gospel the Bishop sits, wearing the mitre. The Book of the Gospels is taken to the credence. The Deacon (or the parish priest or a catechist) presents the candidates. Each is called by name and comes into the sanctuary; if there are very many, they stand in their places. One candidate here stands for all.',
+    ref:'Ordo Confirmationis 21',
+    mv:{D:[M([[300,252],[620,252],[830,165]],0,.22),M([[625,262],D_SIDE],.28,.42)],
+      MB:[M([[468,86]],.02,.1),M([HOME.MB],.16,.26)],
+      K:[fromPew(HOME.K,STATION,.48,.62),toPew(HOME.K,.82,.98)]},
+    acts:{P:[['receives the mitre and sits',.1,.15],['receives the candidates presented to him',.5,.8]],
+      MB:[['places the mitre on the Bishop'+vimp,.1,.15]],
+      D:[['places the Book of the Gospels at the credence',.22,.27],['calls the candidates by name and presents them to the Bishop',.44,.62]],
+      K:[['comes forward when called by name',.48,.62],['bows to the Bishop and returns to the pew',.66,.98]]},
+    face:{K:[[CHAIR,.62,.8]]},
+    props:{gospels:[{at:[868,146],a:.22,b:.27}],mitre:[{by:'P',t:.13}]},
+    say:[['D','(calls each candidate by name)',.44,.62],['K','(answers: "Present.")',.62,.68]]};
+  steps.splice(steps.indexOf(homily),0,presentation);
+  // The mitre and the Book are already dealt with: the homily keeps only the preaching and the end.
+  homily.mv.D=M([[400,150],DCHAIR],0,.25);
+  delete homily.props.gospels;
+  homily.props.mitre=homily.props.mitre.filter(e=>e.by!=='P');
+  homily.mv.MB=homily.mv.MB.slice(2);
+  homily.acts.P=homily.acts.P.filter(a=>!/receives the mitre/.test(a[0]));
+  homily.acts.MB=homily.acts.MB.filter(a=>!/places the mitre/.test(a[0]));
+  homily.text='The Bishop gives the Homily seated at the cathedra, wearing the mitre and holding the pastoral staff, explaining the readings and the meaning of Confirmation to the candidates, their sponsors and parents, and the whole assembly. Then he lays the mitre and staff aside.';
+  homily.ref='Ordo Confirmationis 22; CB 142 (to verify)';
+
+  const promises={key:14.2,part:'Liturgy of the Word',title:'Renewal of Baptismal Promises',dur:16,posture:'stand',
+    text:'The candidates stand and the Bishop questions them. They renew their baptismal promises, rejecting sin and professing their faith in the Father, the Son and the Holy Spirit (given to them today) and in the Church. The Bishop and the whole assembly confirm this profession of faith.',
+    ref:'Ordo Confirmationis 23',
+    acts:{K:[['stands and answers the Bishop',.05,.8]],P:[['questions the candidates',.05,.8]]},
+    say:[['P','Do you renounce Satan, and all his works and empty show?',.04,.14],['K','I do.',.14,.19],
+      ['P','Do you believe in God, the Father almighty, Creator of heaven and earth?',.21,.31],['K','I do.',.31,.36],
+      ['P','(questions on Jesus Christ, the Holy Spirit given today, and the Church)',.38,.66],['K','I do.',.66,.71],
+      ['P','This is our faith. This is the faith of the Church…',.74,.9],['ppl','Amen.',.9,1]]};
+  const hands={key:14.4,part:'Liturgy of the Word',title:'Laying on of Hands',dur:16,posture:'stand',
+    text:'The Bishop, with any priests assisting him, comes to face the candidates. With hands joined he invites all to pray, and all pray in silence for a while. Then he extends his hands over all the candidates. He alone says the prayer asking God to send the Holy Spirit, the Paraclete, with the gifts of wisdom and understanding, counsel and fortitude, knowledge and piety, and the fear of the Lord.',
+    ref:'Ordo Confirmationis 24-25',
+    mv:{P:toFront(0,.24)},
+    acts:{P:[['invites all to pray, hands joined',.26,.36],['extends his hands over all the candidates',.5,.9]],K:[['stands to receive the laying on of hands',.26,.92]]},
+    orans:{P:[[.5,.9]]},
+    say:[['P','(invites all to pray that the Holy Spirit be poured out on these adopted children)',.26,.36],['ppl','(silent prayer)',.36,.48],
+      ['P','(the prayer for the sevenfold gift of the Holy Spirit)',.5,.9],['ppl','Amen.',.92,1]]};
+  const anointing={key:14.6,part:'Liturgy of the Word',title:'Anointing with Chrism',dur:28,posture:'sit',
+    text:'The Deacon brings the holy chrism to the Bishop, who wears the mitre. Each candidate comes to the Bishop with the sponsor, who places the right hand on the candidate\u2019s shoulder and gives the candidate\u2019s name (or the candidate says it). The Bishop dips his right thumb in the chrism and makes the sign of the cross on the candidate\u2019s forehead with the words of the sacrament, and gives the sign of peace. A suitable chant may be sung during the anointing.',
+    ref:'Ordo Confirmationis 26-29',
+    mv:{D:[M([[700,95],[850,150]],0,.14),M([[625,262],D_SIDE],.18,.32),M([[625,262],[850,150]],.84,.96)],
+      MB:[M([MB_SIDE],.04,.16),M([HOME.MB],.24,.38)],
+      K:[fromPew(HOME.K,STATION,.3,.44),toPew(HOME.K,.76,.94)],
+      SP:[fromPew(HOME.SP,BESIDE,.31,.46),toPew(HOME.SP,.77,.96)]},
+    acts:{D:[['takes the vessel of holy chrism',.14,.18],['presents the holy chrism to the Bishop',.32,.38],['takes the chrism back to the credence',.84,.98]],
+      MB:[['places the mitre on the Bishop'+vimp,.16,.2]],
+      P:[['receives the mitre',.16,.2],['anoints the forehead with chrism, tracing the cross with his thumb',.52,.6],['gives the newly confirmed the sign of peace',.62,.7]],
+      K:[['comes forward with the sponsor',.3,.44],['receives the anointing',.52,.6],['returns to the pew',.76,.94]],
+      SP:[['places the right hand on the candidate\u2019s shoulder',.46,.6]]},
+    face:{K:[[FRONT,.44,.74]],SP:[[FRONT,.46,.74]],D:[[FRONT,.38,.84]]},
+    props:{chrism:[{by:'D',t:.16},{at:[878,138],a:.94,b:.98}],mitre:[{by:'P',t:.18}]},
+    say:[['SP','(gives the candidate\u2019s name)',.46,.51],['P','N., be sealed with the Gift of the Holy Spirit.',.52,.6],['K','Amen.',.6,.63],
+      ['P','Peace be with you.',.64,.68],['K','And with your spirit.',.68,.72],['ppl','\u266a a suitable chant during the anointing \u266a',.74,1]]};
+  // A server brings the water; with no servers the Deacon does it.
+  const w=options.serverCount>0?'S':'D';
+  const washing={key:14.8,part:'Liturgy of the Word',title:'Washing of the Bishop\u2019s Hands',dur:12,posture:'sit',
+    text:'After the anointing the Bishop washes his hands. '+(w==='S'?'A server':'The Deacon')+' brings water, a basin and a towel; by custom lemon and bread may be offered to remove the oil. The mitre is laid aside and the Bishop returns to the cathedra for the universal prayer.',
+    ref:'Ordo Confirmationis 29; custom',
+    mv:{[w]:[M([[850,144]],0,.1),M([[625,262],[540,262]],.12,.32),M([[625,262],[850,144]],.7,.86),M(w==='S'?[HOME.S]:[[700,95],DCHAIR],.88,1)],
+      MB:[M([MB_SIDE],.58,.68),M([HOME.MB],.76,.94)],
+      P:toChair(.74,.98)},
+    acts:{[w]:[['pours water over the Bishop\u2019s hands and offers the towel',.36,.62]],P:[['washes the chrism from his hands',.36,.62],['gives back the mitre',.68,.72]],
+      MB:[['takes the mitre'+vimp,.68,.72]]},
+    props:{ewer:[{by:w,t:.1},{at:[850,144],a:.86,b:.88}],mitre:[{by:'MB',t:.7}]},
+    say:[]};
+  if(w==='S')washing.mv.D=M([[700,95],DCHAIR],.02,.3);
+  const after=steps.indexOf(homily)+1;
+  steps.splice(after,0,promises,hands,anointing,washing);
+  const prayer=at(16);
+  prayer.text+=' Among the intentions, the people pray for the newly confirmed, their parents and sponsors, and the whole Church.';
+  prayer.ref+='; Ordo Confirmationis 30';
+  const gifts=at(18);
+  gifts.text+=' Some of the newly confirmed may join those who bring the gifts.';
+  gifts.ref+='; Ordo Confirmationis 31b';
+  if(options.eucharisticPrayer==='I'){
+    const epiclesis=at(25);
+    epiclesis.text+=' In the Roman Canon the Bishop says the proper form of "Hanc igitur" for the newly confirmed.';
+    epiclesis.ref+='; Ordo Confirmationis 31c';
+  }
+  const blessing=at(38);
+  const invocations=['(God the Father, who made you his adopted children, bless you…)','(the Son, who promised the Spirit of truth, confirm you in the faith…)','(the Holy Spirit, who kindled the fire of love, lead you to the joy of the kingdom…)'];
+  let n=0;
+  blessing.say=blessing.say.map(line=>line[0]==='P'&&/invocation/.test(line[1])?['P',invocations[n++],line[2],line[3]]:line);
+  blessing.text+=' In place of the usual blessing the Order of Confirmation gives its own threefold blessing (or a prayer over the people).';
+  blessing.ref+='; Ordo Confirmationis 33';
 }
 
 function chooseHomilyPlace(point){

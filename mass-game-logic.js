@@ -36,7 +36,7 @@ const GAME_DEFAULT_OPTIONS={
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:true,epiclesis:true,elevation:true},
   readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,openChurch:true,
-  crucifix:'wall',crossStand:'right',projector:false,bishop:false,
+  crucifix:'wall',crossStand:'right',projector:false,bishop:false,confirmation:false,
   lapses:true,detail:'key',symbols:true,seed:1,
   rite:'mass',minister:'lay'
 };
@@ -131,6 +131,13 @@ function normaliseGameOptions(role,raw={}){
   if(role==='X'&&o.serverCount===3){o.serverCount=4;notes.push('Server count raised to 4: with three servers there is no cross-bearer.');}
   if(role==='T'&&!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   if(o.incense&&o.serverCount===0){o.incense=false;notes.push('Incense needs at least one server here, so it was switched off.');}
+  o.confirmation=!!o.confirmation;
+  if(o.confirmation){
+    // Confirmation within Mass: the Bishop confers it; the Creed is omitted and its own blessing is given.
+    if(!o.bishop){o.bishop=true;notes.push('The Bishop presides, because he confers Confirmation.');}
+    if(o.creed){o.creed=false;notes.push('The Creed is omitted: the candidates have already professed the faith (Ordo Confirmationis 31).');}
+    o.solemnBlessing=true;
+  }
   o.bishop=!!o.bishop;
   if((role==='MB'||role==='CB')&&!o.bishop){o.bishop=true;notes.push('The Bishop presides, because you are one of his bearers.');}
   if(o.bishop){
@@ -167,7 +174,7 @@ function normaliseExposition(role,o,notes){
     if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   }
   if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
-  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
     music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
   if(!['key','all'].includes(o.detail))o.detail='key';
@@ -179,7 +186,7 @@ function normaliseExposition(role,o,notes){
 const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -190,23 +197,27 @@ const GAME_PRESETS={
   sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, four servers (cross and candles), no incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false}},
   sundayIncense:{name:'Sunday Mass with incense',blurb:'Sung, Deacon, five servers with a thurifer, incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false}},
   weekday:{name:'Weekday Mass',blurb:'Said, no servers or Deacon, no Gloria or Creed, one reading: practice for the Priest.',fields:{
     deacon:false,serverCount:'0',lector:false,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:false,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'said',eucharisticPrayer:'II',
-    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false}},
+    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false}},
   solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false}},
   pontifical:{name:'Mass with the Bishop',blurb:'As a solemnity, with the Bishop presiding: mitre- and crozier-bearers in vimps, the homily from the cathedra and the pontifical blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false}},
+  confirmation:{name:'Confirmation Mass',blurb:'The Bishop confers Confirmation within Mass: the candidates presented after the Gospel, the renewal of baptismal promises, the laying on of hands and the anointing with chrism; no Creed.',fields:{
+    deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:true,bothKinds:false,gloria:true,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true}},
   // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
@@ -238,6 +249,7 @@ function presetForOptions(options,chosen){
     solemnBlessing:options.solemnBlessing,introductory:options.introductory,music:options.music,eucharisticPrayer:options.eucharisticPrayer,
     bellStart:options.bells?.start,bellEpiclesis:options.bells?.epiclesis,bellElevation:options.bells?.elevation,
     bishop:isDevotionRite(options)?undefined:!!options.bishop,
+    confirmation:isDevotionRite(options)?undefined:!!options.confirmation,
     rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
   if(id!=='custom')return id;
@@ -282,8 +294,8 @@ const CELEBRATIONS=[
     preset:'benediction',alsoPresets:['benedictionDeacon'],blurb:'The Priest or Deacon in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
   {id:'corpusChristi',name:'Corpus Christi procession',precedence:'Eucharistic procession',branch:'devotion',colour:'white',icon:'walk',at:[820,600],after:['benediction'],
     blurb:'Outside the church: the canopy, torches, flower petals and bells, with Benediction at the altars on the way.'},
-  {id:'confirmation',name:'Confirmation Mass',precedence:'Pontifical Mass with Confirmation',branch:'pontifical',colour:'red',icon:'bless',at:[760,820],after:['pontifical'],
-    blurb:'The Bishop confirms: the candidates and sponsors, the chrism, and the Bishop\u2019s ministers.'},
+  {id:'confirmation',name:'Confirmation Mass',precedence:'Pontifical Mass with Confirmation',branch:'pontifical',colour:'red',icon:'chrism',at:[760,820],after:['pontifical'],
+    preset:'confirmation',blurb:'The Bishop confirms: the candidates and sponsors, the laying on of hands and the anointing with chrism; the Creed is omitted.'},
   {id:'candlemas',name:'Candlemas',precedence:'Presentation of the Lord',branch:'seasonal',colour:'white',icon:'candle',at:[140,565],after:['solemnity'],
     blurb:'The blessing of candles and the procession into the church.'},
   {id:'ashWednesday',name:'Ash Wednesday',precedence:'Beginning of Lent',branch:'seasonal',colour:'purple',icon:'sprinkler',at:[140,710],after:['candlemas'],
@@ -869,6 +881,8 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'vestD',name:'Vestments for the Deacon (alb, stole, dalmatic)',place:'sacristy',needed:!!options.deacon,ref:'GIRM 338'},
     {id:'insignia',name:'The Bishop\u2019s mitre and pastoral staff',place:'sacristy',needed:!!options.bishop,ref:'Pontificales ritus 18-19; CB 128',reason:'The Bishop vests in the sacristy and wears them in the procession.'},
     {id:'vimps',name:'Two vimps for the mitre- and crozier-bearers',place:'sacristy',needed:!!options.bishop,ref:'Custom (Elliot, Ceremonies Explained for Servers)',reason:'The bearers hold the insignia through the vimps, not with bare hands.'},
+    {id:'chrism',name:'Vessel of holy chrism (from the ambry)',place:'credence',needed:!!options.confirmation,ref:'Ordo Confirmationis 19, 26',reason:'The Deacon brings it to the Bishop for the anointing.'},
+    {id:'chrismWash',name:'Water, basin and towel (with lemon and bread, by custom) for the Bishop to wash his hands',place:'credence',needed:!!options.confirmation,ref:'Ordo Confirmationis 19, 29; custom'},
     {id:'vestS',name:'Albs or cassock and surplice for '+team.length+' server'+(team.length===1?'':'s'),place:'sacristy',needed:team.length>0,ref:'GIRM 339'},
     {id:'lamp',name:'Sanctuary lamp burning before the tabernacle',place:'tabernacle',needed:true,ref:'GIRM 316'},
     {id:'hosts',name:'Bring consecrated hosts out of the tabernacle onto the altar',place:'altar',needed:false,trap:true,ref:'GIRM 85',reason:'Not a sacristan task, and the faithful should ideally receive hosts consecrated at the same Mass.'}
@@ -887,6 +901,7 @@ function sacristanPackAway(options,team=serverTeam(options.serverCount)){
     {id:'thuribleOut',name:'Empty the thurible safely into the sand or ash bucket',place:'sacristy',needed:!!options.incense,ref:'Judgement call (fire safety)'},
     {id:'aspersoryBack',name:'Return the holy-water vessel and sprinkler',place:'sacristy',needed:options.introductory==='sprinkling',ref:'GIRM 105'},
     {id:'bellBack',name:'Put the altar bell away',place:'sacristy',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 105'},
+    {id:'chrismBack',name:'Return the holy chrism to the ambry',place:'sacristy',needed:!!options.confirmation,ref:'Ordo Confirmationis 19; custom',reason:'The holy oils are kept locked and safe.'},
     {id:'giftTable',name:'Clear the gift table',place:'giftTable',needed:!!options.giftsProcession,ref:'GIRM 105'},
     {id:'vestments',name:'Hang up the vestments',place:'sacristy',needed:true,ref:'GIRM 105'},
     {id:'dustCover',name:'Put the dust cover on the altar cloth',place:'altar',needed:true,ref:'Local custom'},
