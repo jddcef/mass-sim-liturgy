@@ -796,7 +796,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','adorationLay','benediction','confirmation'],'nine celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','adorationLay','benediction','confirmation','candlemas'],'ten celebrations are playable now');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
@@ -852,6 +852,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(r.celebration.id,'benediction');p=r.progress;
   assert.equal(G('nextRecommended')(p).id,'confirmation','then the Confirmation Mass');
   p=record(p,{preset:'confirmation',role:'CB',level:'choice',percent:90}).progress;
+  assert.equal(G('nextRecommended')(p).id,'candlemas','then the rites of the seasons');
+  p=record(p,{preset:'candlemas',role:'C1',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
   // Stored progress is cleaned on load.
   const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
@@ -1017,6 +1019,42 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   const items=G('sacristanSetup')(options);
   assert.ok(items.some(i=>i.id==='proclamation'&&i.needed&&i.places.includes('ambo')));
   assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>i.id==='proclamation'&&i.needed));
+  setup('P',{});assert.equal(STEPS[0].key,0);
+}
+// ---- round 20: Candlemas (the Presentation of the Lord) ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  let r=norm('P',{candlemas:true,gloria:false,introductory:'sprinkling',eucharisticPrayer:'IV',bishop:true,confirmation:true});
+  const o=r.options;
+  assert.ok(o.candlemas&&o.gloria&&o.introductory==='A'&&o.eucharisticPrayer==='III'&&!o.bishop&&!o.confirmation);
+  for(const ref of ['n. 7','GIRM 365d'])assert.ok(r.notes.some(n=>n.includes(ref)),ref);
+  assert.ok(r.notes.some(n=>/Bishop was switched off/.test(n)));
+  assert.ok(r.notes.some(n=>/Confirmation .*switched off/.test(n)));
+  r=norm('P',{candlemas:true,nativity:true});
+  assert.ok(!r.options.candlemas&&r.options.nativity,'Christmas wins');
+  r=norm('MB',{candlemas:true});
+  assert.ok(!r.options.candlemas&&r.options.bishop,'the bearers play the Bishop’s Mass');
+  assert.equal(norm('P',{}).options.candlemas,false);
+  assert.equal(norm('E',{rite:'exposition',candlemas:true}).options.candlemas,false,'not at Exposition');
+  const raw={...presets.candlemas.fields,serverCount:Number(presets.candlemas.fields.serverCount)};
+  const {options,scenario}=setup('S',raw);
+  assert.equal(G('presetForOptions')(options,'candlemas'),'candlemas');
+  assert.equal(G('presetForOptions')(setup('P',{...presets.sundayIncense.fields,serverCount:5}).options,'sundayIncense'),'sundayIncense','a plain Sunday is not Candlemas');
+  assert.equal(G('celebrationForPreset')('candlemas').id,'candlemas');
+  setup('S',raw);
+  assert.equal(STEPS[0].title,'Blessing of Candles');
+  assert.ok(G('deriveDuties')('S',STEPS,options).some(d=>d.key===-.5&&/holy water/.test(d.text)),'the server holds the holy water');
+  for(const role of ['P','D','T','C1','X','MC','SAC','PEW','L','AV'])setup(role,{...raw,projector:role==='AV'});
+  const items=G('sacristanSetup')(options);
+  assert.ok(items.some(i=>i.id==='faithfulCandles'&&i.needed&&i.places.includes('procession')));
+  assert.ok(items.some(i=>i.id==='aspersory'&&i.needed&&i.places.includes('procession')));
+  assert.ok(G('sacristanPackAway')(options).some(i=>i.id==='aspersoryBack'&&i.needed));
+  assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>i.id==='faithfulCandles'&&i.needed));
+  const av=setup('AV',{...raw,projector:true});
+  const cues=G('deriveMediaCues')(STEPS,null,av.options,'all');
+  assert.ok(cues.some(c=>c.part==='candles'),'a slide for the antiphon at the lighting of candles');
+  assert.ok(cues.some(c=>c.part==='entrance'&&/Simeon/.test(c.title)));
+  assert.ok(!cues.some(c=>c.part==='confiteor'||c.part==='kyrie'),'no Penitential Act or Kyrie');
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
 console.log('mass-game tests passed');

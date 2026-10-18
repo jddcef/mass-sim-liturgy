@@ -14,6 +14,8 @@ function buildScenario(requested){
   const rite=RITES[requested?.rite]||RITES.mass;
   // A ritual Mass is not celebrated on a solemnity (GIRM 372): Christmas takes precedence over Confirmation.
   if(rite===RITES.mass&&requested?.nativity&&requested.confirmation)requested={...requested,confirmation:false};
+  // Candlemas is modelled with the parish Priest presiding (see applyCandlemas).
+  if(rite===RITES.mass&&requested?.candlemas&&!requested.nativity)requested={...requested,bishop:false,confirmation:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
@@ -21,6 +23,12 @@ function buildScenario(requested){
 function buildMassScenario(requested){
   // Christmas: a solemnity, with the Gloria and the Creed (GIRM 53, 68); Eucharistic Prayer IV has its own Preface (GIRM 365d).
   if(requested.nativity)requested={...requested,gloria:true,creed:true,eucharisticPrayer:requested.eucharisticPrayer==='IV'?'I':requested.eucharisticPrayer};
+  // The Presentation of the Lord: the Gloria follows the procession (Roman Missal, 2 February, n. 7); the
+  // feast has its own Preface (GIRM 365d); the entrance rites replace the Penitential Act. Only the parish
+  // form is modelled, so a Bishop, Confirmation and Christmas are not combined with it.
+  if(requested.candlemas&&!requested.nativity)requested={...requested,gloria:true,introductory:'A',bishop:false,confirmation:false,
+    eucharisticPrayer:requested.eucharisticPrayer==='IV'?'III':requested.eucharisticPrayer};
+  else if(requested.candlemas)requested={...requested,candlemas:false};
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
@@ -46,6 +54,7 @@ function buildMassScenario(requested){
     bishop:!!requested.bishop,
     confirmation:!!requested.confirmation,
     nativity:!!requested.nativity,
+    candlemas:!!requested.candlemas,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -367,6 +376,7 @@ function buildMassScenario(requested){
   applyOptionalElements(steps,options,initialProps,find);
   applyParishMinistries(steps,options,initialPos,initialProps);
   if(options.nativity)applyNativity(steps,options);
+  if(options.candlemas)applyCandlemas(steps,options,initialPos,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
@@ -385,6 +395,7 @@ function buildMassScenario(requested){
   if(!options.creed)removed.add(15);
   if(!options.secondReading)removed.add(11);
   if(options.introductory!=='A')removed.add(6);
+  if(options.candlemas)[3,4,5,6].forEach(key=>removed.add(key));
   const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
@@ -825,6 +836,77 @@ function applyNativity(steps,options){
     blessing.say=blessing.say.map(line=>line[0]==='P'&&/invocation/.test(line[1])?['P',invocations[n++],line[2],line[3]]:line);
     blessing.text+=' The Solemn Blessing for the Nativity of the Lord is used.';
     blessing.ref+='; Roman Missal, Solemn Blessings 2';
+  }
+}
+
+// The Presentation of the Lord (Candlemas), second form: the Solemn Entrance (Roman Missal, 2 February,
+// nn. 13-15, with nn. 2-7). The faithful hold candles; the Priest and ministers go to a suitable place in
+// the church, here the back where the procession forms. The candles are lit and blessed, the procession
+// goes to the altar with the Canticle of Simeon, and the Gloria follows at once: the Sign of the Cross
+// and the greeting were given at the blessing, and the Penitential Act is omitted.
+const CANDLEMAS_HOLY_WATER=[446,806];
+function applyCandlemas(steps,options,initialPos,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const hasS=options.serverCount>0;
+  const caller=options.deacon?'D':'P';
+  const incense=options.incense;
+  const blessing={key:-.5,part:'Introductory Rites',title:'Blessing of Candles',dur:32,posture:'stand',pplCandles:[[.06,1]],
+    text:'The faithful gather holding candles. The Priest and the ministers wait at the back of the church, where most of the people can see them, and the candles are lit while the antiphon "Behold, our Lord will come with power" is '+(sung?'sung':'said')+'. The Priest makes the Sign of the Cross, greets the people and briefly introduces the feast: forty days after Christmas, Christ is presented in the Temple and meets Simeon and Anna. He blesses the candles and sprinkles them with holy water in silence'+(incense?', then puts incense into the thurible for the procession':'')+'. '+(options.deacon?'The Deacon':'The Priest')+' invites all to go forth in peace.',
+    ref:'Roman Missal, Presentation of the Lord (2 February), nn. 2-7, 13-15',
+    say:[['ppl',chant('Behold, our Lord will come with power, to enlighten the eyes of his servants\u2026'),.02,.16],
+      ['P','In the name of the Father, and of the Son, and of the Holy Spirit.',.17,.22],['ppl','Amen.',.22,.24],
+      ['P','The Lord be with you.',.25,.28],['ppl','And with your spirit.',.28,.31],
+      ['P','(introduces the feast: Christ is presented in the Temple and meets his people)',.32,.42],
+      ['P','Let us pray. (prayer of blessing: sanctify these candles, and bring us to the light that never fails)',.44,.58],['ppl','Amen.',.58,.61],
+      [caller,'Let us go forth in peace to meet the Lord.',.9,.95],['ppl','In the name of Christ. Amen.',.95,1]],
+    acts:{P:[['signs himself \u2720',.17,.22],['blesses the candles',.52,.58],['sprinkles the candles with holy water, saying nothing',.62,.76]]},
+    orans:{P:[[.25,.28],[.44,.52]]},
+    mv:{},props:{},smoke:incense?[['T',0,1]]:[]};
+  if(hasS){
+    // The holy water is ready at the back; the server holds it beside the Priest and then takes it to the credence.
+    initialPos.S=CANDLEMAS_HOLY_WATER.slice();
+    initialProps.ewer={by:'S'};
+    blessing.acts.S=[['holds the holy water for the Priest',.6,.78]];
+    blessing.mv.S=[M([[464,814]],.58,.62),M([CANDLEMAS_HOLY_WATER],.77,.81)];
+  }
+  if(incense){
+    blessing.mv.T=[M([[548,700],[548,796]],.76,.8),M([[548,700],[500,700]],.87,.9)];
+    blessing.acts.T=[['brings the thurible to the Priest',.76,.8]];
+    blessing.acts.P.push(['puts incense in the thurible and blesses it',.8,.86]);
+  }
+  steps.unshift(blessing);
+
+  const entrance=at(0);
+  entrance.pplCandles=[[0,1]];
+  entrance.text='The procession goes to the altar, led by the '+(incense?'thurifer':'cross')+', while all carry lighted candles and sing the Canticle of Simeon with its antiphon "A light for revelation to the Gentiles". As the procession enters the sanctuary the Entrance Antiphon is sung. '+entrance.text.replace(/^When the people are gathered, the Priest and ministers go to the altar while the Entrance Chant is sung\. /,'');
+  entrance.ref='Roman Missal, Presentation of the Lord, nn. 6-7, 15; GIRM 120-121';
+  entrance.say=[['ppl',chant('A light for revelation to the Gentiles, and the glory of your people Israel (Canticle of Simeon)'),.03,.82],['ppl',chant('Entrance Antiphon'),.82,1]];
+  if(hasS){
+    entrance.mv.S=[M([[446,824],[880,824],[880,300],[850,165],[850,150]],.3,.82),M([HOME.S],.88,.96)];
+    entrance.props=entrance.props||{};
+    entrance.props.ewer=[{at:[850,144],a:.83,b:.86}];
+    entrance.acts=entrance.acts||{};
+    entrance.acts.S=[['takes the holy water back to the credence by the side aisle',.3,.84]];
+  }
+  for(const key of [1,2]){const s=at(key);if(s)s.pplCandles=[[0,1]];}
+
+  const gloria=at(7);
+  gloria.dur=11;
+  gloria.text='At the altar the Priest venerates it'+(incense?' and incenses it':'')+' and goes to the chair. The Gloria follows at once: the faithful were greeted at the blessing of candles, and the Penitential Act is omitted. The people extinguish their candles once the procession has ended.';
+  gloria.ref='Roman Missal, Presentation of the Lord, n. 7; GIRM 53';
+  gloria.mv=gloria.mv||{};
+  gloria.mv.P=M([[560,90],CHAIR],0,.24);
+  if(options.deacon)gloria.mv.D=M([[440,90],DCHAIR],0,.24);
+  if(incense)gloria.mv.T=M([[760,55]],0,.3);
+  gloria.say=[['P','Glory to God in the highest\u2026',.26,.38],['ppl',chant('\u2026and on earth peace to people of good will\u2026'),.38,1]];
+  gloria.pplCandles=[[0,.3]];
+
+  if(options.eucharisticPrayer!=='IV'){
+    const preface=at(23);
+    preface.text+=' Today the proper Preface of the Presentation of the Lord is said.';
+    preface.ref+='; Roman Missal, Preface of the Presentation of the Lord';
   }
 }
 

@@ -112,6 +112,17 @@ function makeFigure(color,skin,role){
     sphere(arm,0,-.49,0,.075,skin,Boolean(role));
     torso.add(arm);arms.push(arm);
   }
+  let handCandle=null;
+  if(!role){
+    // Candlemas: a lighted candle in the right hand, kept upright while the arm is raised.
+    handCandle=new THREE.Group();
+    handCandle.position.set(0,-.5,.03);
+    handCandle.rotation.x=1.15;
+    mesh(new THREE.CylinderGeometry(.026,.026,.26,8),'#f7f1df',handCandle,0,.13,0,false);
+    sphere(handCandle,0,.3,0,.036,'#ffc84a',false).scale.set(1,1.6,1);
+    handCandle.visible=false;
+    arms[1].add(handCandle);
+  }
   const legs=[];
   for(const side of [-1,1]){
     const leg=new THREE.Group();
@@ -155,7 +166,7 @@ function makeFigure(color,skin,role){
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop};
+  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop,handCandle};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){
@@ -781,6 +792,7 @@ function updatePeople(step,phase){
   const posture=postureAt(cur3d,progress3d).name;
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const genuflect=(step.pplGenuflect||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
+  const candles=(step.pplCandles||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const special=step.special?.type==='communion'?step.special:null;
   congregation.forEach((person,i)=>{
     person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&(!person.outer||naveStyle==='full');
@@ -805,6 +817,10 @@ function updatePeople(step,phase){
     person.figure.root.position.copy(world(p));
     person.figure.root.rotation.y=Math.PI;
     pose(person.figure,walking||receiving?'stand':posture,receiving||bow?'bows':genuflect&&!walking?'genuflects':'',phase+i,walking);
+    if(person.figure.handCandle){
+      person.figure.handCandle.visible=candles;
+      if(candles)person.figure.arms[1].rotation.set(-1.15,0,0);
+    }
     if(step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b){
       person.figure.root.rotation.y=Math.PI+(i%2?-.7:.7);
       person.figure.arms[1].rotation.x=-1;

@@ -271,4 +271,67 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed 4 Christmas scenarios and '+nativityFrames+' sampled frames.');
+  // Candlemas: the candles blessed at the back, the procession with the Canticle of Simeon, then the Gloria at once.
+  let candleFrames=0;
+  for(const requested of [{candlemas:true,serverCount:5,incense:true,deacon:true,lector:true,creed:false,secondReading:false,eucharisticPrayer:'III'},
+    {candlemas:true,serverCount:0,deacon:false,lector:false,gloria:false,introductory:'sprinkling',eucharisticPrayer:'IV',music:'said'},
+    {candlemas:true,serverCount:2,incense:false,deacon:true,introductory:'C',bishop:true,confirmation:true},
+    {candlemas:true,nativity:true,serverCount:5,incense:true}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.nativity){
+      assert.ok(!options.candlemas&&options.nativity,'Christmas wins over Candlemas');
+      assert.ok(STEPS.every(s=>s.title!=='Blessing of Candles'));
+      continue;
+    }
+    assert.ok(options.candlemas&&options.gloria&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.notEqual(options.eucharisticPrayer,'IV','the proper Preface (GIRM 365d)');
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    assert.equal(keys[0],-.5);assert.equal(keys[1],0);
+    for(const key of [3,4,5,6])assert.ok(!keys.includes(key),'no separate Sign of the Cross, greeting or Penitential Act ('+key+')');
+    assert.equal(keys[keys.indexOf(0)+(options.incense?3:2)],7,'the Gloria follows the reverence at once');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const blessing=STEPS[0];
+    assert.equal(blessing.title,'Blessing of Candles');
+    assert.ok(blessing.say.some(([r,t])=>r==='P'&&/In the name of the Father/.test(t)),'the Sign of the Cross at the blessing');
+    assert.ok(blessing.say.some(([r,t])=>r==='P'&&/The Lord be with you/.test(t)),'the greeting at the blessing');
+    assert.ok(blessing.say.some(([r,t])=>r===(options.deacon?'D':'P')&&/go forth in peace/.test(t)));
+    assert.ok(blessing.say.some(([r,t])=>r==='ppl'&&/In the name of Christ/.test(t)));
+    assert.ok(blessing.acts.P.some(([t])=>/sprinkles the candles/.test(t)));
+    assert.equal(blessing.acts.P.some(([t])=>/puts incense/.test(t)),options.incense);
+    assert.equal(blessing.say.some(([,t])=>/\u266a/.test(t)),options.music!=='said');
+    assert.ok(blessing.pplCandles&&STEPS[1].pplCandles,'the faithful hold lighted candles');
+    assert.deepEqual(actorAt(0,'P',.5),START_POS.P,'the Priest blesses the candles at the back');
+    assert.ok(STEPS[1].say.some(([,t])=>/A light for revelation/.test(t)),'the Canticle of Simeon');
+    if(visible.has('S')){
+      assert.equal(propAt(0,'ewer',.7).by,'S','the server holds the holy water');
+      assert.deepEqual(propAt(1,'ewer',1).at,[850,144],'and takes it back to the credence');
+      assert.deepEqual(actorAt(1,'S',1),HOME.S);
+    }else assert.ok(!propAt(0,'ewer',.5).by,'the Priest sprinkles without a server');
+    const gloria=STEPS[idx(7)];
+    assert.deepEqual(actorAt(idx(7),'P',1),CHAIR,'the Priest goes to the chair for the Gloria');
+    if(options.deacon)assert.deepEqual(actorAt(idx(7),'D',1),DCHAIR);
+    assert.ok(/Presentation of the Lord, n\. 7/.test(gloria.ref));
+    assert.ok(!STEPS[idx(8)].pplCandles,'the candles are out by the Collect');
+    assert.ok(/Presentation of the Lord/.test(STEPS[idx(23)].text));
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF)assert.ok(resolveProp(propAt(i,name,k/20,p),p,name).every(Number.isFinite));
+        candleFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{nativity:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Blessing of Candles'&&!s.pplCandles),'candles only at Candlemas');
+  }
+  buildScenario({});
+  console.log('Passed 3 Candlemas scenarios and '+candleFrames+' sampled frames.');
 `,context);
