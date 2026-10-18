@@ -19,7 +19,7 @@ and no account. Other pages:
 ### How to start
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
-   incense, Solemnity, or outside Mass: Adoration led by a lay minister, or
+   incense, Solemnity, Mass with the Bishop, or outside Mass: Adoration led by a lay minister, or
    Exposition and Benediction with the Priest or the Deacon. You can also
    change any option
    yourself.
@@ -337,7 +337,8 @@ in a role. The decisions made while building it are logged for review in
 [`docs/GAME-DECISIONS.md`](docs/GAME-DECISIONS.md).
 
 1. **Choose a role**: Priest, Deacon, Server (book, bell and vessels),
-   Cross-bearer, Candle-bearer, Thurifer, first or second Lector, collection
+   Cross-bearer, Candle-bearer, Thurifer, Mitre-bearer or Crozier-bearer (when
+   the Bishop presides), first or second Lector, collection
    Usher, extraordinary minister of Holy Communion (EMHC), Master of
    Ceremonies, Sacristan or a member of the congregation. Each has an
    illustrated role card.
@@ -474,8 +475,10 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   after the homily and after Communion.
 - **Presets**: "Weekday Mass" (no Gloria or Creed, no servers, said),
   "Sunday Mass" (four servers, no incense), "Sunday Mass with incense"
-  (default, five servers with a thurifer) or "Solemnity". Changing any option
-  shows "Custom".
+  (default, five servers with a thurifer), "Solemnity" or "Mass with the
+  Bishop" (the Bishop presides with mitre and pastoral staff, held by two
+  servers in vimps; the homily from the cathedra; the pontifical blessing).
+  Changing any option shows "Custom".
 - **The Path and seniority**: a map of celebrations in order of precedence
   (on phones, a list). Each finished game is credited to the celebration whose
   preset matches the final options: watching or Guided earns *Attended*,

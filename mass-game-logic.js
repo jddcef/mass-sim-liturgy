@@ -18,6 +18,8 @@ const GAME_ROLES={
   X:{name:'Cross-bearer',actor:'X',start:'sacristy'},
   C1:{name:'Candle-bearer',actor:'C1',start:'sacristy'},
   T:{name:'Thurifer',actor:'T',start:'sacristy'},
+  MB:{name:'Mitre-bearer',actor:'MB',start:'sacristy'},
+  CB:{name:'Crozier-bearer',actor:'CB',start:'sacristy'},
   L:{name:'Lector',actor:'L',sayRole:'L',start:'sacristy',book:'Lectionary'},
   L2:{name:'Second reader',actor:'L2',sayRole:'L2',start:'pew',book:'Lectionary'},
   U:{name:'Collection usher',actor:'U',start:'pew'},
@@ -34,7 +36,7 @@ const GAME_DEFAULT_OPTIONS={
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:true,epiclesis:true,elevation:true},
   readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,openChurch:true,
-  crucifix:'wall',crossStand:'right',projector:false,
+  crucifix:'wall',crossStand:'right',projector:false,bishop:false,
   lapses:true,detail:'key',symbols:true,seed:1,
   rite:'mass',minister:'lay'
 };
@@ -129,6 +131,13 @@ function normaliseGameOptions(role,raw={}){
   if(role==='X'&&o.serverCount===3){o.serverCount=4;notes.push('Server count raised to 4: with three servers there is no cross-bearer.');}
   if(role==='T'&&!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   if(o.incense&&o.serverCount===0){o.incense=false;notes.push('Incense needs at least one server here, so it was switched off.');}
+  o.bishop=!!o.bishop;
+  if((role==='MB'||role==='CB')&&!o.bishop){o.bishop=true;notes.push('The Bishop presides, because you are one of his bearers.');}
+  if(o.bishop){
+    if(!o.deacon){o.deacon=true;notes.push('A Deacon assists the Bishop (Pontificales ritus 6).');}
+    if(!o.lector){o.lector=true;notes.push('A lay reader proclaims the readings while the Bishop presides from the cathedra.');}
+    if(o.serverCount<1){o.serverCount=1;notes.push('A server holds the book before the Bishop (Pontificales ritus 2).');}
+  }
   if(o.bothKinds&&!o.deacon){o.bothKinds=false;notes.push('Communion under both kinds needs the Deacon in this simulator, so it was switched off.');}
   if(o.serverCount===0&&(o.bells.epiclesis||o.bells.elevation)){
     o.bells={...o.bells,epiclesis:false,elevation:false};
@@ -158,7 +167,7 @@ function normaliseExposition(role,o,notes){
     if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   }
   if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
-  Object.assign(o,{deacon:o.minister==='deacon',lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
     music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
   if(!['key','all'].includes(o.detail))o.detail='key';
@@ -170,7 +179,7 @@ function normaliseExposition(role,o,notes){
 const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -181,19 +190,23 @@ const GAME_PRESETS={
   sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, four servers (cross and candles), no incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false}},
   sundayIncense:{name:'Sunday Mass with incense',blurb:'Sung, Deacon, five servers with a thurifer, incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false}},
   weekday:{name:'Weekday Mass',blurb:'Said, no servers or Deacon, no Gloria or Creed, one reading: practice for the Priest.',fields:{
     deacon:false,serverCount:'0',lector:false,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:false,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'said',eucharisticPrayer:'II',
-    bellStart:false,bellEpiclesis:false,bellElevation:false}},
+    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false}},
   solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false}},
+  pontifical:{name:'Mass with the Bishop',blurb:'As a solemnity, with the Bishop presiding: mitre- and crozier-bearers in vimps, the homily from the cathedra and the pontifical blessing.',fields:{
+    deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true}},
   // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
@@ -224,6 +237,7 @@ function presetForOptions(options,chosen){
     incense:options.incense,bothKinds:options.bothKinds,gloria:options.gloria,creed:options.creed,secondReading:options.secondReading,giftsProcession:options.giftsProcession,
     solemnBlessing:options.solemnBlessing,introductory:options.introductory,music:options.music,eucharisticPrayer:options.eucharisticPrayer,
     bellStart:options.bells?.start,bellEpiclesis:options.bells?.epiclesis,bellElevation:options.bells?.elevation,
+    bishop:isDevotionRite(options)?undefined:!!options.bishop,
     rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
   if(id!=='custom')return id;
@@ -252,8 +266,8 @@ const CELEBRATIONS=[
     blurb:'Sunday with a thurifer: incense at the entrance, the Gospel, the gifts and the elevations.'},
   {id:'solemnity',name:'Solemnity',precedence:'Solemnity',branch:'main',station:4,preset:'solemnity',colour:'white',icon:'chalice',at:[390,480],after:['dominicaIncense'],
     blurb:'A great feast: the Roman Canon and a Solemn Blessing, with the full team of servers.'},
-  {id:'pontifical',name:'Mass with the Bishop',precedence:'Pontifical Mass',branch:'main',station:5,colour:'white',icon:'vestment',at:[610,630],after:['solemnity'],
-    blurb:'The Bishop presides: mitre- and crozier-bearers wearing vimps, the book and candle (bugia), the Bishop\u2019s chaplain and M.C.'},
+  {id:'pontifical',name:'Mass with the Bishop',precedence:'Pontifical Mass',branch:'main',station:5,preset:'pontifical',colour:'white',icon:'mitre',at:[610,630],after:['solemnity'],
+    blurb:'The Bishop presides: mitre- and crozier-bearers wearing vimps, a server holding the book, the homily from the cathedra and the pontifical blessing.'},
   {id:'nativity',name:'Christmas Mass',precedence:'Solemnity of the Nativity',branch:'main',station:6,colour:'white',icon:'candle',at:[390,790],after:['pontifical'],
     blurb:'Mass during the Night: the Christmas Proclamation, all kneel at "and by the Holy Spirit was incarnate", the blessing of the crib.'},
   {id:'holyThursday',name:'Holy Thursday',precedence:'Evening Mass of the Lord\u2019s Supper',branch:'triduum',station:7,colour:'white',icon:'tabernacle',at:[300,1070],after:['nativity','palmSunday','corpusChristi','confirmation'],
@@ -371,6 +385,10 @@ function nextRecommended(progress){
 
 // Roles that can be taken over during Mass: anyone present in this celebration, plus the
 // M.C., sacristan and a parishioner (who are always there) and the screen operator with a projector.
+// The celebrant's title: the Bishop when he presides.
+function gameRoleName(role,options){
+  return role==='P'&&options?.bishop?'Bishop':GAME_ROLES[role]?.name||role;
+}
 function switchableRoles(visible,options={}){
   const roles=Object.keys(GAME_ROLES).filter(role=>{
     const actor=GAME_ROLES[role].actor;
@@ -532,7 +550,7 @@ function deriveDuties(role,steps=STEPS,options={}){
   let lastSay=null;
   steps.forEach((step,i)=>{
     const base={step:i,key:step.key,title:step.title,part:step.part,ref:step.ref,role};
-    if(role==='P'&&step.key===14){
+    if(role==='P'&&step.key===14&&!(step.homilyPlaces?.length===1)){
       duties.push({...base,type:'homily',t:0,end:.28,to:AMBO,targets:[AMBO,CHAIR],text:'choose the ambo or the chair for the homily',answer:"the ambo or the celebrant's chair"});
     }
     if(actor){
@@ -739,7 +757,7 @@ function gradeBoard(board){
 // NPC lapses that a Priest, Deacon or M.C. must notice and correct.
 const LAPSE_COUNTS={watch:0,guided:2,choice:3,timed:3,expert:4};
 function lapseCandidates(playerRole,visible,steps=STEPS){
-  const roles=['D','S','X','C1','C2','T','L','L2','Ps','U','E'].filter(r=>visible.has(r)&&r!==playerRole);
+  const roles=['D','S','X','C1','C2','T','MB','CB','L','L2','Ps','U','E'].filter(r=>visible.has(r)&&r!==playerRole);
   const result=[];
   for(const role of roles){
     for(const duty of deriveDuties(role,steps)){
@@ -782,7 +800,7 @@ function nudgeDecision(lapse,level,visible){
 
 // The M.C. cues ministers before their duties.
 function deriveCues(visible,steps=STEPS,detail='key'){
-  const roles=['D','S','X','C1','C2','T','L','L2','Ps','U','E'].filter(r=>visible.has(r));
+  const roles=['D','S','X','C1','C2','T','MB','CB','L','L2','Ps','U','E'].filter(r=>visible.has(r));
   const all=[];
   for(const role of roles){
     for(const duty of deriveDuties(role,steps)){
@@ -849,6 +867,8 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'sacristyBell',name:'Sacristy bell by the door',place:'sacristy',needed:!!options.bells.start,ref:'Local custom'},
     {id:'vestP',name:'Vestments for the Priest (alb, stole, chasuble)',place:'sacristy',needed:true,ref:'GIRM 337'},
     {id:'vestD',name:'Vestments for the Deacon (alb, stole, dalmatic)',place:'sacristy',needed:!!options.deacon,ref:'GIRM 338'},
+    {id:'insignia',name:'The Bishop\u2019s mitre and pastoral staff',place:'sacristy',needed:!!options.bishop,ref:'Pontificales ritus 18-19; CB 128',reason:'The Bishop vests in the sacristy and wears them in the procession.'},
+    {id:'vimps',name:'Two vimps for the mitre- and crozier-bearers',place:'sacristy',needed:!!options.bishop,ref:'Custom (Elliot, Ceremonies Explained for Servers)',reason:'The bearers hold the insignia through the vimps, not with bare hands.'},
     {id:'vestS',name:'Albs or cassock and surplice for '+team.length+' server'+(team.length===1?'':'s'),place:'sacristy',needed:team.length>0,ref:'GIRM 339'},
     {id:'lamp',name:'Sanctuary lamp burning before the tabernacle',place:'tabernacle',needed:true,ref:'GIRM 316'},
     {id:'hosts',name:'Bring consecrated hosts out of the tabernacle onto the altar',place:'altar',needed:false,trap:true,ref:'GIRM 85',reason:'Not a sacristan task, and the faithful should ideally receive hosts consecrated at the same Mass.'}
@@ -989,10 +1009,11 @@ function preMassTasks(role,options,team=serverTeam(options.serverCount),startPos
   const vest=(ref,correct,wrong)=>tasks.push({id:'vest',kind:'task',prompt:'Vest for Mass. What do you put on?',ref,options:shuffled([correct,...wrong],seededRandom(role+'vest')).map(label=>({label,correct:label===correct})),correct});
   if(role==='P')vest('GIRM 337','Alb, stole and chasuble',['Alb and dalmatic','Cassock and surplice only','Cope over a surplice']);
   if(role==='D')vest('GIRM 338, 340','Alb, diagonal stole and dalmatic',['Alb, stole and chasuble','Cassock and surplice only','Alb with the stole around the neck']);
+  if(role==='MB'||role==='CB')vest('GIRM 339; custom (Elliot, Ceremonies Explained for Servers)','Alb (or cassock and surplice), with a white vimp over the shoulders',['Dalmatic','Stole over the alb','Cope']);
   if(['S','X','C1','T'].includes(role))vest('GIRM 339','Alb (or cassock and surplice)',['Dalmatic','Stole over the alb','Chasuble']);
   if(role==='L'||role==='L2')tasks.push({id:'prepare',kind:'task',prompt:'Before Mass, what should you check?',ref:'GIRM 118b; 196',correct:'Find and read through today\'s reading in the Lectionary',options:[
     'Find and read through today\'s reading in the Lectionary','Mark the Preface in the Missal','Light the thurible','Put on a stole'].map(label=>({label,correct:label.startsWith('Find')}))});
-  const carry={D:['Book of the Gospels','GIRM 172'],X:['Processional cross','GIRM 120b'],C1:['A lit processional candle','GIRM 120b'],T:['Thurible with burning incense','GIRM 120a, 276'],L:options.deacon||!options.lectorProcession?null:['Book of the Gospels (slightly elevated)','GIRM 194']}[role];
+  const carry={MB:['Nothing: the Bishop wears the mitre in the procession','CB 128; Pontificales ritus 18'],CB:['Nothing: the Bishop carries the pastoral staff in the procession','CB 128; Pontificales ritus 19'],D:['Book of the Gospels','GIRM 172'],X:['Processional cross','GIRM 120b'],C1:['A lit processional candle','GIRM 120b'],T:['Thurible with burning incense','GIRM 120a, 276'],L:options.deacon||!options.lectorProcession?null:['Book of the Gospels (slightly elevated)','GIRM 194']}[role];
   if(carry){
     const pool=['Book of the Gospels','Processional cross','A lit processional candle','Thurible with burning incense','The Roman Missal','The chalice','Nothing'];
     const correct=carry[0];
@@ -1127,7 +1148,8 @@ function procOrder(options,team){
   if(team.includes('S'))order.push('Server');
   if(options.lector&&options.lectorProcession)order.push('Lector');
   if(options.deacon)order.push('Deacon');
-  order.push('Priest');
+  order.push(options.bishop?'Bishop':'Priest');
+  if(options.bishop)order.push('Mitre- and crozier-bearers');
   return order;
 }
 

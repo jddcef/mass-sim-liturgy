@@ -796,7 +796,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','adorationLay','benediction'],'six celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','adorationLay','benediction'],'seven celebrations are playable now');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
@@ -839,6 +839,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(rank(p).id,'head');
   const next=G('nextRank')(p);
   assert.equal(next.rank.id,'mc');assert.equal(next.ready,false,'the M.C. rank waits for celebrations in preparation');
+  assert.equal(G('nextRecommended')(p).id,'pontifical','then the Mass with the Bishop');
+  p=record(p,{preset:'pontifical',role:'MB',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'adorationLay','then the devotions');
   p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
   r=record(p,{preset:'benedictionDeacon',role:'D',level:'choice',percent:90});
@@ -928,5 +930,37 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(G('devotionPostTasks')('E',{}).some(t=>/tabernacle is locked/.test(t.correct)));
   // Mass still builds afterwards.
   setup('P',{});assert.equal(STEPS[0].key,0);
+}
+// ---- round 17: Mass with the Bishop ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  let r=norm('MB',{deacon:false,lector:false,serverCount:0});
+  assert.equal(r.options.bishop,true,'a bearer brings the Bishop');
+  assert.equal(r.options.deacon,true);assert.equal(r.options.lector,true);assert.ok(r.options.serverCount>=1);
+  assert.ok(r.notes.some(n=>/Pontificales ritus 6/.test(n)));
+  r=norm('P',{});assert.equal(r.options.bishop,false,'the Bishop is optional');
+  const raw={...presets.pontifical.fields,serverCount:Number(presets.pontifical.fields.serverCount)};
+  const {options,scenario}=setup('P',raw);
+  assert.equal(G('presetForOptions')(options,'pontifical'),'pontifical');
+  assert.equal(G('celebrationForPreset')('pontifical').id,'pontifical');
+  assert.ok(scenario.visible.has('MB')&&scenario.visible.has('CB'));
+  assert.equal(G('gameRoleName')('P',options),'Bishop');
+  assert.equal(G('gameRoleName')('P',{}),'Priest');
+  // The homily from the cathedra is not a choice for the Bishop.
+  assert.ok(!G('deriveDuties')('P',STEPS,options).some(d=>d.type==='homily'));
+  for(const role of ['MB','CB']){
+    const duties=G('deriveDuties')(role,STEPS,options);
+    assert.ok(duties.length>5,role+' has duties');
+    assert.ok(duties.some(d=>/mitre|staff/.test(d.text)),role+' handles the insignia');
+    const pre=G('preMassTasks')(role,options);
+    assert.ok(pre.some(t=>/vimp/.test(t.correct)),role+' vests with a vimp');
+  }
+  assert.ok(G('procOrder')(options,G('serverTeam')(options.serverCount)).includes('Bishop'));
+  assert.ok(G('sacristanSetup')(options).some(i=>i.id==='vimps'&&i.needed));
+  assert.ok(G('deriveCues')(scenario.visible,STEPS).some(c=>c.role==='MB'||c.role==='CB'),'the M.C. cues the bearers');
+  // Without the Bishop the bearers are absent and the Priest is named as before.
+  const plain=setup('P',{...raw,bishop:false});
+  assert.ok(!plain.scenario.visible.has('MB'));
+  assert.equal(G('presetForOptions')(plain.options,'pontifical'),'pontifical','a changed preset still credits the chosen celebration');
 }
 console.log('mass-game tests passed');

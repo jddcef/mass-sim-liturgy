@@ -8,6 +8,8 @@ const ROLE_BLURBS={
   X:'Carry the processional cross and know where it stands.',
   C1:'Carry a candle in the processions and flank the Gospel.',
   T:'Thurible and boat: incense at the entrance, Gospel, offertory and elevations.',
+  MB:'In a vimp, hold the Bishop\u2019s mitre whenever he lays it aside, and bring it to him when he sits, preaches and blesses.',
+  CB:'In a vimp, hold the Bishop\u2019s pastoral staff and bring it to him for the Gospel, the homily, the blessing and the recession.',
   L:'Proclaim the readings from the ambo and lead the Psalm.',
   L2:'Proclaim the Second Reading, then return to your place with the congregation.',
   U:'Take up the collection when cued and keep other gifts away from the altar.',
@@ -242,7 +244,7 @@ function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 // ---------- setup form ----------
 const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores',SETUP_VERSION=7;
 function buildSetupForm(){
-  const roleOrder=['P','D','S','X','C1','T','L','L2','U','E','MC','SAC','PEW','AV'];
+  const roleOrder=['P','D','S','X','C1','T','MB','CB','L','L2','U','E','MC','SAC','PEW','AV'];
   $('roleCards').replaceChildren(...roleOrder.map(id=>el('label',{},[
     el('input',{type:'radio',name:'role',value:id,checked:id==='P'}),
     rolePortrait(id),el('strong',{textContent:GAME_ROLES[id].name}),ROLE_BLURBS[id]])));
@@ -316,7 +318,7 @@ function syncPreset(){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -344,7 +346,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -353,12 +355,12 @@ function readForm(){
   Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false,projector:saved.projector===true});
   return {role:saved.role||'P',level:saved.level||'choice',preset:saved.preset||'custom',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
-const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people',AV:'screen'};
+const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',MB:'mitre',CB:'crozier',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people',AV:'screen'};
 function rolePortrait(role){
   const badge=ROLE_ICONS[role];
   const image=el('span',{className:'rolePortrait',role:'img'});
   image.setAttribute('aria-label',GAME_ROLES[role].name);
-  const robe=['P','D','S','X','C1','T'].includes(role)?'#f4f1e6':'#7293aa';
+  const robe=['P','D','S','X','C1','T','MB','CB'].includes(role)?'#f4f1e6':'#7293aa';
   image.innerHTML='<svg viewBox="0 0 96 80" aria-hidden="true"><circle cx="29" cy="17" r="10" fill="#c99b75"/><path d="M18 30h22l12 44H6z" fill="'+robe+'" stroke="#4d5b62" stroke-width="2"/><path d="M15 34L6 53m37-19 10 19" stroke="#4d5b62" stroke-width="5" stroke-linecap="round"/>'+
     (role==='D'?'<path d="m17 32 25 37" stroke="#d4af37" stroke-width="5"/>':role==='P'?'<path d="M29 34v33m-9-22h18" stroke="#d4af37" stroke-width="4"/>':'')+
     '<g transform="translate(57 26) scale(1.5)" fill="none" stroke="#7b5d27" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'+GameIcons.PATHS[badge]+'"/></g></svg>';
@@ -391,7 +393,7 @@ function showPathResult(watched,percent){
     return;
   }
   const after=outcome.progress,next=nextRecommended(after);
-  let text='On the Path: '+outcome.celebration.name+' as '+GAME_ROLES[game.role].name+': '+MARK_NAMES[outcome.mark]+'.';
+  let text='On the Path: '+outcome.celebration.name+' as '+gameRoleName(game.role,game.options)+': '+MARK_NAMES[outcome.mark]+'.';
   if(outcome.rankAfter.id!==outcome.rankBefore.id)text+=' Your seniority is now '+outcome.rankAfter.name+'. '+outcome.rankAfter.blurb;
   if(outcome.mark==='attended'&&!watched&&!isGuided(game.level))text+=' Serve it with '+SERVED_PERCENT+'% or more to count towards seniority.';
   else if(outcome.mark==='attended')text+=' Play at Choice or harder to count towards seniority.';
@@ -499,15 +501,15 @@ function startGame(config){
 }
 function applyRoleUI(){
   const info=GAME_ROLES[game.role];
-  $('gameBadge').textContent='You: '+info.name+' / '+GAME_LEVELS[game.level].name;
+  $('gameBadge').textContent='You: '+gameRoleName(game.role,game.options)+' / '+GAME_LEVELS[game.level].name;
   $('gameRoleNote').textContent=(isDevotion()&&DEVOTION_BLURBS[game.role])||ROLE_BLURBS[game.role];
   $('roleCard').hidden=false;
   const picker=el('select',{id:'switchRole',title:'Take over another role from here on (between moments, during Mass)'});
   picker.setAttribute('aria-label','Switch to another role');
   picker.append(el('option',{value:'',textContent:'⇄ Switch role…'}));
-  for(const role of switchableRoles(game.visible||new Set(),game.options))if(role!==game.role)picker.append(el('option',{value:role,textContent:GAME_ROLES[role].name}));
+  for(const role of switchableRoles(game.visible||new Set(),game.options))if(role!==game.role)picker.append(el('option',{value:role,textContent:gameRoleName(role,game.options)}));
   picker.onchange=()=>{const role=picker.value;picker.value='';if(role)switchRole(role);};
-  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:info.name}),el('small',{textContent:'Involvement: '+GAME_LEVELS[game.level].name}),picker]));
+  $('roleCard').replaceChildren(rolePortrait(game.role),el('div',{},[el('small',{textContent:'You are playing'}),el('strong',{textContent:gameRoleName(game.role,game.options)}),el('small',{textContent:'Involvement: '+GAME_LEVELS[game.level].name}),picker]));
   syncSwitchRole();
   $('gameBookButton').hidden=!info.book;
   $('gameBookButton').textContent='Open the '+(bookName()||'book');
@@ -559,8 +561,8 @@ function switchRole(role){
   game.stops=stopsFrom(game.stops,currentElapsed());
   game.history=[];
   applyRoleUI();
-  logLine('You switch roles: from '+GAME_ROLES[oldRole].name+' to '+GAME_ROLES[role].name+'.','note');
-  toast('You are now the '+GAME_ROLES[role].name+'. Your duties continue from here.');
+  logLine('You switch roles: from '+gameRoleName(oldRole,game.options)+' to '+gameRoleName(role,game.options)+'.','note');
+  toast('You are now the '+gameRoleName(role,game.options)+'. Your duties continue from here.');
   if(cameraMode==='player'||gameView.firstPerson)setCamera('player');
 }
 // Mass, or a rite outside Mass such as Exposition (mass-rite-exposition.js).
@@ -672,7 +674,7 @@ function renderDecision(active){
   box.className=d.input==='floor'||d.input==='figure'?'floor':'';
   if(d.sideQuest)box.classList.add('sideQuest');
   document.body.classList.add('deciding');
-  $('decisionRole').replaceChildren(iconNode(ROLE_ICONS[game.role]),(d.sideQuest?'Side quest / ':'You: ')+GAME_ROLES[game.role].name);
+  $('decisionRole').replaceChildren(iconNode(ROLE_ICONS[game.role]),(d.sideQuest?'Side quest / ':'You: ')+gameRoleName(game.role,game.options));
   $('decisionPortrait').replaceChildren(rolePortrait(game.role));
   $('decisionSkip').hidden=!d.sideQuest;
   $('decisionSkip').onclick=()=>skipSideQuest(active);
@@ -1035,7 +1037,7 @@ const roleStart=()=>{
   const actor=GAME_ROLES[game.role].actor;
   return actor?starts[0].pos[actor]:game.role==='MC'?MC_START:game.role==='AV'?AV_DESK:null;
 };
-function ministersOnStage(){return ['P','D','X','C1','C2','T','S',...(game.options.lectorProcession?['L']:[]),...(isDevotion()?['E']:[])].filter(r=>game.visible.has(r));}
+function ministersOnStage(){return ['P','D','X','C1','C2','T','S','MB','CB',...(game.options.lectorProcession?['L']:[]),...(isDevotion()?['E']:[])].filter(r=>game.visible.has(r));}
 
 // ---------- before Mass ----------
 async function runPreMass(gen){

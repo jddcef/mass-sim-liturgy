@@ -1,6 +1,6 @@
 // ---------- geometry ----------
 const ALT_P=[500,122], ALT_D=[452,122], CHAIR=[500,58], DCHAIR=[450,62], AMBO=[200,222];
-const HOME={P:CHAIR,D:DCHAIR,X:[640,55],C1:[680,55],C2:[720,55],T:[760,55],S:[805,78],L:[395,368],L2:[365,368],Ps:[335,368],U:[875,745],E:[735,402],G1:[600,745],G2:[640,745]};
+const HOME={P:CHAIR,D:DCHAIR,X:[640,55],C1:[680,55],C2:[720,55],T:[760,55],S:[805,78],L:[395,368],L2:[365,368],Ps:[335,368],U:[875,745],E:[735,402],G1:[600,745],G2:[640,745],MB:[372,62],CB:[408,62]};
 const M=(p,a=0,b=0.6)=>({p,a,b});
 
 const ACTORS={
@@ -18,6 +18,9 @@ const ACTORS={
   E:{name:'Extraordinary minister of Holy Communion',fill:'#738d80',stroke:'#444',r:10,txt:'#fff'},
   G1:{name:'Gift-bearer (one of the faithful)',fill:'#9aa86b',stroke:'#444',r:9,txt:'#fff',lab:'G'},
   G2:{name:'Gift-bearer (one of the faithful)',fill:'#9aa86b',stroke:'#444',r:9,txt:'#fff',lab:'G'},
+  // Mass with the Bishop only (mass-scenarios.js applyBishop): servers in vimps who carry the insignia.
+  MB:{name:'Mitre-bearer (server in a vimp)',fill:'#fbfbf6',stroke:'#555',r:10,txt:'#333',only:'bishop'},
+  CB:{name:'Crozier-bearer (server in a vimp)',fill:'#fbfbf6',stroke:'#555',r:10,txt:'#333',only:'bishop'},
 };
 
 // ---------- the rite: steps ----------
@@ -298,19 +301,22 @@ const STEPS=[
 })();
 
 // ---------- initial state ----------
-const START_POS={...HOME,T:[500,700],X:[500,730],C1:[470,730],C2:[530,730],L:[500,756],D:[500,782],P:[500,808]};
+const START_POS={...HOME,T:[500,700],X:[500,730],C1:[470,730],C2:[530,730],L:[500,756],D:[500,782],P:[500,808],MB:[480,834],CB:[520,834]};
 const PROP_DEF={
   corporal:{off:[0,-16]},missal:{off:[0,-16]},gospels:{off:[0,-16]},chalice:{off:[0,-16]},bread:{off:[0,-16]},wine:{off:[0,-16]},
   cross:{off:[0,-18]},cand1:{off:[0,-16]},cand2:{off:[0,-16]},thurible:{off:[13,8]},ewer:{off:[14,-4]},
   collection:{off:[0,-12]},ciborium:{off:[0,-16]},ciborium2:{off:[0,-16]},
   // Exposition (mass-rite-exposition.js): the monstrance and the Sacrament in its lunette.
-  monstrance:{off:[0,-16]},lunette:{off:[0,-16]}
+  monstrance:{off:[0,-16]},lunette:{off:[0,-16]},
+  // Mass with the Bishop: the mitre and the pastoral staff (crozier).
+  mitre:{off:[0,0]},staff:{off:[-9,-4]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
   bread:{at:[612,770]},wine:{at:[632,770]},gospels:{by:'D'},cross:{by:'X'},cand1:{by:'C1'},cand2:{by:'C2'},thurible:{by:'T'},
   collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true},ciborium2:{at:[455,170],h:true},
-  monstrance:{at:[500,160],h:true},lunette:{at:[137,85],h:true}
+  monstrance:{at:[500,160],h:true},lunette:{at:[137,85],h:true},
+  mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true}
 };
 
 // ---------- math helpers ----------
