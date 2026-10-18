@@ -521,6 +521,23 @@ function makeObjects(){
       box(g,0,.08,-.04,.24,.012,.05,'#b8861f');
       for(const [x,z] of [[-.13,-.18],[.13,-.18],[-.13,.18],[.13,.18]])sphere(g,x,.078,z,.022,'#b3262d',false);
       sphere(g,0,.085,-.04,.026,'#2f5fa8',false);
+    }else if(name==='monstrance'){
+      // Monstrance: foot, stem and knop under a sunburst with rays and a small cross; the lunette sits at its centre.
+      cylinder(g,0,.02,0,.13,.16,.04,'#e3bc62','gold');
+      cylinder(g,0,.2,0,.025,.04,.34,'#e3bc62','gold');
+      finishSurface(sphere(g,0,.24,0,.05,'#e3bc62'),'gold');
+      const ring=mesh(new THREE.TorusGeometry(.14,.025,10,28),'#e3bc62',g,0,.52,0);finishSurface(ring,'gold');
+      for(let i=0;i<16;i++){
+        const ray=box(g,0,.52,0,.018,i%2?.12:.2,.012,'#f0cf72',false,'gold');
+        const angle=i*Math.PI/8;ray.rotation.z=angle;
+        ray.position.set(Math.sin(-angle)*(.2+(i%2?.06:.1)),.52+Math.cos(angle)*(.2+(i%2?.06:.1)),0);
+      }
+      box(g,0,.86,0,.02,.12,.02,'#e3bc62',false,'gold');
+      box(g,0,.88,0,.08,.02,.02,'#e3bc62',false,'gold');
+    }else if(name==='lunette'){
+      // The Sacred Host in its lunette; it is placed in the centre of the monstrance's sunburst.
+      const host=mesh(new THREE.CylinderGeometry(.11,.11,.012,28),'#f7f1df',g,0,.52,.02);host.rotation.x=Math.PI/2;
+      const rim=mesh(new THREE.TorusGeometry(.115,.012,8,28),'#e3bc62',g,0,.52,.02);finishSurface(rim,'gold');
     }else{
       // Roman Missal: deep red binding, gilt page edges and coloured ribbons; it lies open while in use at the altar.
       const closed=new THREE.Group();g.add(closed);
@@ -708,7 +725,7 @@ function objectHeight(name,state,p){
 
 function renderFrame(dt=1/60){
   const step=STEPS[cur3d];
-  if(tabernacleDoor)tabernacleDoor.rotation.y=(step.key===34.5&&progress3d>=.43&&progress3d<=.57||step.key===36&&progress3d>=.24&&progress3d<=.33)?-1.2:0;
+  if(tabernacleDoor)tabernacleDoor.rotation.y=((step.tabernacle||[]).some(([a,b])=>progress3d>=a&&progress3d<=b)||step.key===34.5&&progress3d>=.43&&progress3d<=.57||step.key===36&&progress3d>=.24&&progress3d<=.33)?-1.2:0;
   const elapsed=stepStart[cur3d]+step.dur*progress3d;
   const positions={};
   const actionTexts=[];
@@ -746,7 +763,8 @@ function renderFrame(dt=1/60){
     const layInPew=['L','L2','Ps','U','E'].includes(role)&&p[1]>310&&!walking;
     const seated=posture==='sit'&&atSeat&&!walking&&!(role==='P'&&step.key===14);
     const kneelingServer=SERVER_ROLES.includes(role)&&posture==='kneel'&&!walking;
-    pose(figure,layInPew?posture:seated?'sit':kneelingServer?'kneel':'stand',action,elapsed,walking,orans);
+    const kneeling=!walking&&(step.kneel?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
+    pose(figure,layInPew?posture:seated?'sit':kneelingServer||kneeling?'kneel':'stand',action,elapsed,walking,orans);
     if(action)actionTexts.push(ROLE_NAMES[role]+': '+action);
   }
   updatePeople(step,elapsed);
@@ -764,6 +782,13 @@ function renderFrame(dt=1/60){
       object.userData.open.visible=open;object.userData.closed.visible=!open;
     }
     if(state.by&&name==='thurible')object.rotation.z=Math.sin(elapsed*5)*.25;
+    const blessing=state.by&&(name==='monstrance'||name==='lunette')&&(step.blessWith||[]).find(([a,b])=>progress3d>=a&&progress3d<=b);
+    if(blessing){
+      // Benediction: the monstrance traces the Sign of the Cross, up and down then left and right.
+      const k=(progress3d-blessing[0])/(blessing[1]-blessing[0]);
+      if(k<.5)object.position.y+=.35*Math.cos(Math.PI*k*2)-.05;
+      else object.position.x+=.3*Math.sin(Math.PI*(k-.5)*4);
+    }
   }
   const raised=(step.raise||[]).find(([,a,b])=>progress3d>=a&&progress3d<=b);
   let hostRaised=false;
@@ -866,9 +891,11 @@ function applySetup(){
   }
   if(figures[cameraMode]&&!scenario.visible.has(cameraMode))setCamera('P');
   const notes=[];
-  if(!scenario.options.deacon)notes.push('Priest proclaims the Gospel, raises both vessels and dismisses the people.');
+  if(scenario.note)notes.push(scenario.note);
+  else if(!scenario.options.deacon)notes.push('Priest proclaims the Gospel, raises both vessels and dismisses the people.');
   if(!scenario.options.servers)notes.push('Priest or Deacon prepares the altar; fixtures stay in place. No incense or bell.');
   if(!scenario.options.lector)notes.push('Priest proclaims the readings and leads the Psalm.');
+  if(scenario.options.rite!=='mass'){notes.length=0;notes.push(scenario.note);}
   if(!notes.length)notes.push('Priest, Deacon, lay readers and servers share their proper duties.');
   $('scenarioNote').textContent=notes.join(' ');
   $('serverAssignments').textContent=scenario.assignments.length
@@ -900,8 +927,10 @@ function applySetup(){
     button.onclick=()=>jump(i);
     $('stepList').appendChild(button);
   });
-  const index=STEPS.findIndex(step=>step.key>=key);
-  jump(index<0?STEPS.length-1:index);
+  // Rites use different key types (numbers for Mass, strings for others); fall back to the first step.
+  let index=STEPS.findIndex(step=>step.key===key);
+  if(index<0&&typeof key==='number'&&typeof STEPS[0]?.key==='number')index=STEPS.findIndex(step=>step.key>=key);
+  jump(index<0?(typeof key==='number'&&typeof STEPS[0]?.key==='number'?STEPS.length-1:0):index);
   if(featuresReady){refreshTraining();refreshSpeechStatus();}
 }
 

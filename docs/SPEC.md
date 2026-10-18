@@ -36,7 +36,8 @@ Classic scripts load in this order and share globals:
 | File | Responsibility |
 |---|---|
 | `mass-rite.js` | Canonical baseline rite: `STEPS` (part, title, duration, posture, text, ref, movements, props, acts, smoke, say), roles, start positions, props, interpolation, `rebuildTimeline`. Plan of 1000 × 830 units. |
-| `mass-scenarios.js` | `buildScenario(options)` reassigns duties for deacon, lector, 0–5 servers, incense and both kinds. Steps keep their original index as `key`. |
+| `mass-rite-exposition.js` | Exposition of the Blessed Sacrament: steps for the lay-led and Priest forms, registered in `RITES`. |
+| `mass-scenarios.js` | Rite registry `RITES`; `buildScenario(options)` dispatches on `options.rite` (default Mass) and for Mass reassigns duties for deacon, lector, 0–5 servers, incense and both kinds. Steps keep their original index as `key`. |
 | `mass-parishes.js` | Versioned prepared-shell profiles, validation, reversible nave mapping and pure aisle routing. |
 | `mass-features.js` | Church-layout editor and presets; server training cues. |
 | `mass-speech.js`, `audio/` | Browser voices or pre-generated MP3s (`audio/audio-manifest.js`, `audio/index.csv`). |
@@ -62,8 +63,9 @@ startup must appear **before** the `<script>` tags in the HTML.
 ### 4.1 Setup
 
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
-  Mass with incense (default) and Solemnity. Editing any option shows
-  "Custom".
+  Mass with incense (default) and Solemnity. Outside Mass: Adoration
+  (lay-led, no blessing) and Exposition and Benediction (Priest). Editing any
+  option shows "Custom". Roles a rite does not have are refused with a message.
 - **Roles**:
   - Priest, Deacon and Server (book, bell and vessels)
   - Cross-bearer, Candle-bearer and Thurifer

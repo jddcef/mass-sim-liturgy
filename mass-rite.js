@@ -302,12 +302,15 @@ const START_POS={...HOME,T:[500,700],X:[500,730],C1:[470,730],C2:[530,730],L:[50
 const PROP_DEF={
   corporal:{off:[0,-16]},missal:{off:[0,-16]},gospels:{off:[0,-16]},chalice:{off:[0,-16]},bread:{off:[0,-16]},wine:{off:[0,-16]},
   cross:{off:[0,-18]},cand1:{off:[0,-16]},cand2:{off:[0,-16]},thurible:{off:[13,8]},ewer:{off:[14,-4]},
-  collection:{off:[0,-12]},ciborium:{off:[0,-16]},ciborium2:{off:[0,-16]}
+  collection:{off:[0,-12]},ciborium:{off:[0,-16]},ciborium2:{off:[0,-16]},
+  // Exposition (mass-rite-exposition.js): the monstrance and the Sacrament in its lunette.
+  monstrance:{off:[0,-16]},lunette:{off:[0,-16]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
   bread:{at:[612,770]},wine:{at:[632,770]},gospels:{by:'D'},cross:{by:'X'},cand1:{by:'C1'},cand2:{by:'C2'},thurible:{by:'T'},
-  collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true},ciborium2:{at:[455,170],h:true}
+  collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true},ciborium2:{at:[455,170],h:true},
+  monstrance:{at:[500,160],h:true},lunette:{at:[137,85],h:true}
 };
 
 // ---------- math helpers ----------

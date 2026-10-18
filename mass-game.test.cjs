@@ -3,7 +3,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 
 const context=vm.createContext({assert,console});
-for(const file of ['mass-rite.js','mass-scenarios.js','mass-parishes.js','mass-game-logic.js','mass-game-icons.js']){
+for(const file of ['mass-rite.js','mass-scenarios.js','mass-rite-exposition.js','mass-parishes.js','mass-game-logic.js','mass-game-icons.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),context,{filename:file});
 }
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
@@ -796,10 +796,15 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity'],'four celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','adorationLay','benediction'],'six celebrations are playable now');
   assert.equal(avail(byId('easterVigil')),false);
-  // Every available celebration starts a valid Mass in every role.
-  for(const c of C.filter(avail))for(const role of Object.keys(G('GAME_ROLES')))setup(role,{...presets[c.preset].fields,serverCount:Number(presets[c.preset].fields.serverCount)});
+  // Every available celebration starts in every role it has; other roles are refused with a reason.
+  for(const c of C.filter(avail))for(const role of Object.keys(G('GAME_ROLES'))){
+    const raw={...presets[c.preset].fields,serverCount:Number(presets[c.preset].fields.serverCount)};
+    const roles=raw.rite==='exposition'?G('EXPOSITION_ROLES')[raw.minister]:null;
+    if(roles&&!roles.includes(role))assert.throws(()=>setup(role,raw),/has no part/,c.id+' refuses '+role);
+    else setup(role,raw);
+  }
   // Seniority ranks have known requirements, in order.
   for(const r of G('SENIORITY_RANKS'))for(const id of r.needs)assert.ok(ids.has(id),r.id+' needs '+id);
   // Marks.
@@ -833,6 +838,9 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(rank(p).id,'head');
   const next=G('nextRank')(p);
   assert.equal(next.rank.id,'mc');assert.equal(next.ready,false,'the M.C. rank waits for celebrations in preparation');
+  assert.equal(G('nextRecommended')(p).id,'adorationLay','then the devotions');
+  p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
+  p=record(p,{preset:'benediction',role:'P',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
   // Stored progress is cleaned on load.
   const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
@@ -843,9 +851,66 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   const pfo=G('presetForOptions');
   const opts=(role,preset)=>G('normaliseGameOptions')(role,{...presets[preset].fields,serverCount:Number(presets[preset].fields.serverCount),readerCount:Number(presets[preset].fields.readerCount),
     bells:{start:presets[preset].fields.bellStart,epiclesis:presets[preset].fields.bellEpiclesis,elevation:presets[preset].fields.bellElevation}}).options;
-  for(const id of Object.keys(presets))assert.equal(pfo(opts('P',id),id),id,id+' round-trips');
+  for(const id of Object.keys(presets).filter(id=>!presets[id].fields.rite))assert.equal(pfo(opts('P',id),id),id,id+' round-trips');
   assert.equal(pfo(opts('T','sunday'),'sunday'),'sundayIncense','the thurifer brings incense to Sunday');
   assert.equal(pfo(opts('E','weekday'),'weekday'),'weekday','an EMHC on a weekday still credits the weekday');
   assert.equal(pfo(opts('E','weekday'),'custom'),'custom');
+  for(const id of ['adorationLay','benediction']){
+    const role=presets[id].fields.minister==='priest'?'P':'E';
+    assert.equal(pfo(opts(role,id),id),id,id+' round-trips with its minister');
+    assert.equal(pfo(opts('PEW',id),id),id,id+' round-trips from the pew');
+  }
+  assert.equal(pfo(opts('T','adorationLay'),'adorationLay'),'adorationLay','a thurifer at lay-led adoration still credits it');
+  assert.equal(pfo(opts('P','weekday'),'benediction'),'weekday');
+  assert.equal(pfo({...opts('P','weekday'),music:'sung',gloria:true},'benediction'),'custom','a Mass is never credited as Benediction');
+}
+// ---- round 11: Exposition, adoration and Benediction (HCWEOM 82-100; CIC 943) ----
+{
+  const presets=G('GAME_PRESETS');
+  const raw=id=>({...presets[id].fields,serverCount:Number(presets[id].fields.serverCount)});
+  const lay=setup('E',raw('adorationLay')),priest=setup('P',raw('benediction'));
+  assert.equal(lay.options.rite,'exposition');assert.equal(lay.options.minister,'lay');
+  same([...lay.scenario.visible],['E','S']);same([...priest.scenario.visible],['P','S','T']);
+  let keys=STEPS.map(s=>s.key);
+  assert.ok(keys.every(k=>typeof k==='string'&&k.startsWith('exp:')),'string keys keep Mass special cases away');
+  assert.ok(keys.includes('exp:blessing')&&keys.includes('exp:incense'));
+  assert.ok(STEPS.find(s=>s.key==='exp:blessing').acts.P.some(([a])=>/blesses the people/.test(a)));
+  // The lay form never blesses with the Sacrament (HCWEOM 91; CIC 943).
+  setup('E',raw('adorationLay'));
+  keys=STEPS.map(s=>s.key);
+  assert.ok(!keys.includes('exp:blessing'),'no Benediction without a Priest');
+  assert.ok(!STEPS.some(s=>Object.values(s.acts||{}).flat().some(([a])=>/bless/.test(a))),'no blessing acts in the lay form');
+  assert.ok(STEPS.every(s=>s.ref),'every step cites its source');
+  // Props: the Sacrament leaves the tabernacle, rests in the monstrance and returns.
+  const lunette=run("STEPS.map((_,i)=>propAt(i,'lunette',1,Object.fromEntries(Object.keys(ACTORS).map(a=>[a,actorAt(i,a,1)]))))");
+  same(lunette[keys.indexOf('exp:silence')].at,[500,160]);
+  assert.equal(lunette.at(-1).h,true,'reposed at the end');
+  // Duties exist for every role present; the book holds only this rite's texts.
+  for(const [role,form] of [['E','adorationLay'],['S','adorationLay'],['P','benediction'],['S','benediction'],['T','benediction'],['PEW','benediction']]){
+    setup(role,raw(form));
+    assert.ok(G('deriveDuties')(role,STEPS,setup(role,raw(form)).options).length>0,role+' has duties in '+form);
+  }
+  setup('P',raw('benediction'));
+  const book=G('buildBook')('P',STEPS);
+  assert.ok(book.length&&book.every(p=>['Exposition','Adoration','Benediction','Reposition'].includes(p.part)));
+  // Option rules: up to two servers, incense needs a thurifer, Mass-only options off.
+  const norm=G('normaliseGameOptions');
+  assert.equal(norm('T',raw('adorationLay')).options.incense,true);
+  assert.equal(norm('T',raw('adorationLay')).options.serverCount,2);
+  assert.equal(norm('E',{...raw('adorationLay'),serverCount:5,incense:true}).options.serverCount,2);
+  assert.equal(norm('E',{...raw('adorationLay'),serverCount:1,incense:true}).options.incense,false);
+  assert.equal(norm('P',raw('benediction')).options.deacon,false);
+  assert.throws(()=>norm('P',raw('adorationLay')),/has no part/);
+  assert.throws(()=>norm('D',raw('benediction')),/has no part/);
+  same(G('switchableRoles')(new Set(['P','S','T']),norm('P',raw('benediction')).options),['P','S','T','PEW']);
+  // Before and after: cope for the Priest, the authorisation question for the lay minister.
+  const pre=G('devotionPreTasks');
+  assert.ok(pre('P',norm('P',raw('benediction')).options,[952,250])[0].correct.includes('cope'));
+  assert.ok(pre('E',norm('E',raw('adorationLay')).options,[952,250]).some(t=>/not bless/.test(t.correct)));
+  assert.equal(pre('PEW',norm('PEW',raw('benediction')).options)[0].id,'stoup');
+  assert.equal(G('devotionPostTasks')('PEW',{})[0].id,'leave');
+  assert.ok(G('devotionPostTasks')('E',{}).some(t=>/tabernacle is locked/.test(t.correct)));
+  // Mass still builds afterwards.
+  setup('P',{});assert.equal(STEPS[0].key,0);
 }
 console.log('mass-game tests passed');

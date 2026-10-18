@@ -261,7 +261,13 @@ function buildSetupForm(){
     else syncPreset();
   });
   decorateOptions(form);
-  form.addEventListener('submit',event=>{event.preventDefault();startGame(readForm());});
+  form.addEventListener('submit',event=>{
+    event.preventDefault();
+    const config=readForm();
+    // A role that has no part in the chosen rite (for example the Deacon at lay-led adoration).
+    try{normaliseGameOptions(config.role,config.raw);}catch(error){toast(error.message,true);return;}
+    startGame(config);
+  });
   $('cancelSetup').onclick=cancelSetup;
   PathView.initialise(prepareCelebration);
   $('openPath').onclick=()=>PathView.open();
@@ -292,7 +298,9 @@ function choosePreset(id){
   previewNotes();
 }
 function syncPreset(){
-  const id=matchingPreset(formValues());
+  // Exposition presets carry the rite, which is not a form field: keep it while their fields still match.
+  const current=GAME_PRESETS[$('gamePreset').value]?.fields||{};
+  const id=matchingPreset({...formValues(),rite:current.rite,minister:current.minister});
   $('gamePreset').value=id;
   $('presetNote').textContent=GAME_PRESETS[id]?.blurb||'Your own choice of options.';
 }
@@ -331,6 +339,9 @@ function readForm(){
     crucifix:saved.crucifix,crossStand:saved.crossStand,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
+  const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
+  raw.rite=presetFields.rite||'mass';
+  if(presetFields.minister)raw.minister=presetFields.minister;
   Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false,projector:saved.projector===true});
   return {role:saved.role||'P',level:saved.level||'choice',preset:saved.preset||'custom',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
@@ -368,7 +379,7 @@ function syncPathStrip(){
 function showPathResult(watched,percent){
   const outcome=PathView.record({preset:game.preset,role:game.role,level:game.level,percent,watched});
   if(!outcome){
-    $('summaryPath').textContent='Custom options are not on the Path. Choose a Kind of Mass to earn seniority.';
+    $('summaryPath').textContent='Custom options are not on the Path. Choose a kind of celebration to earn seniority.';
     return;
   }
   const after=outcome.progress,next=nextRecommended(after);
@@ -544,8 +555,17 @@ function switchRole(role){
   toast('You are now the '+GAME_ROLES[role].name+'. Your duties continue from here.');
   if(cameraMode==='player'||gameView.firstPerson)setCamera('player');
 }
+// Mass, or a rite outside Mass such as Exposition (mass-rite-exposition.js).
+const isDevotion=()=>isDevotionRite(game.options);
+const riteWord=()=>isDevotion()?'Exposition':'Mass';
 function describeCelebration(){
   const o=game.options,parts=[];
+  if(isDevotion()){
+    parts.push(o.minister==='priest'?'Exposition and Benediction with the Priest':'adoration led by a lay minister, without the blessing');
+    parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s'));
+    parts.push(o.incense?'incense':'no incense');
+    return parts.join(', ')+'.';
+  }
   parts.push(o.music==='sung'?'sung Mass':'said Mass');
   if(o.deacon)parts.push('Deacon');
   parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s'));
@@ -1005,7 +1025,7 @@ const roleStart=()=>{
   const actor=GAME_ROLES[game.role].actor;
   return actor?starts[0].pos[actor]:game.role==='MC'?MC_START:game.role==='AV'?AV_DESK:null;
 };
-function ministersOnStage(){return ['P','D','X','C1','C2','T','S',...(game.options.lectorProcession?['L']:[])].filter(r=>game.visible.has(r));}
+function ministersOnStage(){return ['P','D','X','C1','C2','T','S',...(game.options.lectorProcession?['L']:[]),...(isDevotion()?['E']:[])].filter(r=>game.visible.has(r));}
 
 // ---------- before Mass ----------
 async function runPreMass(gen){
@@ -1036,12 +1056,12 @@ async function runPreMass(gen){
     await Promise.all([npcWalk(),walk('SAC',game.overrides.SAC,seat)]);
   }else{
     const where=game.role==='PEW'?'You arrive outside the church.':game.role==='AV'?'You come in early to set up the screen at the back of the church.':['L','L2','U','E'].includes(game.role)&&!ministers.includes(game.role)?'You prepare your ministry and take your place with the congregation.':'You are in the sacristy with the other ministers.';
-    setPhase('Before Mass',where);
-    const tasks=preMassTasks(game.role,game.options,game.team,roleStart());
+    setPhase('Before '+riteWord(),where);
+    const tasks=isDevotion()?devotionPreTasks(game.role,game.options,roleStart()):preMassTasks(game.role,game.options,game.team,roleStart());
     let walking=null;
     if(game.role==='PEW'||game.role==='AV')walking=npcWalk();
     for(const task of tasks){
-      const outcome=await ask(taskDecision(task,'Before Mass'));
+      const outcome=await ask(taskDecision(task,'Before '+riteWord()));
       if(gen!==game.gen)return;
       await afterPreTask(task,outcome,gen);
       if(gen!==game.gen)return;
@@ -1512,9 +1532,9 @@ function beginMass(){
   const notes={
     MC:'Watch every minister. Cue each one at the right moment, and catch anyone who stalls.',
     SAC:'During Mass the sacristan stays ready at the back. Speed up the clock if you wish; pack-away follows.',
-    PEW:'Follow the Mass: postures, responses and acclamations.'
+    PEW:isDevotion()?'Pray before the Blessed Sacrament: postures, responses and hymns.':'Follow the Mass: postures, responses and acclamations.'
   };
-  setPhase('Holy Mass',notes[game.role]||'Your decisions appear at each of your duties. Watch the other ministers too.');
+  setPhase(isDevotion()?RITES[game.options.rite].name:'Holy Mass',notes[game.role]||'Your decisions appear at each of your duties. Watch the other ministers too.');
   if(game.role==='SAC'){$('rate').value='3';$('rate').dispatchEvent(new Event('change'));toast('Speed set to 3x: there is little for the sacristan to do during Mass.');}
   if(game.role==='MC'||game.role==='SAC')setCamera('action');
   setPlaying(true);
@@ -1713,7 +1733,7 @@ async function startPost(){
   GameAudio.stopTrack(3);
   const gen=game.gen;
   const actor=GAME_ROLES[game.role].actor;
-  setPhase('After Mass',game.role==='PEW'?'The ministers have gone out.':'The ministers return to the sacristy.');
+  setPhase('After '+riteWord(),game.role==='PEW'?'The ministers have gone out.':'The ministers return to the sacristy.');
   ministersOnStage().forEach((r,i)=>{
     const from=actorAt(STEPS.length-1,r,1);
     const start=from[1]>842?[from[0],850]:from;
@@ -1724,8 +1744,8 @@ async function startPost(){
   if(game.role==='SAC'){
     await runPackAway(gen);
   }else{
-    for(const task of postMassTasks(game.role,game.options)){
-      const outcome=await ask(taskDecision(task,'After Mass'));
+    for(const task of isDevotion()?devotionPostTasks(game.role,game.options):postMassTasks(game.role,game.options)){
+      const outcome=await ask(taskDecision(task,'After '+riteWord()));
       if(gen!==game.gen)return;
       if(task.id==='where'){
         const key=actor||game.role;

@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R104.**
+**Next decision number: R111.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -99,6 +99,7 @@ server for liturgical or Catholic questions and clarifications.
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
 | 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
+| 14 | (this PR) | Rite registry; lay-led Adoration and Exposition and Benediction with the Priest (R104–R110) |
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
 
 Round 10 was exercised in Edge through `file://` on all three pages, including
@@ -156,11 +157,10 @@ uncommitted; no push, PR or remote CI run was requested.
 - [ ] Roadmap for the Path (R96, R97). The celebrations are already on the map
       as "In preparation"; adding a `preset` to a celebration in
       `CELEBRATIONS` makes it playable and creditable.
-      1. Rite registry: replace the single `STEPS` list in `mass-rite.js` with
-         rites selected by the setup, so non-Mass rites can run.
-      2. Exposition and Benediction: lay-led Adoration (expose and repose,
-         no blessing) and the clergy form (cope, humeral veil, incense,
-         monstrance blessing). The monstrance is already in the cupboard.
+      1. ~~Rite registry~~ done in round 14 (`RITES` in `mass-scenarios.js`).
+      2. ~~Exposition and Benediction~~ done in round 14
+         (`mass-rite-exposition.js`). Still to do: the Deacon form, cope and
+         humeral veil in 3D.
       3. Mass with the Bishop: mitre- and crozier-bearers in vimps, book and
          bugia, chaplain; then Confirmation.
       4. Christmas Mass, Candlemas, Ash Wednesday, Palm Sunday.

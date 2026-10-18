@@ -35,7 +35,8 @@ const GAME_DEFAULT_OPTIONS={
   bells:{start:true,epiclesis:true,elevation:true},
   readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,openChurch:true,
   crucifix:'wall',crossStand:'right',projector:false,
-  lapses:true,detail:'key',symbols:true,seed:1
+  lapses:true,detail:'key',symbols:true,seed:1,
+  rite:'mass',minister:'lay'
 };
 
 // Plan coordinates beyond the 1000x830 church: the sacristy annex lies past the right wall.
@@ -77,7 +78,8 @@ const GAME_PLACES=[
   {id:'aisle',name:'the central aisle',at:[500,520],r:45},
   {id:'door',name:'the church door',at:[500,860],r:40},
   {id:'sacristyDoor',name:'the outside door of the sacristy',at:[1250,150],r:30},
-  {id:'mainDoors',name:'the main doors, from the inside',at:[500,805],r:30}
+  {id:'mainDoors',name:'the main doors, from the inside',at:[500,805],r:30},
+  {id:'sanctuaryDoor',name:'inside the church by the sacristy door',at:[948,222],r:40}
 ];
 
 function hashString(text){
@@ -110,6 +112,8 @@ function normaliseGameOptions(role,raw={}){
   const o={...GAME_DEFAULT_OPTIONS,...raw,bells:{...GAME_DEFAULT_OPTIONS.bells,...(raw.bells||{})}};
   const notes=[];
   if(!GAME_ROLES[role])throw new RangeError('Unknown role '+role);
+  if(o.rite==='exposition')return normaliseExposition(role,o,notes);
+  o.rite='mass';
   o.serverCount=Math.max(0,Math.min(5,Number(o.serverCount)||0));
   if(role==='D'&&!o.deacon){o.deacon=true;notes.push('A Deacon was added because you are playing the Deacon.');}
   if(role==='L'&&!o.lector){o.lector=true;notes.push('A lay lector was added because you are playing the lector.');}
@@ -138,8 +142,35 @@ function normaliseGameOptions(role,raw={}){
   return {options:o,notes};
 }
 
+// Exposition (mass-rite-exposition.js): a Priest gives Benediction; a lay minister exposes and
+// reposes only (HCWEOM 91; CIC 943). Up to two servers: a server, and a thurifer when incense is used.
+const EXPOSITION_ROLES={lay:['E','S','T','PEW'],priest:['P','S','T','PEW']};
+function normaliseExposition(role,o,notes){
+  o.minister=o.minister==='priest'?'priest':'lay';
+  if(!EXPOSITION_ROLES[o.minister].includes(role)){
+    const names=EXPOSITION_ROLES[o.minister].map(r=>GAME_ROLES[r].name).join(', ');
+    throw new RangeError('The '+GAME_ROLES[role].name+' has no part in this celebration. Choose one of: '+names+'.');
+  }
+  o.serverCount=Math.max(0,Math.min(2,Number(o.serverCount)||0));
+  if(role==='S'&&o.serverCount<1){o.serverCount=1;notes.push('A server was added because you are playing the server.');}
+  if(role==='T'){
+    if(o.serverCount<2){o.serverCount=2;notes.push('Two servers are needed so that there is a thurifer.');}
+    if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
+  }
+  if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
+  Object.assign(o,{deacon:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+    music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
+  if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
+  if(!['key','all'].includes(o.detail))o.detail='key';
+  if(!GAME_LEVELS[o.level])o.level='choice';
+  if(typeof CRUCIFIX_PLACES!=='undefined'&&!CRUCIFIX_PLACES[o.crucifix])o.crucifix='wall';
+  if(typeof CROSS_STANDS!=='undefined'&&!CROSS_STANDS[o.crossStand])o.crossStand='right';
+  return {options:o,notes};
+}
+const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
+
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -162,7 +193,12 @@ const GAME_PRESETS={
   solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true}}
+    bellStart:true,bellEpiclesis:true,bellElevation:true}},
+  // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
+  adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
+    rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
+  benediction:{name:'Exposition and Benediction',blurb:'The Priest in cope exposes the Blessed Sacrament, incenses it, and blesses the people with the monstrance.',fields:{
+    rite:'exposition',minister:'priest',serverCount:'2',incense:true}}
 };
 // The form fields a preset controls; a preset is "current" only while all of them still match.
 function applyPreset(id,current={}){
@@ -170,7 +206,9 @@ function applyPreset(id,current={}){
   return preset?{...current,...preset.fields,preset:id}:{...current,preset:'custom'};
 }
 function matchingPreset(values){
+  const rite=values.rite||'mass';
   for(const [id,preset] of Object.entries(GAME_PRESETS)){
+    if((preset.fields.rite||'mass')!==rite)continue;
     if(Object.entries(preset.fields).every(([k,v])=>values[k]===undefined||String(values[k])===String(v)))return id;
   }
   return 'custom';
@@ -183,9 +221,11 @@ function presetForOptions(options,chosen){
     lectorProcession:options.lectorProcession,collection:options.collection,emhc:options.emhc,reservedCommunion:options.reservedCommunion,deaconCommunion:options.deaconCommunion,
     incense:options.incense,bothKinds:options.bothKinds,gloria:options.gloria,creed:options.creed,secondReading:options.secondReading,giftsProcession:options.giftsProcession,
     solemnBlessing:options.solemnBlessing,introductory:options.introductory,music:options.music,eucharisticPrayer:options.eucharisticPrayer,
-    bellStart:options.bells?.start,bellEpiclesis:options.bells?.epiclesis,bellElevation:options.bells?.elevation};
+    bellStart:options.bells?.start,bellEpiclesis:options.bells?.epiclesis,bellElevation:options.bells?.elevation,
+    rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
-  return id!=='custom'?id:GAME_PRESETS[chosen]?chosen:'custom';
+  if(id!=='custom')return id;
+  return GAME_PRESETS[chosen]&&(GAME_PRESETS[chosen].fields.rite||'mass')===fields.rite?chosen:'custom';
 }
 
 // ---------- the Path: celebrations and seniority ----------
@@ -221,9 +261,9 @@ const CELEBRATIONS=[
   {id:'easterVigil',name:'Easter Vigil',precedence:'The Easter Vigil in the Holy Night',branch:'triduum',station:7,colour:'white',icon:'candle',at:[700,1070],after:['goodFriday'],
     blurb:'The new fire, the Paschal candle and the Exsultet, the readings, the Gloria with bells, Baptism and the renewal of promises.'},
   {id:'adorationLay',name:'Adoration (lay-led)',precedence:'Exposition without Benediction',branch:'devotion',colour:'white',icon:'tabernacle',at:[820,225],after:['dominica'],
-    blurb:'An authorised lay minister exposes the Blessed Sacrament and later reposes it, without giving the blessing.'},
+    preset:'adorationLay',blurb:'An authorised lay minister exposes the Blessed Sacrament and later reposes it, without giving the blessing.'},
   {id:'benediction',name:'Exposition and Benediction',precedence:'Exposition, Adoration and Benediction',branch:'devotion',colour:'white',icon:'bless',at:[820,420],after:['adorationLay','dominicaIncense'],
-    blurb:'Priest or Deacon in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
+    preset:'benediction',blurb:'The Priest in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
   {id:'corpusChristi',name:'Corpus Christi procession',precedence:'Eucharistic procession',branch:'devotion',colour:'white',icon:'walk',at:[820,600],after:['benediction'],
     blurb:'Outside the church: the canopy, torches, flower petals and bells, with Benediction at the altars on the way.'},
   {id:'confirmation',name:'Confirmation Mass',precedence:'Pontifical Mass with Confirmation',branch:'pontifical',colour:'red',icon:'bless',at:[760,820],after:['pontifical'],
@@ -336,6 +376,7 @@ function switchableRoles(visible,options={}){
     if(role==='AV')return !!options.projector;
     return true;
   });
+  if(isDevotionRite(options))return roles.filter(role=>(EXPOSITION_ROLES[options.minister]||[]).includes(role));
   return roles;
 }
 // After a role switch, everything already past is done; the new role's duties start from now.
@@ -912,6 +953,18 @@ function rewindCues(cues,time){
 function buildBook(sayRole,steps=STEPS){
   const used=new Set(steps.map(s=>s.key));
   const pages=[];
+  // Rites other than Mass have string keys: their book holds only their own texts.
+  const source=typeof steps[0]?.key==='string'?steps:ORIGINAL_STEPS;
+  if(source===steps){
+    for(const step of steps){
+      const lines=(step.say||[]).filter(([who])=>who===sayRole).map(([,text])=>text);
+      if(!lines.length)continue;
+      let page=pages.find(p=>p.part===step.part);
+      if(!page){page={part:step.part,sections:[]};pages.push(page);}
+      page.sections.push({key:step.key,title:step.title,ref:step.ref,lines,today:true,note:''});
+    }
+    return pages;
+  }
   ORIGINAL_STEPS.forEach((step,key)=>{
     const today=steps.find(s=>s.key===key);
     const source=today||step;
@@ -1019,6 +1072,45 @@ function postMassTasks(role,options){
   }[role]||['Bow to the cross, put your item away safely and hang up your alb'+(options.incense&&role==='T'?' (charcoal into the sand bucket)':''),'Leave the thurible on the altar','Keep the alb on and go home','Blow out the sanctuary lamp'];
   tasks.push({id:'sacristy',kind:'task',prompt:'In the sacristy: what now?',ref:role==='MC'?'GIRM 106; CB 34-36 (judgement call)':'GIRM 105; custom',correct:close[0],
     options:shuffled(close,seededRandom(role+'close')).map(label=>({label,correct:label===close[0]}))});
+  return tasks;
+}
+// Exposition: before and after (HCWEOM 91-92, 100).
+function devotionPreTasks(role,options,startPos){
+  if(role==='PEW')return preMassTasks('PEW',options);
+  const tasks=[];
+  const choose=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
+    options:shuffled([correct,...wrong],seededRandom(role+id+'exp')).map(label=>({label,correct:label===correct}))});
+  if(role==='P')choose('vest','Vest for Exposition and Benediction. What do you put on?','HCWEOM 92','Alb (or cassock and surplice), white stole and white cope',
+    ['Alb, stole and chasuble','Alb, diagonal stole and dalmatic','Cassock only, without a stole']);
+  if(role==='S'||role==='T')choose('vest','Vest to serve. What do you put on?','Custom; GIRM 339 by analogy','Alb (or cassock and surplice)',['Stole over the alb','Cope','Chasuble']);
+  if(role==='T')choose('carry','What do you carry in?','HCWEOM 93','Thurible with burning incense',['The monstrance','The processional cross','Nothing']);
+  if(role==='S')choose('prepare','What must be ready in the sanctuary?','HCWEOM 92, 99; custom',
+    options.minister==='priest'?'The humeral veil, and the bell if the parish rings it at the blessing':'Seats and the book of prayers for the adoration',
+    ['The chalice and cruets','The Book of the Gospels on the altar','The collection baskets']);
+  if(role==='E')choose('prepare','Before the exposition, what must be true?','HCWEOM 91; CIC 943',
+    'I am authorised; I may expose and repose the Sacrament but not bless with it',
+    ['I will bless the people with the monstrance at the end','I may leave the Sacrament exposed with nobody present','Anyone in the pew may expose the Sacrament']);
+  const place=GAME_PLACES.find(p=>p.id==='sanctuaryDoor');
+  tasks.push({id:'line',kind:'place',prompt:'Where do you wait until it is time to begin?',ref:'Judgement call',target:startPos||place.at,places:[place.id],correct:place.name,
+    options:shuffled([{label:place.name,correct:true},{label:'the back of the church (procession line)',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'expline'))});
+  return tasks;
+}
+function devotionPostTasks(role,options){
+  if(role==='PEW'){
+    const correct='After the reposition, when the ministers have gone out';
+    return [{id:'leave',kind:'task',prompt:'The Blessed Sacrament has been reposed. When do you leave?',ref:'HCWEOM 100 (judgement call on custom)',correct,
+      options:shuffled([correct,'As soon as the Sacrament is exposed','During the blessing','Before the reposition, to beat the traffic'],seededRandom('pewexpleave')).map(label=>({label,correct:label===correct}))}];
+  }
+  const tasks=[{id:'where',kind:'place',prompt:'The ministers have left the church. Where do you go?',ref:'HCWEOM 100',places:['sacristy'],correct:'the sacristy',
+    options:shuffled([{label:'the sacristy',correct:true},{label:'the altar',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'expwhere'))}];
+  const close={
+    P:'Take off the cope, humeral veil and stole and put them away',
+    E:'Make sure the tabernacle is locked and the key is returned to its safe place',
+    S:'Put the humeral veil and bell away and hang up your alb',
+    T:'Put the charcoal safely in the sand bucket and hang up your alb'}[role];
+  const wrong=['Leave the tabernacle key in the door','Leave the monstrance on the altar for next time','Keep the vestments on and go home'];
+  tasks.push({id:'sacristy',kind:'task',prompt:'In the sacristy: what now?',ref:role==='E'?'CIC 938 §5; custom':'Custom',correct:close,
+    options:shuffled([close,...wrong],seededRandom(role+'expclose')).map(label=>({label,correct:label===close}))});
   return tasks;
 }
 function procOrder(options,team){
@@ -1154,4 +1246,4 @@ function nextUseFor(entry,steps,index,progress){
   }
   return null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended};

@@ -14,6 +14,7 @@ jobs:
         run: |
           node --check mass-rite.js
           node --check mass-scenarios.js
+          node --check mass-rite-exposition.js
           node --check mass-features.js
           node --check mass-parishes.js
           node --check mass-parish-editor.js
