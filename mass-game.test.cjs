@@ -796,7 +796,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','adorationLay','benediction','confirmation'],'eight celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','adorationLay','benediction','confirmation'],'nine celebrations are playable now');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
@@ -838,9 +838,14 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   p=record(p,{preset:'solemnity',role:'MC',level:'choice',percent:90}).progress;
   assert.equal(rank(p).id,'head');
   const next=G('nextRank')(p);
-  assert.equal(next.rank.id,'mc');assert.equal(next.ready,false,'the M.C. rank waits for celebrations in preparation');
+  assert.equal(next.rank.id,'mc');assert.equal(next.ready,true,'the M.C. rank can be earned now Christmas is playable');
+  same(next.missing,['pontifical','nativity']);
   assert.equal(G('nextRecommended')(p).id,'pontifical','then the Mass with the Bishop');
   p=record(p,{preset:'pontifical',role:'MB',level:'choice',percent:90}).progress;
+  assert.equal(G('nextRecommended')(p).id,'nativity','then Christmas');
+  p=record(p,{preset:'nativity',role:'T',level:'choice',percent:90}).progress;
+  assert.equal(rank(p).id,'mc','Master of Ceremonies after the Bishop and Christmas');
+  assert.equal(G('nextRank')(p).ready,false,'the Triduum waits for celebrations in preparation');
   assert.equal(G('nextRecommended')(p).id,'adorationLay','then the devotions');
   p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
   r=record(p,{preset:'benedictionDeacon',role:'D',level:'choice',percent:90});
@@ -989,6 +994,29 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(G('GameIcons').iconFor('anoints the forehead with chrism, tracing the cross'),'chrism');
   assert.ok(!G('deriveCues')(scenario.visible,STEPS).some(c=>c.role==='K'||c.role==='SP'),'the candidates are not cued as ministers');
   assert.equal(G('presetForOptions')(setup('D',{...presets.pontifical.fields,serverCount:5}).options,'pontifical'),'pontifical','the plain Bishop\u2019s Mass is not Confirmation');
+  setup('P',{});assert.equal(STEPS[0].key,0);
+}
+// ---- round 19: Christmas Mass during the Night ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  let r=norm('P',{nativity:true,confirmation:true,creed:false,gloria:false,eucharisticPrayer:'IV'});
+  assert.ok(r.options.nativity&&!r.options.confirmation&&r.options.creed&&r.options.gloria&&r.options.eucharisticPrayer==='I');
+  for(const ref of ['GIRM 372','GIRM 53','GIRM 68','GIRM 365d'])assert.ok(r.notes.some(n=>n.includes(ref)),ref);
+  assert.equal(norm('P',{}).options.nativity,false);
+  assert.equal(norm('E',{rite:'exposition',nativity:true}).options.nativity,false,'not at Exposition');
+  const raw={...presets.nativity.fields,serverCount:Number(presets.nativity.fields.serverCount)};
+  const {options,scenario}=setup('S',raw);
+  assert.equal(G('presetForOptions')(options,'nativity'),'nativity');
+  assert.equal(G('presetForOptions')(setup('P',{...presets.solemnity.fields,serverCount:Number(presets.solemnity.fields.serverCount)}).options,'solemnity'),'solemnity','a plain solemnity is not Christmas');
+  assert.equal(G('celebrationForPreset')('nativity').id,'nativity');
+  setup('S',raw);
+  assert.equal(STEPS[0].key,-.5,'the Proclamation comes first');
+  assert.ok(scenario.visible.has('Ps'));
+  assert.ok(G('deriveDuties')('S',STEPS,options).some(d=>/genuflect/.test(d.text)&&d.key===15),'the server genuflects at the Creed');
+  for(const role of ['D','T','MC','SAC','PEW','P'])setup(role,raw);
+  const items=G('sacristanSetup')(options);
+  assert.ok(items.some(i=>i.id==='proclamation'&&i.needed&&i.places.includes('ambo')));
+  assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>i.id==='proclamation'&&i.needed));
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
 console.log('mass-game tests passed');
