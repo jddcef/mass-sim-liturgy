@@ -36,7 +36,7 @@ const GAME_DEFAULT_OPTIONS={
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:true,epiclesis:true,elevation:true},
   readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,openChurch:true,
-  crucifix:'wall',crossStand:'right',projector:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,
+  crucifix:'wall',crossStand:'right',projector:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false,
   lapses:true,detail:'key',symbols:true,seed:1,
   rite:'mass',minister:'lay'
 };
@@ -82,7 +82,8 @@ const GAME_PLACES=[
   {id:'door',name:'the church door',at:[500,860],r:40},
   {id:'sacristyDoor',name:'the outside door of the sacristy',at:[1250,150],r:30},
   {id:'mainDoors',name:'the main doors, from the inside',at:[500,805],r:30},
-  {id:'sanctuaryDoor',name:'inside the church by the sacristy door',at:[948,222],r:40}
+  {id:'sanctuaryDoor',name:'inside the church by the sacristy door',at:[948,222],r:40},
+  {id:'coffinPlace',name:'the place for the coffin at the head of the aisle',at:[500,372],r:42}
 ];
 
 function hashString(text){
@@ -117,6 +118,7 @@ function normaliseGameOptions(role,raw={}){
   if(!GAME_ROLES[role])throw new RangeError('Unknown role '+role);
   if(o.rite==='exposition')return normaliseExposition(role,o,notes);
   if(o.rite==='baptism')return normaliseBaptismRite(role,o,notes);
+  if(o.rite==='funeral')return normaliseFuneralRite(role,o,notes);
   o.rite='mass';
   o.serverCount=Math.max(0,Math.min(5,Number(o.serverCount)||0));
   if(role==='D'&&!o.deacon){o.deacon=true;notes.push('A Deacon was added because you are playing the Deacon.');}
@@ -184,6 +186,19 @@ function normaliseGameOptions(role,raw={}){
     if(o.introductory!=='A'){o.introductory='A';notes.push('The reception of the children at the door replaces the greeting and the Penitential Act (Ordo Baptismi Parvulorum 29).');}
     o.solemnBlessing=true;
   }
+  o.funeral=!!o.funeral;
+  if(o.funeral){
+    // The Funeral Mass (GIRM 380-385; Order of Christian Funerals 154-176), modelled at a parish Mass.
+    const clash=o.nativity?'Christmas':o.candlemas?'the Presentation of the Lord':o.ashWednesday?'Ash Wednesday':o.confirmation?'Confirmation':o.baptism?'Baptism':o.bishop?'the Bishop presiding':'';
+    if(clash){o.funeral=false;notes.push('A Funeral Mass is not combined with '+clash+' in this simulator (GIRM 380), so it was switched off.');}
+    else if(role==='MB'||role==='CB'){o.funeral=false;notes.push('The Funeral Mass is modelled with the parish Priest presiding, so it was switched off for the Bishop\u2019s bearers.');}
+  }
+  if(o.funeral){
+    if(o.gloria){o.gloria=false;notes.push('The Gloria is not sung at a Funeral Mass (Order of Christian Funerals 159).');}
+    if(o.creed){o.creed=false;notes.push('The Creed is not said at a Funeral Mass (GIRM 384).');}
+    if(o.introductory!=='A'){o.introductory='A';notes.push('The reception of the body at the door replaces the greeting and the Penitential Act (Order of Christian Funerals 159).');}
+    if(o.solemnBlessing){o.solemnBlessing=false;notes.push('The final commendation takes the place of the blessing and dismissal (Order of Christian Funerals 170).');}
+  }
   if(o.bishop){
     if(!o.deacon){o.deacon=true;notes.push('A Deacon assists the Bishop (Pontificales ritus 6).');}
     if(!o.lector){o.lector=true;notes.push('A lay reader proclaims the readings while the Bishop presides from the cathedra.');}
@@ -218,7 +233,7 @@ function normaliseExposition(role,o,notes){
     if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   }
   if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
-  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
     music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
   if(!['key','all'].includes(o.detail))o.detail='key';
@@ -238,7 +253,27 @@ function normaliseBaptismRite(role,o,notes){
   }
   o.serverCount=Math.max(0,Math.min(1,Number(o.serverCount)||0));
   if(role==='S'&&o.serverCount<1){o.serverCount=1;notes.push('A server was added because you are playing the server.');}
-  Object.assign(o,{deacon:o.minister==='deacon',incense:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:true,lector:false,bothKinds:false,collection:false,projector:false,emhc:false,readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',incense:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:true,funeral:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:false,readerCount:1,lectorProcession:false,
+    music:o.music==='said'?'said':'sung',bells:{start:false,epiclesis:false,elevation:false}});
+  if(!['key','all'].includes(o.detail))o.detail='key';
+  if(!GAME_LEVELS[o.level])o.level='choice';
+  if(typeof CRUCIFIX_PLACES!=='undefined'&&!CRUCIFIX_PLACES[o.crucifix])o.crucifix='wall';
+  if(typeof CROSS_STANDS!=='undefined'&&!CROSS_STANDS[o.crossStand])o.crossStand='right';
+  return {options:o,notes};
+}
+// The funeral liturgy outside Mass (mass-rite-funeral.js): a Priest presides, or a Deacon when no Priest
+// is available (OCF 14). Up to two servers: a server with the holy water, and a thurifer when incense is used.
+const FUNERAL_ROLES={priest:['P','S','T','PEW'],deacon:['D','S','T','PEW']};
+function normaliseFuneralRite(role,o,notes){
+  o.minister=FUNERAL_ROLES[o.minister]?o.minister:'priest';
+  if(!FUNERAL_ROLES[o.minister].includes(role)){
+    const names=FUNERAL_ROLES[o.minister].map(r=>GAME_ROLES[r].name).join(', ');
+    throw new RangeError('The '+GAME_ROLES[role].name+' has no part in this celebration. Choose one of: '+names+'.');
+  }
+  o.serverCount=Math.max(0,Math.min(2,Number(o.serverCount)||0));
+  if(role==='S'&&o.serverCount<1){o.serverCount=1;notes.push('A server was added because you are playing the server.');}
+  if(role==='T'&&o.serverCount<2){o.serverCount=2;notes.push('Two servers are needed so that there is a thurifer.');}
+  Object.assign(o,{deacon:o.minister==='deacon',incense:o.serverCount===2,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:true,lector:false,bothKinds:false,collection:false,projector:false,emhc:false,readerCount:1,lectorProcession:false,
     music:o.music==='said'?'said':'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(!['key','all'].includes(o.detail))o.detail='key';
   if(!GAME_LEVELS[o.level])o.level='choice';
@@ -247,11 +282,11 @@ function normaliseBaptismRite(role,o,notes){
   return {options:o,notes};
 }
 // The roles that exist in each rite outside Mass, by minister.
-const RITE_ROLES={exposition:EXPOSITION_ROLES,baptism:BAPTISM_ROLES};
+const RITE_ROLES={exposition:EXPOSITION_ROLES,baptism:BAPTISM_ROLES,funeral:FUNERAL_ROLES};
 const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation','nativity','candlemas','ashWednesday','baptism'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation','nativity','candlemas','ashWednesday','baptism','funeral'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -262,43 +297,47 @@ const GAME_PRESETS={
   sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, four servers (cross and candles), no incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   sundayIncense:{name:'Sunday Mass with incense',blurb:'Sung, Deacon, five servers with a thurifer, incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   weekday:{name:'Weekday Mass',blurb:'Said, no servers or Deacon, no Gloria or Creed, one reading: practice for the Priest.',fields:{
     deacon:false,serverCount:'0',lector:false,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:false,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'said',eucharisticPrayer:'II',
-    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   pontifical:{name:'Mass with the Bishop',blurb:'As a solemnity, with the Bishop presiding: mitre- and crozier-bearers in vimps, the homily from the cathedra and the pontifical blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   confirmation:{name:'Confirmation Mass',blurb:'The Bishop confers Confirmation within Mass: the candidates presented after the Gospel, the renewal of baptismal promises, the laying on of hands and the anointing with chrism; no Creed.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true,nativity:false,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   nativity:{name:'Christmas Mass during the Night',blurb:'A solemnity: the Christmas Proclamation before Mass, all genuflect at the Incarnation in the Creed, and the blessing of the crib at the universal prayer.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:true,candlemas:false,ashWednesday:false,baptism:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:true,candlemas:false,ashWednesday:false,baptism:false,funeral:false}},
   candlemas:{name:'Candlemas (Presentation of the Lord)',blurb:'The feast of 2 February: the blessing of candles at the back of the church, the procession with lighted candles and the Canticle of Simeon, then the Gloria at once.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:false,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
-    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:true,ashWednesday:false,baptism:false}},
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:true,ashWednesday:false,baptism:false,funeral:false}},
   ashWednesday:{name:'Ash Wednesday',blurb:'The beginning of Lent: no Penitential Act, Gloria or Alleluia; after the Homily the Priest blesses the ashes and gives them to the faithful.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
-    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:true,baptism:false}},
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:true,baptism:false,funeral:false}},
   baptismMass:{name:'Sunday Mass with Baptism',blurb:'The children are received at the door, baptized at the font after the Homily (litany, promises, water, chrism, white garment and candle) and the parents blessed at the end; no Penitential Act or Creed.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:true,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:true}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:true,funeral:false}},
+  funeralMass:{name:'Funeral Mass',blurb:'The body is received at the door with holy water and the white pall, then Mass in violet without Gloria or Creed, and the final commendation with incense and the Song of Farewell.',fields:{
+    deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:true,bothKinds:false,gloria:false,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,baptism:false,funeral:true}},
   // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
@@ -309,7 +348,11 @@ const GAME_PRESETS={
   baptism:{name:'Baptism of Children',blurb:'The Priest receives the child at the door, then the word of God, the litany, the anointing, the promises, the baptism at the font, the chrism, white garment and candle, the Lord\u2019s Prayer and the blessing.',fields:{
     rite:'baptism',minister:'priest',serverCount:'1'}},
   baptismDeacon:{name:'Baptism of Children (Deacon)',blurb:'The same rite with the Deacon as the ordinary minister of Baptism (CIC 861).',fields:{
-    rite:'baptism',minister:'deacon',serverCount:'1'}}
+    rite:'baptism',minister:'deacon',serverCount:'1'}},
+  funeral:{name:'Funeral Liturgy outside Mass',blurb:'The Priest receives the body at the door, then the Liturgy of the Word, the intercessions, the Lord\u2019s Prayer and the final commendation with holy water and incense.',fields:{
+    rite:'funeral',minister:'priest',serverCount:'2'}},
+  funeralDeacon:{name:'Funeral Liturgy outside Mass (Deacon)',blurb:'The same liturgy led by a Deacon, as when no Priest is available (Order of Christian Funerals 14).',fields:{
+    rite:'funeral',minister:'deacon',serverCount:'2'}}
 };
 // The form fields a preset controls; a preset is "current" only while all of them still match.
 function applyPreset(id,current={}){
@@ -339,6 +382,7 @@ function presetForOptions(options,chosen){
     candlemas:isDevotionRite(options)?undefined:!!options.candlemas,
     ashWednesday:isDevotionRite(options)?undefined:!!options.ashWednesday,
     baptism:isDevotionRite(options)?undefined:!!options.baptism,
+    funeral:isDevotionRite(options)?undefined:!!options.funeral,
     rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
   if(id!=='custom')return id;
@@ -357,6 +401,7 @@ const PATH_BRANCHES={
   seasonal:{name:'Rites of the seasons'},
   pontifical:{name:'With the Bishop'},
   sacraments:{name:'Christian initiation'},
+  funerals:{name:'The rites for the dead'},
   triduum:{name:'The Sacred Paschal Triduum'}
 };
 const CELEBRATIONS=[
@@ -393,7 +438,9 @@ const CELEBRATIONS=[
   {id:'ashWednesday',name:'Ash Wednesday',precedence:'Beginning of Lent',branch:'seasonal',colour:'purple',icon:'ashes',at:[140,710],after:['candlemas'],
     preset:'ashWednesday',blurb:'No Penitential Act, Gloria or Alleluia; after the Homily the Priest blesses the ashes and gives them to the faithful.'},
   {id:'palmSunday',name:'Palm Sunday',precedence:'Palm Sunday of the Passion of the Lord',branch:'seasonal',colour:'red',icon:'walk',at:[140,855],after:['ashWednesday'],
-    blurb:'The blessing of palms, the procession, and the Passion read in parts.'}
+    blurb:'The blessing of palms, the procession, and the Passion read in parts.'},
+  {id:'funeral',name:'Funeral',precedence:'The Order of Christian Funerals',branch:'funerals',colour:'purple',icon:'coffin',at:[890,1050],after:['dominicaIncense'],
+    preset:'funeralMass',alsoPresets:['funeral','funeralDeacon'],blurb:'The body is received at the door with holy water and the pall; after the Liturgy of the Word the final commendation with incense and the Song of Farewell. Play the Funeral Mass or the funeral liturgy outside Mass.'}
 ];
 // Seniority, in the manner of an altar servers' guild. A rank needs every listed celebration to
 // have been "served" (in any role). Ranks that depend on celebrations still in preparation wait.
@@ -547,6 +594,8 @@ function deriveMediaCues(steps=STEPS,startTimes,options={},detail='key'){
     else if(part&&options.ashWednesday&&step.key===12)part={...part,title:'Gospel Acclamation (no Alleluia in Lent)'};
     if(options.baptism&&step.key===16)part={key:16,id:'litany',title:'Litany of the Saints (for the children)',sung:'acapella',said:'slide'};
     else if(options.baptism&&step.key===16.5)part={key:16.5,id:'promises',title:'Renunciation of sin and profession of faith',sung:'slide',said:'slide'};
+    if(options.funeral&&step.key===38.5)part={key:38.5,id:'farewell',title:'Song of Farewell',sung:'track',said:'slide'};
+    else if(options.funeral&&step.key===40)part={key:40,id:'paradisum',title:'In paradisum (May the angels lead you)',sung:'track',hymn:true};
     if(part&&step.key===5&&options.introductory==='sprinkling')part={key:5,id:'asperges',title:'Asperges / Vidi aquam',sung:'track',said:'slide'};
     else if(part&&step.key===5&&options.introductory==='C')part={key:5,id:'invocations',title:'Lord, have mercy (invocations)',sung:'slide',said:'slide'};
     if(!part)return;
@@ -963,7 +1012,7 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'faithfulCandles',name:'Candles for the faithful, given out at the door as people arrive',place:['procession','stoup'],needed:!!options.candlemas,ref:'Roman Missal, Presentation of the Lord, nn. 2, 13',reason:'The faithful hold them, lit, for the blessing and the procession.'},
     {id:'ashes',name:'Vessel of ashes (from last year\u2019s blessed palms)',place:'credence',needed:!!options.ashWednesday,ref:'Roman Missal, Ash Wednesday',reason:'The Priest blesses them after the Homily and gives them to the faithful.'},
     {id:'proclamation',name:'Text of the Christmas Proclamation (Roman Martyrology) for the cantor',place:'ambo',needed:!!options.nativity,ref:'Martyrologium Romanum, 25 December; Directory on Popular Piety 111',reason:'The cantor sings it at the ambo before Mass begins.'},
-    {id:'missal',name:'Roman Missal marked ('+(options.candlemas?'rite of the candles, ':'')+(options.ashWednesday?'blessing of ashes, ':'')+'Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
+    {id:'missal',name:'Roman Missal marked ('+(options.candlemas?'rite of the candles, ':'')+(options.ashWednesday?'blessing of ashes, ':'')+(options.funeral?'Mass for the Dead, reception and final commendation, ':'')+'Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
     {id:'chalice',name:'Chalice with purificator, paten and pall',place:'credence',needed:true,ref:'GIRM 118c'},
     {id:'corporal',name:'Corporal',place:'credence',needed:true,ref:'GIRM 118c'},
     {id:'water',name:'Cruet of water',place:'credence',needed:true,ref:'GIRM 118c'},
@@ -989,6 +1038,10 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'garment',name:'White garment for the child',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum 63'},
     {id:'bcandle',name:'Baptismal candle, with the paschal candle lit beside the font',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum 64; Roman Missal, Pentecost Sunday rubric',reason:'The godparent lights the child\u2019s candle from the paschal candle.'},
     {id:'register',name:'Baptismal register and certificate',place:'sacristy',needed:!!options.baptism,ref:'CIC 877 §1'},
+    {id:'funeralWater',name:'Holy-water vessel and sprinkler for the reception of the body',place:'procession',needed:!!options.funeral,ref:'Order of Christian Funerals 160',reason:'The Priest sprinkles the coffin at the door, recalling Baptism; it is used again at the commendation.'},
+    {id:'funeralPall',name:'White funeral pall, folded',place:'procession',needed:!!options.funeral,ref:'Order of Christian Funerals 161, 38',reason:'The family or the ministers place it on the coffin after the sprinkling.'},
+    {id:'paschalFuneral',name:'Paschal candle on its stand by the place for the coffin, lit',place:'coffinPlace',needed:!!options.funeral,ref:'Order of Christian Funerals 35',reason:'The coffin is placed near it, a sign of Christ\u2019s victory over death.'},
+    {id:'funeralVest',name:'Violet (or white or black) vestments for the Priest'+(options.deacon?' and Deacon':''),place:'sacristy',needed:!!options.funeral,ref:'Order of Christian Funerals 39; GIRM 346d'},
     {id:'chrismWash',name:'Water, basin and towel (with lemon and bread, by custom) for the Bishop to wash his hands',place:'credence',needed:!!options.confirmation,ref:'Ordo Confirmationis 19, 29; custom'},
     {id:'vestS',name:'Albs or cassock and surplice for '+team.length+' server'+(team.length===1?'':'s'),place:'sacristy',needed:team.length>0,ref:'GIRM 339'},
     {id:'lamp',name:'Sanctuary lamp burning before the tabernacle',place:'tabernacle',needed:true,ref:'GIRM 316'},
@@ -1011,7 +1064,8 @@ function sacristanPackAway(options,team=serverTeam(options.serverCount)){
     {id:'bellBack',name:'Put the altar bell away',place:'sacristy',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 105'},
     {id:'chrismBack',name:'Return the holy chrism to the ambry',place:'sacristy',needed:!!options.confirmation||!!options.baptism,ref:options.baptism?'Custom':'Ordo Confirmationis 19; custom',reason:'The holy oils are kept locked and safe.'},
     {id:'oilCatBack',name:'Return the oil of catechumens to the ambry',place:'sacristy',needed:!!options.baptism,ref:'Custom',reason:'The holy oils are kept locked and safe.'},
-    {id:'paschalOut',name:'Extinguish the paschal candle by the font',place:'font',needed:!!options.baptism,ref:'Judgement call (after the ministers leave)'},
+    {id:'paschalOut',name:options.funeral?'Extinguish the paschal candle and return it to the font':'Extinguish the paschal candle by the font',place:options.funeral?'coffinPlace':'font',needed:!!options.baptism||!!options.funeral,ref:'Judgement call (after the ministers leave)'},
+    {id:'pallAway',name:'Fold the white pall and put the holy water away',place:'sacristy',needed:!!options.funeral,ref:'GIRM 105'},
     {id:'giftTable',name:'Clear the gift table',place:'giftTable',needed:!!options.giftsProcession,ref:'GIRM 105'},
     {id:'vestments',name:'Hang up the vestments',place:'sacristy',needed:true,ref:'GIRM 105'},
     {id:'dustCover',name:'Put the dust cover on the altar cloth',place:'altar',needed:true,ref:'Local custom'},
@@ -1265,9 +1319,55 @@ function baptismPostTasks(role){
     options:shuffled([close,...wrong],seededRandom(role+'bapclose')).map(label=>({label,correct:label===close}))});
   return tasks;
 }
+// The funeral liturgy outside Mass: before and after (Order of Christian Funerals 14, 39, 177-203).
+function funeralPreTasks(role,options,startPos){
+  const tasks=[];
+  const choose=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
+    options:shuffled([correct,...wrong],seededRandom(role+id+'fun')).map(label=>({label,correct:label===correct}))});
+  if(role==='P'||role==='D')choose('vest','Vest for the funeral liturgy outside Mass. What do you put on?','Order of Christian Funerals 39; custom',
+    role==='P'?'Alb (or cassock and surplice) and a violet stole; a cope may be worn':'Alb (or cassock and surplice) and a violet stole, worn diagonally',
+    ['Alb, stole and chasuble, as for Mass','A white cope and humeral veil','Cassock only, without a stole']);
+  if(role==='D')choose('minister','May you, as Deacon, lead this funeral liturgy?','Order of Christian Funerals 14',
+    'Yes: when no Priest is available, a Deacon presides at the funeral liturgy outside Mass',
+    ['No: only a Priest may lead any funeral','Only if the family asks for a Deacon','Yes, and you may also celebrate the Funeral Mass']);
+  if(role==='S'||role==='T')choose('vest','Vest to serve. What do you put on?','Custom; GIRM 339 by analogy','Alb (or cassock and surplice)',['Stole over the alb','Cope','Chasuble']);
+  if(role==='T')choose('carry','What do you prepare for the final commendation?','Order of Christian Funerals 197; custom','Thurible with lit charcoal, and the boat with incense',['The monstrance','The processional cross','The baptismal candle']);
+  if(role==='S')choose('prepare','What must be ready before the coffin arrives?','Order of Christian Funerals 35, 38, 182-183; custom',
+    'The holy water and sprinkler and the white pall at the door, and the paschal candle lit where the coffin will rest',
+    ['The chalice and cruets','The monstrance and humeral veil','The collection baskets']);
+  if(role==='PEW'){
+    const correct='In the pews, until the coffin is received at the door';
+    tasks.push({id:'arrive',kind:'task',prompt:'You have come to a funeral. Where are you when it begins?',ref:'Order of Christian Funerals 182 (judgement call)',correct,
+      options:shuffled([correct,'Standing in the sanctuary','At the place for the coffin already','Outside, waiting to leave'],seededRandom('pewfunarrive')).map(label=>({label,correct:label===correct}))});
+    return tasks;
+  }
+  const place=GAME_PLACES.find(p=>p.id==='sanctuaryDoor');
+  tasks.push({id:'line',kind:'place',prompt:'Where do you wait until the coffin arrives?',ref:'Order of Christian Funerals 182 (judgement call)',target:startPos||place.at,places:[place.id],correct:place.name,
+    options:shuffled([{label:place.name,correct:true},{label:'the place for the coffin at the head of the aisle',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'funline'))});
+  return tasks;
+}
+function funeralPostTasks(role){
+  if(role==='PEW'){
+    const correct='After the coffin has been carried out, following the family';
+    return [{id:'leave',kind:'task',prompt:'The final commendation is over. When do you leave?',ref:'Order of Christian Funerals 203 (judgement call)',correct,
+      options:shuffled([correct,'Before the coffin, to get to the car first','During the Song of Farewell','Straight after the readings'],seededRandom('pewfunleave')).map(label=>({label,correct:label===correct}))}];
+  }
+  const tasks=[{id:'where',kind:'place',prompt:'The coffin has been carried out. Where do you go?',ref:'Order of Christian Funerals 203 (judgement call)',places:['sacristy'],correct:'the sacristy',
+    options:shuffled([{label:'the sacristy',correct:true},{label:'the altar',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'funwhere'))}];
+  const close={
+    P:'Take off the stole and alb, and note the funeral in the parish register',
+    D:'Take off the stole and alb, and note the funeral in the parish register',
+    S:'Fold the white pall, put the holy water away and hang up your alb',
+    T:'Empty the thurible into the sand bucket and hang up your alb'}[role];
+  const wrong=['Pour the holy water down the sink','Leave the pall on the floor by the door','Keep the vestments on and go home'];
+  tasks.push({id:'sacristy',kind:'task',prompt:'In the sacristy: what now?',ref:role==='S'||role==='T'?'GIRM 105 by analogy; custom':'CIC 1182',correct:close,
+    options:shuffled([close,...wrong],seededRandom(role+'funclose')).map(label=>({label,correct:label===close}))});
+  return tasks;
+}
 // Exposition: before and after (HCWEOM 91-92, 100).
 function devotionPreTasks(role,options,startPos){
   if(options.rite==='baptism')return baptismPreTasks(role,options,startPos);
+  if(options.rite==='funeral')return funeralPreTasks(role,options,startPos);
   if(role==='PEW')return preMassTasks('PEW',options);
   const tasks=[];
   const choose=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
@@ -1292,6 +1392,7 @@ function devotionPreTasks(role,options,startPos){
 }
 function devotionPostTasks(role,options){
   if(options.rite==='baptism')return baptismPostTasks(role);
+  if(options.rite==='funeral')return funeralPostTasks(role);
   if(role==='PEW'){
     const correct='After the reposition, when the ministers have gone out';
     return [{id:'leave',kind:'task',prompt:'The Blessed Sacrament has been reposed. When do you leave?',ref:'HCWEOM 100 (judgement call on custom)',correct,
@@ -1444,4 +1545,4 @@ function nextUseFor(entry,steps,index,progress){
   }
   return null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended};
