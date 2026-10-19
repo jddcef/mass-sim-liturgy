@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R147.**
+**Next decision number: R154.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -99,7 +99,8 @@ server for liturgical or Catholic questions and clarifications.
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
 | 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
-| 19 | (this PR) | Christmas Mass during the Night: the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer, Christmas solemn blessing; the M.C. rank becomes reachable (R137–R146) |
+| 20 | (this PR) | Candlemas: blessing of candles at the back of the church, procession with lighted candles and the Canticle of Simeon, no Penitential Act, candles out at the Gloria (R147–R153) |
+| 19 | #15 | Christmas Mass during the Night: the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer, Christmas solemn blessing; the M.C. rank becomes reachable (R137–R146) |
 | 18 | #14 | Confirmation within Mass: candidate and sponsor, presentation, renewal of promises, laying on of hands, anointing with chrism, no Creed, Confirmation blessing (R127–R136) |
 | 17 | #13 | Mass with the Bishop: mitre- and crozier-bearers in vimps, mitre and pastoral staff in 3D, homily at the cathedra, pontifical blessing (R119–R126) |
 | 16 | #12 | Exposition and Benediction by a Deacon; white cope and humeral veil in 3D (R115–R118) |
@@ -184,7 +185,8 @@ parish material has been processed yet. The work is local and uncommitted.
          crozier-bearers in vimps; R119–R126); ~~Confirmation~~ in round 18
          (R127–R136).
       4. ~~Christmas Mass during the Night~~ done in round 19 (R137–R146);
-         Candlemas, Ash Wednesday, Palm Sunday.
+         ~~Candlemas~~ in round 20 (R147–R153, indoor form only);
+         Ash Wednesday, Palm Sunday.
       5. Corpus Christi: an outdoor procession (canopy, torches, petals,
          Benediction at altars), which needs an outdoor scene.
       6. The Triduum: Holy Thursday, Good Friday, the Easter Vigil.

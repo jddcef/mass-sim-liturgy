@@ -19,7 +19,7 @@ and no account. Other pages:
 ### How to start
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
-   incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, or outside Mass: Adoration led by a lay minister, or
+   incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, or outside Mass: Adoration led by a lay minister, or
    Exposition and Benediction with the Priest or the Deacon. You can also
    change any option
    yourself.
@@ -482,7 +482,10 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   their baptismal promises and are anointed with chrism by the Bishop; no Creed)
   or "Christmas Mass during the Night" (the cantor sings the Christmas
   Proclamation before Mass, all genuflect at "and by the Holy Spirit was
-  incarnate", and the crib in the nave is blessed at the universal prayer).
+  incarnate", and the crib in the nave is blessed at the universal prayer)
+  or "Candlemas" (the candles are blessed at the back of the church and all
+  walk in procession with lighted candles while the Canticle of Simeon is
+  sung; there is no Penitential Act).
   Changing any option shows "Custom".
 - **The Path and seniority**: a map of celebrations in order of precedence
   (on phones, a list). Each finished game is credited to the celebration whose

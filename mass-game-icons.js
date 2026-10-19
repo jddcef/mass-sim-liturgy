@@ -79,6 +79,7 @@ const GAME_ICON_RULES=[
   [/paten|\bhosts?\b|\bbread\b/,'host',{prop:'bread'}],
   [/lavabo|washes|washing|towel/,'lavabo',{place:'washStand'}],
   [/cruet|\bwine\b/,'cruets',{prop:'wine'}],
+  [/candles for the faithful/,'candle',{place:'procession'}],
   [/sprinkl|aspersory/,'sprinkler',null],
   [/stoup|holy water|holy-water/,'water',{place:'stoup'}],
   [/\bwater\b/,'water',{prop:'ewer'}],

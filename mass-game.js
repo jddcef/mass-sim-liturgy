@@ -318,7 +318,7 @@ function syncPreset(){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -346,7 +346,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -587,7 +587,7 @@ function describeCelebration(){
   if(!o.gloria)parts.push('no Gloria');
   if(!o.creed)parts.push('no Creed');
   if(!o.secondReading)parts.push('one reading before the Gospel');
-  parts.push({A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
+  parts.push(o.candlemas?'blessing of candles and procession (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
   parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
   if(o.solemnBlessing)parts.push('Solemn Blessing');
   if(o.crucifix!=='wall')parts.push('crucifix: '+CRUCIFIX_PLACES[o.crucifix].name.toLowerCase());
