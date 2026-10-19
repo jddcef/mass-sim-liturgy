@@ -1,6 +1,6 @@
 // ---------- geometry ----------
 const ALT_P=[500,122], ALT_D=[452,122], CHAIR=[500,58], DCHAIR=[450,62], AMBO=[200,222];
-const HOME={P:CHAIR,D:DCHAIR,X:[640,55],C1:[680,55],C2:[720,55],T:[760,55],S:[805,78],L:[395,368],L2:[365,368],Ps:[335,368],U:[875,745],E:[735,402],G1:[600,745],G2:[640,745],MB:[372,62],CB:[408,62],K:[605,368],SP:[675,368],BP:[605,402],GP:[675,402]};
+const HOME={P:CHAIR,D:DCHAIR,X:[640,55],C1:[680,55],C2:[720,55],T:[760,55],S:[805,78],L:[395,368],L2:[365,368],Ps:[335,368],U:[875,745],E:[735,402],G1:[600,745],G2:[640,745],MB:[372,62],CB:[408,62],K:[605,368],SP:[675,368],BP:[605,402],GP:[675,402],FD:[440,830],FM:[605,368]};
 const M=(p,a=0,b=0.6)=>({p,a,b});
 
 const ACTORS={
@@ -27,6 +27,10 @@ const ACTORS={
   // Baptism of children only (mass-scenarios.js applyBaptism, mass-rite-baptism.js): one family stands for all.
   BP:{name:'Parent carrying the child',fill:'#5d7fa3',stroke:'#2b3b4d',r:9,txt:'#fff',only:'baptism'},
   GP:{name:'Godparent',fill:'#8c6f9e',stroke:'#3d2f47',r:9,txt:'#fff',only:'baptism'},
+  // Funerals only (mass-scenarios.js applyFuneral, mass-rite-funeral.js): the funeral director wheels the
+  // coffin on its bier (standing for all the bearers) and a member of the family places the pall.
+  FD:{name:'Funeral director (with the bearers)',fill:'#2f3238',stroke:'#111',r:10,txt:'#fff',only:'funeral'},
+  FM:{name:'Member of the family',fill:'#4a4f5c',stroke:'#1f2229',r:9,txt:'#fff',only:'funeral'},
 };
 
 // ---------- the rite: steps ----------
@@ -321,7 +325,10 @@ const PROP_DEF={
   // Ash Wednesday: the vessel of blessed ashes.
   ashes:{off:[10,-6]},
   // Baptism: the child, the oil of catechumens, the white garment and the baptismal candle.
-  infant:{off:[0,-10]},oilCat:{off:[10,-8]},garment:{off:[0,-12]},bcandle:{off:[8,-12]}
+  infant:{off:[0,-10]},oilCat:{off:[10,-8]},garment:{off:[0,-12]},bcandle:{off:[8,-12]},
+  // Funerals: the coffin on its bier (pushed or led by the funeral director) with its white pall, the
+  // folded pall carried by the family, and the holy-water vessel with its sprinkler.
+  coffin:{off:[0,-46]},drape:{off:[0,-46]},pall:{off:[0,-10]},holyWater:{off:[10,-8]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
@@ -331,7 +338,8 @@ const START_PROPS={
   mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true},
   chrism:{at:[878,138],h:true},
   ashes:{at:[858,132],h:true},
-  infant:{at:[470,840],h:true},oilCat:{at:[870,150],h:true},garment:{at:[372,750],h:true},bcandle:{at:[380,756],h:true}
+  infant:{at:[470,840],h:true},oilCat:{at:[870,150],h:true},garment:{at:[372,750],h:true},bcandle:{at:[380,756],h:true},
+  coffin:{at:[500,790],h:true},drape:{at:[500,790],h:true},pall:{at:[526,820],h:true},holyWater:{at:[460,345],h:true}
 };
 
 // ---------- math helpers ----------
