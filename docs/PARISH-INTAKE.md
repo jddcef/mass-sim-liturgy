@@ -23,18 +23,11 @@ photos, plans or addresses to any third-party service.
 3. **Doubt goes to review.** Mark items `flagged` (needs a human) or `excluded`
    (agent believes unusable) with reason codes. Excluded items are still listed
    for the reviewer, who can rescue them.
-4. **Privacy.** Flag identifiable people (`people-identifiable`), readable
-   number plates (`number-plates`) and personal notices (`private-notice`).
-   Derived images must have metadata stripped. Do not crop or blur originals.
-5. **Rights.** Record provenance and licence for every file. Street View and
-   satellite imagery are usually reference-only: they may guide modelling but
-   must not be used as textures or shipped in the app. Use `licence-unknown`
-   when unsure.
-6. **Repository size.** Everything lives under `parishes/` in this repository.
+4. **Repository size.** Everything lives under `parishes/` in this repository.
    Before copying originals totalling more than 50 MB for one parish, or more
    than 500 MB overall, stop and ask the user (Git LFS or keeping originals
    outside the repository may be preferable). Derived images are always kept.
-7. **Ask instead of guessing** when the parish identity of a whole folder is
+5. **Ask instead of guessing** when the parish identity of a whole folder is
    unclear, when two parishes seem mixed, or when the source location cannot
    be found.
 
@@ -128,8 +121,6 @@ photos, plans or addresses to any third-party service.
 | `far-from-church` | Capture point more than 150 m from the church |
 | `unclear-parish` | Cannot tell which parish the item belongs to |
 | `interior-unknown-view` | Interior cannot be oriented |
-| `people-identifiable`, `number-plates`, `private-notice` | Privacy issues |
-| `licence-unknown` | Rights are unknown |
 | `conflict` | Used by the tool for conflicting values |
 | `other` | Anything else; explain in `notes` |
 
@@ -353,7 +344,6 @@ with:
 - remaining gaps and what material would close them (for example "photo from
   the sanctuary towards the door", "measured nave width"),
 - limitations from `profile-report.json`,
-- any rights or privacy concerns.
 
 Finally summarise all parishes for the user: ready, waiting for review,
 needing more material.
