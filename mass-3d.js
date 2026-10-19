@@ -997,8 +997,39 @@ function renderFrame(dt=1/60){
   controls.update();
   if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
   updateWallFade();
+  updateSanctuaryRipples(performance.now());
   if(typeof updateParishPreview==='function')updateParishPreview(dt);
   if(typeof gameRender!=='function'||!gameRender())renderer.render(scene,camera3d);
+}
+
+const sanctuaryRipples=[];
+function spawnSanctuaryRipple(pos,color=0xffd54f,scaleMax=5){
+  if(typeof scene==='undefined'||!scene||!pos)return;
+  const geom=new THREE.RingGeometry(.14,.34,28);
+  const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false});
+  const mesh=new THREE.Mesh(geom,mat);
+  mesh.rotation.x=-Math.PI/2;
+  mesh.position.set(pos.x,(pos.y||0)+.06,pos.z);
+  mesh.renderOrder=6;
+  scene.add(mesh);
+  sanctuaryRipples.push({mesh,birth:performance.now(),duration:1400,scaleMax});
+}
+function updateSanctuaryRipples(now){
+  for(let i=sanctuaryRipples.length-1;i>=0;i--){
+    const r=sanctuaryRipples[i];
+    const age=now-r.birth;
+    if(age>=r.duration){
+      scene.remove(r.mesh);
+      r.mesh.geometry.dispose();
+      r.mesh.material.dispose();
+      sanctuaryRipples.splice(i,1);
+    }else{
+      const p=age/r.duration;
+      const s=1+p*(r.scaleMax-1);
+      r.mesh.scale.set(s,s,s);
+      r.mesh.material.opacity=(1-p)*.9;
+    }
+  }
 }
 
 function showStep(){

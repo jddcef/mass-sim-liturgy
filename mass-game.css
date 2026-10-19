@@ -255,3 +255,89 @@ body.compactUi #cameraPad button { width:40px; height:38px; font-size:18px; }
 body.compactUi #hint { display:none; }
 body.compactUi #caption { bottom:56px; width:calc(100% - 112px); font-size:13px; padding:6px 10px; }
 @media(max-width:600px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; } .cards .rolePortrait { width:64px; height:54px; } .cards small, .cards p { font-size:12px; line-height:1.25; } }
+
+/* Round 23: Liturgical Season Ribbon & Breviary */
+.liturgicalRibbon {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:5px 14px 5px 10px; border-radius:6px;
+  background:var(--ribbon-bg, #27683d); color:var(--ribbon-text, #fff8e7);
+  border:1.5px solid rgba(218,178,74,.75);
+  box-shadow:0 2px 8px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  cursor:pointer; font:600 13px Georgia, serif;
+  transition:all .2s ease; position:relative; flex:none;
+}
+.liturgicalRibbon:hover {
+  transform:translateY(-1px); border-color:#ffd700;
+  box-shadow:0 4px 14px rgba(218,178,74,.4), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.liturgicalRibbon:focus-visible { outline:2px solid #ffd700; outline-offset:2px; }
+.ribbonCross { color:#ffd700; font-size:14px; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+.ribbonText { white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis; }
+
+/* Breviary Sheet */
+.breviarySheet { width:min(740px, 96vw); max-height:88vh; padding:20px 24px; }
+.brevHeaderLeft { display:flex; align-items:center; gap:14px; }
+.brevRibbonTag {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:42px; height:42px; border-radius:8px; font-size:22px;
+  background:var(--ribbon-bg, #27683d); color:#ffd700;
+  border:2px solid #d4af37; box-shadow:0 2px 8px rgba(0,0,0,.25); flex:none;
+}
+.brevSeason { text-transform:uppercase; font-size:11px; letter-spacing:1.2px; color:var(--gold); font-weight:700; display:block; }
+.brevRank { font-size:12px; color:#685e50; font-style:italic; display:block; margin-top:1px; }
+.brevContent { display:grid; gap:12px; margin:16px 0 12px; }
+.brevCard { background:#fffaf1; border:1px solid #d9ccb6; border-radius:8px; padding:12px 16px; }
+.brevCard h3 { font:700 13px system-ui, sans-serif; text-transform:uppercase; letter-spacing:.6px; color:#8a3a2a; margin:0 0 8px; }
+.brevColourRow { display:flex; align-items:center; gap:14px; }
+.brevSwatch { width:36px; height:36px; border-radius:6px; border:2px solid #c9a64a; display:inline-block; flex:none; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+.brevTable { width:100%; border-collapse:collapse; font-size:13.5px; }
+.brevTable th { width:160px; text-align:left; padding:5px 12px 5px 0; color:#685e50; font-weight:600; vertical-align:top; border-bottom:1px solid #f0e6d6; }
+.brevTable td { padding:5px 0; color:#2c251d; vertical-align:top; border-bottom:1px solid #f0e6d6; }
+.brevTable tr:last-child th, .brevTable tr:last-child td { border-bottom:none; }
+.brevSpecialList { margin:4px 0 0; padding-left:18px; font-size:13px; line-height:1.45; color:#3a3227; }
+.brevSpecialList li { margin-bottom:3px; }
+
+/* Round 23: Visual Chime Overlay & Ripple Animation */
+.chimeOverlay {
+  position:absolute; top:75px; left:50%; transform:translateX(-50%);
+  z-index:10; pointer-events:none; display:flex; flex-direction:column; align-items:center;
+}
+.chimeOverlay[hidden] { display:none; }
+.chimeBadge {
+  position:relative; z-index:2;
+  display:inline-flex; align-items:center; gap:8px;
+  padding:7px 18px; border-radius:30px;
+  background:rgba(20, 26, 30, 0.92);
+  color:#fff7e6; border:2px solid #e5b947;
+  box-shadow:0 4px 18px rgba(0,0,0,.5), 0 0 16px rgba(229,185,71,.5);
+  font:600 14px Georgia, serif; letter-spacing:.3px;
+}
+.chimeIcon { font-size:16px; }
+.chimeRipples {
+  position:absolute; top:50%; left:50%; width:0; height:0; pointer-events:none; z-index:1;
+}
+.chimeRing {
+  position:absolute; top:50%; left:50%; width:80px; height:80px;
+  margin:-40px 0 0 -40px; border-radius:50%;
+  border:2px solid #e5b947; opacity:0;
+  box-shadow:0 0 12px rgba(229,185,71,.6);
+}
+.animPulse .chimeBadge {
+  animation:chimeBadgePop .35s ease-out;
+}
+.animPulse .ring1 { animation:chimeRingExpand 1.6s ease-out 0s; }
+.animPulse .ring2 { animation:chimeRingExpand 1.6s ease-out .25s; }
+.animPulse .ring3 { animation:chimeRingExpand 1.6s ease-out .5s; }
+
+@keyframes chimeBadgePop {
+  0% { transform:scale(.7); opacity:0; }
+  60% { transform:scale(1.08); opacity:1; }
+  100% { transform:scale(1); opacity:1; }
+}
+
+@keyframes chimeRingExpand {
+  0% { transform:scale(.4); opacity:.85; }
+  40% { opacity:.6; }
+  100% { transform:scale(2.5); opacity:0; }
+}
+

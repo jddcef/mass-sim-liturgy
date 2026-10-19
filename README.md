@@ -433,7 +433,7 @@ mutes speech and effects; the setup checkbox can disable recordings separately.
 The second reader shares the Lector's recorded voice, and the EMHC shares the
 recorded Communion formula. Missing clips are reported in the speech controls.
 Effects (altar bell, sacristy bell, thurible chains, right/wrong cues) are
-synthesised in the browser (bells are modelled from real bell partials with a little church reverb). Everything plays offline. Bell customs vary by place,
+synthesised in the browser (bells are modelled from real bell partials with a little church reverb). For visual clarity and accessibility (including when sound is muted), active altar bells, sacristy bells and thurible swings trigger a transient HUD chime badge with expanding ripples, paired with horizontal golden wave rings across the 3D sanctuary floor. Everything plays offline. Bell customs vary by place,
 so each bell is optional.
 
 On a phone, the top menu folds into a ☰ button, and the camera controls fold into 🎥 and ✥ buttons in the corners of the 3D view. Tap anywhere else to fold them away again.
@@ -498,6 +498,11 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   Choice or harder with 70% or more earns *Served*, and Timed or Expert with
   90% or more earns *Served with distinction*. Custom games are not credited.
   Progress is kept in this browser only.
+- **Liturgical Breviary & Season Ribbon**: a bookmark ribbon tab in the header
+  displays today's liturgical colour and feast title. Clicking it opens a
+  Breviary sheet detailing the day's precedence rank, Latin vestment colour
+  (*Ruber*, *Albus*, *Viridis*, *Violaceus*, *Rosaceus*, *Aureus*) with GIRM 346
+  rationales, complete Ordo Missae rubric table, and special actions.
 - **Screen operator** (optional role, adds a projector and screen): a warning
   bar fills before each part, then you have a few seconds to start the
   backing track, show the slide, or leave it a cappella. Tracks are simple

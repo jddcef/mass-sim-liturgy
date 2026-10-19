@@ -1368,4 +1368,233 @@ function nextUseFor(entry,steps,index,progress){
   }
   return null;
 }
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended};
+
+const GIRM_COLOUR_RATIONALE={
+  white:"White (Albus) is used in the Offices and Masses of the Paschal season and of Christmas; on celebrations of the Lord other than of his Passion; on celebrations of the Blessed Virgin Mary, the Holy Angels, and of Saints who were not Martyrs (GIRM 346a).",
+  red:"Red (Ruber) is used on Palm Sunday of the Lord's Passion, Good Friday, Pentecost Sunday, celebrations of the Lord's Passion, on birthday feasts of the Apostles and Evangelists, and on celebrations of Martyr Saints (GIRM 346b).",
+  green:"Green (Viridis) is used in the Offices and Masses of Ordinary Time (GIRM 346c).",
+  purple:"Violet or purple (Violaceus) is used in Advent and Lent, and may be used in Offices and Masses for the Dead (GIRM 346d).",
+  rose:"Rose (Rosaceus) may be used on Gaudete Sunday (Third Sunday of Advent) and on Laetare Sunday (Fourth Sunday of Lent) (GIRM 346f).",
+  gold:"Gold (Aureus) or silver may be worn on more solemn days in place of white, red or green (GIRM 346g)."
+};
+
+const LITURGICAL_COLOUR_HEX={
+  white:'#f5f3e9',
+  red:'#a92424',
+  green:'#27683d',
+  purple:'#582d7c',
+  rose:'#b2576c',
+  gold:'#c99e32'
+};
+
+const LITURGICAL_LATIN_NAME={
+  white:'Albus',
+  red:'Ruber',
+  green:'Viridis',
+  purple:'Violaceus',
+  rose:'Rosaceus',
+  gold:'Aureus'
+};
+
+function liturgicalBreviary(options={},date=new Date()){
+  const o=options||{};
+  if(o.rite==='exposition'||isDevotionRite(o)){
+    const isLay=o.minister==='lay';
+    const isD=o.minister==='deacon';
+    return {
+      title:isLay?'Adoration of the Blessed Sacrament (Lay-led)':('Exposition and Benediction with the '+(isD?'Deacon':'Priest')),
+      season:'Eucharistic Worship',
+      rank:'Liturgy of the Blessed Sacrament',
+      colour:'white',
+      colourName:'White',
+      colourHex:LITURGICAL_COLOUR_HEX.white,
+      latinColour:'Albus',
+      colourRationale:'White is the colour of Eucharistic adoration, majesty and joy (HCWEOM 92; GIRM 346a).',
+      preface:'Proper to the Holy Eucharist',
+      penitentialAct:'Omitted',
+      gloria:'Omitted',
+      creed:'Omitted',
+      acclamation:'Omitted',
+      eucharisticPrayer:'Not applicable (Worship outside Mass)',
+      blessing:isLay?'Omitted (a lay minister neither incenses nor gives the blessing)':'Eucharistic Blessing with the Monstrance and Humeral Veil',
+      readings:'Scripture readings, psalms or canticles for adoration (HCWEOM 95)',
+      specialRites:[
+        'Exposition of the Blessed Sacrament in the monstrance',
+        isLay?'No incense (lay minister)':'Kneeling incensation with three double swings of the thurible',
+        'Sacred silence for meditation and prayer',
+        isLay?'Concluding prayer without blessing':'Chanting of Tantum Ergo and Eucharistic blessing',
+        'Reposition into the tabernacle and Divine Praises'
+      ]
+    };
+  }
+
+  let title,season,rank,colour,preface,specialRites=[],penitentialAct,gloria,creed,acclamation,blessing;
+
+  if(o.palmSunday){
+    title='Palm Sunday of the Passion of the Lord';
+    season='Lent (Holy Week)';
+    rank='Sunday of the Passion of the Lord (Solemnity)';
+    colour='red';
+    preface='Preface of Palm Sunday (The Passion of the Lord)';
+    penitentialAct='Omitted (already commemorated in the entrance rites; Missal n. 17)';
+    gloria='Omitted (Lent; GIRM 53)';
+    acclamation='Lenten verse without Alleluia ("Praise to you, Lord Jesus Christ")';
+    creed='Niceno-Constantinopolitan Creed (prescribed on Sundays of Lent; GIRM 68)';
+    blessing='Prayer over the People before the final blessing';
+    specialRites=[
+      'Blessing and sprinkling of palm branches at the back of the church',
+      'Procession with palm branches singing "All Glory, Laud and Honour"',
+      'Proclamation of the Passion in parts at the ambo without candles or incense',
+      'Genuflection and brief silence at the death of the Lord'
+    ];
+  }else if(o.ashWednesday){
+    title='Ash Wednesday';
+    season='Lent';
+    rank='Beginning of the Season of Lent (Privileged Day)';
+    colour='purple';
+    preface='Preface of Lent';
+    penitentialAct='Omitted (replaced by the blessing and distribution of ashes)';
+    gloria='Omitted (Lent; GIRM 53)';
+    acclamation='Lenten verse without Alleluia ("Praise to you, Lord Jesus Christ")';
+    creed='Omitted (Roman Missal, Ash Wednesday)';
+    blessing='Prayer over the People';
+    specialRites=[
+      'Blessing and sprinkling of ashes after the Homily',
+      'Imposition of ashes with the words "Repent, and believe in the Gospel"',
+      "Ablution of the Priest's hands at the credence table"
+    ];
+  }else if(o.candlemas){
+    title='The Presentation of the Lord (Candlemas)';
+    season='Feast of the Lord';
+    rank='Feast of the Lord';
+    colour='white';
+    preface='Preface of the Presentation of the Lord';
+    penitentialAct='Omitted (replaced by the entrance procession)';
+    gloria='Sung (Feast of the Lord; GIRM 53)';
+    acclamation='Alleluia';
+    creed='Omitted (Feast of the Lord)';
+    blessing='Solemn Blessing';
+    specialRites=[
+      'Blessing of candles with holy water at the church entrance',
+      'Procession with lighted candles singing the Canticle of Simeon (Nunc Dimittis)',
+      'Candles extinguished before the Collect'
+    ];
+  }else if(o.nativity){
+    title='The Nativity of the Lord: Mass during the Night';
+    season='Christmas';
+    rank='Solemnity';
+    colour='white';
+    preface='Preface of the Nativity I–III';
+    penitentialAct={A:'Confiteor (Form A)',C:'Invocations (Form C)',sprinkling:'Sprinkling rite'}[o.introductory]||'Confiteor (Form A)';
+    gloria='Sung solemnly with altar bells';
+    acclamation='Alleluia';
+    creed='Niceno-Constantinopolitan Creed (all genuflect at the Incarnation)';
+    blessing='Solemn Blessing of Christmas';
+    specialRites=[
+      'Christmas Proclamation (Kalenda) chanted before Mass begins',
+      'All genuflect during the Creed at "and by the Holy Spirit was incarnate"',
+      'Blessing of the crib in the nave during the Universal Prayer'
+    ];
+  }else if(o.confirmation){
+    title='Mass with the Conferral of Confirmation';
+    season='Ritual Mass';
+    rank='Ritual Mass';
+    colour='red';
+    preface='Preface of the Holy Spirit (or of the day)';
+    penitentialAct='Penitential Act';
+    gloria=o.gloria?'Sung':'Omitted';
+    acclamation='Alleluia';
+    creed='Omitted (replaced by the Renewal of Baptismal Promises)';
+    blessing='Pontifical Blessing ("Sit nomen Domini benedictum")';
+    specialRites=[
+      'Presentation of the candidates after the Gospel',
+      'Renewal of Baptismal Promises and Laying on of Hands',
+      'Anointing with Sacred Chrism on the forehead with the sign of peace',
+      "Ministers in vimps holding the Bishop's mitre and pastoral staff"
+    ];
+  }else if(o.bishop){
+    title='Stational Mass with the Bishop';
+    season='Solemn Liturgy';
+    rank='Stational Mass';
+    colour='white';
+    preface='Preface of the day';
+    penitentialAct='Penitential Act';
+    gloria=o.gloria?'Sung':'Omitted';
+    acclamation='Alleluia';
+    creed=o.creed?'Niceno-Constantinopolitan Creed':'Omitted';
+    blessing='Pontifical Blessing with triple Sign of the Cross';
+    specialRites=[
+      'Ministers in vimps caring for the mitre and pastoral staff',
+      'Homily preached by the Bishop from the cathedra',
+      'Pontifical blessing with triple Sign of the Cross'
+    ];
+  }else{
+    const preset=matchingPreset(o);
+    const day=typeof liturgicalDay==='function'?liturgicalDay(date):{season:'Ordinary Time',name:'Ordinary Time',colour:'green'};
+    if(preset==='solemnity'){
+      title='Solemnity of the Lord';
+      season='Solemnity';
+      rank='Solemnity';
+      colour='white';
+      preface='Proper Preface of the Solemnity';
+      penitentialAct={A:'Confiteor (Form A)',C:'Invocations (Form C)',sprinkling:'Sprinkling rite'}[o.introductory]||'Confiteor';
+      gloria='Sung';
+      acclamation='Alleluia';
+      creed='Niceno-Constantinopolitan Creed';
+      blessing='Solemn Blessing';
+    }else if(preset==='weekday'){
+      title='Weekday Mass';
+      season=day.season||'Ordinary Time';
+      rank='Weekday (Ferial)';
+      colour=day.colour==='rose'?'purple':(day.colour||'green');
+      preface='Common Preface (or seasonal)';
+      penitentialAct={A:'Confiteor (Form A)',C:'Invocations (Form C)',sprinkling:'Sprinkling rite'}[o.introductory]||'Confiteor';
+      gloria='Omitted (Weekday; GIRM 53)';
+      acclamation=day.season==='Lent'?'Lenten verse without Alleluia':'Alleluia';
+      creed='Omitted (Weekday; GIRM 68)';
+      blessing='Simple Blessing';
+    }else{
+      title='Sunday Mass'+(o.incense?' with Incense':'');
+      season=day.season||'Ordinary Time';
+      rank='Sunday of the Lord';
+      colour=day.colour||'green';
+      preface='Preface of Sundays in Ordinary Time (or seasonal)';
+      penitentialAct={A:'Confiteor (Form A)',C:'Invocations (Form C)',sprinkling:'Blessing and Sprinkling of Holy Water'}[o.introductory]||'Confiteor (Form A)';
+      gloria=o.gloria?'Sung':'Omitted';
+      acclamation=season==='Lent'?'Lenten verse without Alleluia':'Alleluia';
+      creed=o.creed?'Niceno-Constantinopolitan Creed':'Omitted';
+      blessing=o.solemnBlessing?'Solemn Blessing':'Simple Blessing';
+    }
+  }
+
+  if(o.vestment&&o.vestment!=='season'){
+    colour=o.vestment;
+  }
+
+  const colourName={green:'Green',purple:'Violet',white:'White',red:'Red',rose:'Rose',gold:'Gold'}[colour]||colour;
+  const latinColour=LITURGICAL_LATIN_NAME[colour]||'Viridis';
+  const colourHex=LITURGICAL_COLOUR_HEX[colour]||'#27683d';
+  const colourRationale=GIRM_COLOUR_RATIONALE[colour]||GIRM_COLOUR_RATIONALE.green;
+
+  return {
+    title,
+    season,
+    rank,
+    colour,
+    colourName,
+    colourHex,
+    latinColour,
+    colourRationale,
+    preface,
+    penitentialAct,
+    gloria,
+    creed,
+    acclamation,
+    eucharisticPrayer:'Eucharistic Prayer '+(o.eucharisticPrayer||'II'),
+    blessing,
+    readings:o.secondReading?'Two readings before the Gospel (Lectionary)':'One reading before the Gospel (Lectionary)',
+    specialRites
+  };
+}
+
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};

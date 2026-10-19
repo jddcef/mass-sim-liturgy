@@ -11,6 +11,10 @@
 <body class="game">
 <header>
   <div><h1>Holy Mass simulator</h1><span id="gameBadge">Choose a role to begin</span></div>
+  <button id="liturgicalRibbon" type="button" class="liturgicalRibbon" title="Liturgical Breviary: season, colour and rubrics for today" aria-haspopup="dialog" aria-expanded="false">
+    <span class="ribbonCross">✠</span>
+    <span id="ribbonText" class="ribbonText">Ordinary Time</span>
+  </button>
   <div id="headerTools">
     <div id="searchBox">
       <input id="gameSearch" type="search" placeholder="Find a person, object or place" aria-label="Find a person, object or place" aria-controls="searchPanel" aria-expanded="false" autocomplete="off">
@@ -68,6 +72,17 @@
       <div id="trainingOverlay" hidden></div>
       <div id="gameToast" role="status" aria-live="polite" hidden></div>
       <div id="mediaWarning" role="status" hidden><span class="label"></span><span class="track"><span class="fill"></span></span></div>
+      <div id="chimeOverlay" class="chimeOverlay" role="status" aria-live="polite" hidden>
+        <div class="chimeBadge">
+          <span id="chimeIcon" class="chimeIcon">🔔</span>
+          <span id="chimeText" class="chimeText">Altar bells</span>
+        </div>
+        <div class="chimeRipples" aria-hidden="true">
+          <span class="chimeRing ring1"></span>
+          <span class="chimeRing ring2"></span>
+          <span class="chimeRing ring3"></span>
+        </div>
+      </div>
       <div id="decision" hidden>
         <div id="decisionPortrait" aria-hidden="true"></div>
         <div id="decisionHead"><span id="decisionRole"></span><span id="decisionStep"></span><span id="decisionTimer"><span></span></span></div>
@@ -293,6 +308,57 @@
       <div id="pathDetail" class="pathDetail" aria-live="polite"></div>
     </div>
     <ol id="pathList" class="pathList"></ol>
+  </div>
+</div>
+
+<div id="breviaryModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="brevTitle" hidden>
+  <div class="sheet breviarySheet">
+    <div class="bookHead">
+      <div class="brevHeaderLeft">
+        <span class="brevRibbonTag" id="brevRibbonTag">✠</span>
+        <div>
+          <span id="brevSeason" class="brevSeason">Ordinary Time</span>
+          <h2 id="brevTitle">Sunday Mass</h2>
+          <span id="brevRank" class="brevRank">Sunday of the Lord</span>
+        </div>
+      </div>
+      <button id="brevClose" type="button">Close</button>
+    </div>
+    <div class="brevContent">
+      <div class="brevCard colourCard">
+        <h3>Liturgical Colour</h3>
+        <div class="brevColourRow">
+          <span id="brevSwatch" class="brevSwatch"></span>
+          <div>
+            <strong id="brevColourName">Green (Viridis)</strong>
+            <p id="brevColourRationale" class="small"></p>
+          </div>
+        </div>
+      </div>
+      <div class="brevCard">
+        <h3>Ordo &amp; Mass Structure</h3>
+        <table class="brevTable" id="brevOrdoTable">
+          <tbody>
+            <tr><th>Entrance</th><td id="brevEntrance"></td></tr>
+            <tr><th>Penitential Act</th><td id="brevPenitential"></td></tr>
+            <tr><th>Gloria</th><td id="brevGloria"></td></tr>
+            <tr><th>Readings</th><td id="brevReadings"></td></tr>
+            <tr><th>Gospel Acclamation</th><td id="brevAcclamation"></td></tr>
+            <tr><th>Creed</th><td id="brevCreed"></td></tr>
+            <tr><th>Preface</th><td id="brevPreface"></td></tr>
+            <tr><th>Eucharistic Prayer</th><td id="brevEP"></td></tr>
+            <tr><th>Blessing</th><td id="brevBlessing"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="brevCard" id="brevSpecialBox">
+        <h3>Special Liturgical Actions</h3>
+        <ul id="brevSpecialList" class="brevSpecialList"></ul>
+      </div>
+    </div>
+    <div class="sheetActions">
+      <button id="brevDone" type="button" class="primary">Close</button>
+    </div>
   </div>
 </div>
 

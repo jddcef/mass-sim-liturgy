@@ -1140,4 +1140,54 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(!cues.some(c=>c.part==='confiteor'||c.part==='kyrie'||c.part==='gloria'));
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
+
+// ---- round 23: liturgical season ribbon and breviary ----
+{
+  const breviary=G('liturgicalBreviary');
+  const presets=G('GAME_PRESETS');
+  const palm=breviary(presets.palmSunday.fields);
+  assert.equal(palm.colour,'red');
+  assert.equal(palm.latinColour,'Ruber');
+  assert.equal(palm.title,'Palm Sunday of the Passion of the Lord');
+  assert.equal(palm.preface,'Preface of Palm Sunday (The Passion of the Lord)');
+  assert.ok(palm.specialRites.some(r=>/palm branches/.test(r)));
+
+  const ash=breviary(presets.ashWednesday.fields);
+  assert.equal(ash.colour,'purple');
+  assert.equal(ash.latinColour,'Violaceus');
+  assert.equal(ash.title,'Ash Wednesday');
+  assert.ok(ash.specialRites.some(r=>/ashes/.test(r)));
+
+  const candle=breviary(presets.candlemas.fields);
+  assert.equal(candle.colour,'white');
+  assert.equal(candle.latinColour,'Albus');
+  assert.ok(candle.specialRites.some(r=>/candles/.test(r)));
+
+  const nat=breviary(presets.nativity.fields);
+  assert.equal(nat.colour,'white');
+  assert.equal(nat.latinColour,'Albus');
+  assert.equal(nat.season,'Christmas');
+
+  const conf=breviary(presets.confirmation.fields);
+  assert.equal(conf.colour,'red');
+  assert.equal(conf.latinColour,'Ruber');
+  assert.ok(conf.specialRites.some(r=>/Chrism/.test(r)));
+
+  const bish=breviary(presets.pontifical.fields);
+  assert.equal(bish.colour,'white');
+  assert.equal(bish.latinColour,'Albus');
+
+  const sun=breviary(presets.sunday.fields);
+  assert.equal(sun.colour,'green');
+  assert.equal(sun.latinColour,'Viridis');
+
+  const exp=breviary(presets.benediction.fields);
+  assert.equal(exp.colour,'white');
+  assert.equal(exp.season,'Eucharistic Worship');
+
+  const lay=breviary(presets.adorationLay.fields);
+  assert.equal(lay.colour,'white');
+  assert.ok(/Lay-led/.test(lay.title));
+}
 console.log('mass-game tests passed');
+

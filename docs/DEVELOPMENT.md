@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R168.**
+**Next decision number: R174.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -99,7 +99,8 @@ server for liturgical or Catholic questions and clarifications.
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
 | 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
-| 22 | (this PR) | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R161–R167) |
+| 23 | (this PR) | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R168–R173) |
+| 22 | #18 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R161–R167) |
 | 21 | #17 | Ash Wednesday: no Penitential Act, Gloria, Creed or Alleluia; after the Homily the Priest blesses and sprinkles the ashes and gives them to the faithful, who come forward in a line; the Deacon or a server holds the vessel (R154–R160) |
 | 20 | #16 | Candlemas: blessing of candles at the back of the church, procession with lighted candles and the Canticle of Simeon, no Penitential Act, candles out at the Gloria (R147–R153) |
 | 19 | #15 | Christmas Mass during the Night: the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer, Christmas solemn blessing; the M.C. rank becomes reachable (R137–R146) |
