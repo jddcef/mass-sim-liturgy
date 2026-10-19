@@ -8,13 +8,19 @@ const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'
 // other rites (mass-rite-exposition.js) register themselves here and use string step keys,
 // so the numeric Mass keys used for special cases elsewhere never match them.
 const RITES={mass:{name:'Holy Mass',build:buildMassScenario}};
+// The Christmas crib stands in the nave, outside the presbyterium (Book of Blessings 1544).
+const CRIB=[66,332];
 function buildScenario(requested){
   const rite=RITES[requested?.rite]||RITES.mass;
+  // A ritual Mass is not celebrated on a solemnity (GIRM 372): Christmas takes precedence over Confirmation.
+  if(rite===RITES.mass&&requested?.nativity&&requested.confirmation)requested={...requested,confirmation:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
 }
 function buildMassScenario(requested){
+  // Christmas: a solemnity, with the Gloria and the Creed (GIRM 53, 68); Eucharistic Prayer IV has its own Preface (GIRM 365d).
+  if(requested.nativity)requested={...requested,gloria:true,creed:true,eucharisticPrayer:requested.eucharisticPrayer==='IV'?'I':requested.eucharisticPrayer};
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
@@ -39,6 +45,7 @@ function buildMassScenario(requested){
     crossStand:CROSS_STANDS[requested.crossStand]?requested.crossStand:'right',
     bishop:!!requested.bishop,
     confirmation:!!requested.confirmation,
+    nativity:!!requested.nativity,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -62,7 +69,7 @@ function buildMassScenario(requested){
     ['S','X','C1','C2'],['S','X','C1','C2','T']
   ][serverCount];
   SERVER_ROLES.forEach(role=>{if(!team.includes(role))visible.delete(role);});
-  if(!options.lector){visible.delete('L');visible.delete('Ps');}
+  if(!options.lector){visible.delete('L');if(!options.nativity)visible.delete('Ps');}
   const steps=JSON.parse(JSON.stringify(ORIGINAL_STEPS)).map((s,key)=>({...s,key}));
   const find=title=>steps.find(s=>s.title===title);
   const initialProps=JSON.parse(JSON.stringify(START_PROPS));
@@ -359,6 +366,7 @@ function buildMassScenario(requested){
 
   applyOptionalElements(steps,options,initialProps,find);
   applyParishMinistries(steps,options,initialPos,initialProps);
+  if(options.nativity)applyNativity(steps,options);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
@@ -756,6 +764,68 @@ function applyConfirmation(steps,options,initialProps){
   blessing.say=blessing.say.map(line=>line[0]==='P'&&/invocation/.test(line[1])?['P',invocations[n++],line[2],line[3]]:line);
   blessing.text+=' In place of the usual blessing the Order of Confirmation gives its own threefold blessing (or a prayer over the people).';
   blessing.ref+='; Ordo Confirmationis 33';
+}
+
+// Christmas Mass during the Night. Before Mass the Christmas Proclamation from the Roman Martyrology
+// may be sung (Directory on Popular Piety 111); here the cantor sings it at the ambo while the ministers
+// wait at the back. All genuflect at the Incarnation in the Creed (GIRM 137). The crib is blessed within
+// Mass: the universal prayer is introduced for it and concluded by the prayer of blessing (Book of Blessings 1562-1564).
+function applyNativity(steps,options){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const route=(from,to,a,b)=>M([[110,from[1]],[110,290],[255,290],[255,222],to],a,b);
+  const homeward=(home,a,b)=>M([[255,222],[255,290],[110,290],[110,home[1]],home],a,b);
+  const proclamation={key:-.5,part:'Introductory Rites',title:'The Christmas Proclamation',dur:26,posture:'stand',
+    text:'Before Mass begins, with the ministers waiting at the back of the church, the cantor '+(sung?'sings':'reads')+' the Proclamation of the Birth of Christ from the Roman Martyrology at the ambo. It recalls the ages of salvation history, from the Creation to the peace of the Roman Empire, and announces the birth of Jesus Christ in Bethlehem. All stand. Then the Entrance Chant begins.',
+    ref:'Martyrologium Romanum, 25 December; Directory on Popular Piety 111',
+    mv:{Ps:[route(HOME.Ps,AMBO,0,.14),homeward(HOME.Ps,.86,1)]},
+    acts:{Ps:[[(sung?'sings':'reads')+' the Christmas Proclamation at the ambo',.16,.84]]},
+    say:[['Ps',chant('The twenty-fifth day of December\u2026'),.16,.26],
+      ['Ps',chant('(the ages of salvation history: the Creation and the Flood, Abraham, Moses, David and the prophets, Rome at peace)'),.27,.58],
+      ['Ps',chant('Jesus Christ, eternal God and Son of the eternal Father, conceived by the Holy Spirit, was born of the Virgin Mary in Bethlehem of Judah, and was made man.'),.59,.74],
+      ['Ps',chant('The Nativity of our Lord Jesus Christ according to the flesh.'),.75,.84]]};
+  steps.unshift(proclamation);
+  at(0).text='After the Christmas Proclamation, the procession sets out. '+at(0).text;
+
+  const creed=at(15);
+  creed.text='At Christmas the Creed is sung or said, and at the words "and by the Holy Spirit was incarnate of the Virgin Mary, and became man" all genuflect (on other days all bow).';
+  creed.pplGenuflect=creed.pplBow||[[.42,.62]];
+  delete creed.pplBow;
+  creed.acts={};
+  for(const role of ['P','D',...SERVER_ROLES,...BEARER_ROLES])creed.acts[role]=[['genuflects',.42,.62]];
+  creed.say=creed.say.map(line=>line[0]==='ppl'&&/\(all bow\)/.test(line[1])?['ppl',line[1].replace('(all bow)','(all genuflect)'),line[2],line[3]]:line);
+
+  const prayer=at(16);
+  prayer.text='The crib is blessed within Mass. The universal prayer begins with an introduction asking God\u2019s blessing on the Christmas manger, and the intentions follow. The Priest concludes them with the prayer of blessing, his hands outstretched toward the crib, which stands outside the sanctuary. No holy water or incense is prescribed.';
+  prayer.ref+='; Book of Blessings 1541-1544, 1562-1564';
+  prayer.say=prayer.say.map(line=>{
+    if(line[0]!=='P')return line;
+    if(/invitation/.test(line[1]))return ['P','(invites all to ask God\u2019s blessing on this Christmas manger)',line[2],line[3]];
+    if(/concluding prayer/.test(line[1]))return ['P','(the prayer of blessing: may all who look upon this manger worship the Word made flesh)',line[2],line[3]];
+    return line;
+  });
+  (prayer.acts??={}).P=[...(prayer.acts.P||[]),['extends his hands toward the crib and says the prayer of blessing',.82,.94]];
+  (prayer.face??={}).P=[[CRIB,.82,.94]];
+
+  if(options.eucharisticPrayer!=='IV'){
+    const preface=at(23);
+    preface.text+=' At Christmas one of the Prefaces of the Nativity of the Lord is said.';
+    preface.ref+='; Roman Missal, Prefaces of the Nativity I-III';
+  }
+  if(options.eucharisticPrayer==='I'){
+    const epiclesis=at(25);
+    epiclesis.text+=' In the Roman Canon the proper form of "In communion with those" (Communicantes) for the Nativity is said.';
+    epiclesis.ref+='; Roman Missal, Eucharistic Prayer I (proper Communicantes)';
+  }
+  const blessing=at(38);
+  if(blessing.say.some(line=>line[0]==='P'&&/invocation/.test(line[1]))){
+    const invocations=['(God, who scattered the darkness of the world by the Incarnation of his Son, drive away the darkness of sin\u2026)','(God, who had the angels announce the Saviour\u2019s birth to the shepherds, fill your minds with gladness\u2026)','(God, who joined earth to heaven when his Word became flesh, give you his peace and goodwill\u2026)'];
+    let n=0;
+    blessing.say=blessing.say.map(line=>line[0]==='P'&&/invocation/.test(line[1])?['P',invocations[n++],line[2],line[3]]:line);
+    blessing.text+=' The Solemn Blessing for the Nativity of the Lord is used.';
+    blessing.ref+='; Roman Missal, Solemn Blessings 2';
+  }
 }
 
 function chooseHomilyPlace(point){

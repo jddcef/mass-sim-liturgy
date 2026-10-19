@@ -220,4 +220,55 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed 6 Confirmation scenarios and '+confirmFrames+' sampled frames.');
+  // Christmas Mass during the Night: the Proclamation before the Entrance, the genuflection at the Creed, the crib blessed.
+  let nativityFrames=0;
+  for(const requested of [{nativity:true,serverCount:5,incense:true,deacon:true,lector:true,solemnBlessing:true,eucharisticPrayer:'I'},
+    {nativity:true,serverCount:0,lector:false,creed:false,gloria:false,eucharisticPrayer:'IV',music:'said'},
+    {nativity:true,bishop:true,serverCount:5,incense:true,solemnBlessing:true},{nativity:true,confirmation:true}]){
+    const {options,visible}=buildScenario(requested);
+    assert.ok(options.nativity&&options.creed&&options.gloria,'Gloria and Creed at Christmas');
+    assert.ok(!options.confirmation,'no ritual Mass on a solemnity (GIRM 372)');
+    assert.notEqual(options.eucharisticPrayer,'IV','EP IV has its own Preface (GIRM 365d)');
+    assert.equal(ROLE_NAMES.P,options.bishop?'Bishop':'Priest');
+    assert.ok(visible.has('Ps'),'the cantor sings the Proclamation');
+    assert.equal(STEPS[0].key,-.5);
+    assert.equal(STEPS[1].key,0);
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const proclamation=STEPS[0];
+    assert.ok(proclamation.say.some(([r,t])=>r==='Ps'&&/Nativity of our Lord Jesus Christ according to the flesh/.test(t)));
+    assert.equal(proclamation.say.some(([,t])=>/\u266a/.test(t)),options.music!=='said');
+    assert.deepEqual(actorAt(0,'Ps',.5),AMBO,'the Proclamation from the ambo');
+    assert.deepEqual(actorAt(0,'Ps',1),HOME.Ps,'back to the pew');
+    assert.deepEqual(actorAt(0,'P',.5),START_POS.P,'the celebrant waits at the back');
+    const creed=STEPS[idx(15)];
+    assert.ok(creed.pplGenuflect&&!creed.pplBow,'all genuflect');
+    assert.ok(creed.say.some(([r,t])=>r==='ppl'&&/all genuflect/.test(t)));
+    for(const role of ['P','D',...SERVER_ROLES,...BEARER_ROLES])if(visible.has(role))assert.ok(creed.acts[role].some(([t])=>t==='genuflects'),role+' genuflects');
+    const prayer=STEPS[idx(16)];
+    assert.ok(prayer.say.some(([r,t])=>r==='P'&&/manger/.test(t)));
+    assert.deepEqual(prayer.face.P[0][0],CRIB);
+    assert.ok(/Book of Blessings .*1562-1564/.test(prayer.ref));
+    assert.equal(/Communicantes/.test(STEPS[idx(25)].text),options.eucharisticPrayer==='I');
+    assert.equal(/Solemn Blessings 2/.test(STEPS[idx(38)].ref),options.solemnBlessing);
+    if(options.bishop)assert.ok(STEPS.every(s=>!/\bPriest\b/.test(s.text)),'the rubrics name the Bishop');
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF)assert.ok(resolveProp(propAt(i,name,k/20,p),p,name).every(Number.isFinite));
+        nativityFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{bishop:true},{confirmation:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.key!==-.5&&!s.pplGenuflect),'Christmas rites only at Christmas');
+  }
+  buildScenario({});
+  console.log('Passed 4 Christmas scenarios and '+nativityFrames+' sampled frames.');
 `,context);

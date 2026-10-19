@@ -83,6 +83,7 @@ const GAME_ICON_RULES=[
   [/stoup|holy water|holy-water/,'water',{place:'stoup'}],
   [/\bwater\b/,'water',{prop:'ewer'}],
   [/corporal|purificator|\bpall\b|cloth|linen/,'linen',{prop:'corporal'}],
+  [/martyrology/,'lectionary',{place:'ambo'}],
   [/gospel/,'gospels',{prop:'gospels'}],
   [/lectionary|reading|psalm/,'lectionary',{place:'ambo'}],
   [/missal|\bbook\b/,'book',{prop:'missal'}],

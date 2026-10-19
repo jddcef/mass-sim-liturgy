@@ -318,7 +318,7 @@ function syncPreset(){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -346,7 +346,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -1822,12 +1822,12 @@ function gameBeforeRender(dt,positions){
   if(game.phase==='mass'){
     const key=STEPS[cur3d].key;
     if(game.role==='MC'){
-      const target=key===0||key===40?[positions.P[0]+38,positions.P[1]-12]:MC_HOME;
-      if(!tweenTowards('MC',target,dt*(playing3d?1:0),key===0||key===40?400:190))game.facing.MC=0;
+      const target=key<=0||key===40?[positions.P[0]+38,positions.P[1]-12]:MC_HOME;
+      if(!tweenTowards('MC',target,dt*(playing3d?1:0),key<=0||key===40?400:190))game.facing.MC=0;
       game.mcPos=game.overrides.MC.slice();
     }
     if(game.role==='SAC'){
-      const target=game.options.bells.start&&cur3d===0&&progress3d<.3?[1040,200]:SACRISTAN_SEAT;
+      const target=game.options.bells.start&&key===0&&progress3d<.3?[1040,200]:SACRISTAN_SEAT;
       if(!game.walkers.SAC)tweenTowards('SAC',target,dt*(playing3d?1:0));
       game.facing.SAC=Math.PI;
     }

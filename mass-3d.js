@@ -230,7 +230,7 @@ function setNaveStyle(style){
   pewGroups.forEach(g=>{g.visible=g.userData.nave===naveStyle;});
   if(typeof setPewLayout==='function')setPewLayout(naveStyle);
 }
-let crucifixGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor, tabernacleBody=[], tabernacleMount=null, altarParts=[];
+let crucifixGroup, cribGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor, tabernacleBody=[], tabernacleMount=null, altarParts=[];
 const ALTAR_SIZES={small:.8,standard:1,large:1.3};
 function setAltarSize(size){
   const factor=ALTAR_SIZES[size]||1;
@@ -348,6 +348,7 @@ function applyAppearance(a){
   recolour(figures.D,colour);
   dressForRite(scenario?.vesture);
   figures.P.bishop.visible=!!scenario?.options?.bishop;
+  if(cribGroup)cribGroup.visible=!!scenario?.options?.nativity;
   const note=$('vestmentNote');
   if(note){
     const date=nextSunday(new Date()).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -372,6 +373,36 @@ function placeCrucifix(id){
   const x=world(place.face).x;
   crucifixGroup.position.set(x,place.recess?2.9:3.8,place.recess?-10.44:-10.49);
   nicheGroup.position.x=x;
+}
+
+// The Christmas crib stands in the nave, outside the sanctuary (Book of Blessings 1544), facing the people.
+function buildCrib(){
+  cribGroup=new THREE.Group();
+  const at=world(CRIB);
+  cribGroup.position.set(at.x,0,at.z);
+  box(cribGroup,0,.06,0,1.3,.12,.95,'#7b5a3a',true,'wood');
+  box(cribGroup,0,.75,-.42,1.3,1.3,.08,'#8a6a45',true,'wood');
+  for(const side of [-1,1]){
+    box(cribGroup,side*.62,.75,-.05,.08,1.3,.08,'#6e5032',true,'wood');
+    const roof=box(cribGroup,side*.34,1.5,-.12,.78,.07,.78,'#6b4a2c',true,'wood');
+    roof.rotation.z=-side*.42;
+  }
+  box(cribGroup,0,1.2,-.36,.9,.04,.02,'#d9c48f',false);
+  sphere(cribGroup,0,1.68,-.1,.07,'#ffe17a',false);
+  box(cribGroup,0,.24,.08,.36,.16,.22,'#b58d4f',true,'wood');
+  box(cribGroup,0,.33,.08,.3,.03,.18,'#e0c56a',false);
+  sphere(cribGroup,0,.38,.08,.07,'#f1d3b5',false);
+  const figure=(x,robe,mantle,kneel)=>{
+    const h=kneel?.32:.5;
+    cylinder(cribGroup,x,.12+h/2,0,.09,.16,h,robe);
+    cylinder(cribGroup,x,.12+h*.7,-.02,.1,.13,h*.55,mantle);
+    sphere(cribGroup,x,.2+h,0,.08,'#e2b892',false);
+  };
+  figure(-.38,'#e9e4d6','#3d64a8',true);
+  figure(.38,'#8b6a43','#5c4a2f',false);
+  cylinder(cribGroup,.52,.45,.05,.012,.012,.7,'#6e5032');
+  cribGroup.visible=false;
+  scene.add(anchorParishObject(cribGroup,CRIB));
 }
 
 function buildChurch(){
@@ -504,6 +535,7 @@ function buildChurch(){
   const gifts=world([621,770]);
   anchorParishObject(box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60',true,'wood'),[621,770]);
   anchorParishObject(box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e',true,'wood'),[621,770]);
+  buildCrib();
   for(const [name,p] of [['Altar',[500,180]],['Ambo',[200,250]],['Chair',[500,55]],['Credence',[866,150]],['Tabernacle',[137,85]]]){
     const sprite=label(name,world(p,1.95));
     sprite.userData.fixture=name.toLowerCase();
@@ -748,6 +780,7 @@ function reservedPew(point){
 function updatePeople(step,phase){
   const posture=postureAt(cur3d,progress3d).name;
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
+  const genuflect=(step.pplGenuflect||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const special=step.special?.type==='communion'?step.special:null;
   congregation.forEach((person,i)=>{
     person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&(!person.outer||naveStyle==='full');
@@ -771,7 +804,7 @@ function updatePeople(step,phase){
     }
     person.figure.root.position.copy(world(p));
     person.figure.root.rotation.y=Math.PI;
-    pose(person.figure,walking||receiving?'stand':posture,receiving||bow?'bows':'',phase+i,walking);
+    pose(person.figure,walking||receiving?'stand':posture,receiving||bow?'bows':genuflect&&!walking?'genuflects':'',phase+i,walking);
     if(step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b){
       person.figure.root.rotation.y=Math.PI+(i%2?-.7:.7);
       person.figure.arms[1].rotation.x=-1;
