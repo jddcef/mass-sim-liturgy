@@ -112,7 +112,7 @@ function makeFigure(color,skin,role){
     sphere(arm,0,-.49,0,.075,skin,Boolean(role));
     torso.add(arm);arms.push(arm);
   }
-  let handCandle=null;
+  let handCandle=null,handPalm=null;
   if(!role){
     // Candlemas: a lighted candle in the right hand, kept upright while the arm is raised.
     handCandle=new THREE.Group();
@@ -122,6 +122,15 @@ function makeFigure(color,skin,role){
     sphere(handCandle,0,.3,0,.036,'#ffc84a',false).scale.set(1,1.6,1);
     handCandle.visible=false;
     arms[1].add(handCandle);
+
+    // Palm Sunday: a green palm branch in the right hand.
+    handPalm=new THREE.Group();
+    handPalm.position.set(0,-.5,.03);
+    handPalm.rotation.x=1.15;
+    cylinder(handPalm,0,.18,0,.012,.014,.36,'#3d7137');
+    mesh(new THREE.ConeGeometry(.07,.3,4),'#4e8a47',handPalm,0,.3,0,false).scale.set(1,1,.3);
+    handPalm.visible=false;
+    arms[1].add(handPalm);
   }
   const legs=[];
   for(const side of [-1,1]){
@@ -166,7 +175,7 @@ function makeFigure(color,skin,role){
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop,handCandle};
+  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop,handCandle,handPalm};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){
@@ -617,6 +626,10 @@ function makeObjects(){
       // The vessel of blessed ashes: a shallow metal bowl with grey ash heaped inside.
       cylinder(g,0,.04,0,.09,.06,.08,'#b9a46a','gold');
       cylinder(g,0,.075,0,.075,.075,.02,'#77736d');
+    }else if(name==='palms'){
+      // Palm branches: green fronds bundled together.
+      cylinder(g,0,.08,0,.02,.02,.2,'#3d7137');
+      mesh(new THREE.ConeGeometry(.09,.32,5),'#4e8a47',g,0,.22,0,false).scale.set(1,1,.3);
     }else if(name==='chrism'){
       // The vessel of holy chrism: a small silver jar with a domed lid and a cross knob.
       cylinder(g,0,.06,0,.055,.045,.12,'#cfd2d4','silver');
@@ -797,6 +810,7 @@ function updatePeople(step,phase){
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const genuflect=(step.pplGenuflect||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const candles=(step.pplCandles||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
+  const palms=(step.pplPalms||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   // People come forward in a line for Communion and, on Ash Wednesday, for the ashes.
   const special=step.special?.type==='communion'||step.special?.type==='ashes'?step.special:null;
   congregation.forEach((person,i)=>{
@@ -825,6 +839,10 @@ function updatePeople(step,phase){
     if(person.figure.handCandle){
       person.figure.handCandle.visible=candles;
       if(candles)person.figure.arms[1].rotation.set(-1.15,0,0);
+    }
+    if(person.figure.handPalm){
+      person.figure.handPalm.visible=palms;
+      if(palms)person.figure.arms[1].rotation.set(-1.15,0,0);
     }
     if(step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b){
       person.figure.root.rotation.y=Math.PI+(i%2?-.7:.7);

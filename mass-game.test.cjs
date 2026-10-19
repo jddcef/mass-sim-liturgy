@@ -796,7 +796,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','adorationLay','benediction','confirmation','candlemas','ashWednesday'],'eleven celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','adorationLay','benediction','confirmation','candlemas','ashWednesday','palmSunday'],'twelve celebrations are playable now');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
@@ -856,6 +856,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   p=record(p,{preset:'candlemas',role:'C1',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'ashWednesday','then Ash Wednesday');
   p=record(p,{preset:'ashWednesday',role:'S',level:'choice',percent:90}).progress;
+  assert.equal(G('nextRecommended')(p).id,'palmSunday','then Palm Sunday');
+  p=record(p,{preset:'palmSunday',role:'S',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
   // Stored progress is cleaned on load.
   const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
@@ -1095,6 +1097,47 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(cues.some(c=>c.part==='ashes'),'music during the giving of ashes');
   assert.ok(cues.some(c=>c.part==='alleluia'&&/no Alleluia/.test(c.title)));
   assert.ok(!cues.some(c=>c.part==='confiteor'||c.part==='kyrie'||c.part==='gloria'||c.part==='creed'));
+  setup('P',{});assert.equal(STEPS[0].key,0);
+}
+// ---- round 22: Palm Sunday ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  let r=norm('P',{palmSunday:true,gloria:true,creed:false,introductory:'sprinkling',eucharisticPrayer:'IV',bishop:true,confirmation:true});
+  const o=r.options;
+  assert.ok(o.palmSunday&&!o.gloria&&o.creed&&o.introductory==='A'&&o.eucharisticPrayer==='III'&&!o.bishop&&!o.confirmation);
+  for(const ref of ['GIRM 53','GIRM 68','GIRM 365d','GIRM 372','Palm Sunday'])assert.ok(r.notes.some(n=>n.includes(ref)),ref);
+  for(const other of [{candlemas:true},{nativity:true},{ashWednesday:true}]){
+    r=norm('P',{palmSunday:true,...other});
+    assert.ok(!r.options.palmSunday,'a different day wins');
+  }
+  assert.ok(!norm('CB',{palmSunday:true}).options.palmSunday,'the bearers play the Bishop\u2019s Mass');
+  assert.equal(norm('P',{}).options.palmSunday,false);
+  assert.equal(norm('E',{rite:'exposition',palmSunday:true}).options.palmSunday,false,'not at Exposition');
+  const raw={...presets.palmSunday.fields,serverCount:Number(presets.palmSunday.fields.serverCount)};
+  const {options}=setup('S',raw);
+  assert.equal(G('presetForOptions')(options,'palmSunday'),'palmSunday');
+  assert.equal(G('presetForOptions')(setup('P',{...presets.sundayIncense.fields,serverCount:5}).options,'sundayIncense'),'sundayIncense','a plain Sunday is not Palm Sunday');
+  assert.equal(G('celebrationForPreset')('palmSunday').id,'palmSunday');
+  setup('S',raw);
+  assert.equal(STEPS[0].title,'Blessing of Palms');
+  assert.ok(G('deriveDuties')('S',STEPS,options).some(d=>d.key===-.5&&/holy water/.test(d.text)),'the server holds the holy water');
+  setup('D',raw);
+  assert.ok(G('deriveDuties')('D',STEPS,options).some(d=>d.key===13&&/Passion/.test(d.title)),'the Deacon narrates the Passion');
+  for(const role of ['P','D','S','C1','X','MC','SAC','PEW','L','AV'])setup(role,{...raw,projector:role==='AV'});
+  const items=G('sacristanSetup')(options);
+  assert.ok(items.some(i=>i.id==='palms'&&i.needed&&i.places.includes('procession')));
+  assert.ok(items.some(i=>i.id==='passionTexts'&&i.needed&&i.places.includes('ambo')));
+  assert.ok(items.some(i=>i.id==='aspersory'&&i.needed&&i.places.includes('procession')));
+  assert.ok(items.some(i=>i.id==='missal'&&/commemoration of the entrance/.test(i.name)));
+  const away=G('sacristanPackAway')(options);
+  assert.ok(away.some(i=>i.id==='aspersoryBack'&&i.needed)&&away.some(i=>i.id==='palmsAway'&&i.needed));
+  assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>i.id==='palms'&&i.needed));
+  const av=setup('AV',{...raw,projector:true});
+  const cues=G('deriveMediaCues')(STEPS,null,av.options,'all');
+  assert.ok(cues.some(c=>c.part==='palms'),'music and slide during the blessing of palms');
+  assert.ok(cues.some(c=>c.part==='entrance'&&/All Glory, Laud and Honour/.test(c.title)));
+  assert.ok(cues.some(c=>c.part==='passion'),'slide and track for the Passion');
+  assert.ok(!cues.some(c=>c.part==='confiteor'||c.part==='kyrie'||c.part==='gloria'));
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
 console.log('mass-game tests passed');

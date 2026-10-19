@@ -18,6 +18,8 @@ function buildScenario(requested){
   if(rite===RITES.mass&&requested?.candlemas&&!requested.nativity)requested={...requested,bishop:false,confirmation:false};
   // Ash Wednesday is likewise modelled with the parish Priest presiding (see applyAshWednesday).
   if(rite===RITES.mass&&requested?.ashWednesday&&!requested.nativity&&!requested.candlemas)requested={...requested,bishop:false,confirmation:false};
+  // Palm Sunday is modelled with the parish Priest presiding (see applyPalmSunday).
+  if(rite===RITES.mass&&requested?.palmSunday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday)requested={...requested,bishop:false,confirmation:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
@@ -36,6 +38,11 @@ function buildMassScenario(requested){
   if(requested.ashWednesday&&!requested.nativity&&!requested.candlemas)requested={...requested,gloria:false,creed:false,introductory:'A',bishop:false,confirmation:false,
     eucharisticPrayer:requested.eucharisticPrayer==='IV'?'III':requested.eucharisticPrayer};
   else if(requested.ashWednesday)requested={...requested,ashWednesday:false};
+  // Palm Sunday: no Gloria in Lent (GIRM 53), the Creed is said (GIRM 68); the commemoration of the Lord's
+  // entrance replaces the Penitential Act (Roman Missal, Palm Sunday, n. 17); Preface of Palm Sunday (GIRM 365d).
+  if(requested.palmSunday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday)requested={...requested,gloria:false,creed:true,introductory:'A',bishop:false,confirmation:false,
+    eucharisticPrayer:requested.eucharisticPrayer==='IV'?'III':requested.eucharisticPrayer};
+  else if(requested.palmSunday)requested={...requested,palmSunday:false};
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
@@ -63,6 +70,7 @@ function buildMassScenario(requested){
     nativity:!!requested.nativity,
     candlemas:!!requested.candlemas,
     ashWednesday:!!requested.ashWednesday,
+    palmSunday:!!requested.palmSunday,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -386,6 +394,7 @@ function buildMassScenario(requested){
   if(options.nativity)applyNativity(steps,options);
   if(options.candlemas)applyCandlemas(steps,options,initialPos,initialProps);
   if(options.ashWednesday)applyAshWednesday(steps,options,initialProps);
+  if(options.palmSunday)applyPalmSunday(steps,options,initialPos,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
@@ -406,6 +415,7 @@ function buildMassScenario(requested){
   if(options.introductory!=='A')removed.add(6);
   if(options.candlemas)[3,4,5,6].forEach(key=>removed.add(key));
   if(options.ashWednesday)[5,6].forEach(key=>removed.add(key));
+  if(options.palmSunday)[3,4,5,6].forEach(key=>removed.add(key));
   const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
@@ -1024,6 +1034,144 @@ function applyAshWednesday(steps,options,initialProps){
   const end=at(38);
   end.text+=' On Ash Wednesday the Missal gives a Prayer over the People, said before the blessing.';
   end.ref+='; Roman Missal, Ash Wednesday';
+}
+
+// Palm Sunday of the Passion of the Lord, Second Form: The Solemn Entrance (Roman Missal, Palm Sunday,
+// nn. 12-17). The faithful hold palm branches; the Priest and ministers go to a suitable place at the back
+// of the church where the procession forms. The antiphon "Hosanna to the Son of David" is sung, the palms
+// are blessed and sprinkled with holy water in silence, and the Gospel of the Lord's Entrance is proclaimed.
+// The procession goes to the altar while "All Glory, Laud and Honour" is sung. The Penitential Act and
+// the Gloria are omitted; the Passion is read in parts at the ambo without candles or incense; all genuflect
+// at the death of the Lord. The Creed is said, and the proper Preface of Palm Sunday is used.
+function applyPalmSunday(steps,options,initialPos,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const hasS=options.serverCount>0;
+  const caller=options.deacon?'D':'P';
+  const incense=options.incense;
+  const blessing={key:-.5,part:'Introductory Rites',title:'Blessing of Palms',dur:36,posture:'stand',pplPalms:[[.04,1]],
+    text:'The faithful gather in the church holding branches. The Priest and the ministers go to a suitable place at the back of the church where the procession forms. The antiphon "Hosanna to the Son of David" is '+(sung?'sung':'said')+'. The Priest makes the Sign of the Cross, greets the people and gives a brief address. He says the prayer of blessing and sprinkles the branches with holy water in silence'+(incense?', then puts incense into the thurible for the procession':'')+'. The Gospel of the Lord\u2019s entrance into Jerusalem is proclaimed. '+(options.deacon?'The Deacon':'The Priest')+' invites all to go forth in peace.',
+    ref:'Roman Missal, Palm Sunday of the Passion of the Lord, nn. 12-17',
+    say:[['ppl',chant('Hosanna to the Son of David; blessed is he who comes in the name of the Lord, the King of Israel. Hosanna in the highest!'),.02,.16],
+      ['P','In the name of the Father, and of the Son, and of the Holy Spirit.',.17,.22],['ppl','Amen.',.22,.24],
+      ['P','The Lord be with you.',.25,.28],['ppl','And with your spirit.',.28,.31],
+      ['P','(address: Dear brethren, since the beginning of Lent until now we have prepared our hearts\u2026)',.32,.4],
+      ['P','Let us pray. (prayer of blessing: sanctify these branches with your blessing\u2026)',.42,.54],['ppl','Amen.',.54,.56],
+      [caller,'The Lord be with you.',.58,.62],['ppl','And with your spirit.',.62,.65],
+      [caller,'A reading from the holy Gospel according to N. (the entrance into Jerusalem)',.65,.74],['ppl','Glory to you, O Lord.',.74,.77],
+      [caller,'(proclaims the Gospel of the Lord\u2019s Entrance)',.77,.86],
+      [caller,'The Gospel of the Lord.',.86,.89],['ppl','Praise to you, Lord Jesus Christ.',.89,.92],
+      [caller,'Let us go forth in peace.',.93,.96],['ppl','In the name of Christ. Amen.',.96,1]],
+    acts:{P:[['signs himself \u2720',.17,.22],['blesses the branches',.48,.54],['sprinkles the branches with holy water, saying nothing',.58,.7]]},
+    orans:{P:[[.25,.28],[.42,.48]]},
+    mv:{},props:{},smoke:incense?[['T',0,1]]:[]};
+  if(hasS){
+    initialPos.S=[446,806];
+    initialProps.ewer={by:'S'};
+    blessing.acts.S=[['holds the holy water for the Priest',.56,.72]];
+    blessing.mv.S=[M([[464,814]],.54,.58),M([[446,806]],.71,.75)];
+  }
+  if(incense){
+    blessing.mv.T=[M([[548,700],[548,796]],.72,.76),M([[548,700],[500,700]],.83,.87)];
+    blessing.acts.T=[['brings the thurible to the Priest',.72,.76]];
+    blessing.acts.P.push(['puts incense in the thurible and blesses it',.76,.82]);
+  }
+  steps.unshift(blessing);
+
+  const entrance=at(0);
+  entrance.pplPalms=[[0,1]];
+  entrance.text='The procession goes to the altar, led by the '+(incense?'thurifer':'cross')+', while all carry palm branches and sing "All Glory, Laud and Honour" with its verses. As the procession enters the sanctuary the Entrance Antiphon is sung. '+entrance.text.replace(/^When the people are gathered, the Priest and ministers go to the altar while the Entrance Chant is sung\. /,'');
+  entrance.ref='Roman Missal, Palm Sunday, nn. 16-17; GIRM 120-121';
+  entrance.say=[['ppl',chant('All glory, laud and honour to you, Redeemer, King, to whom the lips of children made sweet hosannas ring\u2026'),.03,.82],['ppl',chant('Entrance Antiphon'),.82,1]];
+  if(hasS){
+    entrance.mv.S=[M([[446,824],[880,824],[880,300],[850,165],[850,150]],.3,.82),M([HOME.S],.88,.96)];
+    entrance.props=entrance.props||{};
+    entrance.props.ewer=[{at:[850,144],a:.83,b:.86}];
+    entrance.acts=entrance.acts||{};
+    entrance.acts.S=[['takes the holy water back to the credence by the side aisle',.3,.84]];
+  }
+  for(const key of [1,2]){const s=at(key);if(s)s.pplPalms=[[0,1]];}
+
+  const collect=at(8);
+  collect.dur=13;
+  collect.text='At the altar the Priest venerates it'+(incense?' and incenses it':'')+' and goes to the chair. Omitting the greeting and the Penitential Act, he says the Collect. A server may hold the Missal.';
+  collect.ref='Roman Missal, Palm Sunday, n. 17; GIRM 54';
+  collect.mv=collect.mv||{};
+  collect.mv.P=M([[560,90],CHAIR],0,.24);
+  if(options.deacon)collect.mv.D=M([[440,90],DCHAIR],0,.24);
+  if(incense)collect.mv.T=M([[760,55]],0,.3);
+
+  const acclamation=at(12);
+  if(acclamation){
+    if(acclamation.say.length)acclamation.say=acclamation.say.map(([who,text,...rest])=>who==='ppl'&&/Alleluia/.test(text)?[who,chant('Praise to you, Lord Jesus Christ, King of endless glory!'),...rest]:[who,text,...rest]);
+    acclamation.text='All rise and sing the verse before the Gospel: "Christ became obedient to the point of death, even death on a cross." In Lent the Alleluia is not sung. '+(options.deacon?'The Deacon bows before the Priest and asks for his blessing, but no incense or candles accompany the Passion.':'The Priest prepares to proclaim the Passion.');
+    acclamation.ref='Roman Missal, Palm Sunday, n. 21; GIRM 62b';
+    if(acclamation.mv){
+      delete acclamation.mv.C1;
+      delete acclamation.mv.C2;
+      delete acclamation.mv.T;
+    }
+    if(acclamation.acts?.P)acclamation.acts.P=acclamation.acts.P.filter(([t])=>!/incense/.test(t));
+    acclamation.smoke=[];
+  }
+
+  const passion=at(13);
+  if(passion){
+    passion.title='The Passion of the Lord';
+    passion.dur=24;
+    passion.text='The Passion of our Lord Jesus Christ is proclaimed. It is read without candles and without incense, without the greeting and without the signing of the book. The narrative is read in parts: the words of Christ are reserved to the Priest, the Deacon or a reader narrates, and all speak the crowd parts. At the mention of the Lord\u2019s death, all genuflect and a brief silence is kept.';
+    passion.ref='Roman Missal, Palm Sunday, nn. 21-22';
+    passion.smoke=[];
+    if(passion.props?.thurible)delete passion.props.thurible;
+    const narrator=options.deacon?'D':'P';
+    passion.say=[
+      [narrator,'The Passion of our Lord Jesus Christ according to N.',0,.1],
+      [narrator,'(proclaims the narrative: When they came to the place called Golgotha, they crucified him\u2026)',.1,.3],
+      ['P','Father, forgive them, for they know not what they do.',.3,.42],
+      ['ppl','If you are the King of the Jews, save yourself!',.42,.54],
+      ['P','Father, into your hands I commend my spirit.',.54,.64],
+      [narrator,'And bowing his head, he gave up his spirit. (All genuflect, and pause in silence.)',.64,.78],
+      [narrator,'(proclaims the conclusion of the Passion)',.78,.88],
+      [narrator,'The Gospel of the Lord.',.88,.94],
+      ['ppl','Praise to you, Lord Jesus Christ.',.94,1]
+    ];
+    passion.pplGenuflect=[[.65,.78]];
+    passion.acts={
+      P:[['turns toward the ambo',0,.64],['genuflects and pauses in silence',.65,.78]],
+      [narrator]:[['genuflects and pauses in silence',.65,.78],['kisses the Book',.94,1]]
+    };
+    if(options.deacon&&narrator!=='D')passion.acts.D=[['genuflects and pauses in silence',.65,.78]];
+  }
+
+  const homily=at(14);
+  if(homily){
+    if(homily.mv){
+      delete homily.mv.C1;
+      delete homily.mv.C2;
+      delete homily.mv.T;
+    }
+    homily.text+=' On Palm Sunday a brief homily may follow.';
+    homily.ref+='; Roman Missal, Palm Sunday, n. 22';
+  }
+
+  const creed=at(15);
+  if(creed){
+    creed.text+=' On Palm Sunday the Creed is said as on all Sundays of Lent.';
+    creed.ref+='; GIRM 68; Roman Missal, Palm Sunday';
+  }
+
+  if(options.eucharisticPrayer!=='IV'){
+    const preface=at(23);
+    preface.text+=' Today the proper Preface of Palm Sunday (The Passion of the Lord) is said.';
+    preface.ref+='; Roman Missal, Preface of Palm Sunday';
+  }
+
+  const end=at(38);
+  if(end){
+    end.text+=' On Palm Sunday the Missal gives a Prayer over the People before the blessing.';
+    end.ref+='; Roman Missal, Palm Sunday';
+  }
 }
 
 function chooseHomilyPlace(point){

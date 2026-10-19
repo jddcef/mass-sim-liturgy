@@ -316,7 +316,9 @@ const PROP_DEF={
   // Confirmation: the vessel of holy chrism.
   chrism:{off:[10,-8]},
   // Ash Wednesday: the vessel of blessed ashes.
-  ashes:{off:[10,-6]}
+  ashes:{off:[10,-6]},
+  // Palm Sunday: branches of palm.
+  palms:{off:[0,-16]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
@@ -325,7 +327,8 @@ const START_PROPS={
   monstrance:{at:[500,160],h:true},lunette:{at:[137,85],h:true},
   mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true},
   chrism:{at:[878,138],h:true},
-  ashes:{at:[858,132],h:true}
+  ashes:{at:[858,132],h:true},
+  palms:{at:[440,866],h:true}
 };
 
 // ---------- math helpers ----------

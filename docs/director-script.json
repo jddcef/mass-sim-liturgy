@@ -105,6 +105,38 @@
       "r": 9,
       "txt": "#fff",
       "lab": "G"
+    },
+    "MB": {
+      "name": "Mitre-bearer (server in a vimp)",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333",
+      "only": "bishop"
+    },
+    "CB": {
+      "name": "Crozier-bearer (server in a vimp)",
+      "fill": "#fbfbf6",
+      "stroke": "#555",
+      "r": 10,
+      "txt": "#333",
+      "only": "bishop"
+    },
+    "K": {
+      "name": "Candidate for Confirmation",
+      "fill": "#b5524c",
+      "stroke": "#5a2624",
+      "r": 9,
+      "txt": "#fff",
+      "only": "confirmation"
+    },
+    "SP": {
+      "name": "Sponsor",
+      "fill": "#6b6f86",
+      "stroke": "#333",
+      "r": 9,
+      "txt": "#fff",
+      "only": "confirmation"
     }
   },
   "initialPositions": {
@@ -163,6 +195,22 @@
     "G2": [
       640,
       745
+    ],
+    "MB": [
+      480,
+      834
+    ],
+    "CB": [
+      520,
+      834
+    ],
+    "K": [
+      605,
+      368
+    ],
+    "SP": [
+      675,
+      368
     ]
   },
   "initialProps": {
@@ -235,6 +283,55 @@
       "at": [
         455,
         170
+      ],
+      "h": true
+    },
+    "monstrance": {
+      "at": [
+        500,
+        160
+      ],
+      "h": true
+    },
+    "lunette": {
+      "at": [
+        137,
+        85
+      ],
+      "h": true
+    },
+    "mitre": {
+      "at": [
+        1180,
+        190
+      ],
+      "h": true
+    },
+    "staff": {
+      "at": [
+        1180,
+        190
+      ],
+      "h": true
+    },
+    "chrism": {
+      "at": [
+        878,
+        138
+      ],
+      "h": true
+    },
+    "ashes": {
+      "at": [
+        858,
+        132
+      ],
+      "h": true
+    },
+    "palms": {
+      "at": [
+        440,
+        866
       ],
       "h": true
     }

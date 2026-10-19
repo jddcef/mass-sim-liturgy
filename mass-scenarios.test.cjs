@@ -405,4 +405,69 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed '+ashCount+' Ash Wednesday scenarios and '+ashFrames+' sampled frames.');
+
+  // Palm Sunday: the palms blessed at the back, procession with palms, no Gloria, Passion read in parts, Creed is said.
+  let palmFrames=0,palmCount=0;
+  for(const requested of [{palmSunday:true,serverCount:5,incense:true,deacon:true,lector:true,eucharisticPrayer:'III'},
+    {palmSunday:true,serverCount:0,deacon:false,lector:false,gloria:true,creed:false,introductory:'sprinkling',eucharisticPrayer:'IV',music:'said'},
+    {palmSunday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {palmSunday:true,serverCount:0,deacon:true,incense:false},
+    {palmSunday:true,ashWednesday:true,serverCount:5},{palmSunday:true,candlemas:true,serverCount:5},{palmSunday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.ashWednesday||requested.candlemas||requested.nativity){
+      assert.ok(!options.palmSunday,'a different day wins over Palm Sunday');
+      assert.ok(STEPS.every(s=>s.title!=='Blessing of Palms'));
+      continue;
+    }
+    palmCount++;
+    assert.ok(options.palmSunday&&!options.gloria&&options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.notEqual(options.eucharisticPrayer,'IV','Preface of Palm Sunday (GIRM 365d)');
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [3,4,5,6,7])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.equal(keys[0],-.5,'blessing of palms comes first');
+    assert.equal(keys[keys.indexOf(options.incense?2:1)+1],8,'the Collect follows the altar reverence/incensation');
+    assert.ok(keys.includes(15),'the Creed is said on Sundays in Lent (GIRM 68)');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    assert.ok(!STEPS[idx(12)].say.some(([,t])=>/Alleluia/.test(t)),'no Alleluia in Lent');
+    if(options.music!=='said')assert.ok(STEPS[idx(12)].say.some(([,t])=>/Praise to you, Lord Jesus Christ/.test(t)));
+    const blessing=STEPS[idx(-.5)],entrance=STEPS[idx(0)],passion=STEPS[idx(13)];
+    assert.equal(blessing.title,'Blessing of Palms');
+    assert.ok(blessing.pplPalms&&entrance.pplPalms,'people hold palms');
+    assert.equal(passion.title,'The Passion of the Lord');
+    assert.equal(passion.smoke.length,0,'no smoke during the Passion');
+    assert.ok(passion.pplGenuflect&&passion.pplGenuflect.length>0,'all genuflect at the death of the Lord');
+    if(options.deacon){
+      assert.ok(passion.say.some(([r])=>r==='D'),'Deacon narrates');
+      assert.ok(passion.say.some(([r])=>r==='P'),'Priest speaks words of Christ');
+    }
+    if(visible.has('S')){
+      assert.equal(propAt(idx(-.5),'ewer',.65).by,'S','the server holds the holy water');
+      assert.deepEqual(propAt(idx(8),'ewer',1).at,[850,144]);
+      assert.deepEqual(actorAt(idx(8),'S',1),HOME.S);
+    }
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        palmFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{ashWednesday:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Blessing of Palms'&&!s.pplPalms),'palms only on Palm Sunday');
+  }
+  buildScenario({});
+  console.log('Passed '+palmCount+' Palm Sunday scenarios and '+palmFrames+' sampled frames.');
 `,context);
