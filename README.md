@@ -19,7 +19,8 @@ and no account. Other pages:
 ### How to start
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
-   incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, Ash Wednesday, or outside Mass: Adoration led by a lay minister, or
+   incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, Ash Wednesday, Sunday Mass with Baptism, or outside Mass: Baptism of
+   Children (Priest or Deacon), Adoration led by a lay minister, or
    Exposition and Benediction with the Priest or the Deacon. You can also
    change any option
    yourself.
@@ -487,7 +488,11 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   walk in procession with lighted candles while the Canticle of Simeon is
   sung; there is no Penitential Act) or "Ash Wednesday" (after the Homily
   the Priest blesses the ashes and the faithful come forward to receive them;
-  no Penitential Act, Gloria or Alleluia).
+  no Penitential Act, Gloria or Alleluia) or "Sunday Mass with Baptism" (the
+  children are received at the door; after the Homily all go to the font for
+  the Baptism, chrism, white garment and lighted candle; no Penitential Act or
+  Creed). Outside Mass, "Baptism of Children" is led by the Priest or the
+  Deacon with one server.
   Changing any option shows "Custom".
 - **The Path and seniority**: a map of celebrations in order of precedence
   (on phones, a list). Each finished game is credited to the celebration whose

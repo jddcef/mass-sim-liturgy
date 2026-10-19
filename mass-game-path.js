@@ -54,7 +54,7 @@ const PathView=(()=>{
   function drawMap(progress,recommended){
     const svg=node('svg',{viewBox:'0 0 1000 1200',class:'pathSvg',role:'group','aria-label':'Map of the celebrations'});
     // Branch captions.
-    const captions=[['devotion',985,140,'end'],['seasonal',150,520,'middle'],['pontifical',760,740,'middle'],['triduum',500,955,'middle']];
+    const captions=[['devotion',985,140,'end'],['sacraments',150,300,'middle'],['seasonal',150,520,'middle'],['pontifical',760,740,'middle'],['triduum',500,955,'middle']];
     for(const [b,x,y,anchor] of captions){
       const t=node('text',{x,y,class:'pathBranch','text-anchor':anchor},svg);
       t.textContent=PATH_BRANCHES[b].name;
