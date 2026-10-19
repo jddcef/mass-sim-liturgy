@@ -314,7 +314,9 @@ const PROP_DEF={
   // Mass with the Bishop: the mitre and the pastoral staff (crozier).
   mitre:{off:[0,0]},staff:{off:[-9,-4]},
   // Confirmation: the vessel of holy chrism.
-  chrism:{off:[10,-8]}
+  chrism:{off:[10,-8]},
+  // Ash Wednesday: the vessel of blessed ashes.
+  ashes:{off:[10,-6]}
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
@@ -322,7 +324,8 @@ const START_PROPS={
   collection:{at:[875,745],h:true},ciborium:{at:[866,152],h:true},ciborium2:{at:[455,170],h:true},
   monstrance:{at:[500,160],h:true},lunette:{at:[137,85],h:true},
   mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true},
-  chrism:{at:[878,138],h:true}
+  chrism:{at:[878,138],h:true},
+  ashes:{at:[858,132],h:true}
 };
 
 // ---------- math helpers ----------

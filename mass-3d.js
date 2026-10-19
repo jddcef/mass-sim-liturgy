@@ -613,6 +613,10 @@ function makeObjects(){
       }
     }else if(name==='ewer'){
       cylinder(g,0,.1,0,.08,.1,.2,'#c2d5df','silver');
+    }else if(name==='ashes'){
+      // The vessel of blessed ashes: a shallow metal bowl with grey ash heaped inside.
+      cylinder(g,0,.04,0,.09,.06,.08,'#b9a46a','gold');
+      cylinder(g,0,.075,0,.075,.075,.02,'#77736d');
     }else if(name==='chrism'){
       // The vessel of holy chrism: a small silver jar with a domed lid and a cross knob.
       cylinder(g,0,.06,0,.055,.045,.12,'#cfd2d4','silver');
@@ -793,7 +797,8 @@ function updatePeople(step,phase){
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const genuflect=(step.pplGenuflect||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const candles=(step.pplCandles||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
-  const special=step.special?.type==='communion'?step.special:null;
+  // People come forward in a line for Communion and, on Ash Wednesday, for the ashes.
+  const special=step.special?.type==='communion'||step.special?.type==='ashes'?step.special:null;
   congregation.forEach((person,i)=>{
     person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&(!person.outer||naveStyle==='full');
     let p=person.home;
@@ -805,7 +810,7 @@ function updatePeople(step,phase){
       const t=(progress3d-start)/duration;
       if(t>0&&t<1){
         const side=p[0]<500?-1:1;
-        const stations=[...(special.bothKinds||special.deaconHosts?[[470,318],[530,318]]:[[500,318]]),...(special.emhc?[[620,318]]:[])];
+        const stations=special.stations||[...(special.bothKinds||special.deaconHosts?[[470,318],[530,318]]:[[500,318]]),...(special.emhc?[[620,318]]:[])];
         const station=stations[(i/3)%stations.length];
         const aisle=side<0?487:513,outer=side<0?112:888;
         if(t<.43)p=along([p,[aisle,p[1]],[aisle,340],station],t/.43);
@@ -960,7 +965,7 @@ function renderFrame(dt=1/60){
   const caption=speechCaption(speaking);
   if($('caption').textContent!==caption)$('caption').textContent=caption;
   const posture=postureAt(cur3d,progress3d).name;
-  $('posture3d').textContent={stand:'Standing',sit:'Seated',kneel:'Kneeling'}[posture]+(step.special?.type==='communion'?'; communicants approach standing.':'.');
+  $('posture3d').textContent={stand:'Standing',sit:'Seated',kneel:'Kneeling'}[posture]+(step.special?.type==='communion'?'; communicants approach standing.':step.special?.type==='ashes'?'; the faithful come forward for the ashes.':'.');
   $('actions3d').textContent=actionTexts.join(' / ');
   $('timeline').value=Math.round(elapsed/TOTAL*10000);
   const format=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;

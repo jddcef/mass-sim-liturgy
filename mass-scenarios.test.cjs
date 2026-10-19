@@ -334,4 +334,75 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed 3 Candlemas scenarios and '+candleFrames+' sampled frames.');
+
+  // Ash Wednesday: the ashes blessed and given after the Homily; no Penitential Act, Gloria, Creed or Alleluia.
+  let ashFrames=0,ashCount=0;
+  for(const requested of [{ashWednesday:true,serverCount:4,incense:false,deacon:true,lector:true,eucharisticPrayer:'III'},
+    {ashWednesday:true,serverCount:0,deacon:false,lector:false,gloria:true,creed:true,introductory:'sprinkling',eucharisticPrayer:'IV',music:'said'},
+    {ashWednesday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {ashWednesday:true,serverCount:0,deacon:true,incense:true},
+    {ashWednesday:true,candlemas:true,serverCount:5},{ashWednesday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.candlemas||requested.nativity){
+      assert.ok(!options.ashWednesday,'a different day wins over Ash Wednesday');
+      assert.ok(STEPS.every(s=>s.title!=='Blessing of Ashes'));
+      continue;
+    }
+    ashCount++;
+    assert.ok(options.ashWednesday&&!options.gloria&&!options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.notEqual(options.eucharisticPrayer,'IV','a Preface of Lent (GIRM 365d)');
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [5,6,7,15])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.equal(keys[keys.indexOf(4)+1],8,'the Collect follows the greeting');
+    assert.deepEqual(keys.slice(keys.indexOf(14),keys.indexOf(14)+5),[14,14.3,14.5,14.8,16],'the ashes between the Homily and the Universal Prayer');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    assert.ok(!STEPS[idx(12)].say.some(([,t])=>/Alleluia/.test(t)),'no Alleluia in Lent');
+    if(options.music!=='said')assert.ok(STEPS[idx(12)].say.some(([,t])=>/Glory and praise/.test(t)));
+    const blessing=STEPS[idx(14.3)],giving=STEPS[idx(14.5)];
+    assert.ok(blessing.acts.P.some(([t])=>/sprinkles the ashes with holy water/.test(t)));
+    assert.deepEqual(actorAt(idx(14.3),'P',1),[500,262],'the Priest blesses the ashes before the people');
+    const holder=options.deacon?'D':visible.has('S')?'S':'P';
+    assert.equal(propAt(idx(14.3),'ashes',.9).by,holder,'the ashes are held by '+holder);
+    assert.equal(propAt(idx(14.5),'ashes',.5).by,holder);
+    assert.deepEqual(actorAt(idx(14.5),'P',.5),[500,292]);
+    assert.equal(giving.special.type,'ashes');
+    assert.ok(giving.say.some(([r,t])=>r==='P'&&/Repent, and believe in the Gospel/.test(t)));
+    assert.ok(giving.say.some(([r,t])=>r==='P'&&/Remember that you are dust/.test(t)));
+    assert.deepEqual(propAt(idx(14.8),'ashes',1).at,[858,132],'the ashes are back at the credence');
+    assert.deepEqual(actorAt(idx(14.8),'P',1),CHAIR,'the Priest is at the chair for the Universal Prayer');
+    if(options.deacon)assert.deepEqual(actorAt(idx(14.8),'D',1),DCHAIR);
+    if(visible.has('S')){
+      assert.equal(propAt(idx(14.3),'ewer',.9).by,'S','the server holds the holy water');
+      assert.deepEqual(propAt(idx(14.8),'ewer',1).at,[850,144]);
+      assert.deepEqual(actorAt(idx(14.8),'S',1),HOME.S);
+    }
+    chooseHomilyPlace(CHAIR);
+    assert.deepEqual(actorAt(idx(14.3),'P',1),[500,262],'also when preaching from the chair');
+    chooseHomilyPlace(AMBO);
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        ashFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Blessing of Ashes'&&s.special?.type!=='ashes'),'ashes only on Ash Wednesday');
+    assert.ok(!propAt(0,'ashes',0,{}).by);
+  }
+  buildScenario({});
+  console.log('Passed '+ashCount+' Ash Wednesday scenarios and '+ashFrames+' sampled frames.');
 `,context);

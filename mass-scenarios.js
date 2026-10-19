@@ -16,6 +16,8 @@ function buildScenario(requested){
   if(rite===RITES.mass&&requested?.nativity&&requested.confirmation)requested={...requested,confirmation:false};
   // Candlemas is modelled with the parish Priest presiding (see applyCandlemas).
   if(rite===RITES.mass&&requested?.candlemas&&!requested.nativity)requested={...requested,bishop:false,confirmation:false};
+  // Ash Wednesday is likewise modelled with the parish Priest presiding (see applyAshWednesday).
+  if(rite===RITES.mass&&requested?.ashWednesday&&!requested.nativity&&!requested.candlemas)requested={...requested,bishop:false,confirmation:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
@@ -29,6 +31,11 @@ function buildMassScenario(requested){
   if(requested.candlemas&&!requested.nativity)requested={...requested,gloria:true,introductory:'A',bishop:false,confirmation:false,
     eucharisticPrayer:requested.eucharisticPrayer==='IV'?'III':requested.eucharisticPrayer};
   else if(requested.candlemas)requested={...requested,candlemas:false};
+  // Ash Wednesday: no Gloria in Lent (GIRM 53) and no Creed; the blessing and giving of ashes after the
+  // Homily take the place of the Penitential Act (Roman Missal, Ash Wednesday); a Lenten Preface (GIRM 365d).
+  if(requested.ashWednesday&&!requested.nativity&&!requested.candlemas)requested={...requested,gloria:false,creed:false,introductory:'A',bishop:false,confirmation:false,
+    eucharisticPrayer:requested.eucharisticPrayer==='IV'?'III':requested.eucharisticPrayer};
+  else if(requested.ashWednesday)requested={...requested,ashWednesday:false};
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
@@ -55,6 +62,7 @@ function buildMassScenario(requested){
     confirmation:!!requested.confirmation,
     nativity:!!requested.nativity,
     candlemas:!!requested.candlemas,
+    ashWednesday:!!requested.ashWednesday,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -377,6 +385,7 @@ function buildMassScenario(requested){
   applyParishMinistries(steps,options,initialPos,initialProps);
   if(options.nativity)applyNativity(steps,options);
   if(options.candlemas)applyCandlemas(steps,options,initialPos,initialProps);
+  if(options.ashWednesday)applyAshWednesday(steps,options,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
@@ -396,6 +405,7 @@ function buildMassScenario(requested){
   if(!options.secondReading)removed.add(11);
   if(options.introductory!=='A')removed.add(6);
   if(options.candlemas)[3,4,5,6].forEach(key=>removed.add(key));
+  if(options.ashWednesday)[5,6].forEach(key=>removed.add(key));
   const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
@@ -910,11 +920,119 @@ function applyCandlemas(steps,options,initialPos,initialProps){
   }
 }
 
+// Ash Wednesday (Roman Missal, Ash Wednesday: the Blessing and Distribution of Ashes). After the Homily
+// the Priest blesses the ashes and sprinkles them with holy water in silence; he places ashes on all who
+// come to him while antiphons are sung; then he washes his hands and the Universal Prayer follows. The
+// Penitential Act (with the Kyrie), the Gloria and the Creed are omitted, and the Alleluia is not sung.
+const ASH_FRONT=[500,262],ASH_STATION=[500,292],ASH_CREDENCE=[858,132];
+// The Priest goes from the ambo or the chair to the front of the sanctuary; with nobody to bring the
+// ashes he first fetches them from the credence himself.
+function ashPriestPath(ambo,fetch){
+  if(!fetch)return M(ambo?[[300,252],ASH_FRONT]:[[625,90],[625,250],ASH_FRONT],0,.26);
+  return [M(ambo?[[300,252],[625,250],[850,165],[850,150]]:[[700,95],[850,150]],0,.14),M([[625,250],ASH_FRONT],.17,.3)];
+}
+function applyAshWednesday(steps,options,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const hasS=options.serverCount>0;
+  // Who holds the vessel of ashes for the Priest: the Deacon, else a server, else he carries it himself.
+  const holder=options.deacon?'D':hasS?'S':'P';
+  const homily=at(14);
+  const ambo=JSON.stringify((Array.isArray(homily.mv.P)?homily.mv.P[homily.mv.P.length-1]:homily.mv.P).p.slice(-1)[0])===JSON.stringify(AMBO);
+  initialProps.ashes={at:ASH_CREDENCE.slice()};
+  const H_BLESS=[540,268],W_BLESS=[460,268];
+
+  const blessing={key:14.3,part:'Liturgy of the Word',title:'Blessing of Ashes',dur:22,posture:'stand',fetchAshes:holder==='P',
+    text:'After the Homily the Priest stands before the people. The ashes, made from the palms blessed the year before, are brought to him'+(holder==='P'?' (with no Deacon or server he brings them from the credence himself)':'')+'. With hands joined he invites the faithful to pray, and after a brief silence he says one of the two prayers of blessing. Then he sprinkles the ashes with holy water, saying nothing.',
+    ref:'Roman Missal, Ash Wednesday (Blessing and Distribution of Ashes)',
+    mv:{P:ashPriestPath(ambo,holder==='P')},
+    acts:{P:[['invites all to pray, hands joined',.32,.42],['blesses the ashes \u2720',.5,.72],['sprinkles the ashes with holy water, saying nothing',.76,.92]]},
+    props:{ashes:[{by:holder,t:holder==='P'?.15:.14}]},
+    face:{},
+    say:[['P','(invites all to pray that God will bless these ashes, to be put on our heads as a sign of penance)',.32,.42],['ppl','(brief silence)',.42,.49],
+      ['P','(prayer of blessing: bless \u2720 these ashes, that keeping the Lenten observance we may come to Easter with hearts made new)',.5,.72],['ppl','Amen.',.72,.76]]};
+  if(holder==='D'){
+    blessing.mv.D=[M([[700,95],[850,150]],0,.12),M([[625,250],H_BLESS],.18,.32)];
+    blessing.acts.D=[['brings the vessel of ashes',.14,.32],['holds the ashes for the Priest',.32,1]];
+  }
+  if(hasS){
+    blessing.mv.S=[M([[850,140]],0,.11),M([[625,250],holder==='S'?H_BLESS:W_BLESS],.18,.32)];
+    blessing.props.ewer=[{by:'S',t:.13}];
+    blessing.acts.S=holder==='S'?[['brings the ashes and the holy water',.14,.32],['holds the ashes and the holy water for the Priest',.32,1]]:[['brings the holy water',.14,.32],['holds the holy water for the Priest',.74,.94]];
+  }
+  if(holder!=='P')blessing.face[holder]=[[ASH_FRONT,.32,1]];
+
+  const imposition={key:14.5,part:'Liturgy of the Word',title:'Distribution of Ashes',dur:34,posture:'sit',
+    text:'The Priest places ashes on all who come to him, saying to each one of the two formulas: "Repent, and believe in the Gospel" or "Remember that you are dust, and to dust you shall return." The ministers receive them first; others may help the Priest give them. Meanwhile antiphons such as "Let us change our garments to sackcloth and ashes" or "Blot out my transgressions, O Lord" are '+(sung?'sung':'said')+', or another suitable chant.',
+    ref:'Roman Missal, Ash Wednesday (Blessing and Distribution of Ashes)',
+    mv:{P:M([ASH_STATION],0,.06)},
+    acts:{P:[['places ashes on the ministers',.07,.2],['places ashes on the forehead of each person who comes',.22,.92]]},
+    special:{type:'ashes',a:.2,b:.92,stations:[[500,318]]},
+    say:[['P','Repent, and believe in the Gospel.',.24,.32],['P','Remember that you are dust, and to dust you shall return.',.38,.48],
+      ['ppl',chant('Blot out my transgressions, O Lord\u2026 (or another suitable chant)'),.5,.95]]};
+  if(holder!=='P'){
+    imposition.mv[holder]=M([[540,292]],0,.06);
+    imposition.acts[holder]=[['receives ashes',.1,.16],['holds the vessel of ashes beside the Priest',.2,.92]];
+  }
+  if(hasS&&holder!=='S'){
+    imposition.mv.S=M([[625,262]],0,.08);
+    imposition.acts.S=[['receives ashes',.16,.2]];
+  }
+
+  const washing={key:14.8,part:'Liturgy of the Word',title:'Washing of Hands after the Ashes',dur:14,posture:'sit',
+    text:'After the distribution of ashes the Priest washes his hands'+(hasS?', a server pouring the water,':'')+' and goes to the chair. '+(holder==='P'?'He first puts the ashes back at the credence. ':'The vessel of ashes is taken back to the credence. ')+'The Universal Prayer follows; the Creed is not said.',
+    ref:'Roman Missal, Ash Wednesday (Blessing and Distribution of Ashes)',
+    mv:{},acts:{},props:{},say:[]};
+  if(hasS){
+    washing.mv.P=[M([[625,262],[625,122],[600,122]],0,.25),M([[560,90],CHAIR],.72,.95)];
+    washing.acts.P=[['washes his hands',.35,.65]];
+    washing.mv.S=[M([[625,262],[625,140],[642,126]],0,.25),M([[850,140]],.7,.84),M([HOME.S],.88,1)];
+    washing.acts.S=[['pours water over the Priest\u2019s hands',.35,.65],['takes the water'+(holder==='S'?' and the ashes':'')+' back to the credence',.7,.86]];
+    washing.props.ewer=[{at:[850,144],a:.84,b:.86}];
+    if(holder==='S')washing.props.ashes=[{at:ASH_CREDENCE.slice(),a:.84,b:.86}];
+  }else if(holder==='P'){
+    washing.mv.P=[M([[625,262],[625,140],[850,150]],0,.25),M([[700,110],[600,122]],.3,.45),M([[560,90],CHAIR],.75,.95)];
+    washing.acts.P=[['puts the ashes back at the credence',.25,.28],['washes his hands',.48,.7]];
+    washing.props.ashes=[{at:ASH_CREDENCE.slice(),a:.25,b:.28}];
+  }else{
+    washing.mv.P=[M([[625,262],[625,122],[600,122]],0,.25),M([[560,90],CHAIR],.72,.95)];
+    washing.acts.P=[['washes his hands',.35,.65]];
+  }
+  if(holder==='D'){
+    washing.mv.D=[M([[625,262],[625,140],[850,155]],0,.3),M([[700,95],DCHAIR],.4,.7)];
+    washing.acts.D=[['takes the ashes back to the credence',0,.34]];
+    washing.props.ashes=[{at:ASH_CREDENCE.slice(),a:.3,b:.34}];
+  }
+  steps.splice(steps.indexOf(homily)+1,0,blessing,imposition,washing);
+
+  const greeting=at(4);
+  greeting.text+=' Today the Penitential Act is omitted: the blessing and giving of ashes after the Homily take its place, and the Collect follows at once.';
+  greeting.ref+='; Roman Missal, Ash Wednesday';
+  const acclamation=at(12);
+  if(acclamation.say.length)acclamation.say=acclamation.say.map(([who,text,...rest])=>who==='ppl'&&/Alleluia/.test(text)?[who,chant('Glory and praise to you, Lord Jesus Christ!'),...rest]:[who,text,...rest]);
+  acclamation.text=acclamation.text.replace(' At a said Mass the Alleluia, if not sung, may be omitted.',' At a said Mass the acclamation, if not sung, may be omitted.')+' In Lent the Alleluia is not sung: another acclamation such as "Glory and praise to you, Lord Jesus Christ!" takes its place.';
+  acclamation.ref+='; GIRM 62b';
+  const prayer=at(16);
+  prayer.text+=' On Ash Wednesday it follows the giving of ashes; the Creed is not said.';
+  prayer.ref+='; Roman Missal, Ash Wednesday';
+  if(options.eucharisticPrayer!=='IV'){
+    const preface=at(23);
+    preface.text+=' Today a Preface of Lent is said.';
+    preface.ref+='; Roman Missal, Prefaces of Lent';
+  }
+  const end=at(38);
+  end.text+=' On Ash Wednesday the Missal gives a Prayer over the People, said before the blessing.';
+  end.ref+='; Roman Missal, Ash Wednesday';
+}
+
 function chooseHomilyPlace(point){
   const homily=STEPS.find(s=>s.key===14);
   if(!homily)return;
   const ambo=Math.hypot(point[0]-AMBO[0],point[1]-AMBO[1])<60;
   homily.mv.P=M([ambo?AMBO:CHAIR],0,.28);
+  const ashes=STEPS.find(s=>s.key===14.3);
+  if(ashes)ashes.mv.P=ashPriestPath(ambo,ashes.fetchAshes);
   rebuildTimeline(starts[0].pos,starts[0].props);
 }
 
