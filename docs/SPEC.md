@@ -68,7 +68,7 @@ startup must appear **before** the `<script>` tags in the HTML.
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
   Mass with incense (default), Solemnity, Mass with the Bishop (mitre- and
   crozier-bearers in vimps; also a "Bishop presides" option) and Confirmation Mass
-  (the Bishop confirms after the Gospel; no Creed; a candidate and sponsor stand for all) and Christmas Mass during the Night (the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer) and Candlemas (candles blessed at the back of the church, a procession with lighted candles, no Penitential Act). Outside Mass: Adoration
+  (the Bishop confirms after the Gospel; no Creed; a candidate and sponsor stand for all) and Christmas Mass during the Night (the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer) and Candlemas (candles blessed at the back of the church, a procession with lighted candles, no Penitential Act) and Ash Wednesday (the ashes blessed and given after the Homily, no Penitential Act, Gloria or Alleluia). Outside Mass: Adoration
   (lay-led, no blessing) and Exposition and Benediction (Priest or Deacon, in
   white cope, with the humeral veil for the blessing). Editing any
   option shows "Custom". Roles a rite does not have are refused with a message.

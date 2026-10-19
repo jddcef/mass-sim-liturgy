@@ -36,7 +36,7 @@ const GAME_DEFAULT_OPTIONS={
   solemnBlessing:false,giftsProcession:true,eucharisticPrayer:'II',
   bells:{start:true,epiclesis:true,elevation:true},
   readerCount:1,lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,openChurch:true,
-  crucifix:'wall',crossStand:'right',projector:false,bishop:false,confirmation:false,nativity:false,candlemas:false,
+  crucifix:'wall',crossStand:'right',projector:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,
   lapses:true,detail:'key',symbols:true,seed:1,
   rite:'mass',minister:'lay'
 };
@@ -144,6 +144,18 @@ function normaliseGameOptions(role,raw={}){
     if(o.introductory!=='A'){o.introductory='A';notes.push('The blessing of candles and the procession replace the Penitential Act (Roman Missal, Presentation of the Lord, n. 7).');}
     if(o.eucharisticPrayer==='IV'){o.eucharisticPrayer='III';notes.push('Eucharistic Prayer IV has its own Preface, so Eucharistic Prayer III is used with the Preface of the Presentation (GIRM 365d).');}
   }
+  o.ashWednesday=!!o.ashWednesday;
+  if(o.ashWednesday&&(o.nativity||o.candlemas)){o.ashWednesday=false;notes.push('Ash Wednesday is a different day from Christmas and the Presentation of the Lord, so it was switched off.');}
+  if(o.ashWednesday&&(role==='MB'||role==='CB')){o.ashWednesday=false;notes.push('Ash Wednesday is modelled with the parish Priest presiding, so it was switched off for the Bishop\u2019s bearers.');}
+  if(o.ashWednesday){
+    // Ash Wednesday: the ashes are blessed and given after the Homily (Roman Missal, Ash Wednesday).
+    if(o.confirmation){o.confirmation=false;notes.push('Confirmation is not celebrated as a ritual Mass on Ash Wednesday (GIRM 372), so it was switched off.');}
+    if(o.bishop){o.bishop=false;notes.push('Ash Wednesday is modelled with the parish Priest presiding, so the Bishop was switched off.');}
+    if(o.gloria){o.gloria=false;notes.push('The Gloria is not sung in Lent (GIRM 53).');}
+    if(o.creed){o.creed=false;notes.push('The Creed is not said on a Lenten weekday (GIRM 68).');}
+    if(o.introductory!=='A'){o.introductory='A';notes.push('The Penitential Act is omitted: the giving of ashes takes its place (Roman Missal, Ash Wednesday).');}
+    if(o.eucharisticPrayer==='IV'){o.eucharisticPrayer='III';notes.push('Eucharistic Prayer IV has its own Preface, so Eucharistic Prayer III is used with a Preface of Lent (GIRM 365d).');}
+  }
   if(o.nativity){
     // Christmas is a solemnity: Gloria and Creed (GIRM 53, 68), a Nativity Preface, and no ritual Mass (GIRM 372).
     if(o.confirmation){o.confirmation=false;notes.push('Confirmation is not celebrated as a ritual Mass on a solemnity such as Christmas (GIRM 372), so it was switched off.');}
@@ -193,7 +205,7 @@ function normaliseExposition(role,o,notes){
     if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   }
   if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
-  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,nativity:false,candlemas:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
     music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
   if(!['key','all'].includes(o.detail))o.detail='key';
@@ -205,7 +217,7 @@ function normaliseExposition(role,o,notes){
 const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation','nativity','candlemas'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation','nativity','candlemas','ashWednesday'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -216,35 +228,39 @@ const GAME_PRESETS={
   sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, four servers (cross and candles), no incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false}},
   sundayIncense:{name:'Sunday Mass with incense',blurb:'Sung, Deacon, five servers with a thurifer, incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false}},
   weekday:{name:'Weekday Mass',blurb:'Said, no servers or Deacon, no Gloria or Creed, one reading: practice for the Priest.',fields:{
     deacon:false,serverCount:'0',lector:false,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:false,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'said',eucharisticPrayer:'II',
-    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false}},
+    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false}},
   solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false}},
   pontifical:{name:'Mass with the Bishop',blurb:'As a solemnity, with the Bishop presiding: mitre- and crozier-bearers in vimps, the homily from the cathedra and the pontifical blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false,nativity:false,candlemas:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false,nativity:false,candlemas:false,ashWednesday:false}},
   confirmation:{name:'Confirmation Mass',blurb:'The Bishop confers Confirmation within Mass: the candidates presented after the Gospel, the renewal of baptismal promises, the laying on of hands and the anointing with chrism; no Creed.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true,nativity:false,candlemas:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true,nativity:false,candlemas:false,ashWednesday:false}},
   nativity:{name:'Christmas Mass during the Night',blurb:'A solemnity: the Christmas Proclamation before Mass, all genuflect at the Incarnation in the Creed, and the blessing of the crib at the universal prayer.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:true,candlemas:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:true,candlemas:false,ashWednesday:false}},
   candlemas:{name:'Candlemas (Presentation of the Lord)',blurb:'The feast of 2 February: the blessing of candles at the back of the church, the procession with lighted candles and the Canticle of Simeon, then the Gloria at once.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:false,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
-    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:true}},
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:true,ashWednesday:false}},
+  ashWednesday:{name:'Ash Wednesday',blurb:'The beginning of Lent: no Penitential Act, Gloria or Alleluia; after the Homily the Priest blesses the ashes and gives them to the faithful.',fields:{
+    deacon:true,serverCount:'4',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:false,bothKinds:false,gloria:false,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:true}},
   // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
@@ -279,6 +295,7 @@ function presetForOptions(options,chosen){
     confirmation:isDevotionRite(options)?undefined:!!options.confirmation,
     nativity:isDevotionRite(options)?undefined:!!options.nativity,
     candlemas:isDevotionRite(options)?undefined:!!options.candlemas,
+    ashWednesday:isDevotionRite(options)?undefined:!!options.ashWednesday,
     rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
   if(id!=='custom')return id;
@@ -327,8 +344,8 @@ const CELEBRATIONS=[
     preset:'confirmation',blurb:'The Bishop confirms: the candidates and sponsors, the laying on of hands and the anointing with chrism; the Creed is omitted.'},
   {id:'candlemas',name:'Candlemas',precedence:'Presentation of the Lord',branch:'seasonal',colour:'white',icon:'candle',at:[140,565],after:['solemnity'],
     preset:'candlemas',blurb:'The blessing of candles at the back of the church, the procession with lighted candles and the Canticle of Simeon, then the Gloria at once.'},
-  {id:'ashWednesday',name:'Ash Wednesday',precedence:'Beginning of Lent',branch:'seasonal',colour:'purple',icon:'sprinkler',at:[140,710],after:['candlemas'],
-    blurb:'The blessing and giving of ashes after the homily; no Gloria or Alleluia.'},
+  {id:'ashWednesday',name:'Ash Wednesday',precedence:'Beginning of Lent',branch:'seasonal',colour:'purple',icon:'ashes',at:[140,710],after:['candlemas'],
+    preset:'ashWednesday',blurb:'No Penitential Act, Gloria or Alleluia; after the Homily the Priest blesses the ashes and gives them to the faithful.'},
   {id:'palmSunday',name:'Palm Sunday',precedence:'Palm Sunday of the Passion of the Lord',branch:'seasonal',colour:'red',icon:'walk',at:[140,855],after:['ashWednesday'],
     blurb:'The blessing of palms, the procession, and the Passion read in parts.'}
 ];
@@ -480,6 +497,8 @@ function deriveMediaCues(steps=STEPS,startTimes,options={},detail='key'){
     let part=MEDIA_PARTS.find(p=>p.key===step.key);
     if(options.candlemas&&step.key===-.5)part={key:-.5,id:'candles',title:'Antiphon at the lighting of candles',sung:'acapella',said:'slide'};
     else if(part&&options.candlemas&&step.key===0)part={...part,title:'Canticle of Simeon (procession with candles)'};
+    if(options.ashWednesday&&step.key===14.5)part={key:14.5,id:'ashes',title:'Chants during the giving of ashes',sung:'track',said:'slide'};
+    else if(part&&options.ashWednesday&&step.key===12)part={...part,title:'Gospel Acclamation (no Alleluia in Lent)'};
     if(part&&step.key===5&&options.introductory==='sprinkling')part={key:5,id:'asperges',title:'Asperges / Vidi aquam',sung:'track',said:'slide'};
     else if(part&&step.key===5&&options.introductory==='C')part={key:5,id:'invocations',title:'Lord, have mercy (invocations)',sung:'slide',said:'slide'};
     if(!part)return;
@@ -894,8 +913,9 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'gospelsAltar',name:'Book of the Gospels placed on the altar',place:'altar',needed:!options.deacon&&!(options.lector&&options.lectorProcession),ref:'GIRM 117',reason:'With nobody to carry it, it may be placed on the altar beforehand.'},
     {id:'lectionary',name:'Lectionary on the ambo, marked',place:'ambo',needed:true,ref:'GIRM 118b'},
     {id:'faithfulCandles',name:'Candles for the faithful, given out at the door as people arrive',place:['procession','stoup'],needed:!!options.candlemas,ref:'Roman Missal, Presentation of the Lord, nn. 2, 13',reason:'The faithful hold them, lit, for the blessing and the procession.'},
+    {id:'ashes',name:'Vessel of ashes (from last year\u2019s blessed palms)',place:'credence',needed:!!options.ashWednesday,ref:'Roman Missal, Ash Wednesday',reason:'The Priest blesses them after the Homily and gives them to the faithful.'},
     {id:'proclamation',name:'Text of the Christmas Proclamation (Roman Martyrology) for the cantor',place:'ambo',needed:!!options.nativity,ref:'Martyrologium Romanum, 25 December; Directory on Popular Piety 111',reason:'The cantor sings it at the ambo before Mass begins.'},
-    {id:'missal',name:'Roman Missal marked ('+(options.candlemas?'rite of the candles, ':'')+'Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
+    {id:'missal',name:'Roman Missal marked ('+(options.candlemas?'rite of the candles, ':'')+(options.ashWednesday?'blessing of ashes, ':'')+'Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
     {id:'chalice',name:'Chalice with purificator, paten and pall',place:'credence',needed:true,ref:'GIRM 118c'},
     {id:'corporal',name:'Corporal',place:'credence',needed:true,ref:'GIRM 118c'},
     {id:'water',name:'Cruet of water',place:'credence',needed:true,ref:'GIRM 118c'},
@@ -906,8 +926,8 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'emhcVessel',name:'Additional ciborium for the authorised EMHC',place:'credence',needed:!!options.emhc,ref:'GIRM 118c, 162'},
     {id:'collectionBasket',name:'Collection basket ready for the usher',place:'giftTable',needed:!!options.collection,ref:'GIRM 105c'},
     {id:'chalice2',name:'Second chalice for Communion under both kinds',place:'credence',needed:!!options.bothKinds,ref:'GIRM 118c, 285a'},
-    {id:'aspersory',name:'Holy-water vessel and sprinkler',place:options.candlemas?'procession':'credence',needed:options.introductory==='sprinkling'||!!options.candlemas,
-      ref:options.candlemas?'Roman Missal, Presentation of the Lord, n. 5':'GIRM 51; Missal App. II',reason:options.candlemas?'The candles are blessed and sprinkled at the back of the church.':undefined},
+    {id:'aspersory',name:'Holy-water vessel and sprinkler',place:options.candlemas?'procession':'credence',needed:options.introductory==='sprinkling'||!!options.candlemas||!!options.ashWednesday,
+      ref:options.candlemas?'Roman Missal, Presentation of the Lord, n. 5':options.ashWednesday?'Roman Missal, Ash Wednesday':'GIRM 51; Missal App. II',reason:options.candlemas?'The candles are blessed and sprinkled at the back of the church.':options.ashWednesday?'The Priest sprinkles the ashes with holy water.':undefined},
     {id:'thurible',name:'Thurible with lit charcoal, and boat with incense',place:'sacristy',needed:!!options.incense,ref:'GIRM 120a, 276'},
     {id:'altarBell',name:'Altar bell at the sanctuary step',place:'sanctuaryStep',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 150 (local custom)'},
     {id:'sacristyBell',name:'Sacristy bell by the door',place:'sacristy',needed:!!options.bells.start,ref:'Local custom'},
@@ -933,7 +953,8 @@ function sacristanPackAway(options,team=serverTeam(options.serverCount)){
     {id:'linens',name:'Purificators, corporal and towel to the linen basket',place:'sacristy',needed:true,ref:'GIRM 105'},
     {id:'cruets',name:'Rinse and put away the cruets',place:'sacristy',needed:true,ref:'GIRM 105'},
     {id:'thuribleOut',name:'Empty the thurible safely into the sand or ash bucket',place:'sacristy',needed:!!options.incense,ref:'Judgement call (fire safety)'},
-    {id:'aspersoryBack',name:'Return the holy-water vessel and sprinkler',place:'sacristy',needed:options.introductory==='sprinkling'||!!options.candlemas,ref:'GIRM 105'},
+    {id:'aspersoryBack',name:'Return the holy-water vessel and sprinkler',place:'sacristy',needed:options.introductory==='sprinkling'||!!options.candlemas||!!options.ashWednesday,ref:'GIRM 105'},
+    {id:'ashesAway',name:'Dispose of leftover blessed ashes reverently (into the earth or the sacrarium)',place:'sacristy',needed:!!options.ashWednesday,ref:'Judgement call (custom for blessed things)'},
     {id:'bellBack',name:'Put the altar bell away',place:'sacristy',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 105'},
     {id:'chrismBack',name:'Return the holy chrism to the ambry',place:'sacristy',needed:!!options.confirmation,ref:'Ordo Confirmationis 19; custom',reason:'The holy oils are kept locked and safe.'},
     {id:'giftTable',name:'Clear the gift table',place:'giftTable',needed:!!options.giftsProcession,ref:'GIRM 105'},
