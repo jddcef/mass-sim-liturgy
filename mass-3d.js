@@ -636,6 +636,12 @@ function makeObjects(){
       finishSurface(sphere(g,0,.13,0,.05,'#cfd2d4'),'silver');
       box(g,0,.2,0,.012,.05,.012,'#d9b44a');
       box(g,0,.205,0,.035,.012,.012,'#d9b44a');
+    }else if(name==='basin'){
+      // Pitcher and basin for the Mandatum (Washing of the Feet): a wide silver basin and a graceful pitcher.
+      cylinder(g,0,.04,0,.15,.18,.07,'#cfd2d4','silver');
+      cylinder(g,0,.015,0,.1,.1,.03,'#b8babd','silver');
+      cylinder(g,.08,.12,0,.045,.065,.16,'#d8dadc','silver');
+      cylinder(g,.08,.22,0,.03,.035,.07,'#d8dadc','silver');
     }else if(name==='thurible'){
       cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c','silver');
       finishSurface(sphere(g,0,-.4,0,.09,'#a9a6a0'),'silver');

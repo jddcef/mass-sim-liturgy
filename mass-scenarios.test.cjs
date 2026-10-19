@@ -470,4 +470,70 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed '+palmCount+' Palm Sunday scenarios and '+palmFrames+' sampled frames.');
+
+  // Holy Thursday: bells at the Gloria then silent until the Easter Vigil, Mandatum (Washing of Feet),
+  // Creed omitted, Roman Canon with proper formulas, transfer of the Blessed Sacrament to Altar of Repose,
+  // stripping of the altar in silence.
+  let thursdayFrames=0,thursdayCount=0;
+  for(const requested of [{holyThursday:true,serverCount:5,incense:true,deacon:true,lector:true,eucharisticPrayer:'I'},
+    {holyThursday:true,serverCount:0,deacon:false,lector:false,gloria:false,creed:true,introductory:'sprinkling',eucharisticPrayer:'IV',music:'said'},
+    {holyThursday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {holyThursday:true,serverCount:1,deacon:true,incense:false},
+    {holyThursday:true,palmSunday:true,serverCount:5},{holyThursday:true,ashWednesday:true,serverCount:5},{holyThursday:true,candlemas:true,serverCount:5},{holyThursday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.palmSunday||requested.ashWednesday||requested.candlemas||requested.nativity){
+      assert.ok(!options.holyThursday,'a preceding day wins over Holy Thursday');
+      assert.ok(STEPS.every(s=>s.title!=='Washing of the Feet (Mandatum)'));
+      continue;
+    }
+    thursdayCount++;
+    assert.ok(options.holyThursday&&options.gloria&&!options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.equal(options.eucharisticPrayer,'I','Roman Canon on Holy Thursday (Roman Missal, Holy Thursday, nn. 33–35)');
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [15,38,40])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.ok(keys.includes(7),'Gloria is included with bells');
+    assert.ok(keys.includes(14.5),'Mandatum (Washing of Feet) included');
+    assert.ok(keys.includes(16),'Universal Prayer included');
+    assert.ok(keys.includes(38.5),'Transfer of the Blessed Sacrament included');
+    assert.ok(keys.includes(39),'Stripping of the Altar included');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const gloria=STEPS[idx(7)],mandatum=STEPS[idx(14.5)],transfer=STEPS[idx(38.5)],stripping=STEPS[idx(39)];
+    assert.ok(gloria.bell&&gloria.bell.length>0,'bells ring during Gloria');
+    // Consecration bells silent
+    for(const k of [25,26,27]){
+      const s=STEPS[idx(k)];
+      if(s)assert.equal(s.bell.length,0,'no bells during consecration on Holy Thursday');
+    }
+    assert.equal(mandatum.title,'Washing of the Feet (Mandatum)');
+    assert.equal(transfer.title,'Transfer of the Blessed Sacrament to the Altar of Repose');
+    assert.equal(stripping.title,'Stripping of the Altar (Denudatio altaris)');
+    assert.equal(stripping.say.length,0,'stripping of altar in complete silence');
+    if(visible.has('S')){
+      assert.equal(propAt(idx(14.5),'basin',.5).by,'S','the server holds the basin');
+    }
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        thursdayFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{ashWednesday:true},{palmSunday:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Washing of the Feet (Mandatum)'&&s.title!=='Stripping of the Altar (Denudatio altaris)'),'Holy Thursday rites only on Holy Thursday');
+  }
+  buildScenario({});
+  console.log('Passed '+thursdayCount+' Holy Thursday scenarios and '+thursdayFrames+' sampled frames.');
 `,context);

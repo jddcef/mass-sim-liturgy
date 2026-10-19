@@ -796,7 +796,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','adorationLay','benediction','confirmation','candlemas','ashWednesday','palmSunday'],'twelve celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','adorationLay','benediction','confirmation','candlemas','ashWednesday','palmSunday'],'thirteen celebrations are playable now');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
@@ -858,6 +858,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   p=record(p,{preset:'ashWednesday',role:'S',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'palmSunday','then Palm Sunday');
   p=record(p,{preset:'palmSunday',role:'S',level:'choice',percent:90}).progress;
+  assert.equal(G('nextRecommended')(p).id,'holyThursday','then Holy Thursday (the summit of the Triduum)');
+  p=record(p,{preset:'holyThursday',role:'P',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p),null,'all playable celebrations served');
   // Stored progress is cleaned on load.
   const clean=G('normaliseProgress')({celebrations:{feria:{roles:{P:{mark:'served',best:500,plays:2},ZZ:{mark:'served'}}},bogus:{roles:{}}}});
@@ -1188,6 +1190,63 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   const lay=breviary(presets.adorationLay.fields);
   assert.equal(lay.colour,'white');
   assert.ok(/Lay-led/.test(lay.title));
+
+  const ht=breviary(presets.holyThursday.fields);
+  assert.equal(ht.colour,'white');
+  assert.equal(ht.latinColour,'Albus');
+  assert.equal(ht.season,'The Sacred Paschal Triduum');
+  assert.ok(ht.specialRites.some(r=>/Mandatum|Washing of the Feet/.test(r)));
+  assert.ok(ht.specialRites.some(r=>/Altar of Repose/.test(r)));
+  assert.ok(ht.specialRites.some(r=>/Stripping of the altar/.test(r)));
+}
+
+// ---- round 24: Holy Thursday (Mass of the Lord's Supper) ----
+{
+  const presets=G('GAME_PRESETS'),norm=G('normaliseGameOptions');
+  assert.ok(presets.holyThursday,'holyThursday preset exists');
+  assert.equal(presets.holyThursday.fields.holyThursday,true);
+  assert.equal(presets.holyThursday.fields.gloria,true);
+  assert.equal(presets.holyThursday.fields.creed,false);
+  assert.equal(presets.holyThursday.fields.eucharisticPrayer,'I');
+  assert.equal(presets.holyThursday.fields.bellEpiclesis,false);
+  assert.equal(presets.holyThursday.fields.bellElevation,false);
+  assert.equal(norm('E',{rite:'exposition',holyThursday:true}).options.holyThursday,false,'not at Exposition');
+  const raw={...presets.holyThursday.fields,serverCount:Number(presets.holyThursday.fields.serverCount)};
+  const {options}=setup('S',raw);
+  assert.equal(G('presetForOptions')(options,'holyThursday'),'holyThursday');
+  assert.equal(G('celebrationForPreset')('holyThursday').id,'holyThursday');
+  assert.equal(G('celebrationForPreset')('holyThursday').branch,'triduum');
+  assert.equal(G('celebrationForPreset')('holyThursday').station,7);
+  setup('S',raw);
+  assert.ok(STEPS.some(s=>s.key===14.5&&s.title==='Washing of the Feet (Mandatum)'));
+  assert.ok(STEPS.some(s=>s.key===38.5&&s.title==='Transfer of the Blessed Sacrament to the Altar of Repose'));
+  assert.ok(STEPS.some(s=>s.key===39&&s.title==='Stripping of the Altar (Denudatio altaris)'));
+  assert.ok(!STEPS.some(s=>s.key===15),'no Creed on Holy Thursday');
+  assert.ok(!STEPS.some(s=>s.key===38),'no final blessing');
+  assert.ok(!STEPS.some(s=>s.key===40),'no recession with hymn');
+  assert.ok(G('deriveDuties')('S',STEPS,options).some(d=>d.key===14.5&&/basin/.test(d.text)),'the server assists with the basin');
+  setup('D',raw);
+  assert.ok(G('deriveDuties')('D',STEPS,options).some(d=>d.key===14.5),'the Deacon assists at the Mandatum');
+  assert.ok(G('deriveDuties')('D',STEPS,options).some(d=>d.key===38.5),'the Deacon accompanies the Blessed Sacrament');
+  for(const role of ['P','D','S','C1','X','MC','SAC','PEW','L','AV'])setup(role,{...raw,projector:role==='AV'});
+  const items=G('sacristanSetup')(options);
+  assert.ok(items.some(i=>i.id==='pitcherBasin'&&i.needed&&i.places.includes('credence')));
+  assert.ok(items.some(i=>i.id==='gremialTowel'&&i.needed&&i.places.includes('sacristy')));
+  assert.ok(items.some(i=>i.id==='humeralVeil'&&i.needed&&i.places.includes('credence')));
+  assert.ok(items.some(i=>i.id==='ciboriumRepose'&&i.needed));
+  assert.ok(items.some(i=>i.id==='lamp'&&!i.needed),'main tabernacle is empty beforehand');
+  const away=G('sacristanPackAway')(options);
+  assert.ok(away.some(i=>i.id==='stripAltarLinens'&&i.needed));
+  assert.ok(away.some(i=>i.id==='basinBack'&&i.needed));
+  assert.ok(away.some(i=>i.id==='emptyStoups'&&i.needed));
+  assert.ok(away.some(i=>i.id==='lampOut'&&i.needed&&!i.trap),'sanctuary lamp is extinguished after Mass on Holy Thursday');
+  assert.ok(away.some(i=>i.id==='dustCover'&&i.trap),'altar is left stripped, no dust cover');
+  const av=setup('AV',{...raw,projector:true});
+  const cues=G('deriveMediaCues')(STEPS,null,av.options,'all');
+  assert.ok(cues.some(c=>c.part==='mandatum'),'slide and track for Mandatum');
+  assert.ok(cues.some(c=>c.part==='pangeLingua'),'slide and track for Pange Lingua');
+  assert.ok(cues.some(c=>c.part==='recessional'&&c.title.includes('Stripping of the Altar')),'stripping in silence');
+  setup('P',{});assert.equal(STEPS[0].key,0);
 }
 console.log('mass-game tests passed');
 

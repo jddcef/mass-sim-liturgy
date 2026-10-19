@@ -57,7 +57,8 @@ const GAME_ICON_PATHS={
   monstrance:'M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8 M12 1v2 M12 13v2 M5 8H3 M21 8h-2 M7 3l1.5 1.5 M17 3l-1.5 1.5 M7 13l1.5-1.5 M17 13l-1.5-1.5 M12 15v4 M8 21h8 M10 19h4',
   calendar:'M4 5h16v16H4z M4 10h16 M8 3v4 M16 3v4 M8 14h3v3H8z',
   speaker:'M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11',
-  graphics:'M3 5h18v14H3z M3 15l5-5 4 4 3-3 6 6'
+  graphics:'M3 5h18v14H3z M3 15l5-5 4 4 3-3 6 6',
+  basin:'M2 15h20a8 5 0 0 1-20 0z M6 6l5-2v11H6z M11 4h2 M6 8c-2 0-3 1.5-3 3.5s1 3.5 3 3.5'
 };
 
 // Ordered: the first matching rule wins, so specific phrases come before general words.
@@ -71,6 +72,7 @@ const GAME_ICON_RULES=[
   [/chrism|anoint/,'chrism',{prop:'chrism'}],
   [/\bashes\b/,'ashes',{prop:'ashes'}],
   [/\bpalm\b|palms|branch|branches/,'palm',null],
+  [/\bbasin\b|ewer|pitcher|feet|washing of (?:the )?feet|mandatum/,'basin',null],
   [/sign of the cross|blesses|blessing|signs (himself|the)|makes the sign/,'bless',null],
   [/incens.*(crucifix|cross)/,'thurible',{cross:true}],
   [/incens.*\baltar\b/,'thurible',{place:'altar'}],
@@ -101,7 +103,7 @@ const GAME_ICON_RULES=[
   [/gift table/,'credence',{place:'giftTable'}],
   [/mitre|vimp/,'mitre',null],
   [/crozier|pastoral staff/,'crozier',null],
-  [/vest|\balbs?\b|stole|chasuble|dalmatic|surplice|cassock/,'vestment',null],
+  [/vest|\balbs?\b|stole|chasuble|dalmatic|surplice|cassock|veil|gremial/,'vestment',null],
   [/sacristy|cupboard/,'sacristy',{place:'sacristy'}],
   [/\bkiss/,'kiss',{place:'altar'}],
   [/genuflect|kneel/,'kneel',null],

@@ -19,7 +19,7 @@ and no account. Other pages:
 ### How to start
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
-   incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, Ash Wednesday, Palm Sunday, or outside Mass: Adoration led by a lay minister, or
+   incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, Ash Wednesday, Palm Sunday, Holy Thursday (Evening Mass of the Lord's Supper), or outside Mass: Adoration led by a lay minister, or
    Exposition and Benediction with the Priest or the Deacon. You can also
    change any option
    yourself.

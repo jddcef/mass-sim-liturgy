@@ -20,6 +20,8 @@ function buildScenario(requested){
   if(rite===RITES.mass&&requested?.ashWednesday&&!requested.nativity&&!requested.candlemas)requested={...requested,bishop:false,confirmation:false};
   // Palm Sunday is modelled with the parish Priest presiding (see applyPalmSunday).
   if(rite===RITES.mass&&requested?.palmSunday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday)requested={...requested,bishop:false,confirmation:false};
+  // Holy Thursday is modelled with the parish Priest presiding (see applyHolyThursday).
+  if(rite===RITES.mass&&requested?.holyThursday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday&&!requested.palmSunday)requested={...requested,bishop:false,confirmation:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
@@ -43,6 +45,11 @@ function buildMassScenario(requested){
   if(requested.palmSunday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday)requested={...requested,gloria:false,creed:true,introductory:'A',bishop:false,confirmation:false,
     eucharisticPrayer:requested.eucharisticPrayer==='IV'?'III':requested.eucharisticPrayer};
   else if(requested.palmSunday)requested={...requested,palmSunday:false};
+  // Holy Thursday: bells at the Gloria then silent until Easter Vigil; the Mandatum after the Homily;
+  // Creed omitted (Roman Missal, Holy Thursday, n. 13); Eucharistic Prayer I (the Roman Canon) with proper formulas;
+  // transfer of the Blessed Sacrament to the Altar of Repose; stripping of the altar.
+  if(requested.holyThursday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday&&!requested.palmSunday)requested={...requested,gloria:true,creed:false,introductory:'A',bishop:false,confirmation:false,eucharisticPrayer:'I'};
+  else if(requested.holyThursday)requested={...requested,holyThursday:false};
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
@@ -71,6 +78,7 @@ function buildMassScenario(requested){
     candlemas:!!requested.candlemas,
     ashWednesday:!!requested.ashWednesday,
     palmSunday:!!requested.palmSunday,
+    holyThursday:!!requested.holyThursday,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -395,6 +403,7 @@ function buildMassScenario(requested){
   if(options.candlemas)applyCandlemas(steps,options,initialPos,initialProps);
   if(options.ashWednesday)applyAshWednesday(steps,options,initialProps);
   if(options.palmSunday)applyPalmSunday(steps,options,initialPos,initialProps);
+  if(options.holyThursday)applyHolyThursday(steps,options,initialPos,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
@@ -416,6 +425,7 @@ function buildMassScenario(requested){
   if(options.candlemas)[3,4,5,6].forEach(key=>removed.add(key));
   if(options.ashWednesday)[5,6].forEach(key=>removed.add(key));
   if(options.palmSunday)[3,4,5,6].forEach(key=>removed.add(key));
+  if(options.holyThursday)[38,40].forEach(key=>removed.add(key));
   const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
@@ -1171,6 +1181,231 @@ function applyPalmSunday(steps,options,initialPos,initialProps){
   if(end){
     end.text+=' On Palm Sunday the Missal gives a Prayer over the People before the blessing.';
     end.ref+='; Roman Missal, Palm Sunday';
+  }
+}
+
+// Holy Thursday (Evening Mass of the Lord's Supper / Missa vespertina in Cena Domini):
+// 1. Gloria sung solemnly with bells; bells then remain silent until Easter Vigil.
+// 2. Mandatum (Washing of Feet): after the Homily, Priest removes chasuble, vests in linen towel,
+//    and washes/dries the feet of chosen faithful with pitcher, basin and towel; washes hands and vests again.
+// 3. Creed is strictly omitted; Universal Prayer follows directly.
+// 4. Eucharistic Prayer I (Roman Canon): proper Communicantes, proper Hanc igitur, and proper Qui pridie; no altar bells.
+// 5. Transfer of the Blessed Sacrament: after Prayer after Communion, Priest incenses kneeling, receives humeral veil,
+//    carries ciborium in solemn procession to Altar of Repose singing Pange Lingua, incenses with Tantum Ergo, tabernacle closed.
+// 6. Stripping of the Altar: in silence, altar cloths, candles and cross are stripped; main tabernacle left open and empty.
+function applyHolyThursday(steps,options,initialPos,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const hasS=options.serverCount>0;
+  const incense=options.incense;
+
+  // 1. Gloria with bells, then liturgical silence for bells
+  const gloria=at(7);
+  if(gloria){
+    gloria.bell=[[0,.4]];
+    gloria.text='The Gloria in excelsis is sung. While the hymn is being sung, bells are rung, and when it is finished they remain silent until the Gloria in excelsis of the Easter Vigil. The organ and other musical instruments may be used only so as to accompany the singing.';
+    gloria.ref='Roman Missal, Holy Thursday, n. 7; GIRM 53';
+  }
+
+  // 2. EP I (Roman Canon) proper texts & no bells at consecration
+  for(const key of [25,26,27]){
+    const s=at(key);
+    if(s){
+      s.bell=[];
+      if(s.acts?.S)s.acts.S=s.acts.S.filter(([text])=>!text.includes('rings the bell'));
+      s.text=s.text.replace(/The bell may be rung[^.]*\./g,'In accordance with the rubrics of the Triduum, bells remain silent after the Gloria until the Easter Vigil.');
+    }
+  }
+  const epiclesis=at(25);
+  if(epiclesis){
+    epiclesis.text+=' In the Roman Canon on Holy Thursday the proper Hanc igitur is used: "Therefore, Lord, we pray: graciously accept this oblation of our service\u2026 which we offer you in memory of the day on which our Lord Jesus Christ handed on the mysteries of his Body and Blood\u2026".';
+    epiclesis.ref+='; Roman Missal, Holy Thursday, n. 34';
+  }
+  const host=at(26);
+  if(host){
+    host.text+=' The proper Qui pridie is used: "On the day before he was to suffer for our salvation and the salvation of all, that is, today\u2026".';
+    host.ref+='; Roman Missal, Holy Thursday, n. 35';
+  }
+  const preface=at(23);
+  if(preface){
+    preface.text+=' Today the Preface of the Most Holy Eucharist I (The Sacrifice and the Sacrament of Christ) is said.';
+    preface.ref+='; Roman Missal, Preface of the Most Holy Eucharist I';
+  }
+
+  // 3. The Mandatum (Washing of the Feet)
+  const homily=at(14);
+  initialProps.basin={at:[850,144],h:true};
+  const holder=hasS?'S':(options.deacon?'D':'P');
+  const mandatum={
+    key:14.5,part:'Liturgy of the Word',title:'Washing of the Feet (Mandatum)',dur:34,posture:'sit',
+    text:'After the Homily the Priest, putting aside his chasuble if appropriate, puts on a linen gremial or towel. Assisted by the ministers, he goes to each person chosen from the faithful, pours water over their feet, and dries them with a towel. Meanwhile antiphons such as "Ubi caritas" or "A new commandment I give you" are '+(sung?'sung':'said')+'. Afterwards the Priest washes and dries his hands, puts the chasuble back on, and returns to the chair.',
+    ref:'Roman Missal, Holy Thursday, nn. 10–13; Congregation for Divine Worship decree, 6 Jan 2016',
+    mv:{
+      P:[
+        M([[560,90],[625,122],[640,140]],0,.14),
+        M([[625,250],[500,290]],.18,.3),
+        M([[625,140]],.75,.86),
+        M([[560,90],CHAIR],.9,1)
+      ]
+    },
+    acts:{
+      P:[
+        ['removes chasuble and puts on linen towel',0,.14],
+        ['washes and dries the feet of the chosen faithful',.3,.74],
+        ['washes hands and vests in chasuble again',.8,.9]
+      ]
+    },
+    props:{
+      basin:[{hide:false,t:.12},{by:holder,t:.14},{at:[850,144],a:.86,b:.9}]
+    },
+    say:[
+      ['ppl',chant('Ubi caritas et amor, Deus ibi est. Congregavit nos in unum Christi amor\u2026'),.04,.96]
+    ]
+  };
+  if(holder==='S'){
+    mandatum.mv.S=[
+      M([[850,140]],0,.12),
+      M([[625,250],[540,290]],.18,.3),
+      M([[625,140],[850,140]],.75,.86),
+      M([HOME.S],.9,1)
+    ];
+    mandatum.acts.S=[
+      ['brings pitcher, basin and towel',0,.16],
+      ['holds the basin and assists the Priest',.3,.74],
+      ['takes the basin and towel back to the credence',.76,.88]
+    ];
+  }
+  if(options.deacon){
+    if(holder==='D'){
+      mandatum.mv.D=[
+        M([[850,150]],0,.12),
+        M([[625,250],[540,290]],.18,.3),
+        M([[625,140],[850,150]],.75,.86),
+        M([DCHAIR],.9,1)
+      ];
+      mandatum.acts.D=[
+        ['brings the pitcher and basin',.12,.18],
+        ['assists the Priest with the basin and towel',.18,.74],
+        ['returns the basin to the credence',.76,.88]
+      ];
+    }else{
+      mandatum.mv.D=[
+        M([[452,122],[470,270]],.18,.3),
+        M([[470,270],[452,122],DCHAIR],.76,.88)
+      ];
+      mandatum.acts.D=[
+        ['assists the Priest and ministers at the Washing of Feet',.18,.74]
+      ];
+    }
+  }
+  steps.splice(steps.indexOf(homily)+1,0,mandatum);
+
+  // 4. Universal Prayer follows directly (Creed omitted)
+  const prayer=at(16);
+  if(prayer){
+    prayer.text='From the chair the Priest directs the Universal Prayer. On Holy Thursday the Creed is omitted, so the Universal Prayer follows the Washing of Feet directly.';
+    prayer.ref+='; Roman Missal, Holy Thursday, n. 13';
+  }
+
+  // 5. Purification & Reservation: consecrated ciborium remains on the altar
+  const purification=at(36);
+  if(purification){
+    purification.dur=16;
+    purification.text='The sacred vessels are purified. The ciborium containing the Blessed Sacrament for Communion on Good Friday remains on the altar on the corporal, awaiting the procession to the Altar of Repose. The main tabernacle remains empty. Sacred silence follows.';
+    purification.ref='Roman Missal, Holy Thursday, nn. 2, 36–37; GIRM 163';
+    const ordinary=options.deacon?'D':'P';
+    purification.mv[ordinary]=[
+      M([[625,122],[838,140]],0,.3),
+      M([[700,95],ordinary==='D'?DCHAIR:CHAIR],.75,1)
+    ];
+    purification.acts[ordinary]=[
+      ['consumes remaining Precious Blood and purifies the vessels',.25,.68]
+    ];
+    purification.face={};
+    purification.props.bread=[{at:[500,168],a:0,b:.01}];
+    purification.props.chalice=[{at:[540,170],a:0,b:.01},{by:ordinary,t:.28},{at:[888,128],a:.68,b:.72}];
+  }
+
+  // 6. Transfer of the Blessed Sacrament to the Altar of Repose (key 38.5)
+  const postCommunion=at(37);
+  const REPOSE=[260,110];
+  const transfer={
+    key:38.5,part:'Concluding Rites',title:'Transfer of the Blessed Sacrament to the Altar of Repose',dur:38,posture:'stand',
+    text:'After the Prayer after Communion, the Priest kneels before the altar and incenses the Blessed Sacrament. He puts on the white humeral veil, takes the ciborium, and covers it with the veil. A solemn procession forms, led by the cross between candles and the thurifer with incense, carrying the Blessed Sacrament to the Altar of Repose while the hymn "Pange lingua" is sung. At the place of repose, the Priest places the ciborium in the tabernacle, kneels and incenses it while "Tantum ergo" is sung. The tabernacle door is closed, and after silent adoration, all genuflect.',
+    ref:'Roman Missal, Holy Thursday, nn. 36–41',
+    veil:{P:[[.22,.9]]},
+    smoke:incense?[['T',0,1]]:[],
+    mv:{
+      P:[
+        M([ALT_P],0,.18),
+        M([[500,170],[500,270],[350,270],[260,200],[260,150]],.3,.66),
+        M([[260,150]],.66,1)
+      ]
+    },
+    acts:{
+      P:[
+        ['incenses the Blessed Sacrament kneeling',0,.2],
+        ['receives the humeral veil and takes the ciborium',.21,.28],
+        ['carries the Blessed Sacrament in procession',.3,.65],
+        ['places the ciborium in the tabernacle of repose and incenses it',.67,.86],
+        ['genuflects and remains in silent adoration',.88,1]
+      ]
+    },
+    props:{
+      ciborium:[{by:'P',t:.24},{at:REPOSE,a:.68,b:.72}]
+    },
+    say:[
+      ['ppl',chant('Pange, lingua, gloriosi Corporis mysterium, Sanguinisque pretiosi, quem in mundi pretium fructus ventris generosi Rex effudit gentium\u2026'),.06,.65],
+      ['ppl',chant('Tantum ergo Sacramentum veneremur cernui: et antiquum documentum novo cedat ritui\u2026 Amen.'),.68,.96]
+    ]
+  };
+  if(hasS){
+    transfer.mv.X=M([[670,142],[625,262],[350,285],[260,240],[240,150]],.28,.64);
+    transfer.mv.C1=M([[392,152],[392,262],[350,275],[260,230],[240,165]],.28,.64);
+    transfer.mv.C2=M([[612,152],[612,262],[350,295],[260,250],[240,135]],.28,.64);
+    transfer.acts.X=[['leads the procession with the cross',.28,.65]];
+    transfer.acts.C1=[['carries lighted candle in procession',.28,.65]];
+    transfer.acts.C2=[['carries lighted candle in procession',.28,.65]];
+  }
+  if(incense){
+    transfer.mv.T=M([[500,240],[450,270],[350,270],[260,215],[260,170]],.28,.64);
+    transfer.acts.T=[['presents the thurible and boat',0,.2],['leads with smoking thurible before the Blessed Sacrament',.28,.65]];
+    transfer.props.thurible=[{by:'P',t:.08},{by:'T',t:.22},{by:'P',t:.72},{by:'T',t:.86}];
+  }
+  if(options.deacon){
+    transfer.mv.D=M([[452,122],[470,270],[350,270],[275,200],[275,150]],.3,.66);
+    transfer.acts.D=[['accompanies the Priest and closes the tabernacle of repose',.3,.92]];
+  }
+  steps.splice(steps.indexOf(postCommunion)+1,0,transfer);
+
+  // 7. Stripping of the Altar (Denudatio altaris) (key 39)
+  const stripping=at(39);
+  if(stripping){
+    stripping.title='Stripping of the Altar (Denudatio altaris)';
+    stripping.dur=18;
+    stripping.posture='stand';
+    stripping.tabernacle=[[0,1]];
+    stripping.text='In silence, the altar is stripped of its altar cloths, candles and cross, recalling the abandonment of the Lord before his Passion. The main tabernacle remains empty and wide open, and the sanctuary lamp is extinguished. All depart in silence without a blessing or dismissal.';
+    stripping.ref='Roman Missal, Holy Thursday, nn. 41–42';
+    stripping.say=[];
+    stripping.smoke=[];
+    delete stripping.mv.X;
+    delete stripping.mv.C1;
+    delete stripping.mv.C2;
+    delete stripping.mv.T;
+    stripping.props={
+      cross:[{hide:true,t:.3}],
+      cand1:[{hide:true,t:.3}],
+      cand2:[{hide:true,t:.3}],
+      corporal:[{hide:true,t:.3}]
+    };
+    stripping.acts={
+      P:[['strips the altar in silence',0,.5],['makes a profound bow and departs in silence',.6,1]]
+    };
+    if(options.deacon){
+      stripping.acts.D=[['assists in stripping the altar',0,.5],['makes a profound bow and departs in silence',.6,1]];
+    }
   }
 }
 

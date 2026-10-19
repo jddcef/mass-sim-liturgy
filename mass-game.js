@@ -28,7 +28,7 @@ const DEVOTION_BLURBS={
   T:'Thurible and boat: present the incense at the exposition and before the blessing.'
 };
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
-const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],palms:['palms']};
+const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],palms:['palms'],basin:['basin'],pitcherBasin:['basin']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
 
 const game={
@@ -446,7 +446,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,holyThursday:saved.holyThursday===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -688,7 +688,7 @@ function describeCelebration(){
   if(!o.gloria)parts.push('no Gloria');
   if(!o.creed)parts.push('no Creed');
   if(!o.secondReading)parts.push('one reading before the Gospel');
-  parts.push(o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
+  parts.push(o.holyThursday?'Mass of the Lord\u2019s Supper (Mandatum, transfer to altar of repose, stripping of altar)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
   parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
   if(o.solemnBlessing)parts.push('Solemn Blessing');
   if(o.crucifix!=='wall')parts.push('crucifix: '+CRUCIFIX_PLACES[o.crucifix].name.toLowerCase());
