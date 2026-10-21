@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R161.**
+**Next decision number: R175.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -99,7 +99,9 @@ server for liturgical or Catholic questions and clarifications.
 | 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
 | 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
-| 21 | (this PR) | Ash Wednesday: no Penitential Act, Gloria, Creed or Alleluia; after the Homily the Priest blesses and sprinkles the ashes and gives them to the faithful, who come forward in a line; the Deacon or a server holds the vessel (R154–R160) |
+| 23 | (this PR) | Funerals: the Funeral Mass (reception of the body at the door with holy water and the white pall, violet, no Gloria or Creed, final commendation with incense and the Song of Farewell, "In paradisum") and the funeral liturgy outside Mass with the Priest or the Deacon; coffin on a bier, paschal candle, holy-water stand; new Path branch "The rites for the dead" (R168–R174) |
+| 22 | #18 | Baptism of children within Sunday Mass (reception at the door, rite at the font after the Homily, Solemn Blessing) and outside Mass with the Priest or the Deacon; font, paschal candle, oils, white garment and candle; new Path branch "Christian initiation" (R161–R167) |
+| 21 | #17 | Ash Wednesday: no Penitential Act, Gloria, Creed or Alleluia; after the Homily the Priest blesses and sprinkles the ashes and gives them to the faithful, who come forward in a line; the Deacon or a server holds the vessel (R154–R160) |
 | 20 | #16 | Candlemas: blessing of candles at the back of the church, procession with lighted candles and the Canticle of Simeon, no Penitential Act, candles out at the Gloria (R147–R153) |
 | 19 | #15 | Christmas Mass during the Night: the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer, Christmas solemn blessing; the M.C. rank becomes reachable (R137–R146) |
 | 18 | #14 | Confirmation within Mass: candidate and sponsor, presentation, renewal of promises, laying on of hands, anointing with chrism, no Creed, Confirmation blessing (R127–R136) |
@@ -191,7 +193,12 @@ parish material has been processed yet. The work is local and uncommitted.
       5. Corpus Christi: an outdoor procession (canopy, torches, petals,
          Benediction at altars), which needs an outdoor scene.
       6. The Triduum: Holy Thursday, Good Friday, the Easter Vigil.
-      7. Later: Vespers with Benediction, funerals, weddings, baptism.
+      7. ~~Baptism of children~~ done in round 22 (within Mass and outside
+         Mass with the Priest or Deacon; R161–R167).
+      8. ~~Funerals~~ done in round 23 (Funeral Mass and the funeral
+         liturgy outside Mass; R168–R174). The Vigil and the Rite of
+         Committal (outdoors) are left for later.
+      9. Later: Vespers with Benediction, weddings.
 
 ```mermaid
 flowchart TD
@@ -200,6 +207,8 @@ flowchart TD
   S --> AL[Adoration, lay-led] --> EB[Exposition and Benediction] --> CC[Corpus Christi procession]
   SI --> EB
   SO --> CA[Candlemas] --> AW[Ash Wednesday] --> PS[Palm Sunday]
+  S --> BA[Baptism] --> CF
+  SI --> FU[Funeral]
   B --> CF[Confirmation]
   N --> HT[Holy Thursday]
   PS --> HT

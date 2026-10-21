@@ -98,7 +98,7 @@ vm.runInContext(
 `,context);
 
 // Exposition, adoration and Benediction (mass-rite-exposition.js): every form samples valid frames.
-vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
+vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+fs.readFileSync('mass-rite-baptism.js','utf8')+'\n'+fs.readFileSync('mass-rite-funeral.js','utf8')+'\n'+`
   let expFrames=0;
   for(const minister of ['lay','priest','deacon'])for(let serverCount=0;serverCount<=3;serverCount++)for(const incense of [false,true]){
     const {options,visible,vesture}=buildScenario({rite:'exposition',minister,serverCount,incense});
@@ -130,6 +130,99 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   buildScenario({});
   assert.equal(STEPS[0].key,0,'Mass is the default rite');
   console.log('Passed 24 exposition scenarios and '+expFrames+' sampled frames.');
+  // Baptism of children outside Mass (mass-rite-baptism.js): a Priest or Deacon, with or without a server.
+  let riteFrames=0;
+  for(const minister of ['priest','deacon'])for(const serverCount of [0,1,3])for(const music of ['sung','said']){
+    const {options,visible,vesture}=buildScenario({rite:'baptism',minister,serverCount,music});
+    const cel=minister==='deacon'?'D':'P';
+    assert.equal(options.rite,'baptism');
+    assert.equal(options.serverCount,Math.min(1,serverCount));
+    assert.ok(visible.has(cel)&&visible.has('BP')&&visible.has('GP'));
+    assert.equal(visible.has(cel==='P'?'D':'P'),false);
+    assert.deepEqual(vesture,{role:cel,cope:false,recolour:true,colour:'#f6f2e6'});
+    const keys=STEPS.map(s=>s.key);
+    assert.deepEqual(keys,['bap:arrive','bap:reception','bap:procession','bap:word','bap:intercessions','bap:exorcism','bap:toFont','bap:water','bap:promises','bap:baptism','bap:explanatory','bap:return','bap:lordsPrayer','bap:blessing','bap:depart']);
+    const idx=key=>keys.indexOf('bap:'+key);
+    assert.equal(propAt(idx('exorcism'),'oilCat',.5).by,options.servers?'S':cel);
+    assert.deepEqual(actorAt(idx('toFont'),cel,1),[330,758]);
+    assert.ok(STEPS[idx('baptism')].say.some(([r,t])=>r===cel&&/I baptize you/.test(t)));
+    assert.deepEqual(actorAt(idx('return'),cel,1),[500,262],'the procession goes to the altar');
+    assert.deepEqual(actorAt(idx('depart'),cel,1),[952,250]);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','kneel','face','orans'])for(const role in step[field]||{})assert.ok(visible.has(role),minister+': hidden '+role+' in '+field+' of '+step.title);
+      for(const [role] of step.say||[])assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const role in ACTORS){p[role]=actorAt(i,role,k/20);assert.ok(p[role].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite),'prop '+name);
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' for '+name+' in '+step.title);
+        }
+        assert.ok(Number.isFinite(postureAt(i,k/20).val));
+        riteFrames++;
+      }
+    }
+  }
+  buildScenario({});
+  console.log('Passed 12 Baptism (outside Mass) scenarios and '+riteFrames+' sampled frames.');
+  // Funeral liturgy outside Mass (mass-rite-funeral.js): a Priest or Deacon with up to two servers.
+  let funRiteFrames=0;
+  for(const minister of ['priest','deacon'])for(const serverCount of [0,1,2,4])for(const music of ['sung','said']){
+    const {options,visible,vesture}=buildScenario({rite:'funeral',minister,serverCount,music});
+    const cel=minister==='deacon'?'D':'P';
+    const servers=Math.min(2,serverCount);
+    assert.equal(options.rite,'funeral');
+    assert.ok(options.funeral);
+    assert.equal(options.serverCount,servers);
+    assert.equal(options.incense,servers===2,'the second server is the thurifer');
+    assert.ok(visible.has(cel)&&visible.has('FD')&&visible.has('FM'));
+    assert.equal(visible.has(cel==='P'?'D':'P'),false);
+    assert.equal(visible.has('T'),servers===2);
+    assert.deepEqual(vesture,{role:cel,cope:false,recolour:true,colour:FUNERAL_VIOLET});
+    const keys=STEPS.map(s=>s.key);
+    assert.deepEqual(keys,['fun:arrive','fun:reception','fun:procession','fun:collect','fun:word','fun:intercessions','fun:lordsPrayer','fun:invitation','fun:farewell','fun:commendation','fun:out']);
+    const idx=key=>keys.indexOf('fun:'+key);
+    const helper=servers?'S':cel;
+    assert.equal(propAt(0,'coffin',0).by,'FD','the coffin is brought to the door');
+    assert.equal(propAt(idx('reception'),'pall',.5).by,'FM');
+    assert.ok(propAt(idx('reception'),'pall',1).h,'the pall is on the coffin');
+    assert.ok(!propAt(idx('reception'),'drape',1).h);
+    assert.ok(STEPS[idx('reception')].acts[cel].some(([t])=>/sprinkles/.test(t)));
+    assert.deepEqual(propAt(idx('procession'),'coffin',1).at,FUNERAL_PLACES.rest,'the coffin rests before the altar');
+    assert.deepEqual(propAt(idx('procession'),'holyWater',1).at,FUNERAL_PLACES.stand);
+    assert.deepEqual(actorAt(idx('procession'),cel,1),CHAIR);
+    assert.ok(STEPS[idx('word')].say.some(([,t])=>/John 11/.test(t)));
+    assert.ok(/never a eulogy/.test(STEPS[idx('word')].text));
+    assert.equal(propAt(idx('farewell'),'holyWater',.2).by,cel,'the celebrant sprinkles the coffin');
+    assert.equal(STEPS[idx('farewell')].acts[cel].some(([t])=>/incenses/.test(t)),servers===2);
+    if(servers===2)assert.equal(propAt(idx('farewell'),'thurible',.5).by,cel);
+    assert.deepEqual(propAt(idx('commendation'),'holyWater',1).at,FUNERAL_PLACES.stand,'the holy water goes back');
+    assert.ok(STEPS[idx('out')].say.some(([r,t])=>r===cel&&/In peace let us take our brother/.test(t)));
+    assert.ok(propAt(idx('out'),'coffin',1).h,'the coffin has left the church');
+    assert.ok(actorAt(idx('out'),cel,1)[1]>800);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','kneel','face','orans'])for(const role in step[field]||{})assert.ok(visible.has(role),minister+': hidden '+role+' in '+field+' of '+step.title);
+      for(const [role] of step.say||[])assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const role in ACTORS){p[role]=actorAt(i,role,k/20);assert.ok(p[role].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite),'prop '+name);
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' for '+name+' in '+step.title);
+        }
+        assert.ok(Number.isFinite(postureAt(i,k/20).val));
+        funRiteFrames++;
+      }
+    }
+  }
+  buildScenario({});
+  console.log('Passed 16 Funeral (outside Mass) scenarios and '+funRiteFrames+' sampled frames.');
   // Mass with the Bishop: the insignia pass between the Bishop and his bearers and are never left unheld.
   let bishopFrames=0;
   for(const solemnBlessing of [false,true])for(const serverCount of [1,5]){
@@ -405,4 +498,144 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed '+ashCount+' Ash Wednesday scenarios and '+ashFrames+' sampled frames.');
+
+  // Baptism of children within Mass (OBP 29): the reception at the door replaces the greeting and the
+  // Penitential Act; the sacrament is celebrated at the font after the Universal Prayer and litany.
+  let bapFrames=0,bapCount=0;
+  for(const requested of [{baptism:true,serverCount:4,deacon:true,lector:true,incense:true},
+    {baptism:true,serverCount:0,deacon:false,lector:false,music:'said',gloria:false,creed:true},
+    {baptism:true,serverCount:1,deacon:false,gloria:true,introductory:'C'},
+    {baptism:true,serverCount:0,deacon:true},
+    {baptism:true,bishop:true,serverCount:2},{baptism:true,confirmation:true,bishop:true},{baptism:true,nativity:true},{baptism:true,candlemas:true},{baptism:true,ashWednesday:true}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.bishop||requested.nativity||requested.candlemas||requested.ashWednesday){
+      assert.ok(!options.baptism,'another celebration wins over Baptism');
+      assert.ok(!visible.has('BP')&&!visible.has('GP'));
+      assert.ok(STEPS.every(s=>s.title!=='The Baptism'));
+      continue;
+    }
+    bapCount++;
+    assert.ok(options.baptism&&!options.creed&&options.solemnBlessing&&options.introductory==='A');
+    assert.ok(visible.has('BP')&&visible.has('GP'));
+    const keys=STEPS.map(s=>s.key);
+    assert.equal(keys[0],-.4,'the reception at the door comes first');
+    for(const key of [3,4,5,6,15])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.deepEqual(keys.slice(keys.indexOf(16),keys.indexOf(16)+9),[16,16.2,16.3,16.4,16.5,16.6,16.7,16.8,17],'the sacrament between the Universal Prayer and the Preparation');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    assert.deepEqual(actorAt(0,'BP',0),[470,840],'the family waits at the door');
+    assert.equal(propAt(0,'infant',.5).by,'BP');
+    assert.ok(STEPS[idx(-.4)].say.some(([r,t])=>r==='BP'&&t==='Baptism.'));
+    assert.deepEqual(actorAt(idx(0),'BP',1),HOME.BP,'the family goes to its places');
+    assert.ok(STEPS[idx(16)].say.some(([,t])=>/litany of the saints/.test(t)));
+    assert.ok(!STEPS[idx(16)].say.some(([,t])=>/concluding prayer/.test(t)));
+    const helper=options.deacon?'D':visible.has('S')?'S':'P';
+    assert.equal(propAt(idx(16.2),'oilCat',.5).by,helper,'the oil is held by '+helper);
+    assert.deepEqual(propAt(idx(16.2),'oilCat',1).at,[870,150]);
+    assert.deepEqual(actorAt(idx(16.3),'P',1),[330,758],'the Priest at the font');
+    assert.deepEqual(actorAt(idx(16.3),'BP',1),[302,820]);
+    assert.equal(STEPS[idx(16.6)].acts.P.filter(([t])=>/pours water/.test(t)).length,3,'three pourings');
+    assert.ok(STEPS[idx(16.6)].say.some(([,t])=>/I baptize you in the name of the Father/.test(t)));
+    assert.equal(propAt(idx(16.7),'bcandle',1).by,'GP','the godparent holds the lighted candle');
+    assert.ok(propAt(idx(16.7),'garment',1).h,'the garment is on the child');
+    assert.deepEqual(propAt(idx(16.7),'chrism',1).at,[362,750]);
+    assert.deepEqual(actorAt(idx(16.8),'P',1),CHAIR);
+    assert.deepEqual(actorAt(idx(16.8),'BP',1),HOME.BP);
+    if(options.deacon)assert.deepEqual(actorAt(idx(16.8),'D',1),DCHAIR);
+    if(visible.has('S')&&!options.deacon)assert.deepEqual(actorAt(idx(16.8),'S',1),HOME.S);
+    assert.ok(STEPS[idx(38)].say.some(([r,t])=>r==='P'&&/the mother of this child/.test(t)));
+    chooseHomilyPlace(CHAIR);
+    assert.deepEqual(actorAt(idx(16.3),'P',1),[330,758],'also when preaching from the chair');
+    chooseHomilyPlace(AMBO);
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        bapFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{confirmation:true,bishop:true},{rite:'exposition',minister:'priest'}]){
+    const {visible}=buildScenario(requested);
+    assert.ok(!visible.has('BP')&&!visible.has('GP')&&STEPS.every(s=>s.title!=='The Baptism'),'the baptismal family only at a baptism');
+    assert.ok(propAt(0,'infant',0,{}).h);
+  }
+  buildScenario({});
+  console.log('Passed '+bapCount+' Baptism scenarios and '+bapFrames+' sampled frames.');
+
+  // Funeral Mass (GIRM 380-385; OCF 154-176): reception at the door, no Gloria or Creed, and the final
+  // commendation in place of the concluding rites, then the procession to the place of committal.
+  let funFrames=0,funCount=0;
+  for(const requested of [{funeral:true,serverCount:5,deacon:true,lector:true,incense:true},
+    {funeral:true,serverCount:4,deacon:false,incense:true,gloria:true,creed:true},
+    {funeral:true,serverCount:2,deacon:true,incense:true,music:'said'},
+    {funeral:true,serverCount:1,deacon:false},
+    {funeral:true,serverCount:0,deacon:true,bothKinds:true},
+    {funeral:true,serverCount:0,deacon:false,lector:true},
+    {funeral:true,bishop:true},{funeral:true,nativity:true},{funeral:true,candlemas:true},{funeral:true,ashWednesday:true},{funeral:true,baptism:true}]){
+    const {options,visible,vesture}=buildScenario(requested);
+    if(requested.bishop||requested.nativity||requested.candlemas||requested.ashWednesday||requested.baptism){
+      assert.ok(!options.funeral,'another celebration wins over a Funeral Mass');
+      assert.ok(!visible.has('FD')&&!visible.has('FM'));
+      assert.ok(STEPS.every(s=>!/Commendation/.test(s.title)));
+      continue;
+    }
+    funCount++;
+    assert.ok(options.funeral&&!options.gloria&&!options.creed&&!options.solemnBlessing,'no Gloria or Creed');
+    assert.ok(visible.has('FD')&&visible.has('FM'));
+    assert.deepEqual(vesture,{role:'P',roles:['P','D'],cope:false,recolour:true,colour:FUNERAL_VIOLET});
+    const keys=STEPS.map(s=>s.key);
+    assert.equal(keys[0],-.4,'the reception at the door comes first');
+    for(const key of [3,4,5,6,7,15,39])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.deepEqual(keys.slice(keys.indexOf(37)),[37,38,38.5,38.7,40],'the commendation follows the Prayer after Communion');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    assert.equal(propAt(0,'coffin',0).by,'FD');
+    assert.ok(propAt(0,'pall',1).h&&!propAt(0,'drape',1).h,'the pall is placed at the door');
+    assert.deepEqual(propAt(idx(0),'coffin',1).at,FUNERAL_PLACES.rest);
+    assert.deepEqual(propAt(idx(0),'holyWater',1).at,FUNERAL_PLACES.stand);
+    assert.deepEqual(actorAt(idx(0),'FM',1),HOME.FM,'the family goes to its places');
+    assert.deepEqual(actorAt(idx(1),'FD',1),HOME.FD,'the bearers withdraw');
+    assert.ok(/never a eulogy/.test(STEPS[idx(14)].text));
+    assert.deepEqual(STEPS[idx(35)].special.lanes,[468,532],'communicants pass either side of the coffin');
+    assert.ok(STEPS[idx(38.5)].acts.P.some(([t])=>/sprinkles/.test(t)));
+    assert.equal(STEPS[idx(38.5)].acts.P.some(([t])=>/incenses/.test(t)),!!options.incense);
+    assert.equal(propAt(idx(38.5),'holyWater',.2).by,'P');
+    assert.deepEqual(propAt(idx(38.7),'holyWater',1).at,FUNERAL_PLACES.stand);
+    assert.ok(STEPS[idx(40)].say.some(([r,t])=>r===(options.deacon?'D':'P')&&/In peace let us take/.test(t)));
+    assert.ok(propAt(idx(40),'coffin',1).h,'the coffin has left the church');
+    assert.ok(actorAt(idx(40),'P',1)[1]>800,'the Priest leads the coffin out');
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        funFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{baptism:true},{rite:'exposition',minister:'priest'}]){
+    const {visible}=buildScenario(requested);
+    assert.ok(!visible.has('FD')&&!visible.has('FM')&&STEPS.every(s=>!/Commendation/.test(s.title)),'the coffin only at a funeral');
+    assert.ok(propAt(0,'coffin',0,{}).h);
+  }
+  buildScenario({});
+  console.log('Passed '+funCount+' Funeral Mass scenarios and '+funFrames+' sampled frames.');
 `,context);

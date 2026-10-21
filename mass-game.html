@@ -191,7 +191,7 @@
     <fieldset><legend>3. The celebration</legend>
       <div id="pathStrip" class="pathStrip"><span id="pathStripRank"></span><button id="openPath" type="button" title="See the celebrations of the year in order, and your seniority">✠ The Path</button></div>
       <div class="optionGrid">
-        <label class="presetPick" data-icon="calendar">Kind of celebration <select name="preset" id="gamePreset"><option value="weekday">Weekday Mass (Priest practice)</option><option value="sunday">Sunday Mass</option><option value="sundayIncense" selected>Sunday Mass with incense</option><option value="solemnity">Solemnity</option><option value="pontifical">Mass with the Bishop</option><option value="confirmation">Confirmation Mass</option><option value="nativity">Christmas Mass during the Night</option><option value="candlemas">Candlemas (Presentation of the Lord)</option><option value="ashWednesday">Ash Wednesday</option><optgroup label="Outside Mass"><option value="adorationLay">Adoration (lay-led)</option><option value="benediction">Exposition and Benediction</option><option value="benedictionDeacon">Exposition and Benediction (Deacon)</option></optgroup><option value="custom">Custom</option></select></label>
+        <label class="presetPick" data-icon="calendar">Kind of celebration <select name="preset" id="gamePreset"><option value="weekday">Weekday Mass (Priest practice)</option><option value="sunday">Sunday Mass</option><option value="sundayIncense" selected>Sunday Mass with incense</option><option value="solemnity">Solemnity</option><option value="pontifical">Mass with the Bishop</option><option value="confirmation">Confirmation Mass</option><option value="nativity">Christmas Mass during the Night</option><option value="candlemas">Candlemas (Presentation of the Lord)</option><option value="ashWednesday">Ash Wednesday</option><option value="baptismMass">Sunday Mass with Baptism</option><option value="funeralMass">Funeral Mass</option><optgroup label="Outside Mass"><option value="adorationLay">Adoration (lay-led)</option><option value="benediction">Exposition and Benediction</option><option value="benedictionDeacon">Exposition and Benediction (Deacon)</option><option value="baptism">Baptism of Children</option><option value="baptismDeacon">Baptism of Children (Deacon)</option><option value="funeral">Funeral Liturgy outside Mass</option><option value="funeralDeacon">Funeral Liturgy outside Mass (Deacon)</option></optgroup><option value="custom">Custom</option></select></label>
         <small id="presetNote" class="small"></small>
         <h3 class="optionHead" data-icon="people">Ministers</h3>
         <label><input type="checkbox" name="bishop"> The Bishop presides (mitre- and crozier-bearers)</label>
@@ -199,6 +199,8 @@
         <label><input type="checkbox" name="nativity"> Christmas Mass during the Night (Proclamation, genuflection at the Creed, blessing of the crib)</label>
         <label><input type="checkbox" name="candlemas"> Candlemas: the Presentation of the Lord (blessing of candles, procession with the Canticle of Simeon)</label>
         <label><input type="checkbox" name="ashWednesday"> Ash Wednesday (blessing and giving of ashes after the Homily; no Penitential Act, Gloria or Alleluia)</label>
+        <label><input type="checkbox" name="baptism"> Baptism of children within Mass (reception at the door, baptism at the font after the Homily; no Penitential Act or Creed)</label>
+        <label><input type="checkbox" name="funeral"> Funeral Mass (reception of the body at the door, violet, no Gloria or Creed; the final commendation)</label>
         <label><input type="checkbox" name="deacon" checked> Deacon</label>
         <label>Altar servers <select name="serverCount"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option></select></label>
         <label><input type="checkbox" name="lector" checked> Lay lector and psalmist</label>
@@ -312,6 +314,8 @@
 <script src="mass-rite.js"></script>
 <script src="mass-scenarios.js"></script>
 <script src="mass-rite-exposition.js"></script>
+<script src="mass-rite-baptism.js"></script>
+<script src="mass-rite-funeral.js"></script>
 <script src="mass-parishes.js"></script>
 <script src="mass-features.js"></script>
 <script src="audio/audio-manifest.js"></script>

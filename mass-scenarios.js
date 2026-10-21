@@ -2,7 +2,7 @@ const ORIGINAL_STEPS=JSON.parse(JSON.stringify(STEPS));
 const SERVER_ROLES=['X','C1','C2','T','S'];
 // The Bishop's bearers (Mass with the Bishop only): servers in vimps who carry the mitre and the staff.
 const BEARER_ROLES=['MB','CB'];
-const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',MB:'Mitre-bearer',CB:'Crozier-bearer',K:'Candidate',SP:'Sponsor',ppl:'People'};
+const ROLE_NAMES={P:'Priest',D:'Deacon',X:'Cross-bearer',C1:'Candle-bearer',C2:'Candle-bearer',T:'Thurifer',S:'Server',L:'Lector',L2:'Second reader',Ps:'Psalmist',U:'Collection usher',E:'EMHC',G1:'Gift-bearer',G2:'Gift-bearer',MB:'Mitre-bearer',CB:'Crozier-bearer',K:'Candidate',SP:'Sponsor',BP:'Parent',GP:'Godparent',FD:'Funeral director',FM:'Family member',ppl:'People'};
 
 // The rite registry: each rite builds its own STEPS and timeline. Mass is the default;
 // other rites (mass-rite-exposition.js) register themselves here and use string step keys,
@@ -18,6 +18,10 @@ function buildScenario(requested){
   if(rite===RITES.mass&&requested?.candlemas&&!requested.nativity)requested={...requested,bishop:false,confirmation:false};
   // Ash Wednesday is likewise modelled with the parish Priest presiding (see applyAshWednesday).
   if(rite===RITES.mass&&requested?.ashWednesday&&!requested.nativity&&!requested.candlemas)requested={...requested,bishop:false,confirmation:false};
+  // Baptism within Mass is modelled only at a parish Sunday Mass: the Bishop, Confirmation and the proper days take precedence.
+  if(rite===RITES.mass&&requested?.baptism&&(requested.nativity||requested.candlemas||requested.ashWednesday||requested.bishop||requested.confirmation))requested={...requested,baptism:false};
+  // A Funeral Mass is modelled only on an ordinary day (GIRM 380) with the parish Priest: the other occasions take precedence.
+  if(rite===RITES.mass&&requested?.funeral&&(requested.nativity||requested.candlemas||requested.ashWednesday||requested.bishop||requested.confirmation||requested.baptism))requested={...requested,funeral:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
@@ -39,6 +43,12 @@ function buildMassScenario(requested){
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
+  // Baptism within Mass: the reception of the children replaces the greeting and the Penitential Act, the
+  // profession of faith replaces the Creed, and the blessing may be taken from the rite (Ordo Baptismi Parvulorum 29).
+  if(requested.baptism)requested={...requested,creed:false,solemnBlessing:true,introductory:'A'};
+  // Funeral Mass: no Gloria and no Creed; the reception at the door replaces the greeting and the Penitential
+  // Act, and the final commendation replaces the concluding rites (GIRM 384; OCF 159-176).
+  if(requested.funeral)requested={...requested,gloria:false,creed:false,introductory:'A',solemnBlessing:false};
   // The Bishop is assisted by a Deacon (Pontificales ritus 6) and the readings are read by readers.
   if(requested.bishop)requested={...requested,deacon:true,lector:true};
   const serverCount=requested.serverCount??(requested.servers?5:0);
@@ -63,6 +73,8 @@ function buildMassScenario(requested){
     nativity:!!requested.nativity,
     candlemas:!!requested.candlemas,
     ashWednesday:!!requested.ashWednesday,
+    baptism:!!requested.baptism,
+    funeral:!!requested.funeral,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -80,6 +92,8 @@ function buildMassScenario(requested){
   if(!options.deacon)visible.delete('D');
   if(!options.bishop)BEARER_ROLES.forEach(a=>visible.delete(a));
   if(!options.confirmation){visible.delete('K');visible.delete('SP');}
+  if(!options.baptism){visible.delete('BP');visible.delete('GP');}
+  if(!options.funeral){visible.delete('FD');visible.delete('FM');}
   if(!options.servers)SERVER_ROLES.forEach(a=>visible.delete(a));
   const team=[
     [],['S'],['S','X'],['S','C1','C2'],
@@ -388,6 +402,8 @@ function buildMassScenario(requested){
   if(options.ashWednesday)applyAshWednesday(steps,options,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
+  if(options.baptism)applyBaptism(steps,options,initialPos,initialProps);
+  if(options.funeral)applyFuneral(steps,options,initialPos,initialProps,visible);
 
   for(const s of steps){
     for(const field of ['mv','acts','orans']){
@@ -406,6 +422,8 @@ function buildMassScenario(requested){
   if(options.introductory!=='A')removed.add(6);
   if(options.candlemas)[3,4,5,6].forEach(key=>removed.add(key));
   if(options.ashWednesday)[5,6].forEach(key=>removed.add(key));
+  if(options.baptism)[3,4,5,6].forEach(key=>removed.add(key));
+  if(options.funeral)[3,4,5,6].forEach(key=>removed.add(key));
   const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
@@ -415,7 +433,9 @@ function buildMassScenario(requested){
     if(role==='T')return options.incense?'Server 5: incense.':'Server 5: additional assistant.';
     return 'Server '+(team.indexOf(role)+1)+': processional candle.';
   });
-  return {options,visible,assignments,team};
+  // A Funeral Mass is celebrated in violet here (black or, where permitted, white are also allowed: OCF 39).
+  const vesture=options.funeral?{role:'P',roles:['P','D'],cope:false,recolour:true,colour:FUNERAL_VIOLET}:undefined;
+  return {options,visible,assignments,team,vesture};
 }
 
 // Parish options share the original step keys so audio and training references remain stable.
@@ -1024,6 +1044,407 @@ function applyAshWednesday(steps,options,initialProps){
   const end=at(38);
   end.text+=' On Ash Wednesday the Missal gives a Prayer over the People, said before the blessing.';
   end.ref+='; Roman Missal, Ash Wednesday';
+}
+
+// Baptism of children (Ordo Baptismi Parvulorum, OBP). The font stands at the back of the nave by the door,
+// with the paschal candle beside it and a small table for the chrism, the white garment and the candle.
+// One family (a parent carrying the child, BP, and a godparent, GP) stands for all. Texts are short paraphrases.
+const BAPTISM_FONT=[330,792];
+const BAPTISM_PLACES={
+  font:BAPTISM_FONT,celebrant:[330,758],parent:[302,820],godparent:[360,822],nearChild:[292,794],round:[300,764],
+  table:[372,752],chrism:[362,750],garment:[372,752],bcandle:[382,756],paschal:[398,772],atTable:[386,784],beside:[328,830],
+  front:[500,262],parentFront:[478,302],godparentFront:[522,302],helperFront:[540,268],oil:[870,150],
+  doorParent:[470,840],doorGodparent:[530,840]
+};
+// The reception at the church door (OBP 35-41); cel is already standing just inside the door at [500,808].
+function baptismReception({cel,who,within}){
+  const Who=who[0].toUpperCase()+who.slice(1);
+  const spot=[500,814];
+  return {part:within?'Introductory Rites':'Reception of the Children',title:'Reception of the Children',dur:34,posture:'stand',
+    text:'The parents and godparents wait with the child at the church door. '+Who+(within?' and the ministers go':' goes')+' there. He greets everyone, especially the parents and godparents, and asks the name of the child and what they ask of God\u2019s Church. He reminds the parents of their duty to bring the child up in the faith and asks the godparents to help them. Then he welcomes the child for the Christian community and traces the sign of the cross on its forehead; the parents and godparents do the same.'+(within?' At Mass this reception takes the place of the greeting and the Penitential Act.':''),
+    ref:within?'Ordo Baptismi Parvulorum 29, 35-41':'Ordo Baptismi Parvulorum 35-41',
+    mv:{[cel]:[M([spot],0,.06),M([[486,826]],.78,.82),M([spot],.9,.96)]},
+    acts:{[cel]:[['greets the parents and godparents',.04,.12],['traces the sign of the cross on the child\u2019s forehead',.82,.88]],
+      BP:[['traces the sign of the cross on the child',.88,.95]],GP:[['traces the sign of the cross on the child',.9,.97]]},
+    face:{[cel]:[[[500,840],.06,1]],BP:[[spot,0,1]],GP:[[spot,0,1]]},
+    say:[[cel,'(greets all present, especially the parents and godparents)',.03,.12],
+      [cel,'What name do you give your child?',.13,.19],['BP','N.',.19,.22],
+      [cel,'What do you ask of God\u2019s Church for N.?',.24,.3],['BP','Baptism.',.3,.34],
+      [cel,'(reminds the parents of their duty to bring up the child in the faith) Do you clearly understand what you are undertaking?',.36,.5],['BP','We do.',.5,.54],
+      [cel,'Are you ready to help the parents of this child in their duty as Christian parents?',.56,.64],['GP','We are.',.64,.68],
+      [cel,'N., the Christian community welcomes you with great joy; in its name I claim you for Christ our Saviour by the sign of his cross.',.7,.82]]};
+}
+// The steps from the exorcism to the return from the font, shared by Baptism within Mass (applyBaptism)
+// and outside Mass (mass-rite-baptism.js). cel is the celebrant (P or D); helper brings the oil of
+// catechumens from the credence (the celebrant himself when nobody can); key(id,massKey) names each step.
+function baptismCoreSteps({cel,helper,who,within,sung,key}){
+  const B=BAPTISM_PLACES;
+  const Who=who[0].toUpperCase()+who.slice(1);
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const part=within?'Liturgy of the Word':'Celebration of the Sacrament';
+  const fetch=helper===cel;
+  const fromPew=(home,to,a,b)=>M([[513,home[1]],[506,330],to],a,b);
+  const atFont={BP:[[B.celebrant,0,1]],GP:[[B.celebrant,0,1]]};
+  const steps=[];
+
+  const exorcism={key:key('exorcism',16.2),part,title:'Prayer of Exorcism and Anointing before Baptism',dur:26,posture:'stand',
+    text:Who+' comes before the people and the parents and godparents bring the child forward. He prays that the child, who will face the temptations of the world, be set free from original sin and become a temple of God\u2019s glory. Then he anoints the child on the breast with the oil of catechumens'+(fetch?', which with nobody to bring it he fetches from the credence himself':'')+'. (The anointing may be omitted for a serious reason; then he lays his hand on the child in silence.)',
+    ref:'Ordo Baptismi Parvulorum 49-51',
+    mv:{[cel]:fetch?[M([[700,95],[850,150]],0,.14),M([[625,250],B.front],.17,.3),M([[625,250],[850,150]],.84,.92),M([[625,250],B.front],.94,1)]:M([[625,90],[625,250],B.front],0,.26),
+      BP:fromPew(HOME.BP,B.parentFront,.02,.28),GP:fromPew(HOME.GP,B.godparentFront,.04,.3)},
+    acts:{[cel]:[['extends his hands over the child and prays',.34,.56],['anoints the child on the breast with the oil of catechumens',.62,.78]],
+      BP:[['brings the child forward',.02,.28],['holds the child for the anointing',.6,.8]],GP:[['comes forward with the parents',.04,.3]]},
+    orans:{[cel]:[[.34,.56]]},
+    face:{BP:[[B.front,.3,.95]],GP:[[B.front,.3,.95]]},
+    props:{oilCat:[{by:helper,t:fetch?.15:helper==='D'?.14:.12},{at:B.oil,a:fetch?.9:.91,b:fetch?.92:.93}]},
+    say:[[cel,'(prayer of exorcism: set this child free from original sin, make her a temple of your glory and send your Holy Spirit to dwell with her)',.34,.56],['ppl','Amen.',.56,.6],
+      [cel,'We anoint you with the oil of salvation in the name of Christ our Saviour; may he strengthen you with his power.',.62,.78],['ppl','Amen.',.78,.82]]};
+  if(fetch)exorcism.acts[cel].unshift(['takes the oil of catechumens from the credence',.14,.17]),exorcism.acts[cel].push(['puts the oil back on the credence',.88,.92]);
+  else{
+    exorcism.mv[helper]=helper==='D'?[M([[300,252],[625,250],[850,165],[850,150]],0,.14),M([[625,250],B.helperFront],.18,.32),M([[625,250],[850,150]],.84,.92),M([[700,95],DCHAIR],.94,1)]
+      :[M([[850,140]],0,.11),M([[625,250],B.helperFront],.18,.32),M([[625,250],[850,150]],.84,.92),M([HOME.S],.94,1)];
+    exorcism.acts[helper]=[['brings the oil of catechumens',.13,.32],['holds the oil for '+who,.32,.8],['takes the oil back to the credence',.84,.93]];
+    exorcism.face[helper]=[[B.front,.32,.84]];
+  }
+  steps.push(exorcism);
+
+  steps.push({key:key('toFont',16.3),part,title:'Procession to the Font',dur:18,posture:'stand',
+    text:Who+' goes to the font with the parents and godparents, who carry the child, while a suitable song such as Psalm 23 is sung. Here the font stands at the back of the church near the door. If the baptistery cannot hold everyone, the baptism may be celebrated in a more suitable place in the church.',
+    ref:'Ordo Baptismi Parvulorum 52',
+    mv:{[cel]:M([[500,300],[500,740],[380,756],B.celebrant],.1,.85),
+      BP:M([[487,330],[487,830],B.parent],.02,.7),GP:M([[513,330],[513,830],B.godparent],.04,.74)},
+    acts:{[cel]:[['goes to the font',.1,.85]]},
+    face:{[cel]:[[B.font,.85,1]],BP:[[B.celebrant,.74,1]],GP:[[B.celebrant,.76,1]]},
+    say:[['ppl',chant('a suitable song, for example Psalm 23: The Lord is my shepherd'),0,1]]});
+
+  steps.push({key:key('water',16.4),part,title:'Blessing of the Water',dur:18,posture:'stand',
+    text:'At the font '+who+' reminds all of God\u2019s wonderful work in water, from the Creation and the Flood to the crossing of the Red Sea and the baptism of Jesus in the Jordan. He prays that the Holy Spirit give the water the grace of Christ, and touches the water with his right hand. (In Easter time, if the water was blessed at the Easter Vigil, a prayer of thanksgiving is said instead.)',
+    ref:'Ordo Baptismi Parvulorum 53-55',
+    acts:{[cel]:[['touches the water with his right hand',.62,.76]]},
+    face:{[cel]:[[B.font,0,1]],...atFont},
+    say:[[cel,'(invites all to pray that God will give this child new life by water and the Holy Spirit)',.03,.18],
+      [cel,'(blessing of the water: through your Son may all buried with Christ in baptism rise with him to newness of life)',.2,.8],['ppl','Amen.',.82,.9]]});
+
+  steps.push({key:key('promises',16.5),part,title:'Renunciation of Sin and Profession of Faith',dur:22,posture:'stand',
+    text:Who+' asks the parents and godparents to renounce sin and to profess their faith in the Father, the Son and the Holy Spirit and in the Church, the faith in which the child is baptized. He and all present give their assent.',
+    ref:'Ordo Baptismi Parvulorum 56-59',
+    face:{[cel]:[[B.parent,0,1]],...atFont},
+    say:[[cel,'Do you reject sin, so as to live in the freedom of God\u2019s children?',.03,.12],['BP','I do. (parents and godparents)',.12,.16],
+      [cel,'Do you reject Satan, and all his works and empty promises?',.18,.27],['BP','I do.',.27,.31],
+      [cel,'Do you believe in God, the Father almighty, creator of heaven and earth?',.33,.42],['BP','I do.',.42,.46],
+      [cel,'(questions on Jesus Christ, and on the Holy Spirit, the Church, the forgiveness of sins and eternal life)',.48,.66],['BP','I do.',.66,.7],
+      [cel,'This is our faith, the faith of the Church; we are proud to profess it in Christ Jesus our Lord.',.73,.9],['ppl','Amen.',.9,1]]});
+
+  steps.push({key:key('baptism',16.6),part,title:'The Baptism',dur:24,posture:'stand',
+    text:Who+' asks whether they want the child baptized in the faith they have professed. The parent holds the child over the font, and '+who+' baptizes the child, pouring water on its head three times (or immersing it), once at the name of each Person of the Trinity. After the baptism the people may sing an acclamation.',
+    ref:'Ordo Baptismi Parvulorum 58-61; CIC 849-850',
+    mv:{BP:[M([[312,806]],.2,.28),M([B.parent],.8,.88)]},
+    acts:{BP:[['holds the child over the font',.28,.76]],[cel]:[['pours water on the child\u2019s head',.38,.46],['pours water a second time',.52,.6],['pours water a third time',.66,.74]]},
+    face:{[cel]:[[B.font,0,1]],...atFont},
+    say:[[cel,'Is it your will that N. should be baptized in the faith of the Church, which we have all professed with you?',.03,.16],['BP','It is.',.16,.2],
+      [cel,'N., I baptize you in the name of the Father,',.32,.44],[cel,'and of the Son,',.48,.58],[cel,'and of the Holy Spirit.',.62,.72],
+      ['ppl',chant('an acclamation, for example: Blessed be God, who chose you in Christ'),.78,1]]});
+
+  steps.push({key:key('explanatory',16.7),part,title:'Chrism, White Garment and Lighted Candle',dur:40,posture:'stand',
+    text:Who+' anoints the child on the crown of the head with chrism: like Christ, anointed Priest, Prophet and King, the child is now a member of his body. The godparent puts the white garment on the child, the sign of its Christian dignity. '+Who+' takes the paschal candle and the godparent lights the child\u2019s candle from it: the light of Christ is entrusted to the parents and godparents. '+Who+' may then touch the child\u2019s ears and mouth (the Ephphatha).',
+    ref:'Ordo Baptismi Parvulorum 62-66',
+    mv:{[cel]:[M([[352,754]],0,.04),M([B.round,B.nearChild],.08,.16),M([B.round,[352,754]],.28,.34),M([[388,760]],.54,.58),M([B.round,B.nearChild],.82,.88)],
+      GP:[M([B.atTable],.3,.36),M([B.beside],.38,.44),M([B.atTable],.52,.58),M([B.godparent],.7,.76)]},
+    acts:{[cel]:[['takes the holy chrism',.03,.06],['anoints the child on the crown of the head with chrism',.18,.27],['puts the chrism back',.33,.35],
+        ['takes the paschal candle',.58,.64],['touches the child\u2019s ears and mouth (Ephphatha)',.88,.97]],
+      GP:[['puts the white garment on the child',.44,.52],['lights the baptismal candle from the paschal candle',.6,.68]],BP:[['holds the child',0,1]]},
+    face:{[cel]:[[B.parent,.16,.28],[B.paschal,.58,.66],[B.parent,.66,.82]],GP:[[[388,760],.58,.68],[B.celebrant,.76,1]],BP:[[B.celebrant,0,1]]},
+    props:{chrism:[{by:cel,t:.05},{at:B.chrism,a:.33,b:.35}],garment:[{by:'GP',t:.37},{hide:true,t:.52}],bcandle:[{by:'GP',t:.59}]},
+    say:[[cel,'(God, who freed you from sin and gave you new birth, anoints you with chrism: as Christ was anointed Priest, Prophet and King, may you live always as a member of his body)',.06,.2],['ppl','Amen.',.27,.3],
+      [cel,'N., you have become a new creation and have clothed yourself in Christ: see in this white garment the outward sign of your Christian dignity.',.38,.52],['ppl','Amen.',.52,.55],
+      [cel,'Receive the light of Christ.',.58,.64],[cel,'(to the parents and godparents: this light is entrusted to you; keep it burning brightly, so that this child may walk always as a child of the light)',.66,.82],
+      [cel,'(Ephphatha: may the Lord soon touch your ears to receive his word, and your mouth to proclaim his faith)',.88,.97],['ppl','Amen.',.97,1]]});
+
+  const ret={key:key('return',16.8),part,title:within?'Return from the Font':'Procession to the Altar',dur:16,posture:'stand',
+    text:within?'All return from the font, the newly baptized child carried with the lighted candle, while a baptismal song is sung such as "You have put on Christ, in him you have been baptized. Alleluia". '+Who+' goes to the chair and the Mass continues with the Preparation of the Gifts.'
+      :'All go in procession to the altar, the child carried with the lighted candle, while a baptismal song is sung such as "You have put on Christ, in him you have been baptized. Alleluia".',
+    ref:within?'Ordo Baptismi Parvulorum 29, 67':'Ordo Baptismi Parvulorum 67',
+    mv:{[cel]:M([B.round,[380,752],[500,740],[500,300],...(within?[[625,250],[625,90],CHAIR]:[B.front])],0,.9),
+      BP:M(within?[[400,836],[513,836],[513,HOME.BP[1]],HOME.BP]:[[400,836],[487,836],[487,330],B.parentFront],.04,.9),
+      GP:M(within?[[513,826],[513,HOME.GP[1]],HOME.GP]:[[513,826],[513,330],B.godparentFront],.12,.96)},
+    acts:{GP:[['carries the lighted baptismal candle',0,1]]},
+    say:[['ppl',chant('You have put on Christ; in him you have been baptized. Alleluia, alleluia'),0,1]]};
+  if(!within)ret.face={BP:[[B.front,.92,1]],GP:[[B.front,.96,1]]};
+  steps.push(ret);
+  return steps;
+}
+
+// Baptism within Mass (OBP 29): the reception at the door takes the place of the greeting and the
+// Penitential Act; the universal prayer, with the litany of the saints, follows the Homily; the Creed is
+// omitted; the sacrament is celebrated at the font; the Mass continues with the Preparation of the Gifts;
+// the blessing of the mothers, the fathers and all present ends the Mass.
+function applyBaptism(steps,options,initialPos,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const B=BAPTISM_PLACES;
+  initialPos.BP=B.doorParent.slice();initialPos.GP=B.doorGodparent.slice();
+  Object.assign(initialProps,{infant:{by:'BP'},oilCat:{at:B.oil.slice()},chrism:{at:B.chrism.slice()},garment:{at:B.garment.slice()},bcandle:{at:B.bcandle.slice()}});
+  steps.unshift({key:-.4,...baptismReception({cel:'P',who:'the Priest',within:true})});
+
+  const entrance=at(0);
+  entrance.text='After the reception, the procession goes to the altar while the Entrance Chant is sung; the parents and godparents follow with the child and go to their places. '+entrance.text.replace(/^When the people are gathered, the Priest and ministers go to the altar while the Entrance Chant is sung\. /,'');
+  entrance.ref+='; Ordo Baptismi Parvulorum 29';
+  Object.assign(entrance.mv,{BP:M([[487,790],[513,700],[513,HOME.BP[1]],HOME.BP],.34,.9),GP:M([[513,790],[513,HOME.GP[1]],HOME.GP],.38,.96)});
+
+  // The Sign of the Cross and the greeting are omitted; the ministers go to their places during the next step.
+  const sign=at(3),next=at(options.gloria?7:8);
+  for(const field of ['mv','props']){
+    for(const [name,value] of Object.entries(sign[field]||{})){
+      next[field]??={};
+      next[field][name]=field==='mv'?[...segs(value),...segs(next[field][name])]:[...value,...(next[field][name]||[])];
+    }
+  }
+  next.text='The Priest goes straight to the chair: the reception of the children has taken the place of the greeting and the Penitential Act. '+next.text;
+  next.ref+='; Ordo Baptismi Parvulorum 29';
+
+  const homily=at(14);
+  homily.text+=' The Homily explains the readings and the mystery of baptism, and the duties of the parents and godparents.';
+  homily.ref+='; Ordo Baptismi Parvulorum 29, 45';
+
+  const prayer=at(16);
+  prayer.dur=18;
+  prayer.text='After the Homily the universal prayer is taken from the rite of baptism: intentions for the child, the parents and godparents and all the baptized. It ends with the litany of the saints, Holy Mary, Saint John the Baptist, Saint Joseph and others, and the prayer of exorcism takes the place of the concluding prayer. The Creed is not said: the profession of faith is made at the font.';
+  prayer.ref+='; Ordo Baptismi Parvulorum 29, 47-48';
+  prayer.say=prayer.say.filter(([,text])=>!/concluding prayer/.test(text)&&!(text==='Amen.')).map(([who,text,a,b])=>[who,text.replace('(intention\u2026)','(intention for the child, the parents and godparents\u2026)'),a,b]);
+  prayer.say.push(['ppl',sung?'\u266a Holy Mary, Mother of God, pray for us\u2026 Saint John the Baptist\u2026 Saint Joseph\u2026 (litany of the saints) \u266a':'Holy Mary, Mother of God, pray for us\u2026 (litany of the saints)',.82,1]);
+  if(prayer.orans)delete prayer.orans.P;
+  const helper=options.deacon?'D':options.serverCount>0?'S':'P';
+  steps.splice(steps.indexOf(prayer)+1,0,...baptismCoreSteps({cel:'P',helper,who:'the Priest',within:true,sung,key:(id,k)=>k}));
+
+  const blessing=at(38);
+  const invocations=['(God, through his Son born of the Virgin Mary, bless the mother of this child, that she may always be thankful\u2026)',
+    '(God, the giver of life, bless the father of this child, that with his wife he may be the first teacher of the child in the faith\u2026)',
+    '(God bless all of you who are gathered here, that you may always walk as children of the light\u2026)'];
+  let n=0;
+  blessing.say=blessing.say.map(line=>line[0]==='P'&&/invocation/.test(line[1])&&n<3?['P',invocations[n++],line[2],line[3]]:line);
+  blessing.text+=' After the baptism the blessing may be taken from the rite: the mothers, the fathers and all present are blessed in turn.';
+  blessing.ref+='; Ordo Baptismi Parvulorum 29, 70';
+}
+
+// Funerals (Ordo Exsequiarum, OE; Order of Christian Funerals, OCF, US numbering). The coffin rests in the
+// aisle before the sanctuary, with the paschal candle on one side and the holy-water stand on the other.
+// The funeral director (FD) stands for all the bearers and one member of the family (FM) for the mourners.
+// Texts are short paraphrases; "brother" and "he" stand for "brother or sister", "he or she".
+const FUNERAL_VIOLET='#5b3a7a';
+const FUNERAL_PLACES={
+  rest:[500,377],door:[500,790],stand:[460,345],paschal:[540,345],standReach:[470,334],
+  celDoor:[500,738],helperDoor:[528,744],thuriferDoor:[472,744],directorDoor:[500,836],familyDoor:[526,836],pallSpot:[528,800],
+  directorRest:[500,423],celCoffin:[500,322],helperCoffin:[458,322],thuriferCoffin:[542,322],assistantCoffin:[478,300]
+};
+// The reception at the church door (OCF 159-161 within Mass; 184-186 outside Mass); cel is standing just
+// inside the door, facing it.
+function funeralReception({cel,who,helper,within}){
+  const F=FUNERAL_PLACES;
+  const Who=who[0].toUpperCase()+who.slice(1);
+  const step={part:within?'Introductory Rites':'Reception at the Church',title:'Reception at the Church Door',dur:30,posture:'stand',
+    text:'The bearers bring the coffin to the door of the church, with the family. '+Who+(within?' and the ministers go':' goes')+' to meet them. He greets those present with words of faith and consolation and sprinkles the coffin with holy water, which recalls the baptism in which the deceased first received new life. A member of the family then places the white pall over the coffin, a reminder of the baptismal garment; a cross or a Book of the Gospels may also be placed on it.'+(within?' At Mass this reception takes the place of the greeting and the Penitential Act. The paschal candle already stands where the coffin will rest.':''),
+    ref:(within?'GIRM 384; Order of Christian Funerals 159-161':'Order of Christian Funerals 184-186'),
+    mv:{[cel]:M([F.celDoor],0,.08),FM:[M([F.pallSpot],.54,.6),M([F.familyDoor],.76,.82)]},
+    acts:{[cel]:[['greets those present',.03,.14],['sprinkles the coffin with holy water',.3,.46]],FM:[['places the white pall on the coffin',.62,.72]]},
+    face:{[cel]:[[[500,840],.08,1]],FD:[[F.celDoor,0,1]],FM:[[F.door,.6,.74],[F.celDoor,.82,1]]},
+    props:{pall:[{hide:true,t:.7}],drape:[{hide:false,t:.7}]},
+    say:[[cel,'(greets those present: the grace and peace of God our Father, who raised Jesus from the dead, be always with you)',.03,.14],['ppl','And with your spirit.',.14,.2],
+      [cel,'(as he sprinkles the coffin: in the waters of baptism N. died with Christ and rose with him to new life; may he now share with him eternal glory)',.3,.48],
+      ['ppl','(the pall is placed in silence)',.6,.74]]};
+  if(helper!==cel){
+    step.mv[helper]=M([F.helperDoor],0,.08);
+    step.props.holyWater=[{by:cel,t:.26},{by:helper,t:.5}];
+    step.acts[helper]=[['holds the holy water for '+who,.08,.26],['offers the sprinkler',.24,.28],['takes back the holy water',.48,.52]];
+    step.face[helper]=[[F.door,.08,1]];
+  }
+  return step;
+}
+// The final commendation and farewell (OE 46-48; OCF 170-175), shared by the Funeral Mass (applyFuneral)
+// and the funeral liturgy outside Mass (mass-rite-funeral.js). cel starts at the chair; helper brings the
+// holy water from its stand (cel himself when nobody can); thurifer (if any) holds the thurible; assistant
+// (a Deacon who is not the helper) stands by the celebrant; key(id,massKey) names each step.
+function funeralCommendationSteps({cel,helper,thurifer,assistant,who,within,sung,key,thuriblePick}){
+  const F=FUNERAL_PLACES;
+  const Who=who[0].toUpperCase()+who.slice(1);
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const part='Final Commendation';
+  const fetch=helper===cel;
+  const fromChair=[[625,90],[625,250],[520,300]];
+  const steps=[];
+
+  const invitation={key:key('invitation',38),part,title:'Final Commendation: Invitation and Silence',dur:22,posture:'stand',
+    text:(within?'After the Prayer after Communion the concluding rites are omitted and the final commendation and farewell take place. ':'Following the Lord\u2019s Prayer, the final commendation and farewell take place. ')+Who+' goes to stand near the coffin, facing the people, with the ministers who hold the holy water'+(thurifer?' and the incense':'')+'. He invites all to pray, and all pray for a while in silence. (Before the commendation a member of the family or a friend may speak in remembrance of the deceased.)',
+    ref:(within?'GIRM 384; Order of Christian Funerals 170-172; ':'Order of Christian Funerals 197-199; ')+'Ordo Exsequiarum 46-47',
+    mv:{[cel]:fetch?[M([...fromChair,F.standReach],0,.3),M([F.celCoffin],.33,.38)]:M([...fromChair,F.celCoffin],0,.32)},
+    acts:{[cel]:fetch?[['takes the holy water from its stand',.3,.33]]:[]},
+    face:{[cel]:[[[500,400],.38,1]]},
+    props:{holyWater:[{by:helper,t:.31}]},
+    say:[[cel,'(invitation: with faith in Jesus Christ, let us commend our brother N. to the mercy of God, that he may rise with all the saints)',.4,.62],['ppl','(all pray in silence)',.64,1]]};
+  if(!fetch){
+    const route=helper==='D'?[[375,90],[375,250],[440,300],F.standReach]:[[805,110],[700,250],[520,300],F.standReach];
+    invitation.mv[helper]=[M(route,.04,.29),M([F.helperCoffin],.32,.38)];
+    invitation.acts[helper]=[['takes the holy water from its stand',.29,.32]];
+    invitation.face[helper]=[[F.rest,.38,1]];
+  }
+  if(assistant){
+    invitation.mv[assistant]=M([[375,90],[375,250],[440,290],F.assistantCoffin],.04,.3);
+    invitation.face[assistant]=[[F.rest,.3,1]];
+  }
+  if(thurifer){
+    invitation.mv[thurifer]=thuriblePick?[M([[760,95]],0,.08),M([[760,250],[560,292],F.thuriferCoffin],.12,.36)]:M([[760,250],[560,292],F.thuriferCoffin],.06,.32);
+    invitation.face[thurifer]=[[F.rest,.36,1]];
+    invitation.props.thurible=[{by:thurifer,t:thuriblePick?.09:0}];
+    invitation.smoke=[[thurifer,0,1]];
+  }
+  steps.push(invitation);
+
+  const sprinkleEnd=thurifer?.34:.5;
+  const farewell={key:key('farewell',38.5),part,title:'Song of Farewell',dur:30,posture:'stand',
+    text:'The song of farewell is sung, for example: "Saints of God, come to his aid! Hasten to meet him, angels of the Lord!" During the song '+who+' sprinkles the coffin with holy water'+(thurifer?' and then incenses it':'')+'. The holy water recalls the baptism of the deceased'+(thurifer?'; the incense honours the body, once a temple of the Holy Spirit':'')+'. (The sprinkling'+(thurifer?' and the incensing':'')+' may also take place before or after the song.)',
+    ref:(within?'Order of Christian Funerals 173-174; ':'Order of Christian Funerals 200-201; ')+'Ordo Exsequiarum 46-48',
+    acts:{[cel]:[['sprinkles the coffin with holy water',.08,sprinkleEnd]]},
+    face:{[cel]:[[F.rest,0,1]]},
+    props:fetch?{}:{holyWater:[{by:cel,t:.06},{by:helper,t:sprinkleEnd+.02}]},
+    say:[['ppl',chant('Saints of God, come to his aid! Hasten to meet him, angels of the Lord! Receive his soul and present him to God the Most High.'),.04,.96]]};
+  if(!fetch){
+    farewell.acts[helper]=[['offers the sprinkler',.04,.08],['takes back the holy water',sprinkleEnd,sprinkleEnd+.04]];
+    farewell.face[helper]=[[F.celCoffin,0,1]];
+  }
+  if(thurifer){
+    farewell.acts[cel].push(['incenses the coffin',.44,.72]);
+    farewell.acts[thurifer]=[['hands the thurible to '+who,.36,.4],['takes back the thurible',.72,.76]];
+    farewell.face[thurifer]=[[F.celCoffin,0,1]];
+    farewell.props.thurible=[{by:cel,t:.4},{by:thurifer,t:.74}];
+    farewell.smoke=[[thurifer,0,.4],[cel,.4,.74],[thurifer,.74,1]];
+  }
+  steps.push(farewell);
+
+  const prayer={key:key('commendation',38.7),part,title:'Prayer of Commendation',dur:18,posture:'stand',
+    text:Who+' says the prayer of commendation, entrusting the deceased to the Father of mercies in the sure hope that he will rise with Christ on the last day.'+(fetch?' He first puts the holy water back on its stand.':' The holy water is put back on its stand.')+' The funeral director and the bearers come forward to take the coffin'+(within?', and the ministers make ready for the procession.':'.'),
+    ref:(within?'Order of Christian Funerals 175; ':'Order of Christian Funerals 202; ')+'Ordo Exsequiarum 48',
+    mv:{FD:M([[470,800],[470,440],F.directorRest],.2,.9)},
+    acts:{FD:[['comes forward with the bearers to take the coffin',.2,.9]]},
+    orans:{[cel]:[[.24,.8]]},
+    face:{[cel]:[[[500,400],0,1]]},
+    say:[[cel,'Let us pray.',.18,.24],[cel,'(prayer of commendation: into your hands, Father of mercies, we commend our brother N., in the sure and certain hope that, with all who have died in Christ, he will rise with him on the last day)',.24,.8],['ppl','Amen.',.82,.9]]};
+  if(fetch){
+    prayer.mv[cel]=[M([F.standReach],0,.06),M([F.celCoffin],.1,.16)];
+    prayer.props={holyWater:[{at:F.stand,a:.06,b:.09}]};
+    prayer.acts[cel]=[['puts the holy water back on its stand',.06,.1]];
+  }else{
+    prayer.mv[helper]=[M([F.standReach],.02,.08),M([F.helperCoffin],.12,.18)];
+    prayer.props={holyWater:[{at:F.stand,a:.08,b:.11}]};
+    prayer.acts[helper]=[['puts the holy water back on its stand',.08,.12]];
+  }
+  if(thurifer)prayer.smoke=[[thurifer,0,1]];
+  steps.push(prayer);
+  return steps;
+}
+// The procession out of the church (OCF 176 within Mass; 203 outside Mass): the ministers go first in single
+// file, passing beside the coffin, then the coffin, then the family. order lists the ministers in the order
+// they leave; lead gives each one an optional first segment to reach the lane; bow lists those who bow to the
+// altar first.
+function funeralProcessionOut({speaker,sung,key,order,lead={},bow=[],thurifer,within=true}){
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const lane=[[522,300],[522,430],[500,452],[500,860]];
+  const mv={},acts={};
+  order.forEach((role,i)=>{const a=.22+i*.05;mv[role]=[...segs(lead[role]),M(lane,a,a+.38)];});
+  const lastA=.22+Math.max(0,order.length-1)*.05;
+  const fdA=Math.min(.74,lastA+.16),fdB=Math.min(1,fdA+.4),fmA=fdA+.05;
+  mv.FD=M([[500,960]],fdA,fdB);
+  mv.FM=M([[540,380],[500,470],[500,870]],fmA,1);
+  for(const role of bow)acts[role]=[['profound bow',.12,.2]];
+  acts.FD=[['wheels the coffin out of the church',fdA,fdB]];
+  const step={key,part:'Final Commendation',title:'Procession to the Place of Committal',dur:26,posture:'stand',
+    text:(within?'The Deacon or, in his absence, the Priest says: ':'An assisting minister, or in the absence of an assisting minister, the presiding minister says: ')+'"In peace let us take our brother to his place of rest." The ministers lead the procession, then the coffin, followed by the family and the mourners, while "In paradisum" or another song is sung. The rite of committal follows at the grave or the crematorium; it takes place outside the church and is not shown here.',
+    ref:within?'Order of Christian Funerals 176':'Order of Christian Funerals 203',mv,acts,
+    props:{coffin:[{by:'FD',t:0},{hide:true,t:fdB}],drape:[{by:'FD',t:0},{hide:true,t:fdB}]},
+    say:[[speaker,'In peace let us take our brother to his place of rest.',.02,.12],['ppl',chant('May the angels lead you into paradise; may the martyrs come to welcome you\u2026 (In paradisum)'),.14,1]]};
+  if(thurifer)step.smoke=[[thurifer,0,1]];
+  return step;
+}
+
+// The Funeral Mass (GIRM 380-385; OCF 154-176): the reception at the door takes the place of the greeting and
+// the Penitential Act; there is no Gloria and no Creed; after the Prayer after Communion the final commendation
+// replaces the concluding rites (GIRM 384) and the coffin is taken out in procession.
+function applyFuneral(steps,options,initialPos,initialProps,visible){
+  const at=key=>steps.find(s=>s.key===key);
+  const F=FUNERAL_PLACES;
+  const sung=options.music!=='said';
+  const thurifer=options.incense?(options.serverCount===5?'T':'S'):null;
+  const carrier=options.serverCount===5?'S':'P';
+  const helper=options.serverCount===5?'S':options.deacon?'D':'P';
+  const assistant=options.deacon&&helper!=='D'?'D':null;
+  // The ministers wait inside the door, a little further up the aisle, leaving room for the coffin.
+  for(const role of ['T','X','C1','C2','L','D','P','S']){
+    const p=initialPos[role];
+    if(p&&p[1]>=690&&p[0]>=450&&p[0]<=550)initialPos[role]=[p[0],p[1]-100];
+  }
+  if(carrier==='S')initialPos.S=[530,708];
+  initialPos.FD=F.directorDoor.slice();initialPos.FM=F.familyDoor.slice();
+  Object.assign(initialProps,{coffin:{by:'FD'},drape:{by:'FD',h:true},pall:{by:'FM'},holyWater:{by:carrier}});
+  steps.unshift({key:-.4,...funeralReception({cel:'P',who:'the Priest',helper:carrier,within:true})});
+
+  const entrance=at(0);
+  entrance.dur=Math.max(entrance.dur,18);
+  entrance.text='After the reception the procession goes to the altar while the Entrance Chant is sung: the ministers go first, then the coffin, with the family following. The coffin is placed in the aisle before the altar, beside the paschal candle. '+entrance.text.replace(/^The people stand as the Entrance Chant is sung\. /,'');
+  entrance.ref+='; Order of Christian Funerals 162';
+  entrance.props??={};entrance.acts??={};
+  Object.assign(entrance.mv,{FD:M([F.directorRest],.22,.86),FM:M([[526,470],[560,380],HOME.FM],.42,.98)});
+  Object.assign(entrance.props,{coffin:[{at:F.rest,a:.87,b:.87}],drape:[{at:F.rest,a:.87,b:.87}]});
+  entrance.acts.FD=[['brings the coffin before the altar',.22,.86]];
+  if(carrier==='S'){
+    entrance.mv.S=[M([[528,700],[470,600],[470,420],F.standReach],.1,.6),M([[513,300],[700,250],[805,110],HOME.S],.68,1)];
+    entrance.props.holyWater=[{at:F.stand,a:.61,b:.65}];
+    entrance.acts.S=[['puts the holy water on its stand by the coffin',.6,.66]];
+  }else{
+    entrance.mv.P=[M([[500,360],F.standReach],.16,.55),M([[500,310],[530,250]],.62,.86)];
+    entrance.props.holyWater=[{at:F.stand,a:.56,b:.6}];
+    entrance.acts.P=[...(entrance.acts.P||[]),['puts the holy water on its stand by the coffin',.55,.61]];
+  }
+  // The bearers withdraw once the coffin is in place.
+  (at(1).mv??={}).FD=M([[470,430],[470,800],HOME.FD],0,.6);
+
+  // The Sign of the Cross and the greeting are omitted; the ministers go to their places during the Collect.
+  const sign=at(3),next=at(options.gloria?7:8);
+  for(const field of ['mv','props']){
+    for(const [name,value] of Object.entries(sign[field]||{})){
+      next[field]??={};
+      next[field][name]=field==='mv'?[...segs(value),...segs(next[field][name])]:[...value,...(next[field][name]||[])];
+    }
+  }
+  next.text='The Priest goes straight to the chair: the reception at the door has taken the place of the greeting and the Penitential Act. '+next.text;
+  next.ref+='; Order of Christian Funerals 163-164';
+
+  const homily=at(14);
+  homily.text+=' At a funeral the Homily proclaims the paschal mystery and the hope of eternal life; it is never a eulogy of the deceased.';
+  homily.ref+='; GIRM 382; Order of Christian Funerals 27';
+  const prayer=at(16);
+  prayer.text+=' At a funeral the intentions pray for the deceased, for the family and all who mourn, and for all the faithful departed. There is no Creed.';
+  prayer.ref+='; GIRM 385';
+  const communion=at(35);
+  // Communicants walk either side of the coffin, which rests in the middle of the aisle.
+  communion.special.lanes=[468,532];
+
+  const blessing=at(38),dismissal=at(39),recession=at(40);
+  const commendation=funeralCommendationSteps({cel:'P',who:'the Priest',helper,thurifer,assistant,within:true,sung,key:(id,k)=>k,thuriblePick:thurifer==='S'});
+  const last=commendation[commendation.length-1];
+  // The cross and candles are taken up during the prayer, as at the dismissal of an ordinary Mass.
+  for(const role of ['X','C1','C2','L'])if(dismissal.mv?.[role])(last.mv??={})[role]=[...segs(last.mv[role]),...segs(dismissal.mv[role])];
+  for(const name of ['cross','cand1','cand2'])if(dismissal.props?.[name])(last.props??={})[name]=dismissal.props[name];
+  steps.splice(steps.indexOf(blessing),1,...commendation);
+  steps.splice(steps.indexOf(dismissal),1);
+
+  const hadL=!!recession.mv?.L;
+  const order=[thurifer==='T'||visible.has('T')?'T':null,'X','C1','C2',hadL?'L':null,'S','D','P'].filter(role=>role&&visible.has(role));
+  const lead={};
+  for(const role of ['X','C1','C2'])if(recession.mv?.[role])lead[role]=segs(recession.mv[role])[0];
+  if(visible.has('T')&&thurifer!=='T')lead.T=M([[760,250]],0,.2);
+  if(visible.has('S')&&thurifer!=='S'&&helper!=='S')lead.S=M([[805,110],[700,250]],0,.2);
+  if(helper!=='P')lead[helper]=M([[468,300]],.1,.18);
+  const out=funeralProcessionOut({speaker:options.deacon?'D':'P',sung,key:40,order,lead,bow:['P','D'].filter(r=>visible.has(r)),thurifer});
+  out.part='Final Commendation';
+  steps.splice(steps.indexOf(recession),1,out);
 }
 
 function chooseHomilyPlace(point){
