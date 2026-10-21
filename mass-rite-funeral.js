@@ -50,19 +50,19 @@ function funeralRiteSteps({minister,server,thurifer,sung}){
   }
   add('procession',{part:'Reception at the Church',title:'Entrance Procession',dur:20,posture:'stand',
     text:(T?'The thurifer leads the procession, then ':'The procession goes up the aisle: ')+who+' and the ministers, then the coffin, with the family following, while a song or psalm is sung. The coffin is placed before the altar, beside the lighted paschal candle, and the family takes its places.',
-    ref:'Order of Christian Funerals 162-163, 186',...procession,
+    ref:'Order of Christian Funerals 187-188',...procession,
     say:[['ppl',chant('a song or psalm, for example Psalm 25: to you, O Lord, I lift up my soul'),.04,1]]});
 
   add('collect',{part:'Reception at the Church',title:'Opening Prayer',dur:12,posture:'stand',
     text:'At the chair '+who+' invites all to pray, and after a brief silence says the opening prayer for the deceased.',
-    ref:'Order of Christian Funerals 164, 187',
+    ref:'Order of Christian Funerals 189-190',
     face:{[cel]:[[[500,400],0,1]]},orans:{[cel]:[[.2,.85]]},
     mv:{FD:M([[470,430],[470,800],HOME.FD],0,.6)},
     say:[[cel,'Let us pray.',0,.1],['ppl','(silence)',.1,.2],[cel,'(opening prayer: O God, Father of mercies, receive our brother N. into your peace and light\u2026)',.2,.85],['ppl','Amen.',.86,.94]]});
 
   add('word',{part:'Liturgy of the Word',title:'Readings, Gospel and Homily',dur:26,posture:[['sit',0],['stand',.3],['sit',.58]],
     text:'One or more readings are proclaimed, with a psalm, for example "The Lord is my shepherd". '+Who+' reads the Gospel, here the raising of Lazarus. A brief homily follows: it speaks of God\u2019s love and the paschal mystery of Christ, and it is never a eulogy of the deceased.',
-    ref:'Order of Christian Funerals 27, 165-166, 188-189',
+    ref:'Order of Christian Funerals 27, 191-192',
     mv:{[cel]:[M(chairToAmbo,.28,.34),M([...chairToAmbo].reverse().slice(1).concat([CHAIR]),.92,1)]},
     say:[['ppl','(a reading, for example Wisdom 3: the souls of the just are in the hand of God; and Psalm 23)',.02,.26],
       [cel,'A reading from the holy Gospel according to John.',.36,.4],[cel,'(John 11: I am the resurrection and the life; whoever believes in me, even though he die, will live)',.4,.52],
@@ -71,21 +71,21 @@ function funeralRiteSteps({minister,server,thurifer,sung}){
   const reader=server?'S':cel;
   add('intercessions',{part:'Liturgy of the Word',title:'Prayer of the Faithful',dur:16,posture:'stand',
     text:Who+' introduces the prayer of the faithful. '+(server?'The server reads':'He reads')+' the intentions: for the deceased, for the family and all who mourn, and for all the faithful departed.',
-    ref:'Order of Christian Funerals 167, 190',
+    ref:'Order of Christian Funerals 193',
     say:[[cel,'(invitation to prayer)',0,.1],[reader,'(for our brother N., that he may share in the resurrection\u2026) Lord, in your mercy.',.12,.34],['ppl','Hear our prayer.',.34,.42],
       [reader,'(for his family and all who mourn, that they may be comforted\u2026) Lord, in your mercy.',.44,.66],['ppl','Hear our prayer.',.66,.74],
       [reader,'(for all the faithful departed\u2026) Lord, in your mercy.',.76,.92],['ppl','Hear our prayer.',.92,1]]});
 
   add('lordsPrayer',{part:'Liturgy of the Word',title:'The Lord\u2019s Prayer',dur:14,posture:'stand',
     text:Who+' invites all to pray the Lord\u2019s Prayer together, and ends the prayer of the faithful with a concluding prayer.',
-    ref:'Order of Christian Funerals 191-192',orans:{[cel]:[[.72,.92]]},
+    ref:'Order of Christian Funerals 194',orans:{[cel]:[[.72,.92]]},
     say:[[cel,'(let us pray as Christ taught us)',0,.1],['ppl',chant('Our Father, who art in heaven\u2026'),.12,.66],[cel,'(concluding prayer: Lord God, you are attentive to the voice of our pleading\u2026)',.7,.92],['ppl','Amen.',.92,1]]});
 
   for(const step of funeralCommendationSteps({cel,helper,thurifer:T,assistant:null,who,within:false,sung,key:id=>'fun:'+id}))steps.push(step);
 
   const lead={};
   if(server)lead.S=M([[468,300]],.1,.18);
-  steps.push(funeralProcessionOut({speaker:cel,sung,key:'fun:out',order:[T,server?'S':null,cel].filter(Boolean),lead,bow:[cel],thurifer:T}));
+  steps.push(funeralProcessionOut({speaker:cel,sung,key:'fun:out',order:[T,server?'S':null,cel].filter(Boolean),lead,bow:[cel],thurifer:T,within:false}));
   return steps;
 }
 

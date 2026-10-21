@@ -1236,13 +1236,14 @@ const FUNERAL_PLACES={
   celDoor:[500,738],helperDoor:[528,744],thuriferDoor:[472,744],directorDoor:[500,836],familyDoor:[526,836],pallSpot:[528,800],
   directorRest:[500,423],celCoffin:[500,322],helperCoffin:[458,322],thuriferCoffin:[542,322],assistantCoffin:[478,300]
 };
-// The reception at the church door (OCF 159-163); cel is standing just inside the door, facing it.
+// The reception at the church door (OCF 159-161 within Mass; 184-186 outside Mass); cel is standing just
+// inside the door, facing it.
 function funeralReception({cel,who,helper,within}){
   const F=FUNERAL_PLACES;
   const Who=who[0].toUpperCase()+who.slice(1);
   const step={part:within?'Introductory Rites':'Reception at the Church',title:'Reception at the Church Door',dur:30,posture:'stand',
     text:'The bearers bring the coffin to the door of the church, with the family. '+Who+(within?' and the ministers go':' goes')+' to meet them. He greets those present with words of faith and consolation and sprinkles the coffin with holy water, which recalls the baptism in which the deceased first received new life. A member of the family then places the white pall over the coffin, a reminder of the baptismal garment; a cross or a Book of the Gospels may also be placed on it.'+(within?' At Mass this reception takes the place of the greeting and the Penitential Act. The paschal candle already stands where the coffin will rest.':''),
-    ref:(within?'GIRM 384; ':'')+'Order of Christian Funerals 159-163',
+    ref:(within?'GIRM 384; Order of Christian Funerals 159-161':'Order of Christian Funerals 184-186'),
     mv:{[cel]:M([F.celDoor],0,.08),FM:[M([F.pallSpot],.54,.6),M([F.familyDoor],.76,.82)]},
     acts:{[cel]:[['greets those present',.03,.14],['sprinkles the coffin with holy water',.3,.46]],FM:[['places the white pall on the coffin',.62,.72]]},
     face:{[cel]:[[[500,840],.08,1]],FD:[[F.celDoor,0,1]],FM:[[F.door,.6,.74],[F.celDoor,.82,1]]},
@@ -1272,8 +1273,8 @@ function funeralCommendationSteps({cel,helper,thurifer,assistant,who,within,sung
   const steps=[];
 
   const invitation={key:key('invitation',38),part,title:'Final Commendation: Invitation and Silence',dur:22,posture:'stand',
-    text:(within?'After the Prayer after Communion the concluding rites are omitted and the final commendation and farewell take place. ':'')+Who+' goes to stand near the coffin, facing the people, with the ministers who hold the holy water'+(thurifer?' and the incense':'')+'. He invites all to pray, and all pray for a while in silence. (Before the commendation a member of the family or a friend may speak in remembrance of the deceased.)',
-    ref:(within?'GIRM 384; Order of Christian Funerals 170-172; ':'')+'Ordo Exsequiarum 46-47',
+    text:(within?'After the Prayer after Communion the concluding rites are omitted and the final commendation and farewell take place. ':'Following the Lord\u2019s Prayer, the final commendation and farewell take place. ')+Who+' goes to stand near the coffin, facing the people, with the ministers who hold the holy water'+(thurifer?' and the incense':'')+'. He invites all to pray, and all pray for a while in silence. (Before the commendation a member of the family or a friend may speak in remembrance of the deceased.)',
+    ref:(within?'GIRM 384; Order of Christian Funerals 170-172; ':'Order of Christian Funerals 197-199; ')+'Ordo Exsequiarum 46-47',
     mv:{[cel]:fetch?[M([...fromChair,F.standReach],0,.3),M([F.celCoffin],.33,.38)]:M([...fromChair,F.celCoffin],0,.32)},
     acts:{[cel]:fetch?[['takes the holy water from its stand',.3,.33]]:[]},
     face:{[cel]:[[[500,400],.38,1]]},
@@ -1300,7 +1301,7 @@ function funeralCommendationSteps({cel,helper,thurifer,assistant,who,within,sung
   const sprinkleEnd=thurifer?.34:.5;
   const farewell={key:key('farewell',38.5),part,title:'Song of Farewell',dur:30,posture:'stand',
     text:'The song of farewell is sung, for example: "Saints of God, come to his aid! Hasten to meet him, angels of the Lord!" During the song '+who+' sprinkles the coffin with holy water'+(thurifer?' and then incenses it':'')+'. The holy water recalls the baptism of the deceased'+(thurifer?'; the incense honours the body, once a temple of the Holy Spirit':'')+'. (The sprinkling'+(thurifer?' and the incensing':'')+' may also take place before or after the song.)',
-    ref:(within?'Order of Christian Funerals 173-174; ':'')+'Ordo Exsequiarum 46-48',
+    ref:(within?'Order of Christian Funerals 173-174; ':'Order of Christian Funerals 200-201; ')+'Ordo Exsequiarum 46-48',
     acts:{[cel]:[['sprinkles the coffin with holy water',.08,sprinkleEnd]]},
     face:{[cel]:[[F.rest,0,1]]},
     props:fetch?{}:{holyWater:[{by:cel,t:.06},{by:helper,t:sprinkleEnd+.02}]},
@@ -1320,7 +1321,7 @@ function funeralCommendationSteps({cel,helper,thurifer,assistant,who,within,sung
 
   const prayer={key:key('commendation',38.7),part,title:'Prayer of Commendation',dur:18,posture:'stand',
     text:Who+' says the prayer of commendation, entrusting the deceased to the Father of mercies in the sure hope that he will rise with Christ on the last day.'+(fetch?' He first puts the holy water back on its stand.':' The holy water is put back on its stand.')+' The funeral director and the bearers come forward to take the coffin'+(within?', and the ministers make ready for the procession.':'.'),
-    ref:(within?'Order of Christian Funerals 175; ':'')+'Ordo Exsequiarum 48',
+    ref:(within?'Order of Christian Funerals 175; ':'Order of Christian Funerals 202; ')+'Ordo Exsequiarum 48',
     mv:{FD:M([[470,800],[470,440],F.directorRest],.2,.9)},
     acts:{FD:[['comes forward with the bearers to take the coffin',.2,.9]]},
     orans:{[cel]:[[.24,.8]]},
@@ -1339,10 +1340,11 @@ function funeralCommendationSteps({cel,helper,thurifer,assistant,who,within,sung
   steps.push(prayer);
   return steps;
 }
-// The procession out of the church (OCF 176): the ministers go first in single file, passing beside the
-// coffin, then the coffin, then the family. order lists the ministers in the order they leave; lead gives
-// each one an optional first segment to reach the lane; bow lists those who bow to the altar first.
-function funeralProcessionOut({speaker,sung,key,order,lead={},bow=[],thurifer}){
+// The procession out of the church (OCF 176 within Mass; 203 outside Mass): the ministers go first in single
+// file, passing beside the coffin, then the coffin, then the family. order lists the ministers in the order
+// they leave; lead gives each one an optional first segment to reach the lane; bow lists those who bow to the
+// altar first.
+function funeralProcessionOut({speaker,sung,key,order,lead={},bow=[],thurifer,within=true}){
   const chant=text=>sung?'\u266a '+text+' \u266a':text;
   const lane=[[522,300],[522,430],[500,452],[500,860]];
   const mv={},acts={};
@@ -1354,8 +1356,8 @@ function funeralProcessionOut({speaker,sung,key,order,lead={},bow=[],thurifer}){
   for(const role of bow)acts[role]=[['profound bow',.12,.2]];
   acts.FD=[['wheels the coffin out of the church',fdA,fdB]];
   const step={key,part:'Final Commendation',title:'Procession to the Place of Committal',dur:26,posture:'stand',
-    text:'The Deacon or, in his absence, the Priest says: "In peace let us take our brother to his place of rest." The ministers lead the procession, then the coffin, followed by the family and the mourners, while "In paradisum" or another song is sung. The rite of committal follows at the grave or the crematorium; it takes place outside the church and is not shown here.',
-    ref:'Order of Christian Funerals 176',mv,acts,
+    text:(within?'The Deacon or, in his absence, the Priest says: ':'An assisting minister, or in the absence of an assisting minister, the presiding minister says: ')+'"In peace let us take our brother to his place of rest." The ministers lead the procession, then the coffin, followed by the family and the mourners, while "In paradisum" or another song is sung. The rite of committal follows at the grave or the crematorium; it takes place outside the church and is not shown here.',
+    ref:within?'Order of Christian Funerals 176':'Order of Christian Funerals 203',mv,acts,
     props:{coffin:[{by:'FD',t:0},{hide:true,t:fdB}],drape:[{by:'FD',t:0},{hide:true,t:fdB}]},
     say:[[speaker,'In peace let us take our brother to his place of rest.',.02,.12],['ppl',chant('May the angels lead you into paradise; may the martyrs come to welcome you\u2026 (In paradisum)'),.14,1]]};
   if(thurifer)step.smoke=[[thurifer,0,1]];
@@ -1386,7 +1388,7 @@ function applyFuneral(steps,options,initialPos,initialProps,visible){
   const entrance=at(0);
   entrance.dur=Math.max(entrance.dur,18);
   entrance.text='After the reception the procession goes to the altar while the Entrance Chant is sung: the ministers go first, then the coffin, with the family following. The coffin is placed in the aisle before the altar, beside the paschal candle. '+entrance.text.replace(/^The people stand as the Entrance Chant is sung\. /,'');
-  entrance.ref+='; Order of Christian Funerals 159-163';
+  entrance.ref+='; Order of Christian Funerals 162';
   entrance.props??={};entrance.acts??={};
   Object.assign(entrance.mv,{FD:M([F.directorRest],.22,.86),FM:M([[526,470],[560,380],HOME.FM],.42,.98)});
   Object.assign(entrance.props,{coffin:[{at:F.rest,a:.87,b:.87}],drape:[{at:F.rest,a:.87,b:.87}]});
@@ -1412,7 +1414,7 @@ function applyFuneral(steps,options,initialPos,initialProps,visible){
     }
   }
   next.text='The Priest goes straight to the chair: the reception at the door has taken the place of the greeting and the Penitential Act. '+next.text;
-  next.ref+='; Order of Christian Funerals 159-163';
+  next.ref+='; Order of Christian Funerals 163-164';
 
   const homily=at(14);
   homily.text+=' At a funeral the Homily proclaims the paschal mystery and the hope of eternal life; it is never a eulogy of the deceased.';

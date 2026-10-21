@@ -1,6 +1,7 @@
 # Sources and attribution
 
-Links below were consulted or identified during development on 14 October 2026.
+Links below were consulted or identified during development on 14 October 2026,
+and the funeral sources were checked again on 21 October 2026.
 External pages may change; the project does not bundle a full copyrighted Missal.
 
 ## Liturgy
@@ -152,6 +153,131 @@ weekday preset omits the Gloria and Creed per [GIRM 53](https://www.magisterium.
 [GIRM 68](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/68). The screen operator's tracks are synthesised in the browser
 and the slides show placeholders only; no hymn texts or recordings are included.
 The monstrance, projector screen and operator desk are project-made simple geometry.
+
+Round 22 (Baptism of children) choices were checked through Magisterium AI
+against the Order of Baptism of Children. The English
+[Introduction](https://www.magisterium.com/docs/164c92b2-87d0-45cf-8b77-30cda6588e3a/ref/16)
+gives the structure of the rite (the rite begins with the reception of the
+children, whose foreheads the parents and the celebrant sign with the sign of
+the cross), the
+[ministries and roles](https://www.magisterium.com/docs/164c92b2-87d0-45cf-8b77-30cda6588e3a/ref/7),
+the
+[time and place](https://www.magisterium.com/docs/164c92b2-87d0-45cf-8b77-30cda6588e3a/ref/10)
+(the parish church, which must have a baptismal font), the
+[Lord's Prayer and the blessing of the parents and all present](https://www.magisterium.com/docs/164c92b2-87d0-45cf-8b77-30cda6588e3a/ref/19),
+the
+[Easter Vigil adaptations](https://www.magisterium.com/docs/164c92b2-87d0-45cf-8b77-30cda6588e3a/ref/28)
+and the
+[Sunday Mass adaptations](https://www.magisterium.com/docs/164c92b2-87d0-45cf-8b77-30cda6588e3a/ref/29)
+(the reception of the children at the beginning of Mass, the greeting and
+penitential rite omitted, the Credo not said because the profession of faith
+takes its place, and the blessing at the end of Mass). The rite itself keeps
+the Latin numbering of the *Ordo Baptismi Parvulorum*, so the project cites
+the Latin text directly: the
+[reception of the children and the interrogation of the parents](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page19)
+(nos. 32-37), the
+[time and place of Baptism](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page13)
+(nos. 8-11, including the Sunday and the Easter Vigil), the
+[structure of the rite](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page14)
+(nos. 12-18), the
+[water and the font](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page8)
+(nos. 18-25), the
+[baptismal register](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page9)
+(no. 29), the
+[exorcism and the anointing with the oil of catechumens](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page23)
+(nos. 49-52), the
+[address at the font and the blessing of the water](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page24)
+(nos. 53-54) and the
+[Baptism and the anointing with chrism](https://www.magisterium.com/docs/64bbbe97-21df-452c-90b3-d5aa00de2845/ref/page28)
+(nos. 60-62). These sit with
+[CIC 861](https://www.magisterium.com/docs/927224e3-8c2d-44ed-a9fb-dc736030081d/ref/861)
+(the bishop, presbyter or deacon as ordinary minister of Baptism) and
+[CIC 877](https://www.magisterium.com/docs/927224e3-8c2d-44ed-a9fb-dc736030081d/ref/877)
+(the baptismal register kept by the pastor of the place of baptism). The
+placement of the font, the choice of one representative parent and godparent,
+and the distribution of the oils are judgement calls. Where the project writes
+"OBP 29" it means the number 29 of the English Introduction (the adaptations
+for Mass within Sunday Mass), not no. 29 of the Latin rite, which is the
+baptismal register and is cited as such in R167.
+
+Round 23 (Funerals) choices were checked through Magisterium AI against the
+General Introduction of the Order of Christian Funerals, which gives the
+[presiding minister](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/14)
+(priests preside; where no priest is available deacons preside), the
+[homily](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/27)
+(brief, on the readings, and never a eulogy), the
+[prayers of intercession](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/29),
+the
+[silence](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/34)
+and the
+[Easter candle](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/35),
+the
+[pall](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/38),
+the
+[liturgical colour](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/39),
+the
+[processions and the three stations](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/42)
+and the
+[final commendation and farewell](https://www.magisterium.com/docs/3d220e66-7234-440a-966d-169484c63632/ref/6).
+The corpus holds the 2009 United States ritual only as an English General
+Introduction, whose numbered records are headings rather than paragraph
+numbers, so the United States paragraph numbers cited in the project come
+from published outlines of the same ritual: the
+[FDLC outline of the Order of Christian Funerals](https://fdlc.org/wp-content/uploads/2021/08/Outline_of_Order_of_Christian_Funerals.pdf)
+(Funeral Liturgy 128-153, Funeral Mass 154-176, Funeral Liturgy outside Mass
+177-203), the
+[outline of the funeral liturgy outside Mass](https://www.rmhealey.com/docs/pdf/Funeral_Liturgy-Outside_Mass.pdf)
+(nos. 177-203, with the reception of the body, the greeting, the sprinkling,
+the pall, the entrance procession, the placing of Christian symbols, the
+opening prayer, the readings, the homily, the intercessions, the Lord's
+Prayer and the final commendation) and the
+[Through Death to Life excerpt](https://assets.avemariapress.com/media/files/cf9ada9cdd7ea97cea8f29d68ea3aced/Through_Death_to_Life_Excerpt.pdf)
+(nos. 159-164, the introductory rites of the Funeral Mass: the greeting, the
+sprinkling, the pall, the entrance procession and the placing of Christian
+symbols), the
+[diocesan guidelines for the rite of Christian funerals](https://richmonddiocese.org/wp-content/uploads/2015/10/Guidelines-for-the-Rite-of-Christian-Funerals-2-1.pdf)
+(nos. 172, 174 and 176: the silence, the Song of Farewell and the procession
+to the place of committal), the
+[diocesan norms for the Order of Christian Funerals](https://www.orlandodiocese.org/wp-content/uploads/2023/07/Order-of-Christian-Funerals.pdf)
+(nos. 170, 170-176 and 437: the words of remembrance, the end of the liturgy
+and the alternate dismissal), the
+[notes on the final commendation](https://catholicsensibility.wordpress.com/2010/11/05/ocf-171-175-final-commendation/)
+(nos. 171-175) and the
+[notes on the procession to the place of committal](https://catholicsensibility.wordpress.com/2010/11/06/ocf-176-procession-to-the-place-of-committal/)
+(no. 176, with the texts that may be sung as the procession leaves the
+church). The 1969 Latin *Ordo Exsequiarum* in the corpus is
+cited for what it is: the
+[three types of funeral and the forbidden days](https://www.magisterium.com/docs/f7d36d03-08f8-445b-8490-f5b8c08cd00c/ref/page5)
+(nos. 4-8, with no. 6 on when the funeral Mass is forbidden), the
+[final commendation after the funeral Mass](https://www.magisterium.com/docs/f7d36d03-08f8-445b-8490-f5b8c08cd00c/ref/page6)
+(no. 10) and the
+[rite of final commendation](https://www.magisterium.com/docs/f7d36d03-08f8-445b-8490-f5b8c08cd00c/ref/page19)
+(nos. 46-48, the sprinkling and incensing, the *Subvenite* and the *In manus
+tuas*). The Masses for the Dead follow
+[GIRM 372](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/372)
+(ritual Masses are prohibited on the Sundays of Advent, Lent and Easter, on
+solemnities, on All Souls' Day, on Ash Wednesday and during Holy Week),
+[GIRM 374](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/374),
+[GIRM 380](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/380)
+(the Funeral Mass may be celebrated on any day except solemnities that are holy
+days of obligation, Holy Thursday, the Easter Triduum, and the Sundays of
+Advent, Lent and Easter),
+[GIRM 381](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/381)
+and
+[GIRM 384](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/384)
+(after the prayer after Communion and omitting the concluding rite, the final
+commendation or farewell takes place, only if the body is present). The
+[Roman Missal instruction on the Masses for the Dead](https://www.magisterium.com/docs/3f204803-62dd-4467-9edb-8b46db283e8a/ref/Masses%20for%20the%20Dead)
+says the same about the days on which the Funeral Mass may be celebrated. The
+Gloria and the Creed are not said at an ordinary weekday Funeral Mass, which
+follows from
+[GIRM 53](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/53)
+and
+[GIRM 68](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/68),
+not from any paragraph of the Order of Christian Funerals. The coffin on a
+bier in the nave, the single funeral director and family mourner, and the
+simplification of the incensation of the coffin are judgement calls. The
+Vigil and the Rite of Committal are not modelled.
 
 Round eight choices: the entrance hymn stopping before the Sign of the Cross follows
 [GIRM 47](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/47) (the chant accompanies the procession). Search, hover tips,

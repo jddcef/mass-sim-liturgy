@@ -194,8 +194,8 @@ function normaliseGameOptions(role,raw={}){
     else if(role==='MB'||role==='CB'){o.funeral=false;notes.push('The Funeral Mass is modelled with the parish Priest presiding, so it was switched off for the Bishop\u2019s bearers.');}
   }
   if(o.funeral){
-    if(o.gloria){o.gloria=false;notes.push('The Gloria is not sung at a Funeral Mass (Order of Christian Funerals 159).');}
-    if(o.creed){o.creed=false;notes.push('The Creed is not said at a Funeral Mass (GIRM 384).');}
+    if(o.gloria){o.gloria=false;notes.push('The Gloria is not sung at a Funeral Mass on a weekday, because it is sung or said only on Sundays outside Advent and Lent, on solemnities and feasts, and at celebrations of a more solemn character (GIRM 53).');}
+    if(o.creed){o.creed=false;notes.push('The Creed is not said at a Funeral Mass on a weekday, because it is sung or said only on Sundays and solemnities, and at celebrations of a more solemn character (GIRM 68).');}
     if(o.introductory!=='A'){o.introductory='A';notes.push('The reception of the body at the door replaces the greeting and the Penitential Act (Order of Christian Funerals 159).');}
     if(o.solemnBlessing){o.solemnBlessing=false;notes.push('The final commendation takes the place of the blessing and dismissal (Order of Christian Funerals 170).');}
   }
@@ -1034,12 +1034,12 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'vimps',name:'Two vimps for the mitre- and crozier-bearers',place:'sacristy',needed:!!options.bishop,ref:'Custom (Elliot, Ceremonies Explained for Servers)',reason:'The bearers hold the insignia through the vimps, not with bare hands.'},
     {id:'chrism',name:'Vessel of holy chrism (from the ambry)',place:options.baptism?'font':'credence',needed:!!options.confirmation||!!options.baptism,ref:options.baptism?'Ordo Baptismi Parvulorum 62':'Ordo Confirmationis 19, 26',reason:options.baptism?'The celebrant anoints the crown of the child\u2019s head after the baptism.':'The Deacon brings it to the Bishop for the anointing.'},
     {id:'oilCat',name:'Oil of catechumens (from the ambry)',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum 50',reason:'The child is anointed on the breast after the prayer of exorcism.'},
-    {id:'fontWater',name:'Water in the font, and a towel',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum, Praenotanda 18-20; 60'},
+    {id:'fontWater',name:'Water in the font, and a towel',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum 18-20; 25; 53-54; 60'},
     {id:'garment',name:'White garment for the child',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum 63'},
     {id:'bcandle',name:'Baptismal candle, with the paschal candle lit beside the font',place:'font',needed:!!options.baptism,ref:'Ordo Baptismi Parvulorum 64; Roman Missal, Pentecost Sunday rubric',reason:'The godparent lights the child\u2019s candle from the paschal candle.'},
     {id:'register',name:'Baptismal register and certificate',place:'sacristy',needed:!!options.baptism,ref:'CIC 877 §1'},
-    {id:'funeralWater',name:'Holy-water vessel and sprinkler for the reception of the body',place:'procession',needed:!!options.funeral,ref:'Order of Christian Funerals 160',reason:'The Priest sprinkles the coffin at the door, recalling Baptism; it is used again at the commendation.'},
-    {id:'funeralPall',name:'White funeral pall, folded',place:'procession',needed:!!options.funeral,ref:'Order of Christian Funerals 161, 38',reason:'The family or the ministers place it on the coffin after the sprinkling.'},
+    {id:'funeralWater',name:'Holy-water vessel and sprinkler for the reception of the body',place:'procession',needed:!!options.funeral,ref:options.rite==='funeral'?'Order of Christian Funerals 185':'Order of Christian Funerals 160',reason:'The Priest sprinkles the coffin at the door, recalling Baptism; it is used again at the commendation.'},
+    {id:'funeralPall',name:'White funeral pall, folded',place:'procession',needed:!!options.funeral,ref:(options.rite==='funeral'?'Order of Christian Funerals 186':'Order of Christian Funerals 161')+', 38',reason:'The family or the ministers place it on the coffin after the sprinkling.'},
     {id:'paschalFuneral',name:'Paschal candle on its stand by the place for the coffin, lit',place:'coffinPlace',needed:!!options.funeral,ref:'Order of Christian Funerals 35',reason:'The coffin is placed near it, a sign of Christ\u2019s victory over death.'},
     {id:'funeralVest',name:'Violet (or white or black) vestments for the Priest'+(options.deacon?' and Deacon':''),place:'sacristy',needed:!!options.funeral,ref:'Order of Christian Funerals 39; GIRM 346d'},
     {id:'chrismWash',name:'Water, basin and towel (with lemon and bread, by custom) for the Bishop to wash his hands',place:'credence',needed:!!options.confirmation,ref:'Ordo Confirmationis 19, 29; custom'},
@@ -1288,7 +1288,7 @@ function baptismPreTasks(role,options,startPos){
     'Yes: the Deacon is an ordinary minister of Baptism',
     ['No: only a Priest may baptize','Only in danger of death','Only if the Bishop gives permission each time']);
   if(role==='S')choose('vest','Vest to serve. What do you put on?','Custom; GIRM 339 by analogy','Alb (or cassock and surplice)',['Stole over the alb','Cope','Chasuble']);
-  if(role==='S')choose('prepare','What must be ready at the font?','Ordo Baptismi Parvulorum, Praenotanda 18-20; custom',
+  if(role==='S')choose('prepare','What must be ready at the font?','Ordo Baptismi Parvulorum 18-20; 25; 53-54; custom',
     'Water in the font, the oils of catechumens and chrism, the white garment, the baptismal candle and a towel, with the paschal candle lit',
     ['The chalice and cruets','The monstrance and humeral veil','The collection baskets']);
   if(role==='PEW'){
@@ -1324,7 +1324,7 @@ function funeralPreTasks(role,options,startPos){
   const tasks=[];
   const choose=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
     options:shuffled([correct,...wrong],seededRandom(role+id+'fun')).map(label=>({label,correct:label===correct}))});
-  if(role==='P'||role==='D')choose('vest','Vest for the funeral liturgy outside Mass. What do you put on?','Order of Christian Funerals 39; custom',
+  if(role==='P'||role==='D')choose('vest','Vest for the funeral liturgy outside Mass. What do you put on?','Order of Christian Funerals 182, 39; custom',
     role==='P'?'Alb (or cassock and surplice) and a violet stole; a cope may be worn':'Alb (or cassock and surplice) and a violet stole, worn diagonally',
     ['Alb, stole and chasuble, as for Mass','A white cope and humeral veil','Cassock only, without a stole']);
   if(role==='D')choose('minister','May you, as Deacon, lead this funeral liturgy?','Order of Christian Funerals 14',
@@ -1332,17 +1332,17 @@ function funeralPreTasks(role,options,startPos){
     ['No: only a Priest may lead any funeral','Only if the family asks for a Deacon','Yes, and you may also celebrate the Funeral Mass']);
   if(role==='S'||role==='T')choose('vest','Vest to serve. What do you put on?','Custom; GIRM 339 by analogy','Alb (or cassock and surplice)',['Stole over the alb','Cope','Chasuble']);
   if(role==='T')choose('carry','What do you prepare for the final commendation?','Order of Christian Funerals 197; custom','Thurible with lit charcoal, and the boat with incense',['The monstrance','The processional cross','The baptismal candle']);
-  if(role==='S')choose('prepare','What must be ready before the coffin arrives?','Order of Christian Funerals 35, 38, 182-183; custom',
+  if(role==='S')choose('prepare','What must be ready before the coffin arrives?','Order of Christian Funerals 35, 185-187; custom',
     'The holy water and sprinkler and the white pall at the door, and the paschal candle lit where the coffin will rest',
     ['The chalice and cruets','The monstrance and humeral veil','The collection baskets']);
   if(role==='PEW'){
     const correct='In the pews, until the coffin is received at the door';
-    tasks.push({id:'arrive',kind:'task',prompt:'You have come to a funeral. Where are you when it begins?',ref:'Order of Christian Funerals 182 (judgement call)',correct,
+    tasks.push({id:'arrive',kind:'task',prompt:'You have come to a funeral. Where are you when it begins?',ref:'Order of Christian Funerals 183 (judgement call)',correct,
       options:shuffled([correct,'Standing in the sanctuary','At the place for the coffin already','Outside, waiting to leave'],seededRandom('pewfunarrive')).map(label=>({label,correct:label===correct}))});
     return tasks;
   }
   const place=GAME_PLACES.find(p=>p.id==='sanctuaryDoor');
-  tasks.push({id:'line',kind:'place',prompt:'Where do you wait until the coffin arrives?',ref:'Order of Christian Funerals 182 (judgement call)',target:startPos||place.at,places:[place.id],correct:place.name,
+  tasks.push({id:'line',kind:'place',prompt:'Where do you wait until the coffin arrives?',ref:'Order of Christian Funerals 183 (judgement call)',target:startPos||place.at,places:[place.id],correct:place.name,
     options:shuffled([{label:place.name,correct:true},{label:'the place for the coffin at the head of the aisle',correct:false},{label:'the ambo',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'funline'))});
   return tasks;
 }
