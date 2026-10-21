@@ -536,4 +536,86 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+`
   }
   buildScenario({});
   console.log('Passed '+thursdayCount+' Holy Thursday scenarios and '+thursdayFrames+' sampled frames.');
+
+  // Good Friday: silent entrance and prostration before bare altar, Passion of St John in parts,
+  // Solemn Intercessions, Showing and Adoration of the Holy Cross, Communion from reserved Sacrament,
+  // Prayer over the People, silent departure. Strictly no Gloria, Creed, bells, or Eucharistic Prayer.
+  let fridayFrames=0,fridayCount=0;
+  for(const requested of [{goodFriday:true,serverCount:5,incense:true,deacon:true,lector:true},
+    {goodFriday:true,serverCount:0,deacon:false,lector:false,gloria:true,creed:true,introductory:'sprinkling',music:'said'},
+    {goodFriday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {goodFriday:true,serverCount:3,deacon:true,incense:false},
+    {goodFriday:true,holyThursday:true,serverCount:5},{goodFriday:true,palmSunday:true,serverCount:5},{goodFriday:true,ashWednesday:true,serverCount:5},{goodFriday:true,candlemas:true,serverCount:5},{goodFriday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.holyThursday||requested.palmSunday||requested.ashWednesday||requested.candlemas||requested.nativity){
+      assert.ok(!options.goodFriday,'a preceding day wins over Good Friday');
+      assert.ok(STEPS.every(s=>s.title!=='Showing of the Holy Cross (Ecce lignum Crucis)'));
+      continue;
+    }
+    fridayCount++;
+    assert.ok(options.goodFriday&&!options.gloria&&!options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [2,3,4,5,6,7,15,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,39])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.equal(STEPS.length,21,'Good Friday has exactly 21 steps');
+    assert.ok(keys.includes(0),'Entrance in silence included');
+    assert.ok(keys.includes(1),'Prostration included');
+    assert.ok(keys.includes(8),'Collect included');
+    assert.ok(keys.includes(13),'Passion according to John included');
+    assert.ok(keys.includes(16),'Solemn Intercessions included');
+    assert.ok(keys.includes(16.5),'Showing of Cross included');
+    assert.ok(keys.includes(16.7),'Adoration of Cross included');
+    assert.ok(keys.includes(17),'Preparation of Altar included');
+    assert.ok(keys.includes(17.5),'Transfer from Repose included');
+    assert.ok(keys.includes(31),'Lord\u2019s Prayer included');
+    assert.ok(keys.includes(34),'Behold the Lamb of God included');
+    assert.ok(keys.includes(35),'Holy Communion included');
+    assert.ok(keys.includes(36),'Reposition & Stripping included');
+    assert.ok(keys.includes(37),'Prayer after Communion included');
+    assert.ok(keys.includes(38),'Prayer over the People included');
+    assert.ok(keys.includes(40),'Silent Departure included');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const entrance=STEPS[idx(0)],prostration=STEPS[idx(1)],passion=STEPS[idx(13)],showing=STEPS[idx(16.5)],adoration=STEPS[idx(16.7)],transfer=STEPS[idx(17.5)],stripping=STEPS[idx(36)],recession=STEPS[idx(40)];
+    assert.equal(entrance.title,'Entrance in Silence');
+    assert.equal(entrance.say.length,0,'no entrance hymn');
+    assert.equal(prostration.title,'Reverence & Prostration in Silence');
+    assert.equal(prostration.posture,'kneel');
+    assert.deepEqual(actorAt(idx(1),'P',.5),[500,240],'Priest prostrates before the bare altar');
+    assert.equal(passion.title,'The Passion of the Lord according to John');
+    assert.ok(passion.kneel&&passion.kneel.length>0,'kneel at death of the Lord');
+    assert.equal(showing.title,'Showing of the Holy Cross (Ecce lignum Crucis)');
+    assert.ok(showing.say.some(([r,t])=>r==='P'&&/Ecce lignum Crucis/.test(t)));
+    assert.ok(showing.say.some(([r,t])=>r==='ppl'&&/Venite, adoremus/.test(t)));
+    assert.equal(adoration.title,'Adoration of the Holy Cross (Adoratio Sanctae Crucis)');
+    assert.ok(adoration.say.some(([r,t])=>r==='ppl'&&/Crucem tuam/.test(t)));
+    assert.equal(transfer.title,'Bringing the Blessed Sacrament from the Altar of Repose');
+    const holder=options.deacon?'D':'P';
+    assert.equal(propAt(idx(17.5),'ciborium',.5).by,holder,'the ciborium is brought by '+holder);
+    assert.equal(stripping.title,'Reposition & Stripping of the Altar');
+    assert.equal(recession.title,'Silent Departure');
+    assert.equal(recession.say.length,0,'silent departure');
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        fridayFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{ashWednesday:true},{palmSunday:true},{holyThursday:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Showing of the Holy Cross (Ecce lignum Crucis)'&&s.title!=='Adoration of the Holy Cross (Adoratio Sanctae Crucis)'),'Good Friday rites only on Good Friday');
+  }
+  buildScenario({});
+  console.log('Passed '+fridayCount+' Good Friday scenarios and '+fridayFrames+' sampled frames.');
 `,context);

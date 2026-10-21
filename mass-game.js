@@ -446,7 +446,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,holyThursday:saved.holyThursday===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,holyThursday:saved.holyThursday===true,goodFriday:saved.goodFriday===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -688,8 +688,8 @@ function describeCelebration(){
   if(!o.gloria)parts.push('no Gloria');
   if(!o.creed)parts.push('no Creed');
   if(!o.secondReading)parts.push('one reading before the Gospel');
-  parts.push(o.holyThursday?'Mass of the Lord\u2019s Supper (Mandatum, transfer to altar of repose, stripping of altar)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
-  parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
+  parts.push(o.goodFriday?'Celebration of the Passion of the Lord (prostration, Passion of St John, Solemn Intercessions, Adoration of the Cross, Communion)':o.holyThursday?'Mass of the Lord\u2019s Supper (Mandatum, transfer to altar of repose, stripping of altar)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
+  if(!o.goodFriday)parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
   if(o.solemnBlessing)parts.push('Solemn Blessing');
   if(o.crucifix!=='wall')parts.push('crucifix: '+CRUCIFIX_PLACES[o.crucifix].name.toLowerCase());
   if(o.crossStand!=='right')parts.push('cross stand: '+CROSS_STANDS[o.crossStand].name.toLowerCase());

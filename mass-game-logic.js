@@ -183,6 +183,22 @@ function normaliseGameOptions(role,raw={}){
       notes.push('After the Gloria, bells remain silent until the Easter Vigil, so consecration bells were switched off.');
     }
   }
+  o.goodFriday=!!o.goodFriday;
+  if(o.goodFriday&&(o.nativity||o.candlemas||o.ashWednesday||o.palmSunday||o.holyThursday)){o.goodFriday=false;notes.push('Good Friday is a different day from Christmas, Candlemas, Ash Wednesday, Palm Sunday and Holy Thursday, so it was switched off.');}
+  if(o.goodFriday&&(role==='MB'||role==='CB')){o.goodFriday=false;notes.push('Good Friday is modelled with the parish Priest presiding, so it was switched off for the Bishop\u2019s bearers.');}
+  if(o.goodFriday){
+    // Good Friday: Celebration of the Passion of the Lord (Roman Missal).
+    if(o.confirmation){o.confirmation=false;notes.push('Confirmation is not celebrated as a ritual Mass on Good Friday (GIRM 372), so it was switched off.');}
+    if(o.bishop){o.bishop=false;notes.push('Good Friday is modelled with the parish Priest presiding, so the Bishop was switched off.');}
+    if(o.gloria){o.gloria=false;notes.push('The Gloria is omitted in the Passion of the Lord (strict liturgical silence).');}
+    if(o.creed){o.creed=false;notes.push('The Creed is not said on Good Friday.');}
+    if(o.giftsProcession){o.giftsProcession=false;notes.push('There is no presentation of the gifts on Good Friday.');}
+    if(o.bothKinds){o.bothKinds=false;notes.push('Communion is from the reserved Sacrament consecrated on Holy Thursday.');}
+    if(o.bells.start||o.bells.epiclesis||o.bells.elevation){
+      o.bells={start:false,epiclesis:false,elevation:false};
+      notes.push('All bells remain strictly silent on Good Friday.');
+    }
+  }
   if(o.nativity){
     // Christmas is a solemnity: Gloria and Creed (GIRM 53, 68), a Nativity Preface, and no ritual Mass (GIRM 372).
     if(o.confirmation){o.confirmation=false;notes.push('Confirmation is not celebrated as a ritual Mass on a solemnity such as Christmas (GIRM 372), so it was switched off.');}
@@ -232,7 +248,7 @@ function normaliseExposition(role,o,notes){
     if(!o.incense){o.incense=true;notes.push('Incense switched on because you are the thurifer.');}
   }
   if(o.incense&&o.serverCount<2){o.incense=false;notes.push('Incense needs a thurifer (two servers) here, so it was switched off.');}
-  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
+  Object.assign(o,{deacon:o.minister==='deacon',bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:o.minister==='lay',readerCount:1,lectorProcession:false,
     music:'sung',bells:{start:false,epiclesis:false,elevation:false}});
   if(role==='E')notes.push('Only an instituted acolyte or an authorised extraordinary minister may expose the Blessed Sacrament, when no Priest or Deacon is available; they do not give the blessing.');
   if(!['key','all'].includes(o.detail))o.detail='key';
@@ -244,7 +260,7 @@ function normaliseExposition(role,o,notes){
 const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
 
 function scenarioRequest(options){
-  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation','nativity','candlemas','ashWednesday','palmSunday','holyThursday'];
+  const keys=['deacon','lector','serverCount','incense','bothKinds','gloria','creed','secondReading','introductory','music','solemnBlessing','giftsProcession','eucharisticPrayer','bells','crucifix','crossStand','readerCount','lectorProcession','collection','emhc','reservedCommunion','deaconCommunion','openChurch','projector','rite','minister','bishop','confirmation','nativity','candlemas','ashWednesday','palmSunday','holyThursday','goodFriday'];
   return Object.fromEntries(keys.map(k=>[k,k==='bells'?{...options.bells}:options[k]]));
 }
 
@@ -255,47 +271,51 @@ const GAME_PRESETS={
   sunday:{name:'Sunday Mass',blurb:'Sung, Deacon, four servers (cross and candles), no incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   sundayIncense:{name:'Sunday Mass with incense',blurb:'Sung, Deacon, five servers with a thurifer, incense, Gloria and Creed, two readings.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   weekday:{name:'Weekday Mass',blurb:'Said, no servers or Deacon, no Gloria or Creed, one reading: practice for the Priest.',fields:{
     deacon:false,serverCount:'0',lector:false,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:false,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'said',eucharisticPrayer:'II',
-    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   solemnity:{name:'Solemnity',blurb:'As Sunday, with the Roman Canon and a Solemn Blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   pontifical:{name:'Mass with the Bishop',blurb:'As a solemnity, with the Bishop presiding: mitre- and crozier-bearers in vimps, the homily from the cathedra and the pontifical blessing.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   confirmation:{name:'Confirmation Mass',blurb:'The Bishop confers Confirmation within Mass: the candidates presented after the Gospel, the renewal of baptismal promises, the laying on of hands and the anointing with chrism; no Creed.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:true,confirmation:true,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   nativity:{name:'Christmas Mass during the Night',blurb:'A solemnity: the Christmas Proclamation before Mass, all genuflect at the Incarnation in the Creed, and the blessing of the crib at the universal prayer.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:true,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:true,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:true,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   candlemas:{name:'Candlemas (Presentation of the Lord)',blurb:'The feast of 2 February: the blessing of candles at the back of the church, the procession with lighted candles and the Canticle of Simeon, then the Gloria at once.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:false,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
-    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:true,ashWednesday:false,palmSunday:false,holyThursday:false}},
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:true,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false}},
   ashWednesday:{name:'Ash Wednesday',blurb:'The beginning of Lent: no Penitential Act, Gloria or Alleluia; after the Homily the Priest blesses the ashes and gives them to the faithful.',fields:{
     deacon:true,serverCount:'4',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:false,bothKinds:false,gloria:false,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
-    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:true,palmSunday:false,holyThursday:false}},
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:true,palmSunday:false,holyThursday:false,goodFriday:false}},
   palmSunday:{name:'Palm Sunday',blurb:'Palm Sunday of the Passion of the Lord: blessing of palms at the back of the church, procession, no Gloria, and the Passion proclaimed in parts.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:false,creed:true,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'III',
-    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:true,holyThursday:false}},
+    bellStart:false,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:true,holyThursday:false,goodFriday:false}},
   holyThursday:{name:'Holy Thursday (Mass of the Lord\u2019s Supper)',blurb:'Evening Mass of the Lord\u2019s Supper: bells at the Gloria then silent until the Easter Vigil, the Mandatum (washing of feet), Roman Canon with proper formulas, transfer of the Blessed Sacrament to the Altar of Repose, and stripping of the altar.',fields:{
     deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:true,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
-    bellStart:true,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:true}},
+    bellStart:true,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:true,goodFriday:false}},
+  goodFriday:{name:'Good Friday (Celebration of the Passion of the Lord)',blurb:'Celebration of the Passion of the Lord: silent entrance and prostration before the bare altar, the Passion of St John without candles or incense, the Solemn Intercessions, the Adoration of the Holy Cross, and Holy Communion from the reserved Sacrament.',fields:{
+    deacon:true,serverCount:'5',lector:true,readerCount:'2',lectorProcession:false,collection:true,emhc:false,reservedCommunion:true,deaconCommunion:true,
+    incense:false,bothKinds:false,gloria:false,creed:false,secondReading:true,giftsProcession:false,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'I',
+    bellStart:false,bellEpiclesis:false,bellElevation:false,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:true}},
   // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
@@ -333,6 +353,7 @@ function presetForOptions(options,chosen){
     ashWednesday:isDevotionRite(options)?undefined:!!options.ashWednesday,
     palmSunday:isDevotionRite(options)?undefined:!!options.palmSunday,
     holyThursday:isDevotionRite(options)?undefined:!!options.holyThursday,
+    goodFriday:isDevotionRite(options)?undefined:!!options.goodFriday,
     rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
   if(id!=='custom')return id;
@@ -367,8 +388,8 @@ const CELEBRATIONS=[
     blurb:'Mass during the Night: the Christmas Proclamation, all genuflect at "and by the Holy Spirit was incarnate", the blessing of the crib.'},
   {id:'holyThursday',name:'Holy Thursday',precedence:'Evening Mass of the Lord\u2019s Supper',branch:'triduum',station:7,preset:'holyThursday',colour:'white',icon:'basin',at:[300,1070],after:['nativity','palmSunday','corpusChristi','confirmation'],
     blurb:'Bells at the Gloria then silence, the washing of feet, the transfer of the Blessed Sacrament to the altar of repose, the stripping of the altar.'},
-  {id:'goodFriday',name:'Good Friday',precedence:'Celebration of the Passion of the Lord',branch:'triduum',station:7,colour:'red',icon:'crucifix',at:[500,1070],after:['holyThursday'],
-    blurb:'Prostration in silence, the Passion, the Solemn Intercessions, the Adoration of the Cross and Communion from the reserved Sacrament.'},
+  {id:'goodFriday',name:'Good Friday',precedence:'Celebration of the Passion of the Lord',branch:'triduum',station:7,preset:'goodFriday',colour:'red',icon:'crucifix',at:[500,1070],after:['holyThursday'],
+    blurb:'Prostration in silence, the Passion of St John, the Solemn Intercessions, the Adoration of the Holy Cross and Communion from the reserved Sacrament.'},
   {id:'easterVigil',name:'Easter Vigil',precedence:'The Easter Vigil in the Holy Night',branch:'triduum',station:7,colour:'white',icon:'candle',at:[700,1070],after:['goodFriday'],
     blurb:'The new fire, the Paschal candle and the Exsultet, the readings, the Gloria with bells, Baptism and the renewal of promises.'},
   {id:'adorationLay',name:'Adoration (lay-led)',precedence:'Exposition without Benediction',branch:'devotion',colour:'white',icon:'tabernacle',at:[820,225],after:['dominica'],
@@ -547,6 +568,12 @@ function deriveMediaCues(steps=STEPS,startTimes,options={},detail='key'){
     if(options.holyThursday&&step.key===14.5)part={key:14.5,id:'mandatum',title:'Antiphons at the Washing of Feet (Ubi caritas)',sung:'track',said:'slide'};
     if(options.holyThursday&&step.key===38.5)part={key:38.5,id:'pangeLingua',title:'Pange lingua gloriosi (procession to the Altar of Repose)',sung:'track',said:'slide'};
     if(options.holyThursday&&step.key===39)part={key:39,id:'recessional',title:'Stripping of the Altar (in silence)',sung:'slide',said:'slide'};
+    if(options.goodFriday&&step.key===0)return;
+    if(options.goodFriday&&step.key===12)part={...part,title:'Verse before the Gospel (Christ became obedient for us)'};
+    if(options.goodFriday&&step.key===13)part={key:13,id:'passion',title:'The Passion of the Lord according to John (in parts)',sung:'track',said:'slide'};
+    if(options.goodFriday&&step.key===16.5)part={key:16.5,id:'ecceLignum',title:'Showing of the Holy Cross (Ecce lignum Crucis)',sung:'acapella',said:'slide'};
+    if(options.goodFriday&&step.key===16.7)part={key:16.7,id:'improperia',title:'Adoration of the Holy Cross (Crucem tuam / Reproaches)',sung:'track',said:'slide'};
+    if(options.goodFriday&&(step.key===39||step.key===40))return;
     if(part&&step.key===5&&options.introductory==='sprinkling')part={key:5,id:'asperges',title:'Asperges / Vidi aquam',sung:'track',said:'slide'};
     else if(part&&step.key===5&&options.introductory==='C')part={key:5,id:'invocations',title:'Lord, have mercy (invocations)',sung:'slide',said:'slide'};
     if(!part)return;
@@ -967,24 +994,26 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'pitcherBasin',name:'Pitcher of water, basin and towels for the Washing of Feet (Mandatum)',place:'credence',needed:!!options.holyThursday,ref:'Roman Missal, Holy Thursday, n. 11',reason:'The Priest washes the feet of the chosen faithful after the Homily.'},
     {id:'gremialTowel',name:'Linen gremial or towel for the Priest during the Mandatum',place:'sacristy',needed:!!options.holyThursday,ref:'Roman Missal, Holy Thursday, n. 11; custom',reason:'The Priest puts aside his chasuble and puts on the towel.'},
     {id:'humeralVeil',name:'White humeral veil for the transfer of the Most Blessed Sacrament',place:'credence',needed:!!options.holyThursday,ref:'Roman Missal, Holy Thursday, n. 37',reason:'The Priest wears it when carrying the ciborium to the Altar of Repose.'},
+    {id:'veiledCross',name:'Crucifix draped in a violet veil (ready for the Adoration of the Holy Cross)',place:'sacristy',needed:!!options.goodFriday,ref:'Roman Missal, Friday of the Passion of the Lord, n. 15',reason:'The Cross is brought in procession from the sacristy for the Ostensio Crucis.'},
+    {id:'commCandles',name:'Two candlesticks for Communion from the Altar of Repose',place:'credence',needed:!!options.goodFriday,ref:'Roman Missal, Friday of the Passion of the Lord, n. 21'},
     {id:'ciboriumRepose',name:'Additional altar breads consecrated for Communion on Good Friday',place:options.giftsProcession?'giftTable':'credence',needed:!!options.holyThursday,ref:'Roman Missal, Holy Thursday, n. 2',reason:'Enough hosts must be consecrated for Communion today and tomorrow; the tabernacle was completely empty.'},
     {id:'proclamation',name:'Text of the Christmas Proclamation (Roman Martyrology) for the cantor',place:'ambo',needed:!!options.nativity,ref:'Martyrologium Romanum, 25 December; Directory on Popular Piety 111',reason:'The cantor sings it at the ambo before Mass begins.'},
-    {id:'missal',name:'Roman Missal marked ('+(options.candlemas?'rite of the candles, ':'')+(options.palmSunday?'commemoration of the entrance, ':'')+(options.ashWednesday?'blessing of ashes, ':'')+(options.holyThursday?'Evening Mass of the Lord\u2019s Supper, Mandatum, proper Roman Canon, ':'')+'Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
-    {id:'chalice',name:'Chalice with purificator, paten and pall',place:'credence',needed:true,ref:'GIRM 118c'},
-    {id:'corporal',name:'Corporal',place:'credence',needed:true,ref:'GIRM 118c'},
-    {id:'water',name:'Cruet of water',place:'credence',needed:true,ref:'GIRM 118c'},
-    {id:'lavabo',name:'Lavabo bowl, jug and towel',place:'credence',needed:true,ref:'GIRM 118c'},
+    {id:'missal',name:'Roman Missal marked ('+(options.candlemas?'rite of the candles, ':'')+(options.palmSunday?'commemoration of the entrance, ':'')+(options.ashWednesday?'blessing of ashes, ':'')+(options.holyThursday?'Evening Mass of the Lord\u2019s Supper, Mandatum, proper Roman Canon, ':'')+(options.goodFriday?'Celebration of the Passion of the Lord, Passion of St John, Solemn Intercessions, Adoration of the Cross, Communion, ':'')+'Collect, Preface, EP '+ep+(options.solemnBlessing?', Solemn Blessing':'')+')',place:['credence','chair','bookStand'],needed:true,ref:'GIRM 118a'},
+    {id:'chalice',name:'Chalice with purificator, paten and pall',place:'credence',needed:!options.goodFriday,ref:'GIRM 118c'},
+    {id:'corporal',name:'Corporal',place:'credence',needed:true,ref:'GIRM 118c; Roman Missal, Friday of the Passion of the Lord, n. 21'},
+    {id:'water',name:'Cruet of water',place:'credence',needed:!options.goodFriday,ref:'GIRM 118c'},
+    {id:'lavabo',name:'Lavabo bowl, jug and towel',place:'credence',needed:!options.goodFriday,ref:'GIRM 118c'},
     {id:'commPlate',name:'Communion plate for the faithful',place:'credence',needed:true,ref:'GIRM 118c'},
-    {id:'wine',name:'Cruet of wine',place:options.giftsProcession?'giftTable':'credence',needed:true,ref:options.giftsProcession?'GIRM 73, 118c':'GIRM 118c',reason:options.giftsProcession?'The faithful bring it up in the procession of the gifts.':'No procession of the gifts today.'},
-    {id:'ciborium',name:'Ciborium with altar breads',place:options.giftsProcession?'giftTable':'credence',needed:true,ref:options.giftsProcession?'GIRM 73, 118c':'GIRM 118c'},
+    {id:'wine',name:'Cruet of wine',place:options.giftsProcession?'giftTable':'credence',needed:!options.goodFriday,ref:options.giftsProcession?'GIRM 73, 118c':'GIRM 118c',reason:options.giftsProcession?'The faithful bring it up in the procession of the gifts.':'No procession of the gifts today.'},
+    {id:'ciborium',name:'Ciborium with altar breads',place:options.giftsProcession?'giftTable':'credence',needed:!options.goodFriday,ref:options.giftsProcession?'GIRM 73, 118c':'GIRM 118c'},
     {id:'emhcVessel',name:'Additional ciborium for the authorised EMHC',place:'credence',needed:!!options.emhc,ref:'GIRM 118c, 162'},
-    {id:'collectionBasket',name:'Collection basket ready for the usher',place:'giftTable',needed:!!options.collection,ref:'GIRM 105c'},
+    {id:'collectionBasket',name:'Collection basket ready for the usher',place:'giftTable',needed:!!options.collection,ref:'GIRM 105c; Roman Missal (Holy Land collection)'},
     {id:'chalice2',name:'Second chalice for Communion under both kinds',place:'credence',needed:!!options.bothKinds,ref:'GIRM 118c, 285a'},
     {id:'aspersory',name:'Holy-water vessel and sprinkler',place:options.candlemas||options.palmSunday?'procession':'credence',needed:options.introductory==='sprinkling'||!!options.candlemas||!!options.ashWednesday||!!options.palmSunday,
       ref:options.candlemas?'Roman Missal, Presentation of the Lord, n. 5':options.palmSunday?'Roman Missal, Palm Sunday, n. 6':options.ashWednesday?'Roman Missal, Ash Wednesday':'GIRM 51; Missal App. II',reason:options.candlemas?'The candles are blessed and sprinkled at the back of the church.':options.palmSunday?'The branches are blessed and sprinkled at the back of the church.':options.ashWednesday?'The Priest sprinkles the ashes with holy water.':undefined},
     {id:'thurible',name:'Thurible with lit charcoal, and boat with incense',place:'sacristy',needed:!!options.incense,ref:'GIRM 120a, 276'},
-    {id:'altarBell',name:'Altar bell at the sanctuary step',place:'sanctuaryStep',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 150 (local custom)'},
-    {id:'sacristyBell',name:'Sacristy bell by the door',place:'sacristy',needed:!!options.bells.start,ref:'Local custom'},
+    {id:'altarBell',name:'Altar bell at the sanctuary step',place:'sanctuaryStep',needed:!(options.holyThursday||options.goodFriday)&&!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 150 (local custom)'},
+    {id:'sacristyBell',name:'Sacristy bell by the door',place:'sacristy',needed:!(options.holyThursday||options.goodFriday)&&!!options.bells.start,ref:'Local custom'},
     {id:'vestP',name:'Vestments for the Priest (alb, stole, chasuble)',place:'sacristy',needed:true,ref:'GIRM 337'},
     {id:'vestD',name:'Vestments for the Deacon (alb, stole, dalmatic)',place:'sacristy',needed:!!options.deacon,ref:'GIRM 338'},
     {id:'insignia',name:'The Bishop\u2019s mitre and pastoral staff',place:'sacristy',needed:!!options.bishop,ref:'Pontificales ritus 18-19; CB 128',reason:'The Bishop vests in the sacristy and wears them in the procession.'},
@@ -992,7 +1021,7 @@ function sacristanSetup(options,team=serverTeam(options.serverCount)){
     {id:'chrism',name:'Vessel of holy chrism (from the ambry)',place:'credence',needed:!!options.confirmation,ref:'Ordo Confirmationis 19, 26',reason:'The Deacon brings it to the Bishop for the anointing.'},
     {id:'chrismWash',name:'Water, basin and towel (with lemon and bread, by custom) for the Bishop to wash his hands',place:'credence',needed:!!options.confirmation,ref:'Ordo Confirmationis 19, 29; custom'},
     {id:'vestS',name:'Albs or cassock and surplice for '+team.length+' server'+(team.length===1?'':'s'),place:'sacristy',needed:team.length>0,ref:'GIRM 339'},
-    {id:'lamp',name:'Sanctuary lamp burning before the tabernacle',place:'tabernacle',needed:!options.holyThursday,ref:'GIRM 316; Roman Missal, Holy Thursday, n. 2',reason:options.holyThursday?'On Holy Thursday the main tabernacle is entirely empty beforehand.':'The sanctuary lamp burns while the Blessed Sacrament is reserved.'},
+    {id:'lamp',name:'Sanctuary lamp burning before the tabernacle',place:'tabernacle',needed:!options.holyThursday&&!options.goodFriday,ref:'GIRM 316; Roman Missal, Holy Thursday, n. 2; Good Friday, n. 1',reason:options.goodFriday?'On Good Friday the main tabernacle is completely empty and open, and the sanctuary lamp is extinguished.':options.holyThursday?'On Holy Thursday the main tabernacle is entirely empty beforehand.':'The sanctuary lamp burns while the Blessed Sacrament is reserved.'},
     {id:'hosts',name:'Bring consecrated hosts out of the tabernacle onto the altar',place:'altar',needed:false,trap:true,ref:'GIRM 85',reason:'Not a sacristan task, and the faithful should ideally receive hosts consecrated at the same Mass.'}
   ];
   return items.map(item=>({...item,places:[].concat(item.place)}));
@@ -1005,7 +1034,7 @@ function sacristanPackAway(options,team=serverTeam(options.serverCount)){
     {id:'booksBack',name:'Return the Missal, Lectionary and Book of the Gospels',place:'sacristy',needed:true,ref:'GIRM 105'},
     {id:'vessels',name:'Wash the chalice, paten and ciborium (already purified at Mass)',place:'sacristy',needed:true,ref:'GIRM 163, 183, 279'},
     {id:'linens',name:'Purificators, corporal and towel to the linen basket',place:'sacristy',needed:true,ref:'GIRM 105'},
-    {id:'cruets',name:'Rinse and put away the cruets',place:'sacristy',needed:true,ref:'GIRM 105'},
+    {id:'cruets',name:'Rinse and put away the cruets',place:'sacristy',needed:!options.goodFriday,ref:'GIRM 105'},
     {id:'thuribleOut',name:'Empty the thurible safely into the sand or ash bucket',place:'sacristy',needed:!!options.incense,ref:'Judgement call (fire safety)'},
     {id:'aspersoryBack',name:'Return the holy-water vessel and sprinkler',place:'sacristy',needed:options.introductory==='sprinkling'||!!options.candlemas||!!options.ashWednesday||!!options.palmSunday,ref:'GIRM 105'},
     {id:'palmsAway',name:'Clear and store leftover blessed palms reverently',place:'sacristy',needed:!!options.palmSunday,ref:'Judgement call (custom for blessed things)'},
@@ -1013,12 +1042,13 @@ function sacristanPackAway(options,team=serverTeam(options.serverCount)){
     {id:'stripAltarLinens',name:'Altar cloths and frontals removed in silence after the stripping of the altar',place:'sacristy',needed:!!options.holyThursday,ref:'Roman Missal, Holy Thursday, n. 41'},
     {id:'basinBack',name:'Wash, dry and store the pitcher, basin and towels used for the Mandatum',place:'sacristy',needed:!!options.holyThursday,ref:'GIRM 105'},
     {id:'emptyStoups',name:'Empty the holy-water stoups for the Triduum',place:'sacristy',needed:!!options.holyThursday,ref:'Custom (Paschale Solemnitatis)'},
-    {id:'bellBack',name:'Put the altar bell away',place:'sacristy',needed:!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 105'},
+    {id:'crossPlaced',name:'Leave the Holy Cross on or near the altar between the two candles',place:'altar',needed:!!options.goodFriday,ref:'Roman Missal, Friday of the Passion of the Lord, n. 33',reason:'The Cross remains with candles for prayer and veneration throughout the remainder of the day.'},
+    {id:'bellBack',name:'Put the altar bell away',place:'sacristy',needed:!(options.holyThursday||options.goodFriday)&&!!(options.bells.epiclesis||options.bells.elevation),ref:'GIRM 105'},
     {id:'chrismBack',name:'Return the holy chrism to the ambry',place:'sacristy',needed:!!options.confirmation,ref:'Ordo Confirmationis 19; custom',reason:'The holy oils are kept locked and safe.'},
     {id:'giftTable',name:'Clear the gift table',place:'giftTable',needed:!!options.giftsProcession,ref:'GIRM 105'},
     {id:'vestments',name:'Hang up the vestments',place:'sacristy',needed:true,ref:'GIRM 105'},
-    {id:'dustCover',name:'Put the dust cover on the altar cloth',place:'altar',needed:!options.holyThursday,trap:!!options.holyThursday,ref:'Local custom; Roman Missal, Holy Thursday, n. 41',reason:options.holyThursday?'The altar remains stripped and bare after the stripping of the altar.':'The dust cover protects the altar cloth.'},
-    {id:'lampOut',name:'Extinguish the sanctuary lamp',place:'tabernacle',needed:!!options.holyThursday,trap:!options.holyThursday,ref:'Roman Missal, Holy Thursday, n. 42',reason:options.holyThursday?'The main tabernacle remains empty and open, and the sanctuary lamp is extinguished.':'It burns permanently while the Blessed Sacrament is reserved.'},
+    {id:'dustCover',name:'Put the dust cover on the altar cloth',place:'altar',needed:!options.holyThursday&&!options.goodFriday,trap:!!options.holyThursday||!!options.goodFriday,ref:'Local custom; Roman Missal, Holy Thursday, n. 41; Good Friday, n. 33',reason:(options.holyThursday||options.goodFriday)?'The altar remains stripped and bare after the service.':'The dust cover protects the altar cloth.'},
+    {id:'lampOut',name:'Extinguish the sanctuary lamp',place:'tabernacle',needed:!!options.holyThursday||!!options.goodFriday,trap:!options.holyThursday&&!options.goodFriday,ref:'Roman Missal, Holy Thursday, n. 42; Good Friday, n. 1',reason:(options.holyThursday||options.goodFriday)?'The main tabernacle remains empty and open, and the sanctuary lamp is extinguished.':'It burns permanently while the Blessed Sacrament is reserved.'},
     {id:'hostsAway',name:'Move the remaining hosts into the tabernacle yourself',place:'tabernacle',needed:false,trap:true,ref:'GIRM 163',reason:'The Priest or Deacon reserves the Blessed Sacrament during Mass.'},
     {id:'pourAway',name:'Pour the remaining Precious Blood down the sink',place:'sacristy',needed:false,trap:true,ref:'GIRM 163, 182',reason:'What remains is consumed at the altar, never poured away.'},
     {id:'charcoalBin',name:'Tip the lit charcoal into the rubbish bin',place:'sacristy',needed:false,trap:true,ref:'Judgement call (fire safety)',reason:'Lit charcoal goes into a sand or ash bucket.'}
@@ -1464,7 +1494,26 @@ function liturgicalBreviary(options={},date=new Date()){
 
   let title,season,rank,colour,preface,specialRites=[],penitentialAct,gloria,creed,acclamation,blessing;
 
-  if(o.holyThursday){
+  if(o.goodFriday){
+    title='Friday of the Passion of the Lord (Good Friday)';
+    season='The Sacred Paschal Triduum';
+    rank='Celebration of the Passion of the Lord';
+    colour='red';
+    preface='None (No Eucharistic Prayer)';
+    penitentialAct='Omitted (Ministers enter in silence and prostrate before the bare altar)';
+    gloria='Omitted (strictly forbidden)';
+    acclamation='Lenten verse without Alleluia ("Christ became obedient for us even unto death...")';
+    creed='Omitted (Roman Missal, Friday of the Passion of the Lord)';
+    blessing='Prayer over the People ("May your abundant blessing, Lord, come down upon your people"); no blessing or dismissal';
+    specialRites=[
+      'Ministers enter in silence and prostrate before the bare altar while the faithful kneel',
+      'Proclamation of the Passion of the Lord according to John in parts without candles or incense',
+      'The Ten Solemn Intercessions chanted with kneeler/standing biddings',
+      'Showing and Adoration of the Holy Cross (Ecce lignum Crucis) with three elevations and genuflections',
+      'Distribution of Holy Communion from the hosts reserved at the Altar of Repose on Holy Thursday',
+      'Silent departure with genuflection to the Cross; altar stripped bare'
+    ];
+  }else if(o.holyThursday){
     title='Thursday of the Lord\u2019s Supper (Evening Mass of the Lord\u2019s Supper)';
     season='The Sacred Paschal Triduum';
     rank='Mass of the Lord\u2019s Supper';
@@ -1642,9 +1691,9 @@ function liturgicalBreviary(options={},date=new Date()){
     gloria,
     creed,
     acclamation,
-    eucharisticPrayer:'Eucharistic Prayer '+(o.eucharisticPrayer||'II'),
+    eucharisticPrayer:o.goodFriday?'None (No Eucharistic Prayer)':'Eucharistic Prayer '+(o.eucharisticPrayer||'II'),
     blessing,
-    readings:o.secondReading?'Two readings before the Gospel (Lectionary)':'One reading before the Gospel (Lectionary)',
+    readings:o.goodFriday?'Passion of our Lord Jesus Christ according to John (Jn 18:1—19:42)':(o.secondReading?'Two readings before the Gospel (Lectionary)':'One reading before the Gospel (Lectionary)'),
     specialRites
   };
 }

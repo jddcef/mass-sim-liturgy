@@ -22,6 +22,8 @@ function buildScenario(requested){
   if(rite===RITES.mass&&requested?.palmSunday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday)requested={...requested,bishop:false,confirmation:false};
   // Holy Thursday is modelled with the parish Priest presiding (see applyHolyThursday).
   if(rite===RITES.mass&&requested?.holyThursday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday&&!requested.palmSunday)requested={...requested,bishop:false,confirmation:false};
+  // Good Friday is modelled with the parish Priest presiding (see applyGoodFriday).
+  if(rite===RITES.mass&&requested?.goodFriday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday&&!requested.palmSunday&&!requested.holyThursday)requested={...requested,bishop:false,confirmation:false};
   // The celebrant is named "Bishop" wherever ROLE_NAMES is shown when the Bishop presides.
   ROLE_NAMES.P=rite===RITES.mass&&(requested?.bishop||requested?.confirmation)?'Bishop':'Priest';
   return rite.build(requested||{});
@@ -50,6 +52,11 @@ function buildMassScenario(requested){
   // transfer of the Blessed Sacrament to the Altar of Repose; stripping of the altar.
   if(requested.holyThursday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday&&!requested.palmSunday)requested={...requested,gloria:true,creed:false,introductory:'A',bishop:false,confirmation:false,eucharisticPrayer:'I'};
   else if(requested.holyThursday)requested={...requested,holyThursday:false};
+  // Good Friday: silent entrance and prostration before bare altar; Passion of St John in parts;
+  // Solemn Intercessions; Adoration of the Holy Cross; Communion from reserved Sacrament;
+  // strictly no Gloria, no Creed, no bells, no gifts procession, no Eucharistic Prayer, no blessing or dismissal.
+  if(requested.goodFriday&&!requested.nativity&&!requested.candlemas&&!requested.ashWednesday&&!requested.palmSunday&&!requested.holyThursday)requested={...requested,gloria:false,creed:false,introductory:'A',bishop:false,confirmation:false,giftsProcession:false,bothKinds:false};
+  else if(requested.goodFriday)requested={...requested,goodFriday:false};
   // Confirmation is conferred by the Bishop within Mass; the Creed is omitted because the faith has
   // already been professed (Ordo Confirmationis 31a) and its own blessing replaces the usual one (n. 33).
   if(requested.confirmation)requested={...requested,bishop:true,creed:false,solemnBlessing:true};
@@ -79,6 +86,7 @@ function buildMassScenario(requested){
     ashWednesday:!!requested.ashWednesday,
     palmSunday:!!requested.palmSunday,
     holyThursday:!!requested.holyThursday,
+    goodFriday:!!requested.goodFriday,
     readerCount:requested.readerCount===2?2:1,
     lectorProcession:requested.lectorProcession??false,
     collection:!!requested.collection,emhc:!!requested.emhc,reservedCommunion:!!requested.reservedCommunion,
@@ -404,6 +412,7 @@ function buildMassScenario(requested){
   if(options.ashWednesday)applyAshWednesday(steps,options,initialProps);
   if(options.palmSunday)applyPalmSunday(steps,options,initialPos,initialProps);
   if(options.holyThursday)applyHolyThursday(steps,options,initialPos,initialProps);
+  if(options.goodFriday)applyGoodFriday(steps,options,initialPos,initialProps);
   if(options.bishop)applyBishop(steps,options,initialProps);
   if(options.confirmation)applyConfirmation(steps,options,initialProps);
 
@@ -426,6 +435,7 @@ function buildMassScenario(requested){
   if(options.ashWednesday)[5,6].forEach(key=>removed.add(key));
   if(options.palmSunday)[3,4,5,6].forEach(key=>removed.add(key));
   if(options.holyThursday)[38,40].forEach(key=>removed.add(key));
+  if(options.goodFriday)[2,3,4,5,6,7,15,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,39].forEach(key=>removed.add(key));
   const filtered=steps.filter(s=>!removed.has(s.key));
   STEPS.splice(0,STEPS.length,...filtered);
   rebuildTimeline(initialPos,initialProps);
@@ -1405,6 +1415,411 @@ function applyHolyThursday(steps,options,initialPos,initialProps){
     };
     if(options.deacon){
       stripping.acts.D=[['assists in stripping the altar',0,.5],['makes a profound bow and departs in silence',.6,1]];
+    }
+  }
+}
+
+// Good Friday (Celebration of the Passion of the Lord / Feria VI in Passione Domini):
+// 1. Liturgy of the Word: altar stripped bare beforehand, silent entrance, prostration flat on face,
+//    Collect without "Let us pray", Passion of St John in parts without candles or incense, Solemn Intercessions.
+// 2. Adoration of the Holy Cross: veiled Cross brought from sacristy, unveiled in three stages (Ecce lignum Crucis),
+//    procession to venerate Cross with Improperia and Crucem tuam.
+// 3. Holy Communion: single cloth and corporal spread on altar, ciborium brought from Altar of Repose with candles,
+//    Our Father (Rite of Peace and Agnus Dei omitted), Behold the Lamb of God, Communion,
+//    reposition to repose, altar stripped bare again, Prayer after Communion, Prayer over the People, silent departure.
+function applyGoodFriday(steps,options,initialPos,initialProps){
+  const at=key=>steps.find(s=>s.key===key);
+  const sung=options.music!=='said';
+  const chant=text=>sung?'\u266a '+text+' \u266a':text;
+  const hasS=options.serverCount>0;
+  const REPOSE=[260,110];
+
+  // 1. Initial props: bare altar beforehand, veiled cross in sacristy, main tabernacle empty
+  initialProps.cross={at:[1180,190],h:true};
+  initialProps.cand1={at:[1180,190],h:true};
+  initialProps.cand2={at:[1180,190],h:true};
+  initialProps.corporal={at:[866,120],h:true};
+
+  // 2. Entrance in silence (key 0)
+  const entrance=at(0);
+  if(entrance){
+    entrance.title='Entrance in Silence';
+    entrance.text='The Priest and Deacon, vested in red, enter the church in complete silence with the ministers and approach the sanctuary. There is no entrance hymn or instrumental music.';
+    entrance.ref='Roman Missal, Friday of the Passion of the Lord, n. 4';
+    entrance.say=[];
+    entrance.bell=[];
+    entrance.smoke=[];
+  }
+
+  // 3. Reverence & Prostration in Silence (key 1)
+  const prostration=at(1);
+  if(prostration){
+    prostration.title='Reverence & Prostration in Silence';
+    prostration.dur=24;
+    prostration.posture='kneel';
+    prostration.text='The Priest and Deacon approach the bare altar, make a reverence, and prostrate themselves flat on the floor in silent prayer. All others in the church kneel and pray in silence.';
+    prostration.ref='Roman Missal, Friday of the Passion of the Lord, n. 5';
+    prostration.say=[];
+    prostration.bell=[];
+    prostration.mv.P=M([[500,240]],0,.2);
+    prostration.acts.P=[
+      ['prostrates flat before the bare altar in silent prayer',.2,.85],
+      ['rises and prepares to go to the chair',.85,1]
+    ];
+    if(options.deacon){
+      prostration.mv.D=M([[460,240]],0,.2);
+      prostration.acts.D=[
+        ['prostrates flat beside the Priest in silent prayer',.2,.85],
+        ['rises with the Priest',.85,1]
+      ];
+    }
+    prostration.props={};
+    delete prostration.acts.X;
+    delete prostration.acts.C1;
+    delete prostration.acts.C2;
+    delete prostration.acts.L;
+  }
+
+  // 4. Collect without Oremus (key 8)
+  const collect=at(8);
+  if(collect){
+    collect.title='Prayer (Collect)';
+    collect.text='The Priest goes to the chair with the ministers. Facing the people, with hands joined, he says the prayer without "Let us pray", since the silent prayer has already been offered in prostration: "Remember your mercies, O Lord, and with your eternal protection sanctify your servants, for whom Christ your Son, by the shedding of his Blood, established the Paschal Mystery." All respond: "Amen."';
+    collect.ref='Roman Missal, Friday of the Passion of the Lord, n. 5';
+    collect.mv={P:M([[500,240],[500,120],CHAIR],0,.2)};
+    collect.acts={P:[['prays the Collect with hands joined',.2,.85]]};
+    if(options.deacon){
+      collect.mv.D=M([[460,240],[450,120],DCHAIR],0,.2);
+      collect.acts.D=[['stands beside the Priest at the chair',.2,1]];
+    }
+    collect.say=[
+      ['P','Remember your mercies, O Lord, and with your eternal protection sanctify your servants, for whom Christ your Son, by the shedding of his Blood, established the Paschal Mystery.',0,.85],
+      ['ppl','Amen.',.88,1]
+    ];
+  }
+
+  // 5. Responsorial Psalm (key 10)
+  const psalm=at(10);
+  if(psalm){
+    psalm.text='The psalmist sings or says the Responsorial Psalm (Psalm 31): "Father, into your hands I commend my spirit."';
+    psalm.ref='Roman Missal, Friday of the Passion of the Lord, n. 7; Lectionary n. 40';
+    psalm.say=[['ppl',chant('Father, into your hands I commend my spirit.'),0,1]];
+  }
+
+  // 6. Verse before the Gospel without Alleluia, no candles or incense (key 12)
+  const acclamation=at(12);
+  if(acclamation){
+    acclamation.title='Verse before the Gospel';
+    acclamation.text='All stand. The verse before the Gospel is sung without Alleluia: "Christ became obedient for us even unto death, dying on the cross. Therefore God raised him on high and gave him the name above all other names." Candles and incense are not used.';
+    acclamation.ref='Roman Missal, Friday of the Passion of the Lord, n. 8; Phil 2:8–9';
+    acclamation.say=[['ppl',chant('Christ became obedient for us even unto death, dying on the cross. Therefore God raised him on high and gave him the name above all other names.'),0,1]];
+    acclamation.acts={};
+    acclamation.props={};
+    acclamation.smoke=[];
+  }
+
+  // 7. Passion of our Lord Jesus Christ according to John (key 13)
+  const passion=at(13);
+  if(passion){
+    passion.title='The Passion of the Lord according to John';
+    passion.dur=44;
+    passion.text='The Passion of our Lord Jesus Christ according to John (Jn 18:1—19:42) is proclaimed in parts at the ambo without candles or incense, and without the greeting or signing of the book. At the death of the Lord ("bowed his head and gave up the spirit"), all kneel and pause in silent prayer.';
+    passion.ref='Roman Missal, Friday of the Passion of the Lord, nn. 8–9';
+    passion.kneel=[[.62,.76]];
+    passion.props={};
+    passion.smoke=[];
+    passion.acts={
+      P:[['listens to the proclamation of the Passion',0,.62],['kneels at the death of the Lord',.62,.76],['rises for the remainder of the Passion',.76,1]]
+    };
+    if(options.deacon){
+      passion.acts.D=[['proclaims the Passion of the Lord at the ambo',0,.62],['kneels at the death of the Lord',.62,.76],['concludes the proclamation of the Passion',.76,1]];
+    }
+    const reader=options.lector?'L':(options.deacon?'D':'P');
+    passion.say=[
+      [reader,'The Passion of our Lord Jesus Christ according to John.',0,.12],
+      [reader,'...Jesus said, "It is finished"; and bowing his head, he gave up the spirit.',.5,.62],
+      ['ppl','(All kneel and pause in silent prayer)',.63,.75],
+      [reader,'...they laid Jesus there because of the Jewish day of Preparation, for the tomb was close at hand.',.78,.92],
+      [reader,'The Gospel of the Lord.',.93,.97],
+      ['ppl','Praise to you, Lord Jesus Christ.',.97,1]
+    ];
+  }
+
+  // 8. Homily (key 14)
+  const homily=at(14);
+  if(homily){
+    homily.text='A brief homily is given, drawing the minds of the faithful to the mystery of the Passion and Cross.';
+    homily.ref='Roman Missal, Friday of the Passion of the Lord, n. 10';
+  }
+
+  // 9. Solemn Intercessions (key 16)
+  const intercessions=at(16);
+  if(intercessions){
+    intercessions.title='The Solemn Intercessions (Orationes Solemnes)';
+    intercessions.dur=38;
+    intercessions.posture='stand';
+    intercessions.text='From the chair, the Priest directs the ten Solemn Intercessions: for Holy Church, the Pope, all orders of the faithful, catechumens, Christian unity, the Jewish people, those who do not believe in Christ, those who do not believe in God, public officials, and those in tribulation. The Deacon (or Priest) announces the bidding, all pray in silence kneeling, and the Priest sings or says the prayer with hands extended.';
+    intercessions.ref='Roman Missal, Friday of the Passion of the Lord, nn. 11–13';
+    intercessions.say=[
+      [options.deacon?'D':'P','Let us kneel. (Silent prayer) ... Let us stand.',.08,.35],
+      ['P','Almighty ever-living God, in whose hand lies every human heart and the rights of peoples, look with favour on those who govern us... Through Christ our Lord.',.4,.9],
+      ['ppl','Amen.',.92,1]
+    ];
+    intercessions.acts={
+      P:[
+        ['introduces the Solemn Intercession',0,.08],
+        ['kneels in silent prayer',.08,.35],
+        ['says the prayer with hands extended',.4,.9]
+      ]
+    };
+    if(options.deacon){
+      intercessions.acts.D=[
+        ['sings or says the bidding: "Let us kneel ... Let us stand"',.08,.35]
+      ];
+    }
+  }
+
+  // 10. Showing of the Holy Cross (key 16.5)
+  const showing={
+    key:16.5,part:'The Adoration of the Holy Cross',title:'Showing of the Holy Cross (Ecce lignum Crucis)',dur:36,posture:'stand',
+    text:'The veiled Cross is brought in procession from the sacristy to the altar accompanied by two servers with lighted candles. At the altar, the Priest uncovers the upper part, the right arm, and then the entire Cross, raising it three times and singing: "Behold the wood of the Cross, on which hung the salvation of the world." All respond: "Come, let us adore," and all kneel and adore in silence each time.',
+    ref:'Roman Missal, Friday of the Passion of the Lord, nn. 14–17',
+    mv:{
+      P:[
+        M([CHAIR],0,.08),
+        M([[500,170],[500,220]],.1,.25),
+        M([[500,220]],.25,1)
+      ]
+    },
+    acts:{
+      P:[
+        ['goes to the altar and receives the veiled Cross',.1,.25],
+        ['unveils the Cross in three stages, singing "Ecce lignum Crucis"',.26,.85],
+        ['kneels in silent adoration with all present',.86,1]
+      ]
+    },
+    props:{
+      cross:[{hide:false,t:.15},{by:'P',t:.25},{at:[500,230],a:.85,b:.9}]
+    },
+    say:[
+      ['P',chant('Ecce lignum Crucis, in quo salus mundi pependit.'),.26,.55],
+      ['ppl',chant('Venite, adoremus.'),.58,.84]
+    ]
+  };
+  if(options.deacon){
+    showing.mv.D=[
+      M([DCHAIR],0,.08),
+      M([[460,170],[460,220]],.1,.25),
+      M([[460,220]],.25,1)
+    ];
+    showing.acts.D=[
+      ['assists the Priest in the unveiling of the Cross',.26,.85]
+    ];
+  }
+  if(options.serverCount>=3){
+    showing.mv.C1=M([[392,152],[440,240]],.15,.35);
+    showing.mv.C2=M([[612,152],[560,240]],.15,.35);
+    showing.acts.C1=[['accompanies the Cross with a lighted candle',.15,.85]];
+    showing.acts.C2=[['accompanies the Cross with a lighted candle',.15,.85]];
+    showing.props.cand1=[{hide:false,t:.2},{at:[440,240],a:.85,b:.9}];
+    showing.props.cand2=[{hide:false,t:.2},{at:[560,240],a:.85,b:.9}];
+  }
+  steps.splice(steps.indexOf(intercessions)+1,0,showing);
+
+  // 11. Adoration of the Holy Cross (key 16.7)
+  const adoration={
+    key:16.7,part:'The Adoration of the Holy Cross',title:'Adoration of the Holy Cross (Adoratio Sanctae Crucis)',dur:36,posture:'stand',
+    text:'The Cross is placed between two lighted candles at the entrance to the sanctuary. The Priest, clergy and faithful approach in procession to venerate the Cross of the Lord, making a genuflection or kissing the wood of the Cross. Meanwhile the Reproaches (Improperia), the antiphon "Crucem tuam adoramus", and hymns are sung.',
+    ref:'Roman Missal, Friday of the Passion of the Lord, nn. 18–20',
+    mv:{
+      P:[
+        M([[500,240]],0,.15),
+        M([[500,220],CHAIR],.5,.8)
+      ]
+    },
+    acts:{
+      P:[
+        ['venerates the Holy Cross with a genuflection',.1,.45],
+        ['returns to the chair',.5,.8]
+      ]
+    },
+    props:{
+      cross:[{at:[500,230],a:0,b:1}]
+    },
+    say:[
+      ['ppl',chant('Crucem tuam adoramus, Domine, et sanctam resurrectionem tuam laudamus et glorificamus: ecce enim propter lignum venit gaudium in universo mundo.'),.05,.95]
+    ]
+  };
+  if(options.deacon){
+    adoration.mv.D=[
+      M([[460,240]],0,.15),
+      M([[460,220],DCHAIR],.5,.8)
+    ];
+    adoration.acts.D=[
+      ['venerates the Holy Cross with a genuflection',.15,.5],
+      ['returns to the seat',.5,.8]
+    ];
+  }
+  steps.splice(steps.indexOf(showing)+1,0,adoration);
+
+  // 12. Preparation of the Altar for Communion (key 17)
+  const prep=at(17);
+  if(prep){
+    prep.title='Preparation of the Altar for Communion';
+    prep.dur=20;
+    prep.posture='sit';
+    prep.text='The altar is covered with a single white cloth, and a corporal and the Missal are placed upon it. Two candlesticks are set on or near the altar. No chalice, water, wine or lavabo are prepared, since there is no Sacrifice of the Mass today.';
+    prep.ref='Roman Missal, Friday of the Passion of the Lord, n. 21';
+    prep.say=[];
+    prep.bell=[];
+    const minister=options.deacon?'D':'P';
+    prep.acts={};
+    prep.acts[minister]=[
+      ['spreads the corporal and places the Missal on the bare altar',.2,.8]
+    ];
+    prep.props={
+      corporal:[{hide:false,t:.2},{at:[500,168],a:.25,b:.9}]
+    };
+  }
+
+  // 13. Bringing the Blessed Sacrament from the Altar of Repose (key 17.5)
+  const ordinary=options.deacon?'D':'P';
+  const transfer={
+    key:17.5,part:'Holy Communion',title:'Bringing the Blessed Sacrament from the Altar of Repose',dur:32,posture:'stand',
+    text:'The Deacon (or Priest) goes to the Altar of Repose where the Blessed Sacrament was reserved on Holy Thursday. Accompanied by two servers carrying lighted candles, he brings the ciborium with the consecrated hosts to the altar and places it on the corporal. The servers place their candles on or near the altar. All stand in reverence.',
+    ref:'Roman Missal, Friday of the Passion of the Lord, n. 22',
+    mv:{
+      [ordinary]:[
+        M([ordinary==='D'?DCHAIR:CHAIR],0,.08),
+        M([[350,270],[260,200],[260,130]],.1,.35),
+        M([[260,130],[350,270],[500,240],[500,170],ordinary==='D'?ALT_D:ALT_P],.4,.8)
+      ]
+    },
+    acts:{
+      [ordinary]:[
+        ['goes to the Altar of Repose',.1,.35],
+        ['takes the ciborium and brings it to the altar',.36,.8],
+        ['places the ciborium on the corporal and genuflects',.8,1]
+      ]
+    },
+    props:{
+      ciborium:[{by:ordinary,t:.35},{at:[500,168],a:.8,b:.85}]
+    },
+    say:[]
+  };
+  if(options.serverCount>=3){
+    transfer.mv.C1=M([[440,240],[350,275],[260,230],[260,150],[350,275],[440,170]],.1,.8);
+    transfer.mv.C2=M([[560,240],[350,295],[260,250],[260,135],[350,295],[560,170]],.1,.8);
+    transfer.acts.C1=[['accompanies the Blessed Sacrament with a lighted candle',.1,.85]];
+    transfer.acts.C2=[['accompanies the Blessed Sacrament with a lighted candle',.1,.85]];
+    transfer.props.cand1=[{at:[440,170],a:.8,b:.9}];
+    transfer.props.cand2=[{at:[560,170],a:.8,b:.9}];
+  }
+  steps.splice(steps.indexOf(prep)+1,0,transfer);
+
+  // 14. The Lord's Prayer (key 31)
+  const pater=at(31);
+  if(pater){
+    pater.text='The Priest approaches the altar and genuflects. With hands joined, he introduces the Lord\'s Prayer: "At the Saviour\'s command and formed by divine teaching, we dare to say." All pray the Our Father. The Priest alone says the embolism: "Deliver us, Lord, we pray, from every evil..." The people conclude: "For the kingdom, the power and the glory are yours now and for ever." The Rite of Peace is omitted.';
+    pater.ref='Roman Missal, Friday of the Passion of the Lord, nn. 23–28';
+  }
+
+  // 15. Behold the Lamb of God (key 34)
+  const behold=at(34);
+  if(behold){
+    behold.text='The Priest genuflects, takes a host, and holding it slightly raised above the ciborium, facing the people, says aloud: "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb." All respond: "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed."';
+    behold.ref='Roman Missal, Friday of the Passion of the Lord, n. 29';
+    behold.acts={P:[['genuflects and shows the host above the ciborium',.2,.7]]};
+  }
+
+  // 16. Holy Communion (key 35)
+  const comm=at(35);
+  if(comm){
+    comm.text='The Priest reverently consumes the Body of Christ and distributes Holy Communion to the ministers and faithful from the hosts consecrated on Holy Thursday. Psalm 22 or another appropriate chant may be sung, or Communion may be distributed in silence.';
+    comm.ref='Roman Missal, Friday of the Passion of the Lord, n. 30';
+    comm.acts={P:[['receives the Body of Christ and distributes Holy Communion',.1,.9]]};
+    if(options.deacon){
+      comm.acts.D=[['receives Holy Communion and assists in distribution',.1,.9]];
+    }
+  }
+
+  // 17. Reposition & Stripping of the Altar (key 36)
+  const purif=at(36);
+  if(purif){
+    purif.title='Reposition & Stripping of the Altar';
+    purif.dur=22;
+    purif.posture='sit';
+    purif.text='After Communion, the ciborium with remaining consecrated hosts is carried by the Deacon (or Priest) to a place of reposition outside the church (or in a side chapel). The altar is stripped bare once again: the corporal, Missal and altar cloth are removed, leaving the bare altar. A period of sacred silence is kept.';
+    purif.ref='Roman Missal, Friday of the Passion of the Lord, nn. 31, 33';
+    purif.mv={
+      [ordinary]:[
+        M([ordinary==='D'?ALT_D:ALT_P],0,.1),
+        M([[500,170],[350,270],[260,200],[260,110]],.1,.45),
+        M([[260,110],[350,270],[500,240],ordinary==='D'?DCHAIR:CHAIR],.5,.85)
+      ]
+    };
+    purif.acts={
+      [ordinary]:[
+        ['carries the ciborium to the place of reposition',.1,.45],
+        ['strips the altar bare: removes corporal and Missal',.5,.85]
+      ]
+    };
+    purif.props={
+      ciborium:[{by:ordinary,t:.1},{at:REPOSE,a:.45,b:.5}],
+      corporal:[{hide:true,t:.75}]
+    };
+    if(ordinary==='D'){
+      purif.acts.P=[['sits in silence during reposition and stripping of the altar',.1,.85]];
+    }
+  }
+
+  // 18. Prayer after Communion (key 37)
+  const postComm=at(37);
+  if(postComm){
+    postComm.text='The Priest says: "Let us pray." All stand, and the Priest says the Prayer after Communion: "Almighty ever-living God, who have restored us to life by the blessed Death and Resurrection of your Christ, preserve in us the work of your mercy, that, by partaking of this mystery, we may have a life unceasingly devoted to you. Through Christ our Lord." All respond: "Amen."';
+    postComm.ref='Roman Missal, Friday of the Passion of the Lord, n. 32';
+  }
+
+  // 19. Prayer over the People (key 38)
+  const prayerPeople=at(38);
+  if(prayerPeople){
+    prayerPeople.title='Prayer over the People';
+    prayerPeople.dur=16;
+    prayerPeople.posture='stand';
+    prayerPeople.text='For the dismissal, the Deacon (or Priest) says: "Bow down for the blessing." The Priest extends his hands over the people and says the Prayer over the People: "May your abundant blessing, Lord, come down upon your people, who have honoured the Death of your Son in the hope of their resurrection: may pardon come, comfort be given, holy faith increase, and everlasting redemption be made secure. Through Christ our Lord." There is no blessing formula or dismissal.';
+    prayerPeople.ref='Roman Missal, Friday of the Passion of the Lord, n. 33';
+    prayerPeople.say=[
+      [options.deacon?'D':'P','Bow down for the blessing.',.05,.2],
+      ['P','May your abundant blessing, Lord, come down upon your people, who have honoured the Death of your Son in the hope of their resurrection: may pardon come, comfort be given, holy faith increase, and everlasting redemption be made secure. Through Christ our Lord.',.25,.88],
+      ['ppl','Amen.',.9,1]
+    ];
+    prayerPeople.acts={
+      P:[['extends hands over the people and says the Prayer over the People',.2,.9]]
+    };
+    if(options.deacon){
+      prayerPeople.acts.D=[['says: "Bow down for the blessing"',.05,.2]];
+    }
+    delete prayerPeople.orans;
+  }
+
+  // 20. Silent Departure (key 40)
+  const recession=at(40);
+  if(recession){
+    recession.title='Silent Departure';
+    recession.dur=24;
+    recession.text='All ministers, after genuflecting to the Holy Cross, depart in complete silence into the sacristy. The altar remains bare, and the Cross remains with candles for prayer and veneration.';
+    recession.ref='Roman Missal, Friday of the Passion of the Lord, n. 33';
+    recession.say=[];
+    recession.bell=[];
+    recession.smoke=[];
+    recession.acts={
+      P:[['genuflects to the Cross and departs in silence',.1,.9]]
+    };
+    if(options.deacon){
+      recession.acts.D=[['genuflects to the Cross and departs in silence',.1,.9]];
+    }
+    if(hasS){
+      recession.acts.S=[['genuflects to the Cross and departs in silence',.1,.9]];
     }
   }
 }

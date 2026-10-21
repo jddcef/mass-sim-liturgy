@@ -83,23 +83,13 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R181.**
+**Next decision number: R188.**
 
 | Round | PR | Content |
 |---|---|---|
+| 25 | (this PR) | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R181–R187) |
+| 24 | #20 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R174–R180) |
 | 1 | #2 | Playable simulator: roles, four levels, options, lapses, M.C., sacristan, bells and thurible |
-| 2–3 | #3 | Watch mode, symbols, varied heights, incensation detail, cross and crucifix placement, outfits, liturgical colours, redo, windows and floor |
-| 4 | #4 | Recorded audio in the game, homily place, collection, EMHC, reserved hosts, readers, timeline jump, speed slider |
-| 5 | #5 | Role card, side quests, camera pad, speaker view, highlight, first person, sacristan training, audio fixes |
-| 6 | #6 | Cupboard models, vestment rail and stand, first-person views, figure eyes |
-| 7 | #7 | Presets, role switching, screen operator, monstrance, detail levels, sound icon, cancel New game |
-| 8 | #8 | Search and index card, hover tips, feedback, wall fade, nave seating, audio timing, rename |
-| docs | #8 | Player-facing README opening, `SPEC.md`, this guide, Copilot instructions |
-| 9 | (this PR) | More natural bell synthesis, compact phone layout with fold-away menus |
-| 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
-| 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
-| 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
-| 24 | (this PR) | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R174–R180) |
 | 23 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R168–R173) |
 | 22 | #18 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R161–R167) |
 | 21 | #17 | Ash Wednesday: no Penitential Act, Gloria, Creed or Alleluia; after the Homily the Priest blesses and sprinkles the ashes and gives them to the faithful, who come forward in a line; the Deacon or a server holds the vessel (R154–R160) |
@@ -195,7 +185,7 @@ parish material has been processed yet. The work is local and uncommitted.
       5. Corpus Christi: an outdoor procession (canopy, torches, petals,
          Benediction at altars), which needs an outdoor scene.
       6. The Triduum: ~~Holy Thursday~~ done in round 24 (R174–R180);
-         Good Friday, the Easter Vigil.
+         ~~Good Friday~~ done in round 25 (R181–R187); the Easter Vigil.
       7. Later: Vespers with Benediction, funerals, weddings, baptism.
 
 ```mermaid
