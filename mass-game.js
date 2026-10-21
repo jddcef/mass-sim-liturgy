@@ -42,7 +42,7 @@ const FUNERAL_BLURBS={
 };
 const riteBlurb=role=>({baptism:BAPTISM_BLURBS,funeral:FUNERAL_BLURBS}[game.options.rite]||DEVOTION_BLURBS)[role];
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
-const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],oilCat:['oilCat'],garment:['garment'],bcandle:['bcandle'],funeralWater:['holyWater'],funeralPall:['drape']};
+const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],oilCat:['oilCat'],garment:['garment'],bcandle:['bcandle'],funeralWater:['holyWater'],funeralPall:['drape'],palms:['palms'],basin:['basin'],pitcherBasin:['basin']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
 
 const game={
@@ -311,7 +311,7 @@ function formValues(){
 }
 function choosePreset(id){
   const preset=GAME_PRESETS[id];
-  if(!preset){$('presetNote').textContent='Your own choice of options.';return;}
+  if(!preset){$('presetNote').textContent='Your own choice of options.';syncLiturgicalRibbon(formValues());return;}
   const form=$('setupForm').elements;
   for(const [name,value] of Object.entries(preset.fields)){
     const field=form[name];
@@ -320,19 +320,119 @@ function choosePreset(id){
   }
   $('presetNote').textContent=preset.blurb;
   previewNotes();
+  syncLiturgicalRibbon({...formValues(),rite:preset.fields.rite,minister:preset.fields.minister});
 }
 function syncPreset(){
   // Exposition presets carry the rite, which is not a form field: keep it while their fields still match.
   const current=GAME_PRESETS[$('gamePreset').value]?.fields||{};
-  const id=matchingPreset({...formValues(),rite:current.rite,minister:current.minister});
+  const values={...formValues(),rite:current.rite,minister:current.minister};
+  const id=matchingPreset(values);
   $('gamePreset').value=id;
   $('presetNote').textContent=GAME_PRESETS[id]?.blurb||'Your own choice of options.';
+  syncLiturgicalRibbon(values);
+}
+
+function syncLiturgicalRibbon(options){
+  if(typeof liturgicalBreviary!=='function')return;
+  const brev=liturgicalBreviary(options);
+  const ribbon=$('liturgicalRibbon');
+  if(!ribbon)return;
+  ribbon.style.setProperty('--ribbon-bg',brev.colourHex);
+  ribbon.style.setProperty('--ribbon-text',brev.colour==='white'?'#2c2214':'#fff8e7');
+  const shortTitle=brev.title.length>26?brev.title.slice(0,24)+'…':brev.title;
+  $('ribbonText').textContent=shortTitle;
+  ribbon.title=`Liturgical Breviary: ${brev.title} (${brev.colourName} · ${brev.latinColour}) — click to open`;
+}
+
+function openBreviary(options){
+  if(typeof liturgicalBreviary!=='function')return;
+  const brev=liturgicalBreviary(options||game.options||formValues());
+  const modal=$('breviaryModal');
+  if(!modal)return;
+  const tag=$('brevRibbonTag');
+  if(tag){
+    tag.style.setProperty('--ribbon-bg',brev.colourHex);
+    tag.style.setProperty('color',brev.colour==='white'?'#8c6e25':'#ffd700');
+  }
+  $('brevSeason').textContent=brev.season;
+  $('brevTitle').textContent=brev.title;
+  $('brevRank').textContent=brev.rank;
+  $('brevSwatch').style.background=brev.colourHex;
+  $('brevColourName').textContent=`${brev.colourName} (${brev.latinColour})`;
+  $('brevColourRationale').textContent=brev.colourRationale;
+
+  $('brevEntrance').textContent=brev.penitentialAct==='Omitted'?'Second Form / Solemn Entrance with branches':'Processional Entrance';
+  $('brevPenitential').textContent=brev.penitentialAct;
+  $('brevGloria').textContent=brev.gloria;
+  $('brevReadings').textContent=brev.readings;
+  $('brevAcclamation').textContent=brev.acclamation;
+  $('brevCreed').textContent=brev.creed;
+  $('brevPreface').textContent=brev.preface;
+  $('brevEP').textContent=brev.eucharisticPrayer;
+  $('brevBlessing').textContent=brev.blessing;
+
+  const list=$('brevSpecialList');
+  if(list){
+    list.replaceChildren(...(brev.specialRites||[]).map(r=>el('li',{textContent:r})));
+  }
+  $('brevSpecialBox').hidden=!(brev.specialRites&&brev.specialRites.length);
+  modal.hidden=false;
+}
+
+function closeBreviary(){
+  const modal=$('breviaryModal');
+  if(modal)modal.hidden=true;
+}
+
+let chimeTimeout=null;
+function triggerVisualChime(cue){
+  const overlay=$('chimeOverlay');
+  if(!overlay)return;
+  const icon=$('chimeIcon'),text=$('chimeText');
+  let iconText='🔔',label='Altar bells';
+  let pos=null;
+  if(cue.type==='sacristyBell'){
+    iconText='🔔';
+    label='Sacristy bell';
+    if(typeof world==='function')pos=world([480,830]);
+  }else if(cue.type==='bell'){
+    iconText='🔔';
+    const isElevation=cue.step&&STEPS[cue.step]&&(/elevation/i.test(STEPS[cue.step].title||'')||/elevation/i.test(STEPS[cue.step].part||''));
+    label=isElevation?'Altar bells: Consecration Elevation':(cue.key===23?'Altar bell: Epiclesis':'Altar bells');
+    const server=figures?.S1||figures?.S||figures?.G;
+    pos=server?.root?.position?.clone()||(typeof world==='function'?world([660,245]):null);
+  }else if(cue.type==='thurible'){
+    iconText='💨';
+    label=`Thurible: ${cue.swings||3} swings`;
+    const thurifer=figures?.[cue.actor||'T']||figures?.T||figures?.P;
+    pos=thurifer?.root?.position?.clone()||(typeof world==='function'?world([500,200]):null);
+  }else if(cue.type==='silence'){
+    iconText='🕊️';
+    label='Sacred silence';
+  }
+
+  if(icon)icon.textContent=iconText;
+  if(text)text.textContent=label;
+  overlay.hidden=false;
+  overlay.classList.remove('animPulse');
+  void overlay.offsetWidth;
+  overlay.classList.add('animPulse');
+
+  if(pos&&typeof spawnSanctuaryRipple==='function'){
+    spawnSanctuaryRipple(pos,cue.type==='thurible'?0xe8dfc8:0xffd54f);
+  }
+
+  clearTimeout(chimeTimeout);
+  chimeTimeout=setTimeout(()=>{
+    overlay.hidden=true;
+    overlay.classList.remove('animPulse');
+  },2200);
 }
 // A symbol beside each setup option, so the long list can be scanned by eye.
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',ashWednesday:'ashes',baptism:'font',funeral:'coffin',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',ashWednesday:'ashes',palmSunday:'palm',baptism:'font',funeral:'coffin',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -360,7 +460,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,baptism:saved.baptism===true,funeral:saved.funeral===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,holyThursday:saved.holyThursday===true,goodFriday:saved.goodFriday===true,baptism:saved.baptism===true,funeral:saved.funeral===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -497,6 +597,7 @@ function startGame(config){
   applyRoleUI();
   for(const note of notes)logLine(note,'note');
   logLine('Celebration: '+describeCelebration(),'note');
+  syncLiturgicalRibbon(game.options);
   setCamera('player');
   setFirstPersonView(config.fpView);
   setFirstPerson(game.firstPersonChoice);
@@ -615,8 +716,8 @@ function describeCelebration(){
   if(!o.secondReading)parts.push('one reading before the Gospel');
   if(o.baptism)parts.push('Baptism of children after the Homily');
   if(o.funeral)parts.push('Funeral Mass in violet, with the final commendation');
-  parts.push(o.funeral?'reception of the body at the door (no Penitential Act)':o.baptism?'reception of the children at the door (no Penitential Act)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
-  parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
+  parts.push(o.funeral?'reception of the body at the door (no Penitential Act)':o.baptism?'reception of the children at the door (no Penitential Act)':o.goodFriday?'Celebration of the Passion of the Lord (prostration, Passion of St John, Solemn Intercessions, Adoration of the Cross, Communion)':o.holyThursday?'Mass of the Lord\u2019s Supper (Mandatum, transfer to altar of repose, stripping of altar)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
+  if(!o.goodFriday)parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
   if(o.solemnBlessing)parts.push('Solemn Blessing');
   if(o.crucifix!=='wall')parts.push('crucifix: '+CRUCIFIX_PLACES[o.crucifix].name.toLowerCase());
   if(o.crossStand!=='right')parts.push('cross stand: '+CROSS_STANDS[o.crossStand].name.toLowerCase());
@@ -1128,6 +1229,7 @@ function ringForProcession(){
   if(!cue)return false;
   cue.rung=true;
   if(GameAudio.enabled)GameAudio.sacristyBell();
+  triggerVisualChime(cue);
   return true;
 }
 async function afterPreTask(task,outcome,gen){
@@ -1907,14 +2009,17 @@ function gameBeforeRender(dt,positions){
     const elapsed=currentElapsed();
     updateAutoSlides(elapsed);
     updateMediaWarning(elapsed);
-    if(game.options&&GameAudio.enabled)for(const cue of game.soundCues){
+    if(game.options)for(const cue of game.soundCues){
       if(cue.time>game.lastElapsed&&cue.time<=elapsed+1e-6&&!cue.rung){
         if(cue.type==='sacristyBell')cue.rung=true;
         const rate=Number($('rate').value)||1;
-        if(cue.type==='bell')GameAudio.altarBell(Math.max(.8,Math.min(3,(cue.until-cue.time)/rate)));
-        else if(cue.type==='sacristyBell')GameAudio.sacristyBell();
-        else if(cue.type==='silence')GameAudio.silence();
-        else GameAudio.thurible(cue.swings,Math.max(.35,.9/Math.sqrt(rate)));
+        if(GameAudio.enabled){
+          if(cue.type==='bell')GameAudio.altarBell(Math.max(.8,Math.min(3,(cue.until-cue.time)/rate)));
+          else if(cue.type==='sacristyBell')GameAudio.sacristyBell();
+          else if(cue.type==='silence')GameAudio.silence();
+          else GameAudio.thurible(cue.swings,Math.max(.35,.9/Math.sqrt(rate)));
+        }
+        triggerVisualChime(cue);
       }
     }
     game.lastElapsed=elapsed;
@@ -1994,6 +2099,10 @@ function initialiseGame(){
   buildSetupForm();
   initialiseGameView();
   initialiseGameUi();
+  $('liturgicalRibbon').onclick=()=>openBreviary();
+  $('liturgicalRibbon').onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openBreviary();}};
+  $('brevClose').onclick=closeBreviary;
+  $('brevDone').onclick=closeBreviary;
   $('gameBookButton').onclick=()=>openBook();
   $('gameSound').onclick=()=>{
     GameAudio.setEnabled(!GameAudio.enabled);
@@ -2041,6 +2150,7 @@ function initialiseGame(){
   },true);
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&PathView.isOpen()){PathView.close();event.preventDefault();return;}
+    if(event.key==='Escape'&&!$('breviaryModal').hidden){closeBreviary();event.preventDefault();return;}
     if(event.key==='Escape'&&!$('bookModal').hidden){$('bookModal').hidden=true;event.preventDefault();return;}
     if(event.key==='Escape'&&!$('gameSetup').hidden&&!$('cancelSetup').hidden){cancelSetup();event.preventDefault();return;}
     if(['INPUT','SELECT','TEXTAREA'].includes(event.target.tagName))return;

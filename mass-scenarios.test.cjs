@@ -499,6 +499,219 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+fs.readFi
   buildScenario({});
   console.log('Passed '+ashCount+' Ash Wednesday scenarios and '+ashFrames+' sampled frames.');
 
+  // Palm Sunday: the palms blessed at the back, procession with palms, no Gloria, Passion read in parts, Creed is said.
+  let palmFrames=0,palmCount=0;
+  for(const requested of [{palmSunday:true,serverCount:5,incense:true,deacon:true,lector:true,eucharisticPrayer:'III'},
+    {palmSunday:true,serverCount:0,deacon:false,lector:false,gloria:true,creed:false,introductory:'sprinkling',eucharisticPrayer:'IV',music:'said'},
+    {palmSunday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {palmSunday:true,serverCount:0,deacon:true,incense:false},
+    {palmSunday:true,ashWednesday:true,serverCount:5},{palmSunday:true,candlemas:true,serverCount:5},{palmSunday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.ashWednesday||requested.candlemas||requested.nativity){
+      assert.ok(!options.palmSunday,'a different day wins over Palm Sunday');
+      assert.ok(STEPS.every(s=>s.title!=='Blessing of Palms'));
+      continue;
+    }
+    palmCount++;
+    assert.ok(options.palmSunday&&!options.gloria&&options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.notEqual(options.eucharisticPrayer,'IV','Preface of Palm Sunday (GIRM 365d)');
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [3,4,5,6,7])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.equal(keys[0],-.5,'blessing of palms comes first');
+    assert.equal(keys[keys.indexOf(options.incense?2:1)+1],8,'the Collect follows the altar reverence/incensation');
+    assert.ok(keys.includes(15),'the Creed is said on Sundays in Lent (GIRM 68)');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    assert.ok(!STEPS[idx(12)].say.some(([,t])=>/Alleluia/.test(t)),'no Alleluia in Lent');
+    if(options.music!=='said')assert.ok(STEPS[idx(12)].say.some(([,t])=>/Praise to you, Lord Jesus Christ/.test(t)));
+    const blessing=STEPS[idx(-.5)],entrance=STEPS[idx(0)],passion=STEPS[idx(13)];
+    assert.equal(blessing.title,'Blessing of Palms');
+    assert.ok(blessing.pplPalms&&entrance.pplPalms,'people hold palms');
+    assert.equal(passion.title,'The Passion of the Lord');
+    assert.equal(passion.smoke.length,0,'no smoke during the Passion');
+    assert.ok(passion.pplGenuflect&&passion.pplGenuflect.length>0,'all genuflect at the death of the Lord');
+    if(options.deacon){
+      assert.ok(passion.say.some(([r])=>r==='D'),'Deacon narrates');
+      assert.ok(passion.say.some(([r])=>r==='P'),'Priest speaks words of Christ');
+    }
+    if(visible.has('S')){
+      assert.equal(propAt(idx(-.5),'ewer',.65).by,'S','the server holds the holy water');
+      assert.deepEqual(propAt(idx(8),'ewer',1).at,[850,144]);
+      assert.deepEqual(actorAt(idx(8),'S',1),HOME.S);
+    }
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        palmFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{ashWednesday:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Blessing of Palms'&&!s.pplPalms),'palms only on Palm Sunday');
+  }
+  buildScenario({});
+  console.log('Passed '+palmCount+' Palm Sunday scenarios and '+palmFrames+' sampled frames.');
+
+  // Holy Thursday: bells at the Gloria then silent until the Easter Vigil, Mandatum (Washing of Feet),
+  // Creed omitted, Roman Canon with proper formulas, transfer of the Blessed Sacrament to Altar of Repose,
+  // stripping of the altar in silence.
+  let thursdayFrames=0,thursdayCount=0;
+  for(const requested of [{holyThursday:true,serverCount:5,incense:true,deacon:true,lector:true,eucharisticPrayer:'I'},
+    {holyThursday:true,serverCount:0,deacon:false,lector:false,gloria:false,creed:true,introductory:'sprinkling',eucharisticPrayer:'IV',music:'said'},
+    {holyThursday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {holyThursday:true,serverCount:1,deacon:true,incense:false},
+    {holyThursday:true,palmSunday:true,serverCount:5},{holyThursday:true,ashWednesday:true,serverCount:5},{holyThursday:true,candlemas:true,serverCount:5},{holyThursday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.palmSunday||requested.ashWednesday||requested.candlemas||requested.nativity){
+      assert.ok(!options.holyThursday,'a preceding day wins over Holy Thursday');
+      assert.ok(STEPS.every(s=>s.title!=='Washing of the Feet (Mandatum)'));
+      continue;
+    }
+    thursdayCount++;
+    assert.ok(options.holyThursday&&options.gloria&&!options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.equal(options.eucharisticPrayer,'I','Roman Canon on Holy Thursday (Roman Missal, Holy Thursday, nn. 33–35)');
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [15,38,40])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.ok(keys.includes(7),'Gloria is included with bells');
+    assert.ok(keys.includes(14.5),'Mandatum (Washing of Feet) included');
+    assert.ok(keys.includes(16),'Universal Prayer included');
+    assert.ok(keys.includes(38.5),'Transfer of the Blessed Sacrament included');
+    assert.ok(keys.includes(39),'Stripping of the Altar included');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const gloria=STEPS[idx(7)],mandatum=STEPS[idx(14.5)],transfer=STEPS[idx(38.5)],stripping=STEPS[idx(39)];
+    assert.ok(gloria.bell&&gloria.bell.length>0,'bells ring during Gloria');
+    // Consecration bells silent
+    for(const k of [25,26,27]){
+      const s=STEPS[idx(k)];
+      if(s)assert.equal(s.bell.length,0,'no bells during consecration on Holy Thursday');
+    }
+    assert.equal(mandatum.title,'Washing of the Feet (Mandatum)');
+    assert.equal(transfer.title,'Transfer of the Blessed Sacrament to the Altar of Repose');
+    assert.equal(stripping.title,'Stripping of the Altar (Denudatio altaris)');
+    assert.equal(stripping.say.length,0,'stripping of altar in complete silence');
+    if(visible.has('S')){
+      assert.equal(propAt(idx(14.5),'basin',.5).by,'S','the server holds the basin');
+    }
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        thursdayFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{ashWednesday:true},{palmSunday:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Washing of the Feet (Mandatum)'&&s.title!=='Stripping of the Altar (Denudatio altaris)'),'Holy Thursday rites only on Holy Thursday');
+  }
+  buildScenario({});
+  console.log('Passed '+thursdayCount+' Holy Thursday scenarios and '+thursdayFrames+' sampled frames.');
+
+  // Good Friday: silent entrance and prostration before bare altar, Passion of St John in parts,
+  // Solemn Intercessions, Showing and Adoration of the Holy Cross, Communion from reserved Sacrament,
+  // Prayer over the People, silent departure. Strictly no Gloria, Creed, bells, or Eucharistic Prayer.
+  let fridayFrames=0,fridayCount=0;
+  for(const requested of [{goodFriday:true,serverCount:5,incense:true,deacon:true,lector:true},
+    {goodFriday:true,serverCount:0,deacon:false,lector:false,gloria:true,creed:true,introductory:'sprinkling',music:'said'},
+    {goodFriday:true,serverCount:2,deacon:false,introductory:'C',bishop:true,confirmation:true},
+    {goodFriday:true,serverCount:3,deacon:true,incense:false},
+    {goodFriday:true,holyThursday:true,serverCount:5},{goodFriday:true,palmSunday:true,serverCount:5},{goodFriday:true,ashWednesday:true,serverCount:5},{goodFriday:true,candlemas:true,serverCount:5},{goodFriday:true,nativity:true,serverCount:5}]){
+    const {options,visible}=buildScenario(requested);
+    if(requested.holyThursday||requested.palmSunday||requested.ashWednesday||requested.candlemas||requested.nativity){
+      assert.ok(!options.goodFriday,'a preceding day wins over Good Friday');
+      assert.ok(STEPS.every(s=>s.title!=='Showing of the Holy Cross (Ecce lignum Crucis)'));
+      continue;
+    }
+    fridayCount++;
+    assert.ok(options.goodFriday&&!options.gloria&&!options.creed&&options.introductory==='A'&&!options.bishop&&!options.confirmation);
+    assert.equal(ROLE_NAMES.P,'Priest');
+    const keys=STEPS.map(s=>s.key);
+    for(const key of [2,3,4,5,6,7,15,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,39])assert.ok(!keys.includes(key),'omitted: '+key);
+    assert.equal(STEPS.length,21,'Good Friday has exactly 21 steps');
+    assert.ok(keys.includes(0),'Entrance in silence included');
+    assert.ok(keys.includes(1),'Prostration included');
+    assert.ok(keys.includes(8),'Collect included');
+    assert.ok(keys.includes(13),'Passion according to John included');
+    assert.ok(keys.includes(16),'Solemn Intercessions included');
+    assert.ok(keys.includes(16.5),'Showing of Cross included');
+    assert.ok(keys.includes(16.7),'Adoration of Cross included');
+    assert.ok(keys.includes(17),'Preparation of Altar included');
+    assert.ok(keys.includes(17.5),'Transfer from Repose included');
+    assert.ok(keys.includes(31),'Lord\u2019s Prayer included');
+    assert.ok(keys.includes(34),'Behold the Lamb of God included');
+    assert.ok(keys.includes(35),'Holy Communion included');
+    assert.ok(keys.includes(36),'Reposition & Stripping included');
+    assert.ok(keys.includes(37),'Prayer after Communion included');
+    assert.ok(keys.includes(38),'Prayer over the People included');
+    assert.ok(keys.includes(40),'Silent Departure included');
+    assert.equal(stepStart.length,STEPS.length);
+    assert.equal(TOTAL,STEPS.reduce((n,s)=>n+s.dur,0));
+    const idx=key=>STEPS.findIndex(s=>s.key===key);
+    const entrance=STEPS[idx(0)],prostration=STEPS[idx(1)],passion=STEPS[idx(13)],showing=STEPS[idx(16.5)],adoration=STEPS[idx(16.7)],transfer=STEPS[idx(17.5)],stripping=STEPS[idx(36)],recession=STEPS[idx(40)];
+    assert.equal(entrance.title,'Entrance in Silence');
+    assert.equal(entrance.say.length,0,'no entrance hymn');
+    assert.equal(prostration.title,'Reverence & Prostration in Silence');
+    assert.equal(prostration.posture,'kneel');
+    assert.deepEqual(actorAt(idx(1),'P',.5),[500,240],'Priest prostrates before the bare altar');
+    assert.equal(passion.title,'The Passion of the Lord according to John');
+    assert.ok(passion.kneel&&passion.kneel.length>0,'kneel at death of the Lord');
+    assert.equal(showing.title,'Showing of the Holy Cross (Ecce lignum Crucis)');
+    assert.ok(showing.say.some(([r,t])=>r==='P'&&/Ecce lignum Crucis/.test(t)));
+    assert.ok(showing.say.some(([r,t])=>r==='ppl'&&/Venite, adoremus/.test(t)));
+    assert.equal(adoration.title,'Adoration of the Holy Cross (Adoratio Sanctae Crucis)');
+    assert.ok(adoration.say.some(([r,t])=>r==='ppl'&&/Crucem tuam/.test(t)));
+    assert.equal(transfer.title,'Bringing the Blessed Sacrament from the Altar of Repose');
+    const holder=options.deacon?'D':'P';
+    assert.equal(propAt(idx(17.5),'ciborium',.5).by,holder,'the ciborium is brought by '+holder);
+    assert.equal(stripping.title,'Reposition & Stripping of the Altar');
+    assert.equal(recession.title,'Silent Departure');
+    assert.equal(recession.say.length,0,'silent departure');
+    for(let i=0;i<STEPS.length;i++){
+      const step=STEPS[i];
+      for(const field of ['mv','acts','orans','face'])for(const role in step[field]||{})assert.ok(visible.has(role),'hidden '+role+' in '+step.title);
+      for(const [role] of step.say)assert.ok(role==='ppl'||visible.has(role),role+' speaks in '+step.title);
+      for(let k=0;k<=20;k++){
+        const p={};
+        for(const r in ACTORS){p[r]=actorAt(i,r,k/20);assert.ok(p[r].every(Number.isFinite));}
+        for(const name in PROP_DEF){
+          const prop=propAt(i,name,k/20,p);
+          assert.ok(resolveProp(prop,p,name).every(Number.isFinite));
+          if(!prop.h&&prop.by)assert.ok(visible.has(prop.by),'invisible holder '+prop.by+' of '+name+' in '+step.title);
+        }
+        fridayFrames++;
+      }
+    }
+  }
+  for(const requested of [{},{candlemas:true},{ashWednesday:true},{palmSunday:true},{holyThursday:true},{rite:'exposition',minister:'priest'}]){
+    buildScenario(requested);
+    assert.ok(STEPS.every(s=>s.title!=='Showing of the Holy Cross (Ecce lignum Crucis)'&&s.title!=='Adoration of the Holy Cross (Adoratio Sanctae Crucis)'),'Good Friday rites only on Good Friday');
+  }
+  buildScenario({});
+  console.log('Passed '+fridayCount+' Good Friday scenarios and '+fridayFrames+' sampled frames.');
+
   // Baptism of children within Mass (OBP 29): the reception at the door replaces the greeting and the
   // Penitential Act; the sacrament is celebrated at the font after the Universal Prayer and litany.
   let bapFrames=0,bapCount=0;

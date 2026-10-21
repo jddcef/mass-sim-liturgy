@@ -52,13 +52,15 @@ const GAME_ICON_PATHS={
   play:'M7 4l13 8-13 8z',
   stop:'M6 6h12v12H6z',
   ashes:'M4 13h16l-2 6H6z M7 13c1-3 3-4 5-4s4 1 5 4 M12 3v4 M10 5h4',
+  palm:'M12 22V10 M12 10c-3-2-6-3-9-3c0 3 1.5 6 4.5 7.5c2.5 1 4.5-.5 4.5-.5 M12 10c3-2 6-3 9-3c0 3-1.5 6-4.5 7.5c-2.5 1-4.5-.5-4.5-.5 M12 14c-2.5-1.5-5-2-7-2c0 2.5 1.5 4.5 4 5.5c2 .5 3 0 3 0 M12 14c2.5-1.5 5-2 7-2c0 2.5-1.5 4.5-4 5.5c-2 .5-3 0-3 0 M12 6c0-2 0-3.5 0-4',
   chrism:'M8 11h8v9a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z M7 11a5 3.5 0 0 1 10 0 M12 3v4 M10.5 4.5h3',
   coffin:'M9 2h6l3 5-2 15H8L6 7z M12 7v8 M9.5 10h5',
   font:'M4 9h16a8 5 0 0 1-16 0z M12 14v5 M8 21h8 M12 3c1.5 2 1.5 3 0 4c-1.5-1-1.5-2 0-4z',
   monstrance:'M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8 M12 1v2 M12 13v2 M5 8H3 M21 8h-2 M7 3l1.5 1.5 M17 3l-1.5 1.5 M7 13l1.5-1.5 M17 13l-1.5-1.5 M12 15v4 M8 21h8 M10 19h4',
   calendar:'M4 5h16v16H4z M4 10h16 M8 3v4 M16 3v4 M8 14h3v3H8z',
   speaker:'M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11',
-  graphics:'M3 5h18v14H3z M3 15l5-5 4 4 3-3 6 6'
+  graphics:'M3 5h18v14H3z M3 15l5-5 4 4 3-3 6 6',
+  basin:'M2 15h20a8 5 0 0 1-20 0z M6 6l5-2v11H6z M11 4h2 M6 8c-2 0-3 1.5-3 3.5s1 3.5 3 3.5'
 };
 
 // Ordered: the first matching rule wins, so specific phrases come before general words.
@@ -77,6 +79,8 @@ const GAME_ICON_RULES=[
   [/white garment/,'vestment',{prop:'garment'}],
   [/baptismal candle|paschal candle/,'candle',{prop:'bcandle'}],
   [/\bfont\b|baptizes|baptising|baptizing/,'font',{place:'font'}],
+  [/\bpalm\b|palms|branch|branches/,'palm',null],
+  [/\bbasin\b|ewer|pitcher|feet|washing of (?:the )?feet|mandatum/,'basin',null],
   [/sign of the cross|blesses|blessing|signs (himself|the)|makes the sign/,'bless',null],
   [/incens.*(crucifix|cross)/,'thurible',{cross:true}],
   [/incens.*\baltar\b/,'thurible',{place:'altar'}],
@@ -108,7 +112,7 @@ const GAME_ICON_RULES=[
   [/gift table/,'credence',{place:'giftTable'}],
   [/mitre|vimp/,'mitre',null],
   [/crozier|pastoral staff/,'crozier',null],
-  [/vest|\balbs?\b|stole|chasuble|dalmatic|surplice|cassock/,'vestment',null],
+  [/vest|\balbs?\b|stole|chasuble|dalmatic|surplice|cassock|veil|gremial/,'vestment',null],
   [/sacristy|cupboard/,'sacristy',{place:'sacristy'}],
   [/\bkiss/,'kiss',{place:'altar'}],
   [/genuflect|kneel/,'kneel',null],

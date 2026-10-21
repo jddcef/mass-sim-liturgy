@@ -112,7 +112,7 @@ function makeFigure(color,skin,role){
     sphere(arm,0,-.49,0,.075,skin,Boolean(role));
     torso.add(arm);arms.push(arm);
   }
-  let handCandle=null;
+  let handCandle=null,handPalm=null;
   if(!role){
     // Candlemas: a lighted candle in the right hand, kept upright while the arm is raised.
     handCandle=new THREE.Group();
@@ -122,6 +122,15 @@ function makeFigure(color,skin,role){
     sphere(handCandle,0,.3,0,.036,'#ffc84a',false).scale.set(1,1.6,1);
     handCandle.visible=false;
     arms[1].add(handCandle);
+
+    // Palm Sunday: a green palm branch in the right hand.
+    handPalm=new THREE.Group();
+    handPalm.position.set(0,-.5,.03);
+    handPalm.rotation.x=1.15;
+    cylinder(handPalm,0,.18,0,.012,.014,.36,'#3d7137');
+    mesh(new THREE.ConeGeometry(.07,.3,4),'#4e8a47',handPalm,0,.3,0,false).scale.set(1,1,.3);
+    handPalm.visible=false;
+    arms[1].add(handPalm);
   }
   const legs=[];
   for(const side of [-1,1]){
@@ -166,7 +175,7 @@ function makeFigure(color,skin,role){
   if(name)root.add(name);
   root.userData.role=role;
   scene.add(root);
-  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop,handCandle};
+  return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop,handCandle,handPalm};
 }
 
 function pose(figure,posture,action,phase,walking=false,orans=false){
@@ -674,6 +683,10 @@ function makeObjects(){
       // The vessel of blessed ashes: a shallow metal bowl with grey ash heaped inside.
       cylinder(g,0,.04,0,.09,.06,.08,'#b9a46a','gold');
       cylinder(g,0,.075,0,.075,.075,.02,'#77736d');
+    }else if(name==='palms'){
+      // Palm branches: green fronds bundled together.
+      cylinder(g,0,.08,0,.02,.02,.2,'#3d7137');
+      mesh(new THREE.ConeGeometry(.09,.32,5),'#4e8a47',g,0,.22,0,false).scale.set(1,1,.3);
     }else if(name==='oilCat'){
       // The oil of catechumens: a silver stock like the chrism vessel, with a violet band.
       cylinder(g,0,.06,0,.05,.045,.12,'#cfd2d4','silver');
@@ -713,12 +726,19 @@ function makeObjects(){
       cylinder(g,0,.07,0,.08,.065,.14,'#cfd2d4','silver');
       cylinder(g,.04,.2,0,.012,.012,.22,'#cfd2d4','silver');
       finishSurface(sphere(g,.04,.31,0,.03,'#cfd2d4'),'silver');
+
     }else if(name==='chrism'){
       // The vessel of holy chrism: a small silver jar with a domed lid and a cross knob.
       cylinder(g,0,.06,0,.055,.045,.12,'#cfd2d4','silver');
       finishSurface(sphere(g,0,.13,0,.05,'#cfd2d4'),'silver');
       box(g,0,.2,0,.012,.05,.012,'#d9b44a');
       box(g,0,.205,0,.035,.012,.012,'#d9b44a');
+    }else if(name==='basin'){
+      // Pitcher and basin for the Mandatum (Washing of the Feet): a wide silver basin and a graceful pitcher.
+      cylinder(g,0,.04,0,.15,.18,.07,'#cfd2d4','silver');
+      cylinder(g,0,.015,0,.1,.1,.03,'#b8babd','silver');
+      cylinder(g,.08,.12,0,.045,.065,.16,'#d8dadc','silver');
+      cylinder(g,.08,.22,0,.03,.035,.07,'#d8dadc','silver');
     }else if(name==='thurible'){
       cylinder(g,0,-.18,0,.008,.008,.36,'#5c5c5c','silver');
       finishSurface(sphere(g,0,-.4,0,.09,'#a9a6a0'),'silver');
@@ -893,6 +913,7 @@ function updatePeople(step,phase){
   const bow=(step.pplBow||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const genuflect=(step.pplGenuflect||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   const candles=(step.pplCandles||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
+  const palms=(step.pplPalms||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
   // People come forward in a line for Communion and, on Ash Wednesday, for the ashes.
   const special=step.special?.type==='communion'||step.special?.type==='ashes'?step.special:null;
   congregation.forEach((person,i)=>{
@@ -922,6 +943,10 @@ function updatePeople(step,phase){
     if(person.figure.handCandle){
       person.figure.handCandle.visible=candles;
       if(candles)person.figure.arms[1].rotation.set(-1.15,0,0);
+    }
+    if(person.figure.handPalm){
+      person.figure.handPalm.visible=palms;
+      if(palms)person.figure.arms[1].rotation.set(-1.15,0,0);
     }
     if(step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b){
       person.figure.root.rotation.y=Math.PI+(i%2?-.7:.7);
@@ -1079,8 +1104,39 @@ function renderFrame(dt=1/60){
   controls.update();
   if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
   updateWallFade();
+  updateSanctuaryRipples(performance.now());
   if(typeof updateParishPreview==='function')updateParishPreview(dt);
   if(typeof gameRender!=='function'||!gameRender())renderer.render(scene,camera3d);
+}
+
+const sanctuaryRipples=[];
+function spawnSanctuaryRipple(pos,color=0xffd54f,scaleMax=5){
+  if(typeof scene==='undefined'||!scene||!pos)return;
+  const geom=new THREE.RingGeometry(.14,.34,28);
+  const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false});
+  const mesh=new THREE.Mesh(geom,mat);
+  mesh.rotation.x=-Math.PI/2;
+  mesh.position.set(pos.x,(pos.y||0)+.06,pos.z);
+  mesh.renderOrder=6;
+  scene.add(mesh);
+  sanctuaryRipples.push({mesh,birth:performance.now(),duration:1400,scaleMax});
+}
+function updateSanctuaryRipples(now){
+  for(let i=sanctuaryRipples.length-1;i>=0;i--){
+    const r=sanctuaryRipples[i];
+    const age=now-r.birth;
+    if(age>=r.duration){
+      scene.remove(r.mesh);
+      r.mesh.geometry.dispose();
+      r.mesh.material.dispose();
+      sanctuaryRipples.splice(i,1);
+    }else{
+      const p=age/r.duration;
+      const s=1+p*(r.scaleMax-1);
+      r.mesh.scale.set(s,s,s);
+      r.mesh.material.opacity=(1-p)*.9;
+    }
+  }
 }
 
 function showStep(){

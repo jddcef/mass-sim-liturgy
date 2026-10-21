@@ -324,11 +324,16 @@ const PROP_DEF={
   chrism:{off:[10,-8]},
   // Ash Wednesday: the vessel of blessed ashes.
   ashes:{off:[10,-6]},
+  // Palm Sunday: branches of palm.
+  palms:{off:[0,-16]},
+  // Holy Thursday: pitcher and basin for the Mandatum.
+  basin:{off:[0,-14]},
   // Baptism: the child, the oil of catechumens, the white garment and the baptismal candle.
   infant:{off:[0,-10]},oilCat:{off:[10,-8]},garment:{off:[0,-12]},bcandle:{off:[8,-12]},
   // Funerals: the coffin on its bier (pushed or led by the funeral director) with its white pall, the
   // folded pall carried by the family, and the holy-water vessel with its sprinkler.
   coffin:{off:[0,-46]},drape:{off:[0,-46]},pall:{off:[0,-10]},holyWater:{off:[10,-8]}
+
 };
 const START_PROPS={
   corporal:{at:[866,120]},missal:{at:[845,120]},chalice:{at:[888,128]},ewer:{at:[850,144]},
@@ -338,8 +343,11 @@ const START_PROPS={
   mitre:{at:[1180,190],h:true},staff:{at:[1180,190],h:true},
   chrism:{at:[878,138],h:true},
   ashes:{at:[858,132],h:true},
+  palms:{at:[440,866],h:true},
+  basin:{at:[850,144],h:true},
   infant:{at:[470,840],h:true},oilCat:{at:[870,150],h:true},garment:{at:[372,750],h:true},bcandle:{at:[380,756],h:true},
   coffin:{at:[500,790],h:true},drape:{at:[500,790],h:true},pall:{at:[526,820],h:true},holyWater:{at:[460,345],h:true}
+
 };
 
 // ---------- math helpers ----------
