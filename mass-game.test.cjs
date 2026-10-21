@@ -3,7 +3,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 
 const context=vm.createContext({assert,console});
-for(const file of ['mass-rite.js','mass-scenarios.js','mass-rite-exposition.js','mass-parishes.js','mass-game-logic.js','mass-game-icons.js']){
+for(const file of ['mass-rite.js','mass-scenarios.js','mass-rite-exposition.js','mass-rite-baptism.js','mass-rite-funeral.js','mass-parishes.js','mass-game-logic.js','mass-game-icons.js']){
   vm.runInContext(fs.readFileSync(file,'utf8'),context,{filename:file});
 }
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
@@ -796,13 +796,15 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','goodFriday','adorationLay','benediction','confirmation','candlemas','ashWednesday','palmSunday'],'fourteen celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','goodFriday','adorationLay','benediction','confirmation','baptism','candlemas','ashWednesday','palmSunday','funeral'],'sixteen celebrations are playable now');
+  assert.equal(G('celebrationForPreset')('baptismMass').id,'baptism','Mass with Baptism credits Baptism');
+  assert.equal(G('celebrationForPreset')('baptismDeacon').id,'baptism');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
   assert.equal(avail(byId('easterVigil')),false);
   // Every available celebration starts in every role it has; other roles are refused with a reason.
   for(const c of C.filter(avail))for(const role of Object.keys(G('GAME_ROLES'))){
     const raw={...presets[c.preset].fields,serverCount:Number(presets[c.preset].fields.serverCount)};
-    const roles=raw.rite==='exposition'?G('EXPOSITION_ROLES')[raw.minister]:null;
+    const roles=raw.rite?G('RITE_ROLES')[raw.rite][raw.minister]:null;
     if(roles&&!roles.includes(role))assert.throws(()=>setup(role,raw),/has no part/,c.id+' refuses '+role);
     else setup(role,raw);
   }
@@ -852,12 +854,17 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(r.celebration.id,'benediction');p=r.progress;
   assert.equal(G('nextRecommended')(p).id,'confirmation','then the Confirmation Mass');
   p=record(p,{preset:'confirmation',role:'CB',level:'choice',percent:90}).progress;
+  assert.equal(G('nextRecommended')(p).id,'baptism','then Christian initiation');
+  p=record(p,{preset:'baptismDeacon',role:'S',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'candlemas','then the rites of the seasons');
   p=record(p,{preset:'candlemas',role:'C1',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'ashWednesday','then Ash Wednesday');
   p=record(p,{preset:'ashWednesday',role:'S',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'palmSunday','then Palm Sunday');
   p=record(p,{preset:'palmSunday',role:'S',level:'choice',percent:90}).progress;
+  assert.equal(G('nextRecommended')(p).id,'funeral','then the rites for the dead');
+  r=record(p,{preset:'funeralDeacon',role:'T',level:'choice',percent:90});
+  assert.equal(r.celebration.id,'funeral');p=r.progress;
   assert.equal(G('nextRecommended')(p).id,'holyThursday','then Holy Thursday (the summit of the Triduum)');
   p=record(p,{preset:'holyThursday',role:'P',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'goodFriday','then Good Friday (the Passion of the Lord)');
@@ -881,6 +888,12 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.equal(pfo(opts(role,id),id),id,id+' round-trips with its minister');
     assert.equal(pfo(opts('PEW',id),id),id,id+' round-trips from the pew');
   }
+  for(const id of ['baptism','baptismDeacon']){
+    const role=G('BAPTISM_ROLES')[presets[id].fields.minister][0];
+    assert.equal(pfo(opts(role,id),id),id,id+' round-trips with its minister');
+    assert.equal(pfo(opts('S',id),id),id,id+' round-trips from the server');
+  }
+  assert.equal(pfo(opts('P','baptismMass'),'sunday'),'baptismMass','Mass with Baptism is its own preset');
   assert.equal(pfo(opts('T','adorationLay'),'adorationLay'),'adorationLay','a thurifer at lay-led adoration still credits it');
   assert.equal(pfo(opts('P','weekday'),'benediction'),'weekday');
   assert.equal(pfo({...opts('P','weekday'),music:'sung',gloria:true},'benediction'),'custom','a Mass is never credited as Benediction');
@@ -1103,7 +1116,149 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(!cues.some(c=>c.part==='confiteor'||c.part==='kyrie'||c.part==='gloria'||c.part==='creed'));
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
-// ---- round 22: Palm Sunday ----
+// ---- round 22: Baptism of children, within Mass and on its own (Ordo Baptismi Parvulorum; CIC 861) ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  const raw=id=>({...presets[id].fields,serverCount:Number(presets[id].fields.serverCount),readerCount:Number(presets[id].fields.readerCount||1)});
+  // Within Mass: no Creed, the reception replaces the Penitential Act, the solemn blessing of the parents.
+  let r=norm('P',{baptism:true,creed:true,introductory:'sprinkling',solemnBlessing:false});
+  assert.ok(r.options.baptism&&!r.options.creed&&r.options.introductory==='A'&&r.options.solemnBlessing);
+  assert.ok(r.notes.filter(n=>/Ordo Baptismi Parvulorum 29/.test(n)).length===2);
+  for(const other of [{nativity:true},{candlemas:true},{ashWednesday:true},{confirmation:true},{bishop:true}]){
+    r=norm('P',{baptism:true,...other});
+    assert.ok(!r.options.baptism&&r.notes.some(n=>/Baptism within Mass is not combined/.test(n)),JSON.stringify(other)+' wins');
+  }
+  assert.ok(!norm('MB',{baptism:true}).options.baptism,'the bearers play the Bishop\u2019s Mass');
+  assert.equal(norm('P',{}).options.baptism,false);
+  assert.equal(norm('E',{rite:'exposition',baptism:true}).options.baptism,false,'not at Exposition');
+  const {options,scenario}=setup('S',raw('baptismMass'));
+  assert.equal(G('presetForOptions')(options,'baptismMass'),'baptismMass');
+  assert.equal(G('presetForOptions')(setup('P',raw('sunday')).options,'sunday'),'sunday','a plain Sunday is not a Baptism');
+  assert.ok(scenario.visible.has('BP')&&scenario.visible.has('GP'));
+  setup('S',raw('baptismMass'));
+  assert.ok(!STEPS.some(s=>s.key===15)&&!STEPS.some(s=>[3,4,5,6].includes(s.key)),'no Creed or Penitential Act');
+  assert.ok(STEPS.some(s=>s.key===16.6),'the baptism follows the litany');
+  for(const role of ['P','D','S','X','C1','MC','SAC','PEW','L','AV'])setup(role,{...raw('baptismMass'),projector:role==='AV'});
+  setup('D',raw('baptismMass'));
+  assert.ok(G('deriveDuties')('D',STEPS,options).some(d=>/oil|chrism|font/.test(d.text)),'the Deacon assists at the font');
+  assert.ok(!G('deriveCues')(scenario.visible,STEPS).some(c=>c.role==='BP'||c.role==='GP'),'the family is not cued as ministers');
+  const items=G('sacristanSetup')(options);
+  for(const id of ['chrism','oilCat','fontWater','garment','bcandle','register'])assert.ok(items.some(i=>i.id===id&&i.needed),id+' is needed');
+  assert.ok(items.find(i=>i.id==='chrism').places.includes('font'));
+  const away=G('sacristanPackAway')(options);
+  for(const id of ['chrismBack','oilCatBack','paschalOut'])assert.ok(away.some(i=>i.id===id&&i.needed),id);
+  assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>['oilCat','garment','bcandle'].includes(i.id)&&i.needed));
+  const av=setup('AV',{...raw('baptismMass'),projector:true});
+  const cues=G('deriveMediaCues')(STEPS,null,av.options,'all');
+  assert.ok(cues.some(c=>c.part==='litany')&&cues.some(c=>c.part==='promises'));
+  assert.ok(!cues.some(c=>c.part==='confiteor'||c.part==='kyrie'||c.part==='creed'));
+  const icon=G('GameIcons').iconFor;
+  assert.equal(icon('anoints the child with the oil of catechumens'),'chrism');
+  assert.equal(icon('Put the white garment on the child'),'vestment');
+  assert.equal(icon('Light the baptismal candle from the paschal candle'),'candle');
+  // Outside Mass: the Priest or the Deacon (CIC 861), with at most one server.
+  for(const id of ['baptism','baptismDeacon']){
+    const minister=presets[id].fields.minister,cel=minister==='deacon'?'D':'P';
+    const s=setup(cel,raw(id));
+    assert.equal(s.options.rite,'baptism');assert.equal(s.options.baptism,true);
+    assert.equal(s.options.deacon,minister==='deacon');
+    assert.ok(STEPS.every(st=>typeof st.key==='string'&&st.key.startsWith('bap:')),'string keys keep Mass special cases away');
+    assert.ok(G('deriveDuties')(cel,STEPS,s.options).length>5,cel+' has duties');
+    assert.ok(G('deriveDuties')('S',STEPS,setup('S',raw(id)).options).length>0,'the server has duties');
+    setup('PEW',raw(id));
+    for(const role of ['X','T','E','MC','SAC','MB',minister==='deacon'?'P':'D'])assert.throws(()=>norm(role,raw(id)),/has no part/,id+' refuses '+role);
+    same(G('switchableRoles')(new Set([cel,'S','BP','GP']),s.options),[cel,'S','PEW']);
+    assert.equal(G('celebrationForPreset')(id).id,'baptism');
+  }
+  assert.equal(norm('S',{...raw('baptism'),serverCount:0}).options.serverCount,1,'the server role adds a server');
+  assert.equal(norm('P',{...raw('baptism'),serverCount:4,incense:true}).options.serverCount,1);
+  assert.equal(norm('P',{...raw('baptism'),incense:true}).options.incense,false);
+  const pre=G('devotionPreTasks'),post=G('devotionPostTasks');
+  const dOpts=norm('D',raw('baptismDeacon')).options;
+  assert.ok(pre('D',dOpts,[952,250]).some(t=>t.id==='minister'&&/ordinary minister/.test(t.correct)),'the Deacon may baptize');
+  assert.ok(pre('P',norm('P',raw('baptism')).options,[952,250])[0].correct.includes('white stole'));
+  assert.ok(pre('S',norm('S',raw('baptism')).options,[948,222]).some(t=>/oils of catechumens and chrism/.test(t.correct)));
+  assert.equal(pre('PEW',norm('PEW',raw('baptism')).options)[0].id,'arrive');
+  assert.equal(post('PEW',dOpts)[0].id,'leave');
+  assert.ok(post('D',dOpts).some(t=>/register/.test(t.correct)));
+  assert.ok(post('S',dOpts).some(t=>/ambry/.test(t.correct)));
+  assert.ok(post('E',{rite:'exposition'}).some(t=>/tabernacle is locked/.test(t.correct)),'Exposition keeps its own tasks');
+  setup('P',{});assert.equal(STEPS[0].key,0);
+}
+// ---- round 23: Funerals, the Funeral Mass and the funeral liturgy outside Mass (OCF 14, 154-203; GIRM 380-385) ----
+{
+  const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
+  const raw=id=>({...presets[id].fields,serverCount:Number(presets[id].fields.serverCount),readerCount:Number(presets[id].fields.readerCount||1)});
+  // Within Mass: no Gloria or Creed, the reception replaces the Penitential Act, the commendation replaces the blessing.
+  let r=norm('P',{funeral:true,gloria:true,creed:true,introductory:'sprinkling',solemnBlessing:true});
+  assert.ok(r.options.funeral&&!r.options.gloria&&!r.options.creed&&r.options.introductory==='A'&&!r.options.solemnBlessing);
+  assert.equal(r.notes.length,4);
+  for(const other of [{nativity:true},{candlemas:true},{ashWednesday:true},{confirmation:true},{bishop:true},{baptism:true}]){
+    r=norm('P',{funeral:true,...other});
+    assert.ok(!r.options.funeral&&r.notes.some(n=>/Funeral Mass is not combined/.test(n)),JSON.stringify(other)+' wins');
+  }
+  assert.ok(!norm('MB',{funeral:true}).options.funeral,'the bearers play the Bishop\u2019s Mass');
+  assert.equal(norm('P',{}).options.funeral,false);
+  assert.equal(norm('E',{rite:'exposition',funeral:true}).options.funeral,false,'not at Exposition');
+  assert.equal(norm('P',{rite:'baptism',funeral:true}).options.funeral,false,'not at a Baptism');
+  const {options,scenario}=setup('S',raw('funeralMass'));
+  assert.equal(G('presetForOptions')(options,'funeralMass'),'funeralMass');
+  assert.equal(G('celebrationForPreset')('funeralMass').id,'funeral');
+  assert.ok(scenario.visible.has('FD')&&scenario.visible.has('FM'));
+  setup('S',raw('funeralMass'));
+  assert.ok(!STEPS.some(s=>[3,4,5,6,7,15,39].includes(s.key)),'no greeting, Penitential Act, Gloria, Creed or blessing');
+  assert.ok(STEPS.some(s=>s.key===38.5)&&STEPS.some(s=>s.key===40),'the commendation and the procession out');
+  for(const role of ['P','D','S','T','X','C1','MC','SAC','PEW','L','AV'])setup(role,{...raw('funeralMass'),projector:role==='AV'});
+  setup('T',raw('funeralMass'));
+  assert.ok(G('deriveDuties')('T',STEPS,options).some(d=>d.key>=38&&d.key<39),'the thurifer serves the commendation');
+  assert.ok(!G('deriveCues')(scenario.visible,STEPS).some(c=>c.role==='FD'||c.role==='FM'),'the family is not cued as ministers');
+  const items=G('sacristanSetup')(options);
+  for(const id of ['funeralWater','funeralPall','paschalFuneral','funeralVest'])assert.ok(items.some(i=>i.id===id&&i.needed),id+' is needed');
+  assert.ok(items.find(i=>i.id==='paschalFuneral').places.includes('coffinPlace'));
+  assert.ok(items.find(i=>i.id==='missal').name.includes('final commendation'));
+  const away=G('sacristanPackAway')(options);
+  assert.ok(away.some(i=>i.id==='pallAway'&&i.needed)&&away.find(i=>i.id==='paschalOut').places.includes('coffinPlace'));
+  assert.ok(!G('sacristanSetup')(setup('P',{}).options).some(i=>['funeralWater','funeralPall','paschalFuneral'].includes(i.id)&&i.needed));
+  const av=setup('AV',{...raw('funeralMass'),projector:true});
+  const cues=G('deriveMediaCues')(STEPS,null,av.options,'all');
+  assert.ok(cues.some(c=>c.part==='farewell')&&cues.some(c=>c.part==='paradisum'));
+  assert.ok(!cues.some(c=>['confiteor','kyrie','gloria','creed','recessional'].includes(c.part)));
+  const icon=G('GameIcons').iconFor;
+  assert.equal(icon('The bearers carry the coffin out'),'coffin');
+  assert.equal(icon('Place the white pall on the coffin'),'coffin');
+  assert.equal(icon('Help place the white pall'),'vestment');
+  // Outside Mass: the Priest, or the Deacon when no Priest is available (OCF 14), with up to two servers.
+  for(const id of ['funeral','funeralDeacon']){
+    const minister=presets[id].fields.minister,cel=minister==='deacon'?'D':'P';
+    const s=setup(cel,raw(id));
+    assert.equal(s.options.rite,'funeral');assert.equal(s.options.funeral,true);assert.equal(s.options.incense,true);
+    assert.equal(s.options.deacon,minister==='deacon');
+    assert.ok(STEPS.every(st=>typeof st.key==='string'&&st.key.startsWith('fun:')),'string keys keep Mass special cases away');
+    assert.ok(G('deriveDuties')(cel,STEPS,s.options).length>5,cel+' has duties');
+    for(const role of ['S','T'])assert.ok(G('deriveDuties')(role,STEPS,setup(role,raw(id)).options).length>0,role+' has duties');
+    setup('PEW',raw(id));
+    for(const role of ['X','E','MC','SAC','MB','L',minister==='deacon'?'P':'D'])assert.throws(()=>norm(role,raw(id)),/has no part/,id+' refuses '+role);
+    same(G('switchableRoles')(new Set([cel,'S','T','FD','FM']),s.options),[cel,'S','T','PEW']);
+    assert.equal(G('celebrationForPreset')(id).id,'funeral');
+    assert.equal(G('presetForOptions')(s.options,id),id);
+  }
+  assert.equal(norm('T',{...raw('funeral'),serverCount:0}).options.serverCount,2,'the thurifer role adds two servers');
+  r=norm('P',{...raw('funeral'),serverCount:1,incense:true}).options;
+  assert.ok(r.serverCount===1&&!r.incense,'no thurifer, no incense');
+  assert.equal(norm('P',{...raw('funeral'),serverCount:5}).options.serverCount,2);
+  const pre=G('devotionPreTasks'),post=G('devotionPostTasks');
+  const dOpts=norm('D',raw('funeralDeacon')).options;
+  assert.ok(pre('D',dOpts,[952,250]).some(t=>t.id==='minister'&&/no Priest is available/.test(t.correct)),'the Deacon may lead it');
+  assert.ok(pre('P',norm('P',raw('funeral')).options,[952,250])[0].correct.includes('violet stole'));
+  assert.ok(pre('S',norm('S',raw('funeral')).options,[948,222]).some(t=>/white pall/.test(t.correct)));
+  assert.ok(pre('T',norm('T',raw('funeral')).options,[946,278]).some(t=>/Thurible/.test(t.correct)));
+  assert.equal(pre('PEW',norm('PEW',raw('funeral')).options)[0].id,'arrive');
+  assert.equal(post('PEW',dOpts)[0].id,'leave');
+  assert.ok(post('T',dOpts).some(t=>/sand bucket/.test(t.correct)));
+  assert.ok(post('S',dOpts).some(t=>/pall/.test(t.correct)));
+  setup('P',{});assert.equal(STEPS[0].key,0);
+}
+// ---- round 24: Palm Sunday ----
 {
   const norm=G('normaliseGameOptions'),presets=G('GAME_PRESETS');
   let r=norm('P',{palmSunday:true,gloria:true,creed:false,introductory:'sprinkling',eucharisticPrayer:'IV',bishop:true,confirmation:true});
@@ -1145,7 +1300,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
 
-// ---- round 23: liturgical season ribbon and breviary ----
+// ---- round 25: liturgical season ribbon and breviary ----
 {
   const breviary=G('liturgicalBreviary');
   const presets=G('GAME_PRESETS');
@@ -1211,7 +1366,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(gf.specialRites.some(r=>/Altar of Repose/i.test(r)));
 }
 
-// ---- round 24: Holy Thursday (Mass of the Lord's Supper) ----
+// ---- round 26: Holy Thursday (Mass of the Lord's Supper) ----
 {
   const presets=G('GAME_PRESETS'),norm=G('normaliseGameOptions');
   assert.ok(presets.holyThursday,'holyThursday preset exists');
@@ -1260,7 +1415,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   setup('P',{});assert.equal(STEPS[0].key,0);
 }
 
-// ---- round 25: Good Friday (Celebration of the Passion of the Lord) ----
+// ---- round 27: Good Friday (Celebration of the Passion of the Lord) ----
 {
   const presets=G('GAME_PRESETS'),norm=G('normaliseGameOptions');
   assert.ok(presets.goodFriday,'goodFriday preset exists');

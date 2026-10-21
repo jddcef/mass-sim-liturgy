@@ -9,7 +9,7 @@ const materials=new Map();
 const SCALE=.025;
 // Servers are often of different ages; candle-bearers are drawn as younger children.
 // Relative figure heights: the Priest and Deacon are full-grown adults, servers vary in age.
-const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92,MB:.95,CB:.93,K:.86,SP:1};
+const SERVER_HEIGHTS={P:1.1,D:1.06,S:.95,X:1,C1:.84,C2:.86,T:.92,MB:.95,CB:.93,K:.86,SP:1,BP:.84,GP:.8,FD:1.02,FM:.9};
 // Altar servers and the Bishop's bearers share the server's alb (or cassock and surplice).
 const ALB_ROLES=[...SERVER_ROLES,...BEARER_ROLES];
 const groundAt=p=>{const y=layoutPoint(p)[1];return y<295?.32:y<310?.32*(310-y)/15:0;};
@@ -250,7 +250,7 @@ function setNaveStyle(style){
   pewGroups.forEach(g=>{g.visible=g.userData.nave===naveStyle;});
   if(typeof setPewLayout==='function')setPewLayout(naveStyle);
 }
-let crucifixGroup, cribGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor, tabernacleBody=[], tabernacleMount=null, altarParts=[];
+let crucifixGroup, cribGroup, fontGroup, funeralGroup, nicheGroup, corpusGroup, sanctuaryFloor, windowsGroup, tabernacleDoor, tabernacleBody=[], tabernacleMount=null, altarParts=[];
 const ALTAR_SIZES={small:.8,standard:1,large:1.3};
 function setAltarSize(size){
   const factor=ALTAR_SIZES[size]||1;
@@ -338,15 +338,18 @@ function recolour(figure,colour){
   figure.body.material=material(colour);
   for(const arm of figure.arms)arm.children[0].material=material(colour);
 }
-// Vesture for rites outside Mass: the minister in a white cope instead of the Mass vestments.
+// Vesture for rites outside Mass: the minister in a white cope instead of the Mass vestments, or
+// (recolour) simply in white, as for the alb and white stole of a baptism outside Mass. vesture.roles lets
+// several ministers share the colour, as the Priest and Deacon in violet at a Funeral Mass.
 function dressForRite(vesture){
   for(const role of ['P','D']){
     const figure=figures[role];
     if(!figure?.cope)continue;
-    const dressed=vesture?.role===role&&!!vesture.cope;
+    const mine=vesture?.role===role||!!vesture?.roles?.includes(role);
+    const dressed=mine&&!!vesture.cope;
     figure.cope.visible=dressed;
     if(!dressed)figure.veil.visible=false;
-    if(dressed)recolour(figure,vesture.colour);
+    if(mine&&(dressed||vesture.recolour))recolour(figure,vesture.colour);
   }
 }
 function applyAppearance(a){
@@ -369,6 +372,8 @@ function applyAppearance(a){
   dressForRite(scenario?.vesture);
   figures.P.bishop.visible=!!scenario?.options?.bishop;
   if(cribGroup)cribGroup.visible=!!scenario?.options?.nativity;
+  if(fontGroup)fontGroup.visible=!!scenario?.options?.baptism;
+  if(funeralGroup)funeralGroup.visible=!!scenario?.options?.funeral;
   const note=$('vestmentNote');
   if(note){
     const date=nextSunday(new Date()).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
@@ -423,6 +428,56 @@ function buildCrib(){
   cylinder(cribGroup,.52,.45,.05,.012,.012,.7,'#6e5032');
   cribGroup.visible=false;
   scene.add(anchorParishObject(cribGroup,CRIB));
+}
+
+// The baptismal font by the door, with the paschal candle beside it and a small table for the chrism,
+// the white garment and the baptismal candle (OBP 25, 64). Shown only at a baptism.
+function buildFont(){
+  fontGroup=new THREE.Group();
+  const origin=world(BAPTISM_PLACES.font);
+  fontGroup.position.set(origin.x,0,origin.z);
+  const local=p=>{const w=world(p);return [w.x-origin.x,w.z-origin.z];};
+  cylinder(fontGroup,0,.05,0,.38,.42,.1,'#cfc6b4','stone');
+  cylinder(fontGroup,0,.45,0,.16,.2,.7,'#d8d0bf','stone');
+  cylinder(fontGroup,0,.88,0,.45,.3,.22,'#e2dacb','stone');
+  cylinder(fontGroup,0,.98,0,.4,.4,.02,'#7fb2c9');
+  const [cx,cz]=local(BAPTISM_PLACES.paschal);
+  cylinder(fontGroup,cx,.06,cz,.16,.18,.12,'#b58d40','gold');
+  cylinder(fontGroup,cx,.6,cz,.035,.035,1,'#b58d40','gold');
+  cylinder(fontGroup,cx,1.1,cz,.07,.05,.04,'#b58d40','gold');
+  cylinder(fontGroup,cx,1.42,cz,.05,.05,.6,'#fff6df');
+  box(fontGroup,cx,1.48,cz+.051,.012,.16,.004,'#c0392b',false);
+  box(fontGroup,cx,1.5,cz+.051,.1,.012,.004,'#c0392b',false);
+  sphere(fontGroup,cx,1.77,cz,.04,'#ffbf50',false);
+  const [tx,tz]=local(BAPTISM_PLACES.table);
+  box(fontGroup,tx,.92,tz,.6,.05,.4,'#ab8b60',true,'wood');
+  box(fontGroup,tx,.45,tz,.08,.9,.3,'#80623e',true,'wood');
+  box(fontGroup,tx,.95,tz,.56,.01,.36,'#fbf8ef',false);
+  fontGroup.visible=false;
+  scene.add(anchorParishObject(fontGroup,BAPTISM_PLACES.font));
+}
+
+// At a funeral the lighted paschal candle stands at the head of the coffin, before the altar (OCF 35),
+// with the holy-water stand on the other side. Shown only at a funeral.
+function buildFuneralStands(){
+  funeralGroup=new THREE.Group();
+  const origin=world(FUNERAL_PLACES.rest);
+  funeralGroup.position.set(origin.x,0,origin.z);
+  const local=p=>{const w=world(p);return [w.x-origin.x,w.z-origin.z];};
+  const [cx,cz]=local(FUNERAL_PLACES.paschal);
+  cylinder(funeralGroup,cx,.06,cz,.16,.18,.12,'#b58d40','gold');
+  cylinder(funeralGroup,cx,.6,cz,.035,.035,1,'#b58d40','gold');
+  cylinder(funeralGroup,cx,1.1,cz,.07,.05,.04,'#b58d40','gold');
+  cylinder(funeralGroup,cx,1.42,cz,.05,.05,.6,'#fff6df');
+  box(funeralGroup,cx,1.48,cz+.051,.012,.16,.004,'#c0392b',false);
+  box(funeralGroup,cx,1.5,cz+.051,.1,.012,.004,'#c0392b',false);
+  sphere(funeralGroup,cx,1.77,cz,.04,'#ffbf50',false);
+  const [sx,sz]=local(FUNERAL_PLACES.stand);
+  cylinder(funeralGroup,sx,.04,sz,.14,.16,.08,'#9a9a9a','silver');
+  cylinder(funeralGroup,sx,.45,sz,.025,.025,.8,'#9a9a9a','silver');
+  cylinder(funeralGroup,sx,.87,sz,.13,.08,.06,'#9a9a9a','silver');
+  funeralGroup.visible=false;
+  scene.add(anchorParishObject(funeralGroup,FUNERAL_PLACES.rest));
 }
 
 function buildChurch(){
@@ -556,6 +611,8 @@ function buildChurch(){
   anchorParishObject(box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60',true,'wood'),[621,770]);
   anchorParishObject(box(scene,gifts.x,.45,gifts.z,.12,.9,.6,'#80623e',true,'wood'),[621,770]);
   buildCrib();
+  buildFont();
+  buildFuneralStands();
   for(const [name,p] of [['Altar',[500,180]],['Ambo',[200,250]],['Chair',[500,55]],['Credence',[866,150]],['Tabernacle',[137,85]]]){
     const sprite=label(name,world(p,1.95));
     sprite.userData.fixture=name.toLowerCase();
@@ -630,6 +687,46 @@ function makeObjects(){
       // Palm branches: green fronds bundled together.
       cylinder(g,0,.08,0,.02,.02,.2,'#3d7137');
       mesh(new THREE.ConeGeometry(.09,.32,5),'#4e8a47',g,0,.22,0,false).scale.set(1,1,.3);
+    }else if(name==='oilCat'){
+      // The oil of catechumens: a silver stock like the chrism vessel, with a violet band.
+      cylinder(g,0,.06,0,.05,.045,.12,'#cfd2d4','silver');
+      cylinder(g,0,.09,0,.052,.052,.025,'#6b4b8c');
+      finishSurface(sphere(g,0,.13,0,.045,'#cfd2d4'),'silver');
+    }else if(name==='infant'){
+      // The child, wrapped in a shawl and carried in the arms.
+      const body=sphere(g,0,0,0,.11,'#f3efe6',false);body.scale.set(1,.75,1.9);
+      sphere(g,0,.04,.2,.065,'#efc9a8',false);
+    }else if(name==='garment'){
+      box(g,0,.02,0,.3,.04,.22,'#fbfbf6',false);
+      box(g,0,.045,0,.08,.01,.2,'#e8d9a8',false);
+    }else if(name==='bcandle'){
+      cylinder(g,0,.18,0,.022,.022,.36,'#fffdf4');
+      box(g,0,.04,0,.08,.01,.08,'#e8d9a8',false);
+      g.userData.flame=sphere(g,0,.39,0,.03,'#ffbf50',false);
+    }else if(name==='coffin'){
+      // The coffin on its wheeled bier, lying along the aisle; origin on the floor.
+      box(g,0,.5,0,.62,.04,1.9,'#55524d',true,'slate');
+      for(const z of [-.8,.8])for(const x of [-.25,.25])box(g,x,.25,z,.04,.5,.04,'#55524d',true,'slate');
+      box(g,0,.76,0,.56,.46,1.96,'#7a5233',true,'wood');
+      box(g,0,1.0,0,.5,.03,1.9,'#8d6240',true,'wood');
+      for(const side of [-1,1])box(g,side*.29,.76,0,.02,.04,1.5,'#c9a24e',false,'gold');
+    }else if(name==='drape'){
+      // The white funeral pall spread over the coffin, recalling the baptismal garment, with a gold cross.
+      box(g,0,1.03,0,.68,.03,2.04,'#f7f4ec',true);
+      for(const side of [-1,1])box(g,side*.34,.8,0,.015,.46,2.04,'#f7f4ec',true);
+      for(const end of [-1,1])box(g,0,.8,end*1.02,.68,.46,.015,'#f7f4ec',true);
+      box(g,0,1.05,0,.07,.01,.9,'#d7b565',false,'gold');
+      box(g,0,1.05,-.18,.42,.01,.07,'#d7b565',false,'gold');
+    }else if(name==='pall'){
+      // The pall folded in the arms before it is spread over the coffin.
+      box(g,0,0,0,.36,.12,.26,'#f7f4ec',true);
+      box(g,0,.065,0,.1,.01,.2,'#d7b565',false,'gold');
+    }else if(name==='holyWater'){
+      // The holy-water vessel with its sprinkler (aspergillum).
+      cylinder(g,0,.07,0,.08,.065,.14,'#cfd2d4','silver');
+      cylinder(g,.04,.2,0,.012,.012,.22,'#cfd2d4','silver');
+      finishSurface(sphere(g,.04,.31,0,.03,'#cfd2d4'),'silver');
+
     }else if(name==='chrism'){
       // The vessel of holy chrism: a small silver jar with a domed lid and a cross knob.
       cylinder(g,0,.06,0,.055,.045,.12,'#cfd2d4','silver');
@@ -808,7 +905,7 @@ function updateFollow(dt){
 }
 
 function reservedPew(point){
-  return ['L','L2','Ps','U','E','K','SP'].some(role=>scenario.visible.has(role)&&Math.hypot(point[0]-HOME[role][0],point[1]-HOME[role][1])<25);
+  return ['L','L2','Ps','U','E','K','SP','BP','GP','FM'].some(role=>scenario.visible.has(role)&&Math.hypot(point[0]-HOME[role][0],point[1]-HOME[role][1])<25);
 }
 
 function updatePeople(step,phase){
@@ -832,7 +929,8 @@ function updatePeople(step,phase){
         const side=p[0]<500?-1:1;
         const stations=special.stations||[...(special.bothKinds||special.deaconHosts?[[470,318],[530,318]]:[[500,318]]),...(special.emhc?[[620,318]]:[])];
         const station=stations[(i/3)%stations.length];
-        const aisle=side<0?487:513,outer=side<0?112:888;
+        const lanes=special.lanes||[487,513];
+        const aisle=side<0?lanes[0]:lanes[1],outer=side<0?112:888;
         if(t<.43)p=along([p,[aisle,p[1]],[aisle,340],station],t/.43);
         else if(t<.55){p=station;receiving=true;}
         else p=naveStyle==='full'?along([station,[aisle,340],[aisle,p[1]],person.home],(t-.55)/.45):along([station,[outer,330],[outer,p[1]],person.home],(t-.55)/.45);
@@ -859,11 +957,13 @@ function updatePeople(step,phase){
 }
 
 function objectHeight(name,state,p){
+  if(name==='coffin'||name==='drape')return groundAt(p);
   if(state.by){
     const owner=figures[state.by];
     return groundAt(p)+(name==='cross'||name==='staff'?.2:owner.root.scale.y*1.28);
   }
   if(name==='cross'||name==='staff')return groundAt(p)+(name==='staff'?.05:0);
+  if(name==='holyWater')return groundAt(p)+.9;
   if(name.startsWith('cand'))return groundAt(p)+1.35;
   if(name==='gospels'&&p[0]<260)return groundAt(p)+1.38;
   if(name==='missal'&&p[1]<100)return groundAt(p)+1.29;
@@ -933,6 +1033,7 @@ function renderFrame(dt=1/60){
       object.userData.open.visible=open;object.userData.closed.visible=!open;
     }
     if(state.by&&name==='thurible')object.rotation.z=Math.sin(elapsed*5)*.25;
+    if(name==='bcandle')object.userData.flame.visible=state.by==='GP';
     object.scale.setScalar(1);
     if(name==='mitre'&&state.by==='P'&&object.visible){
       // Worn: the mitre sits on the Bishop's head and follows his bows.

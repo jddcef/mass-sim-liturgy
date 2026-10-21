@@ -27,8 +27,22 @@ const DEVOTION_BLURBS={
   S:'Prepare the humeral veil and bell, kneel with the minister and assist at the blessing.',
   T:'Thurible and boat: present the incense at the exposition and before the blessing.'
 };
+// Role notes for the Baptism of children outside Mass (Ordo Baptismi Parvulorum 35-71).
+const BAPTISM_BLURBS={
+  P:'Minister of Baptism. In a white stole, receive the child at the door, lead the word and the prayers, anoint, baptize at the font and bless the family.',
+  D:'Minister of Baptism (CIC 861). In a white stole, receive the child at the door, lead the word and the prayers, anoint, baptize at the font and bless the family.',
+  S:'Prepare the font: the holy oils, the white garment, the candle and a towel. Hold the book and the oils, lead the intercessions, and assist at the font.'
+};
+// Role notes for the funeral liturgy outside Mass (Order of Christian Funerals 177-203).
+const FUNERAL_BLURBS={
+  P:'Presider. In a violet stole, receive the body at the door with holy water and the pall, lead the Liturgy of the Word and the prayers, and commend the deceased to God with holy water and incense.',
+  D:'Presider when no Priest is available (Order of Christian Funerals 14). In a violet stole, receive the body, lead the word and the prayers, and lead the final commendation.',
+  S:'Carry the holy water and the book; help place the white pall on the coffin, and hand the sprinkler at the commendation.',
+  T:'Thurifer. Bring the thurible for the final commendation and lead the coffin out.'
+};
+const riteBlurb=role=>({baptism:BAPTISM_BLURBS,funeral:FUNERAL_BLURBS}[game.options.rite]||DEVOTION_BLURBS)[role];
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
-const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],palms:['palms'],basin:['basin'],pitcherBasin:['basin']};
+const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],oilCat:['oilCat'],garment:['garment'],bcandle:['bcandle'],funeralWater:['holyWater'],funeralPall:['drape'],palms:['palms'],basin:['basin'],pitcherBasin:['basin']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
 
 const game={
@@ -418,7 +432,7 @@ function triggerVisualChime(cue){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',ashWednesday:'ashes',palmSunday:'palm',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',ashWednesday:'ashes',palmSunday:'palm',baptism:'font',funeral:'coffin',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -446,7 +460,7 @@ function readForm(){
     gloria:saved.gloria,creed:saved.creed,secondReading:saved.secondReading,giftsProcession:saved.giftsProcession,solemnBlessing:saved.solemnBlessing,
     introductory:saved.introductory,music:saved.music,eucharisticPrayer:saved.eucharisticPrayer,
     bells:{start:saved.bellStart,epiclesis:saved.bellEpiclesis,elevation:saved.bellElevation},
-    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,holyThursday:saved.holyThursday===true,goodFriday:saved.goodFriday===true,
+    crucifix:saved.crucifix,crossStand:saved.crossStand,bishop:saved.bishop===true,confirmation:saved.confirmation===true,nativity:saved.nativity===true,candlemas:saved.candlemas===true,ashWednesday:saved.ashWednesday===true,palmSunday:saved.palmSunday===true,holyThursday:saved.holyThursday===true,goodFriday:saved.goodFriday===true,baptism:saved.baptism===true,funeral:saved.funeral===true,
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
@@ -603,7 +617,7 @@ function startGame(config){
 function applyRoleUI(){
   const info=GAME_ROLES[game.role];
   $('gameBadge').textContent='You: '+gameRoleName(game.role,game.options)+' / '+GAME_LEVELS[game.level].name;
-  $('gameRoleNote').textContent=(isDevotion()&&DEVOTION_BLURBS[game.role])||ROLE_BLURBS[game.role];
+  $('gameRoleNote').textContent=(isDevotion()&&riteBlurb(game.role))||ROLE_BLURBS[game.role];
   $('roleCard').hidden=false;
   const picker=el('select',{id:'switchRole',title:'Take over another role from here on (between moments, during Mass)'});
   picker.setAttribute('aria-label','Switch to another role');
@@ -669,10 +683,22 @@ function switchRole(role){
 // Mass, or a rite outside Mass such as Exposition (mass-rite-exposition.js).
 const isDevotion=()=>isDevotionRite(game.options);
 // Outside Mass the ministers read from the rite's book of prayers, not the Missal or Gospels.
-const bookName=()=>isDevotion()&&GAME_ROLES[game.role].book?'book of prayers for Exposition':GAME_ROLES[game.role].book;
-const riteWord=()=>isDevotion()?'Exposition':'Mass';
+const bookName=()=>isDevotion()&&GAME_ROLES[game.role].book?({baptism:'Rite of Baptism',funeral:'Order of Christian Funerals'}[game.options.rite]||'book of prayers for Exposition'):GAME_ROLES[game.role].book;
+const riteWord=()=>isDevotion()?({baptism:'the Baptism',funeral:'the funeral'}[game.options.rite]||'Exposition'):'Mass';
 function describeCelebration(){
   const o=game.options,parts=[];
+  if(isDevotion()&&o.rite==='funeral'){
+    parts.push('Funeral liturgy outside Mass, with the '+(o.minister==='deacon'?'Deacon':'Priest'));
+    parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s')+(o.incense?', with incense':''));
+    parts.push(o.music==='said'?'said':'sung');
+    return parts.join(', ')+'.';
+  }
+  if(isDevotion()&&o.rite==='baptism'){
+    parts.push('Baptism of children outside Mass, with the '+(o.minister==='deacon'?'Deacon':'Priest'));
+    parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s'));
+    parts.push(o.music==='said'?'said':'sung');
+    return parts.join(', ')+'.';
+  }
   if(isDevotion()){
     parts.push(o.minister==='lay'?'adoration led by a lay minister, without the blessing':'Exposition and Benediction with the '+(o.minister==='deacon'?'Deacon':'Priest'));
     parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s'));
@@ -688,7 +714,9 @@ function describeCelebration(){
   if(!o.gloria)parts.push('no Gloria');
   if(!o.creed)parts.push('no Creed');
   if(!o.secondReading)parts.push('one reading before the Gospel');
-  parts.push(o.goodFriday?'Celebration of the Passion of the Lord (prostration, Passion of St John, Solemn Intercessions, Adoration of the Cross, Communion)':o.holyThursday?'Mass of the Lord\u2019s Supper (Mandatum, transfer to altar of repose, stripping of altar)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
+  if(o.baptism)parts.push('Baptism of children after the Homily');
+  if(o.funeral)parts.push('Funeral Mass in violet, with the final commendation');
+  parts.push(o.funeral?'reception of the body at the door (no Penitential Act)':o.baptism?'reception of the children at the door (no Penitential Act)':o.goodFriday?'Celebration of the Passion of the Lord (prostration, Passion of St John, Solemn Intercessions, Adoration of the Cross, Communion)':o.holyThursday?'Mass of the Lord\u2019s Supper (Mandatum, transfer to altar of repose, stripping of altar)':o.candlemas?'blessing of candles and procession (no Penitential Act)':o.ashWednesday?'blessing and giving of ashes (no Penitential Act)':o.palmSunday?'commemoration of the entrance and procession of palms (no Penitential Act)':{A:'Confiteor',C:'invocations',sprinkling:'sprinkling rite'}[o.introductory]);
   if(!o.goodFriday)parts.push('Eucharistic Prayer '+o.eucharisticPrayer);
   if(o.solemnBlessing)parts.push('Solemn Blessing');
   if(o.crucifix!=='wall')parts.push('crucifix: '+CRUCIFIX_PLACES[o.crucifix].name.toLowerCase());

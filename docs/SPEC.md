@@ -37,6 +37,8 @@ Classic scripts load in this order and share globals:
 |---|---|
 | `mass-rite.js` | Canonical baseline rite: `STEPS` (part, title, duration, posture, text, ref, movements, props, acts, smoke, say), roles, start positions, props, interpolation, `rebuildTimeline`. Plan of 1000 × 830 units. |
 | `mass-rite-exposition.js` | Exposition of the Blessed Sacrament: steps for the lay-led and Priest forms, registered in `RITES`. |
+| `mass-rite-baptism.js` | Baptism of children outside Mass (Priest or Deacon): steps registered in `RITES`. |
+| `mass-rite-funeral.js` | Funeral liturgy outside Mass (Priest, or Deacon when no Priest is available; up to two servers): steps registered in `RITES`. |
 | `mass-scenarios.js` | Rite registry `RITES`; `buildScenario(options)` dispatches on `options.rite` (default Mass) and for Mass reassigns duties for deacon, lector, 0–5 servers, incense and both kinds. Steps keep their original index as `key`. |
 | `mass-parishes.js` | Versioned prepared-shell profiles, validation, reversible nave mapping and pure aisle routing. |
 | `mass-features.js` | Church-layout editor and presets; server training cues. |
@@ -68,7 +70,7 @@ startup must appear **before** the `<script>` tags in the HTML.
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
   Mass with incense (default), Solemnity, Mass with the Bishop (mitre- and
   crozier-bearers in vimps; also a "Bishop presides" option) and Confirmation Mass
-  (the Bishop confirms after the Gospel; no Creed; a candidate and sponsor stand for all) and Christmas Mass during the Night (the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer) and Candlemas (candles blessed at the back of the church, a procession with lighted candles, no Penitential Act) and Ash Wednesday (the ashes blessed and given after the Homily, no Penitential Act, Gloria or Alleluia). Outside Mass: Adoration
+  (the Bishop confirms after the Gospel; no Creed; a candidate and sponsor stand for all) and Christmas Mass during the Night (the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer) and Candlemas (candles blessed at the back of the church, a procession with lighted candles, no Penitential Act) and Ash Wednesday (the ashes blessed and given after the Homily, no Penitential Act, Gloria or Alleluia) and Sunday Mass with Baptism (the children received at the door, baptized at the font after the Homily, no Penitential Act or Creed) and the Funeral Mass (the body received at the door with holy water and the white pall, violet, no Penitential Act, Gloria or Creed, the final commendation with incense and the Song of Farewell instead of the blessing; not on the days when GIRM 380 forbids it). Outside Mass: Baptism of Children (Priest or Deacon, one server), the Funeral Liturgy outside Mass (Priest or Deacon, up to two servers; incense with two), Adoration
   (lay-led, no blessing) and Exposition and Benediction (Priest or Deacon, in
   white cope, with the humeral veil for the blessing). Editing any
   option shows "Custom". Roles a rite does not have are refused with a message.

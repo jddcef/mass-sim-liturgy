@@ -256,7 +256,7 @@ body.compactUi #hint { display:none; }
 body.compactUi #caption { bottom:56px; width:calc(100% - 112px); font-size:13px; padding:6px 10px; }
 @media(max-width:600px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; } .cards .rolePortrait { width:64px; height:54px; } .cards small, .cards p { font-size:12px; line-height:1.25; } }
 
-/* Round 23: Liturgical Season Ribbon & Breviary */
+/* Round 25: Liturgical Season Ribbon & Breviary */
 .liturgicalRibbon {
   display:inline-flex; align-items:center; gap:8px;
   padding:5px 14px 5px 10px; border-radius:6px;
@@ -297,7 +297,7 @@ body.compactUi #caption { bottom:56px; width:calc(100% - 112px); font-size:13px;
 .brevSpecialList { margin:4px 0 0; padding-left:18px; font-size:13px; line-height:1.45; color:#3a3227; }
 .brevSpecialList li { margin-bottom:3px; }
 
-/* Round 23: Visual Chime Overlay & Ripple Animation */
+/* Round 25: Visual Chime Overlay & Ripple Animation */
 .chimeOverlay {
   position:absolute; top:75px; left:50%; transform:translateX(-50%);
   z-index:10; pointer-events:none; display:flex; flex-direction:column; align-items:center;

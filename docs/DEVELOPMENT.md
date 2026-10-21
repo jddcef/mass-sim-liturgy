@@ -83,15 +83,28 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R188.**
+**Next decision number: R202.**
 
 | Round | PR | Content |
 |---|---|---|
-| 25 | (this PR) | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R181–R187) |
-| 24 | #20 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R174–R180) |
 | 1 | #2 | Playable simulator: roles, four levels, options, lapses, M.C., sacristan, bells and thurible |
-| 23 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R168–R173) |
-| 22 | #18 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R161–R167) |
+| 2–3 | #3 | Watch mode, symbols, varied heights, incensation detail, cross and crucifix placement, outfits, liturgical colours, redo, windows and floor |
+| 4 | #4 | Recorded audio in the game, homily place, collection, EMHC, reserved hosts, readers, timeline jump, speed slider |
+| 5 | #5 | Role card, side quests, camera pad, speaker view, highlight, first person, sacristan training, audio fixes |
+| 6 | #6 | Cupboard models, vestment rail and stand, first-person views, figure eyes |
+| 7 | #7 | Presets, role switching, screen operator, monstrance, detail levels, sound icon, cancel New game |
+| 8 | #8 | Search and index card, hover tips, feedback, wall fade, nave seating, audio timing, rename |
+| docs | #8 | Player-facing README opening, `SPEC.md`, this guide, Copilot instructions |
+| 9 | (this PR) | More natural bell synthesis, compact phone layout with fold-away menus |
+| 10 | local, not published | Offline stone/marble/wood textures and metal finishes on Standard/High, reversible detail switching, restrained lighting; existing defaults and saved choices retained |
+| 11 | local, not published | Repository workflow guidance: changes go through PRs rather than direct commits to `main`; consult the Magisterium MCP for liturgical and Catholic questions |
+| 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
+| 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
+| 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
+| 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
+| 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
+| 23 | #20 | Funerals: the Funeral Mass (reception of the body at the door with holy water and the white pall, violet, no Gloria or Creed, final commendation with incense and the Song of Farewell, "In paradisum") and the funeral liturgy outside Mass with the Priest or the Deacon; coffin on a bier, paschal candle, holy-water stand; new Path branch "The rites for the dead" (R168–R174) |
+| 22 | #18 | Baptism of children within Sunday Mass (reception at the door, rite at the font after the Homily, Solemn Blessing) and outside Mass with the Priest or the Deacon; font, paschal candle, oils, white garment and candle; new Path branch "Christian initiation" (R161–R167) |
 | 21 | #17 | Ash Wednesday: no Penitential Act, Gloria, Creed or Alleluia; after the Homily the Priest blesses and sprinkles the ashes and gives them to the faithful, who come forward in a line; the Deacon or a server holds the vessel (R154–R160) |
 | 20 | #16 | Candlemas: blessing of candles at the back of the church, procession with lighted candles and the Canticle of Simeon, no Penitential Act, candles out at the Gloria (R147–R153) |
 | 19 | #15 | Christmas Mass during the Night: the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer, Christmas solemn blessing; the M.C. rank becomes reachable (R137–R146) |
@@ -181,12 +194,17 @@ parish material has been processed yet. The work is local and uncommitted.
       4. ~~Christmas Mass during the Night~~ done in round 19 (R137–R146);
          ~~Candlemas~~ in round 20 (R147–R153, indoor form only);
          ~~Ash Wednesday~~ in round 21 (R154–R160);
-         ~~Palm Sunday~~ in round 22 (R161–R167).
+         ~~Palm Sunday~~ in round 24 (R175–R181).
       5. Corpus Christi: an outdoor procession (canopy, torches, petals,
          Benediction at altars), which needs an outdoor scene.
-      6. The Triduum: ~~Holy Thursday~~ done in round 24 (R174–R180);
-         ~~Good Friday~~ done in round 25 (R181–R187); the Easter Vigil.
-      7. Later: Vespers with Benediction, funerals, weddings, baptism.
+      6. The Triduum: ~~Holy Thursday~~ done in round 26 (R188–R194);
+         ~~Good Friday~~ done in round 27 (R195–R201); the Easter Vigil.
+      7. ~~Baptism of children~~ done in round 22 (within Mass and outside
+         Mass with the Priest or Deacon; R161–R167).
+      8. ~~Funerals~~ done in round 23 (Funeral Mass and the funeral
+         liturgy outside Mass; R168–R174). The Vigil and the Rite of
+         Committal (outdoors) are left for later.
+      9. Later: Vespers with Benediction, weddings.
 
 ```mermaid
 flowchart TD
@@ -195,6 +213,8 @@ flowchart TD
   S --> AL[Adoration, lay-led] --> EB[Exposition and Benediction] --> CC[Corpus Christi procession]
   SI --> EB
   SO --> CA[Candlemas] --> AW[Ash Wednesday] --> PS[Palm Sunday]
+  S --> BA[Baptism] --> CF
+  SI --> FU[Funeral]
   B --> CF[Confirmation]
   N --> HT[Holy Thursday]
   PS --> HT
