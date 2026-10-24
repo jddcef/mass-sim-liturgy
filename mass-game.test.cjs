@@ -69,6 +69,17 @@ const setup=(role,raw={})=>{
   buildScenario({deacon:true,lector:true,serverCount:5,incense:true});
   assert.equal(STEPS.length,41);
 }
+{
+  const {scenario}=setup('U',{collection:true,giftsProcession:true});
+  const collection=STEPS.find(s=>s.key===17.5),gifts=STEPS.find(s=>s.key===18);
+  assert.equal(scenario.options.collection,true);
+  assert.ok(collection&&gifts);
+  const collectionIndex=STEPS.indexOf(collection),giftsIndex=STEPS.indexOf(gifts);
+  same(G('actorAt')(collectionIndex,'U',1),G('actorAt')(giftsIndex,'U',0),'usher continues from collection into the offertory procession');
+  assert.match(gifts.text,/same presentation|joins the presentation/i);
+  assert.match(gifts.text,/away from the altar/i);
+  assert.ok(gifts.props.collection.some(event=>event.at?.[0]===710&&event.at?.[1]===280));
+}
 
 // ---- duties and decisions per role ----
 for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){

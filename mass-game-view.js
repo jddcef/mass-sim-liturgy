@@ -5,6 +5,11 @@
 
 const gameView={firstPerson:false,yaw:0,pitch:-.18,fov:null,drag:null,highlightOn:true,speaker:null,spokenDone:new Set(),dim:null,boost:null,lit:new Set(),lastProps:new Map()};
 
+function setCameraHint(text){
+  const hint=$('hint');
+  if(hint&&hint.textContent!==text)hint.textContent=text;
+}
+
 // ---------- camera pad ----------
 function cameraNudge(action){
   if(!camera3d||!controls)return;
@@ -24,6 +29,17 @@ function cameraNudge(action){
     if(turn)gameView.yaw+=turn;
     if(action==='up'||action==='panForward')gameView.pitch=Math.min(.6,gameView.pitch+.17);
     if(action==='down'||action==='panBack')gameView.pitch=Math.max(-1.2,gameView.pitch-.17);
+    if(action==='in'||action==='out'){
+      camera3d.fov=Math.max(20,Math.min(80,camera3d.fov*(action==='in'?.8:1.25)));
+      camera3d.updateProjectionMatrix();
+    }
+    return;
+  }
+  if(gameView.speaker){
+    const turn={left:.26,right:-.26,panLeft:.26,panRight:-.26}[action];
+    if(turn)gameView.speaker.yaw+=turn;
+    if(action==='up'||action==='panForward')gameView.speaker.pitch=Math.min(.6,gameView.speaker.pitch+.17);
+    if(action==='down'||action==='panBack')gameView.speaker.pitch=Math.max(-1.2,gameView.speaker.pitch-.17);
     if(action==='in'||action==='out'){
       camera3d.fov=Math.max(20,Math.min(80,camera3d.fov*(action==='in'?.8:1.25)));
       camera3d.updateProjectionMatrix();
@@ -221,6 +237,7 @@ function setFirstPerson(on){
   gameView.firstPerson=!!on;
   if($('firstPerson'))$('firstPerson').checked=gameView.firstPerson;
   controls.enabled=!gameView.firstPerson;
+  setCameraHint(gameView.firstPerson?'Drag to look around':'Drag to orbit / right-drag to pan / scroll to zoom');
   gameView.yaw=0;gameView.pitch=-.18;
   if(gameView.fov===null)gameView.fov=camera3d.fov;
   if(!gameView.firstPerson){
@@ -279,9 +296,12 @@ function endSpeakerView(){
   gameView.spokenDone.add(saved.id);
   camera3d.position.copy(saved.position);
   controls.target.copy(saved.target);
+  if(camera3d.fov!==saved.fov){camera3d.fov=saved.fov;camera3d.updateProjectionMatrix();}
   cameraMode=saved.mode;
   followPosition=null;
+  controls.enabled=!gameView.firstPerson;
   controls.update();
+  setCameraHint(gameView.firstPerson?'Drag to look around':'Drag to orbit / right-drag to pan / scroll to zoom');
 }
 function gameCameraOverride(){
   if(typeof game==='undefined')return;
@@ -299,14 +319,18 @@ function gameCameraOverride(){
     return;
   }
   if(!gameView.speaker&&line){
-    gameView.speaker={id:line,mode:cameraMode,position:camera3d.position.clone(),target:controls.target.clone(),started:performance.now()};
+    gameView.speaker={id:line,mode:cameraMode,position:camera3d.position.clone(),target:controls.target.clone(),started:performance.now(),yaw:0,pitch:-.15,fov:camera3d.fov};
     cameraMode='speaker';
+    controls.enabled=false;
+    setCameraHint('Drag to look around from your perspective');
   }
   if(gameView.speaker){
     const root=figures.player.root;
     root.updateMatrixWorld();
     camera3d.position.copy(root.localToWorld(new THREE.Vector3(0,1.68,.3)));
-    controls.target.copy(root.localToWorld(new THREE.Vector3(0,1.2,3.2)));
+    const heading=root.rotation.y+gameView.speaker.yaw,pitch=gameView.speaker.pitch;
+    const direction=new THREE.Vector3(Math.sin(heading)*Math.cos(pitch),Math.sin(pitch),Math.cos(heading)*Math.cos(pitch));
+    controls.target.copy(camera3d.position).add(direction.multiplyScalar(3.2));
     camera3d.lookAt(controls.target);
   }
 }
@@ -443,12 +467,16 @@ function initialiseGameView(){
   controls?.addEventListener('start',()=>{gameView.tween=null;});
   $('firstPerson').onchange=()=>setFirstPerson($('firstPerson').checked);
   const canvas=renderer.domElement;
-  canvas.addEventListener('pointerdown',event=>{if(firstPersonActive())gameView.drag={x:event.clientX,y:event.clientY};});
+  canvas.addEventListener('pointerdown',event=>{if(firstPersonActive()||gameView.speaker)gameView.drag={x:event.clientX,y:event.clientY};});
   window.addEventListener('pointermove',event=>{
     const drag=gameView.drag;
-    if(!drag||!firstPersonActive())return;
-    gameView.yaw-=(event.clientX-drag.x)*.005;
-    gameView.pitch=Math.max(-1.2,Math.min(.6,gameView.pitch-(event.clientY-drag.y)*.005));
+    if(!drag||(!firstPersonActive()&&!gameView.speaker))return;
+    const yaw=gameView.speaker?gameView.speaker.yaw:gameView.yaw;
+    const pitch=gameView.speaker?gameView.speaker.pitch:gameView.pitch;
+    const nextYaw=yaw-(event.clientX-drag.x)*.005;
+    const nextPitch=Math.max(-1.2,Math.min(.6,pitch-(event.clientY-drag.y)*.005));
+    if(gameView.speaker){gameView.speaker.yaw=nextYaw;gameView.speaker.pitch=nextPitch;}
+    else{gameView.yaw=nextYaw;gameView.pitch=nextPitch;}
     drag.x=event.clientX;drag.y=event.clientY;
   });
   window.addEventListener('pointerup',()=>{gameView.drag=null;});
