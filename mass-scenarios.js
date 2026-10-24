@@ -516,7 +516,8 @@ function applyParishMinistries(steps,options,initialPos,initialProps){
   if(options.giftsProcession){
     gifts.acts.P=[['receives the bread and wine, assisted by the ministers',.53,.62]];
     gifts.props.wine=[{by:'P',t:.58},...(options.deacon?[{by:'D',t:.64}]:[])];
-    gifts.text+=' The Priest receives both bread and wine, assisted by the Deacon or another minister. Other offerings for the Church and the poor are placed away from the altar.';
+    gifts.text+=' The Priest receives both bread and wine, assisted by the Deacon or another minister.';
+    if(!options.collection)gifts.text+=' Other offerings for the Church and the poor are placed away from the altar.';
   }
   if(options.collection){
     initialProps.collection={by:'U'};
@@ -527,10 +528,11 @@ function applyParishMinistries(steps,options,initialPos,initialProps){
       mv:{U:M([[890,700],[890,370],[110,330],[110,700],[890,745]],.12,.92)},
       props:{collection:[{by:'U',t:0}]},say:[]};
     steps.splice(steps.indexOf(gifts),0,collection);
-    gifts.mv.U=[M([[890,300],[700,280]],0,.5),M([[890,300],HOME.U],.65,1)];
+    gifts.mv.U=[M([[890,745],[890,330],[700,280]],0,.5),M([[700,280],[890,330],HOME.U],.65,1)];
     gifts.acts.U=[['presents the collection and sets it beside the sanctuary, not on the altar',.5,.65]];
     gifts.props.collection=[{at:[710,280],a:.55,b:.6}];
     (gifts.acts.P??=[]).push(['acknowledges the other offerings for the Church and the poor',.63,.68]);
+    gifts.text+=' The usher joins the presentation with the collection, placing it at a suitable place away from the altar.';
   }
   // The Priest incenses the offerings first; the assisting minister then incenses him before the people.
   const incense=at(20),minister=options.deacon?'D':'S';

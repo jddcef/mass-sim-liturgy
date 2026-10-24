@@ -414,8 +414,9 @@ Readers and Psalmist sit with the people; everyone stands through the final
 blessing and exit procession. The longer sign-of-peace interval shows exchanges
 between neighbours.
 
-The usher collects offerings and the M.C. can cue collection. Bread and wine
-are received at the offertory; other offerings stay off the altar. After the
+The usher collects offerings and, when a gifts procession is selected, joins it
+with the collection basket. The bread and wine go to the altar; the collection
+is placed at a suitable place away from it (GIRM 73, 140). After the
 Priest incenses the gifts, cross and altar, the Deacon (or server) incenses the
 Priest, then the people. Optional EMHC assistance assumes proper deputation
 and genuine need, starts after the Priest's Communion, and does not include
@@ -445,7 +446,8 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   header, with its portrait.
 - **Camera pad** (bottom right): zoom, pan and rotate. **Highlight** greys the
   church except the people and objects currently moving. **Speaker view** briefly
-  switches to your character's eyes while your role speaks.
+  switches to your character's eyes while your role speaks; drag the scene or use
+  the camera pad to look around.
 - **First person** (game option): walk through your own eyes. If you head the
   wrong way for a few seconds, an arrow and a ring show where to go. As Priest,
   click the Missal in front of you, then the right passage on the page. Choose
