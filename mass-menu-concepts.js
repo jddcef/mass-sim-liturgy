@@ -1,6 +1,6 @@
 'use strict';
 
-// Layout experiments move the existing controls, never copy or replace their values.
+// Move the existing controls so layout changes retain values and event handlers.
 window.SetupMenus=(()=>{
   const form=document.getElementById('setupForm');
   const fieldsets=Array.from(form.children).filter(node=>node.tagName==='FIELDSET');
@@ -9,6 +9,8 @@ window.SetupMenus=(()=>{
   const celebration=fieldsets[2],gameOptions=fieldsets[3];
   const options=celebration.querySelector('.optionGrid');
   const optionNodes=Array.from(options.children);
+  const gameGrid=gameOptions.querySelector('.optionGrid');
+  const gameNodes=Array.from(gameGrid.children);
   const gameAnchor=document.createComment('Original game options position');
   gameOptions.before(gameAnchor);
   const make=(tag,className,text)=>{
@@ -18,9 +20,9 @@ window.SetupMenus=(()=>{
     return node;
   };
   const layouts={
-    stacks:['A. Card stacks','Browse five role families. Open a stack, pick a role, and keep the rest tucked away.'],
-    dashboard:['B. Dashboard','A role library on the left, your celebration and involvement on the right.'],
-    steps:['C. Step by step','One decision at a time: your role, your involvement, then your celebration.'],
+    stacks:['Card stacks','Browse five role families. Open a stack, pick a role, and keep the rest tucked away.'],
+    dashboard:['Dashboard','A role library on the left, your celebration and involvement on the right.'],
+    steps:['Step by step','One decision at a time: your role, your involvement, then your celebration.'],
     classic:['Original menu','The existing long form, for comparison. No choices are lost when switching layouts.']
   };
   const families=[
@@ -30,7 +32,8 @@ window.SetupMenus=(()=>{
     ['Support & coordination','Preparation and practical duties',['MC','SAC','U','AV'],'sacristy'],
     ['Congregation','Take part from the pews',['PEW'],'people']
   ];
-  const toolbar=make('div','menuConcepts');
+  const toolbar=make('details','menuConcepts');
+  toolbar.append(make('summary','','Menu layout'));
   const pickerLabel=make('label','','Try a menu layout');
   const picker=make('select');
   picker.id='menuConcept';
@@ -42,7 +45,7 @@ window.SetupMenus=(()=>{
   const description=make('p','menuDescription');
   description.id='menuDescription';
   picker.setAttribute('aria-describedby',description.id);
-  toolbar.append(make('span','menuEyebrow','DESIGN PREVIEW'),pickerLabel,description);
+  toolbar.append(pickerLabel,description);
   form.prepend(toolbar);
   const intro=form.querySelector('h2 + p');
   const originalIntro=intro.textContent;
@@ -78,15 +81,116 @@ window.SetupMenus=(()=>{
   const selectedBlurb=make('p');
   selected.append(make('small','menuEyebrow','YOUR ROLE'),selectedName,selectedBlurb);
   selected.setAttribute('aria-live','polite');
-  const levelNote=make('p','menuLevelNote');
-  levelNote.setAttribute('aria-live','polite');
-  document.getElementById('levelCards').after(levelNote);
+  const involvement=[
+    ['watch','eye','Just watch','No questions; your duties happen automatically.'],
+    ['guided','guide','Follow a hint','The right action is highlighted. Click to continue.'],
+    ['choice','choices','Choose an answer','Pick from a few answers, with two tries.'],
+    ['timed','timer','Beat the clock','Answer choices with a countdown.'],
+    ['expert','target','Find it yourself','No hints: select places, people and book passages.']
+  ];
+  involvement.forEach(([id,icon,title,text])=>{
+    const card=form.querySelector(`#levelCards input[value="${id}"]`).closest('label');
+    Array.from(card.childNodes).filter(node=>node.nodeType===Node.TEXT_NODE).forEach(node=>node.remove());
+    const symbol=make('span','menuLevelIcon');
+    symbol.setAttribute('aria-hidden','true');
+    symbol.innerHTML=GameIcons.svg(icon);
+    card.querySelector('strong').before(symbol);
+    card.append(make('b','menuLevelTag',title),make('small','menuLevelHelp',text));
+  });
+  const difficulty=make('details','menuAdvanced menuDifficulty');
+  difficulty.append(make('summary','','Challenge & assistance'));
+  const difficultyGrid=make('div','optionGrid');
+  difficulty.append(make('p','small','Adjust the number of questions, extra duties and answer aids. Watch has no questions, but extra preparation tasks can still lengthen a run.'),difficultyGrid);
+  const difficultyNames=['detail','lapses','openChurch','symbols'];
+  const difficultyNodes=difficultyNames.map(name=>form.elements[name].closest('label'));
+  const decisionLabel=form.elements.detail.closest('label');
+  decisionLabel.append(make('small','menuSettingHelp','Key moments asks less often; Every duty adds more questions.'));
+  form.elements.lapses.closest('label').append(make('small','menuSettingHelp','Extra reminders to spot, for Priest, Deacon and M.C.'));
+  form.elements.openChurch.closest('label').append(make('small','menuSettingHelp','Adds opening and preparation tasks for the Sacristan.'));
+  form.elements.symbols.closest('label').append(make('small','menuSettingHelp','Visual answer aids; turn off for less assistance.'));
   const advanced=make('details','menuAdvanced');
   advanced.append(make('summary','','Fine-tune celebration & church'));
   const advancedGrid=make('div','optionGrid');
   advanced.append(advancedGrid);
   const preferences=make('details','menuAdvanced');
-  preferences.append(make('summary','','Game, sound & camera options'));
+  preferences.append(make('summary','','Sound & camera preferences'));
+  const preferenceGrid=make('div','optionGrid');
+  preferences.append(make('p','small','Presentation preferences, separate from the challenge settings.'),preferenceGrid);
+  const contextual=make('section','menuContext');
+  contextual.append(make('h3','','This celebration'));
+  const contextNote=make('p','small');
+  const contextGrid=make('div','optionGrid');
+  contextual.append(contextNote,contextGrid);
+  const specialNodes=SETUP_CELEBRATION_FLAGS.map(name=>form.elements[name].closest('label'));
+  const seasonalBrowser=make('div','menuCelebrations');
+  seasonalBrowser.append(make('h3','','Through the liturgical year'),make('p','small','Colour tints are browsing cues, not automatic vestment choices. Only existing celebrations are playable.'));
+  const seasonGrid=make('div','menuSeasonGrid');
+  const otherGrid=make('div','menuSeasonGrid');
+  seasonalBrowser.append(seasonGrid,make('h3','','Other celebrations & rites'),otherGrid);
+  const presetSelect=document.getElementById('gamePreset');
+  const presetValue=presetSelect.value;
+  const presetOptions=new Map(Array.from(presetSelect.options).map(option=>[option.value,option]));
+  presetSelect.replaceChildren();
+  const seasonGroups=SETUP_CELEBRATION_GROUPS.map((group,index)=>{
+    const detail=make('details',`menuSeason menuTint-${group.colour}`);
+    const summary=make('summary');
+    summary.append(make('strong','',group.name),make('small','',group.presets.length?`${group.presets.length} available`:'Not yet available'));
+    detail.append(summary);
+    if(group.note)detail.append(make('p','small',group.note));
+    const optgroup=make('optgroup');
+    optgroup.label=group.name;
+    const buttons=group.presets.map(id=>{
+      optgroup.append(presetOptions.get(id));
+      const button=make('button','menuCelebrationPick',GAME_PRESETS[id].name);
+      button.type='button';
+      button.dataset.preset=id;
+      if(id==='holyThursday'||id==='goodFriday')button.classList.add(id==='holyThursday'?'menuTint-white':'menuTint-red');
+      button.addEventListener('click',()=>{
+        presetSelect.value=id;
+        presetSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      detail.append(button);
+      return button;
+    });
+    if(group.presets.length)presetSelect.append(optgroup);
+    (index<7?seasonGrid:otherGrid).append(detail);
+    return {detail,buttons,group};
+  });
+  presetSelect.append(presetOptions.get('custom'));
+  presetSelect.value=presetValue;
+  let contextPreset=GAME_PRESETS[presetValue]?presetValue:null;
+  function refreshCelebration(id){
+    if(id&&GAME_PRESETS[id])contextPreset=id;
+    const current=presetSelect.value;
+    const values=formValues();
+    const rite=GAME_PRESETS[current]?.fields.rite||'mass';
+    const flags=setupCelebrationFlags({...values,rite},contextPreset);
+    specialNodes.forEach(node=>{node.hidden=!flags.includes(node.querySelector('input').name);});
+    contextual.hidden=flags.length===0;
+    contextNote.textContent=current==='custom'?'Customised celebration: only its relevant features are shown. Choose another celebration above to change its type.':GAME_PRESETS[current]?.name||'Your own choice of options.';
+    seasonGroups.forEach(({detail,buttons,group})=>{
+      detail.classList.toggle('hasSelection',group.presets.includes(current));
+      buttons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.preset===current)));
+    });
+  }
+  function groupAdvancedOptions(){
+    advancedGrid.replaceChildren();
+    contextGrid.replaceChildren(...specialNodes);
+    let section;
+    for(const node of optionNodes.slice(optionNodes.findIndex(node=>node.classList.contains('optionHead')))){
+      if(specialNodes.includes(node))continue;
+      if(node.classList.contains('optionHead')){
+        section=make('section','menuSettingsSection');
+        const grid=make('div','optionGrid');
+        section.append(node,grid);
+        advancedGrid.append(section);
+      }else section.querySelector('.optionGrid').append(node);
+    }
+    advancedGrid.prepend(contextual);
+    difficultyGrid.replaceChildren(...difficultyNodes);
+    preferenceGrid.replaceChildren(...gameNodes.filter(node=>!difficultyNodes.includes(node)));
+    fieldsets[1].append(difficulty);
+  }
   const stepNav=make('nav','menuSteps');
   stepNav.setAttribute('aria-label','Setup steps');
   const stepButtons=['Your role','Involvement','Celebration'].map((title,index)=>{
@@ -122,7 +226,6 @@ window.SetupMenus=(()=>{
     const card=roleCards.find(node=>node.querySelector('input').value===chosenRole());
     selectedName.textContent=card.querySelector('strong').textContent;
     selectedBlurb.textContent=Array.from(card.childNodes).filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join('');
-    levelNote.textContent=GAME_LEVELS[form.elements.level.value||'choice'].blurb;
     refreshGroups();
   }
   function showStep(index,focus=false){
@@ -142,7 +245,7 @@ window.SetupMenus=(()=>{
     }
   }
   function applyLayout(value){
-    layout=Object.hasOwn(layouts,value)?value:'classic';
+    layout=Object.hasOwn(layouts,value)?value:'stacks';
     picker.value=layout;
     form.dataset.menu=layout;
     description.textContent=layouts[layout][1];
@@ -150,15 +253,16 @@ window.SetupMenus=(()=>{
     intro.textContent=classic?originalIntro:'Choose your role, involvement and celebration. The detailed settings are optional.';
     groupNav.hidden=layout!=='dashboard';
     familyNote.hidden=selected.hidden=classic;
-    levelNote.hidden=classic||layout==='steps';
     stepNav.hidden=layout!=='steps';
     if(classic){
       roles.className='cards';
       roles.replaceChildren(...roleCards);
       options.replaceChildren(...optionNodes);
+      specialNodes.forEach(node=>{node.hidden=false;});
+      gameGrid.replaceChildren(...gameNodes);
       gameAnchor.after(gameOptions);
       body.after(...fieldsets);
-      advanced.remove();preferences.remove();
+      advanced.remove();preferences.remove();difficulty.remove();seasonalBrowser.remove();
     }else{
       body.append(...fieldsets.slice(0,3));
       roles.className='menuRoleFamilies';
@@ -170,12 +274,14 @@ window.SetupMenus=(()=>{
       roles.after(familyNote,selected);
       const firstHeading=optionNodes.findIndex(node=>node.classList.contains('optionHead'));
       options.replaceChildren(...optionNodes.slice(0,firstHeading));
-      advancedGrid.replaceChildren(...optionNodes.slice(firstHeading));
+      options.before(seasonalBrowser);
+      groupAdvancedOptions();
       celebration.append(advanced,preferences);
-      preferences.append(gameOptions);
+      gameOptions.remove();
     }
     activeFamily=Math.max(0,groups.findIndex(group=>group.ids.includes(chosenRole())));
     refreshSelection();
+    if(!classic)refreshCelebration();
     showStep(step);
   }
   picker.addEventListener('change',event=>{
@@ -184,6 +290,7 @@ window.SetupMenus=(()=>{
   });
   form.addEventListener('change',event=>{
     if(event.target.name==='role'||event.target.name==='level')refreshSelection();
+    if(layout!=='classic')refreshCelebration();
   });
   // Enter on an early wizard page advances rather than silently starting a game.
   form.addEventListener('submit',event=>{
@@ -192,6 +299,9 @@ window.SetupMenus=(()=>{
       showStep(step+1,true);
     }
   },true);
-  applyLayout(new URLSearchParams(location.search).get('menu')||'classic');
-  return {showCelebration:()=>showStep(2)};
+  applyLayout(new URLSearchParams(location.search).get('menu')||'stacks');
+  return {showCelebration:()=>showStep(2),refresh:id=>{
+    if(layout!=='classic')refreshCelebration(id);
+    else if(GAME_PRESETS[id])contextPreset=id;
+  }};
 })();

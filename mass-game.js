@@ -256,7 +256,7 @@ function walk(key,from,to,speed){
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 // ---------- setup form ----------
-const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores',SETUP_VERSION=7;
+const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores',SETUP_VERSION=8;
 function buildSetupForm(){
   const roleOrder=['P','D','S','X','C1','T','MB','CB','L','L2','U','E','MC','SAC','PEW','AV'];
   $('roleCards').replaceChildren(...roleOrder.map(id=>el('label',{},[
@@ -269,7 +269,7 @@ function buildSetupForm(){
   try{
     const saved=JSON.parse(localStorage.getItem(SETUP_KEY)||'null');
     // Older saves predate the new defaults (bell on, reserved hosts on): let those defaults apply.
-    if(saved&&!(saved._v>=SETUP_VERSION)){delete saved.bellStart;delete saved.reservedCommunion;delete saved.preset;}
+    if(saved&&!(saved._v>=7)){delete saved.bellStart;delete saved.reservedCommunion;delete saved.preset;}
     if(saved)for(const [name,value] of Object.entries(saved)){
       const field=form.elements[name];
       if(!field)continue;
@@ -321,6 +321,7 @@ function choosePreset(id){
   $('presetNote').textContent=preset.blurb;
   previewNotes();
   syncLiturgicalRibbon({...formValues(),rite:preset.fields.rite,minister:preset.fields.minister});
+  window.SetupMenus?.refresh(id);
 }
 function syncPreset(){
   // Exposition presets carry the rite, which is not a form field: keep it while their fields still match.
@@ -330,6 +331,7 @@ function syncPreset(){
   $('gamePreset').value=id;
   $('presetNote').textContent=GAME_PRESETS[id]?.blurb||'Your own choice of options.';
   syncLiturgicalRibbon(values);
+  window.SetupMenus?.refresh(id);
 }
 
 function syncLiturgicalRibbon(options){

@@ -11,6 +11,29 @@ const run=code=>vm.runInContext(code,context);
 const G=name=>run(name);
 
 {
+  const groups=G('SETUP_CELEBRATION_GROUPS'),presets=G('GAME_PRESETS');
+  const ids=groups.flatMap(group=>Array.from(group.presets));
+  same(ids.slice().sort(),Object.keys(presets).sort(),'every celebration appears once in the seasonal browser');
+  assert.equal(new Set(ids).size,ids.length,'no duplicate celebration shortcuts');
+  same(Array.from(groups.slice(0,7),group=>group.id),['advent','christmas','ordinary','lent','holyWeek','triduum','easter']);
+  for(const id of ['advent','easter'])assert.equal(groups.find(group=>group.id===id).presets.length,0,'do not invent seasonal rites');
+  assert.ok(groups.find(group=>group.id==='feasts').presets.includes('candlemas'));
+  const visible=G('setupCelebrationFlags');
+  same(visible(presets.sunday.fields,'sunday'),[],'ordinary Sunday has no special celebration toggles');
+  for(const [id,preset] of Object.entries(presets)){
+    const expected=(preset.fields.rite||'mass')==='mass'
+      ?Array.from(G('SETUP_CELEBRATION_FLAGS')).filter(name=>preset.fields[name]===true):[];
+    same(visible(preset.fields,id),expected,id+' shows only its own celebration features');
+  }
+  same(visible({...presets.nativity.fields,nativity:false},'nativity'),['nativity'],'can re-enable an edited celebration feature');
+  same(visible({nativity:true},'custom'),['nativity'],'old custom saves keep active features visible');
+  same(visible({nativity:true,funeral:true,rite:'exposition'},'benediction'),[],'outside Mass ignores retained Mass flags');
+  for(const name of ['eye','guide','choices','timer','target']){
+    assert.ok(G('GameIcons').PATHS[name],name+' involvement icon exists');
+  }
+}
+
+{
   const profiles=G('ChurchProfiles');
   for(const style of ['aisles','full']){
     const p=profiles.base();p.seating.style=style;

@@ -58,7 +58,7 @@ Classic scripts load in this order and share globals:
 | `mass-game-ui.js` | Hover tips, search and index card, feedback dialog. |
 | `feedback-config.js` | `FEEDBACK_ENDPOINT` (empty means offline fallback). |
 | `mass-game.js` | Game controller: setup form, phases, questions, the Missal view, scene extras (sacristy, cupboard, doors). |
-| `mass-menu-concepts.js`, `mass-menu-concepts.css` | Optional start-menu design previews: grouped card stacks, dashboard and a three-step flow, reusing the real setup controls. Original layout remains the default. |
+| `mass-menu-concepts.js`, `mass-menu-concepts.css` | Card-stack setup, involvement illustrations, challenge settings and seasonal celebration browser. Dashboard, three-step and original layouts remain available; all reuse the real form controls. |
 
 Rule: game rules belong in `mass-game-logic.js` with tests. DOM and Three.js
 code belongs in the other files. Any markup that a script looks up at
@@ -68,11 +68,18 @@ startup must appear **before** the `<script>` tags in the HTML.
 
 ### 4.1 Setup
 
-- **Menu design previews**: a temporary layout selector compares card stacks,
-  a dashboard and a three-step flow with the original menu. Previews group all
-  roles and collapse advanced options, retaining the same controls, values,
-  preset behaviour and storage. These are browsing groups, not liturgical ranks.
-  No final redesign is selected; the original remains the default.
+- **Setup layout**: Card stacks is the default, with grouped roles, illustrated
+  involvement choices and collapsed advanced settings. Challenge & assistance
+  contains decision frequency, minister lapses, Sacristan opening tasks and
+  symbols; sound/camera settings are separate. A seasonal browser and grouped
+  native selector expose every existing celebration. Advent and Easter-specific
+  rites are labelled unavailable, not substituted with generic Mass presets.
+  Special celebration switches are removed from Ministers and shown only in
+  their own celebration/custom context. Changing type uses the celebration
+  picker. These browsing groups and colour tints are not liturgical ranks,
+  calendar restrictions or changes to vestment settings. Dashboard, step-by-step
+  and original layouts remain available through Menu layout and `?menu=...`,
+  retaining controls, values and storage. Version 8 keeps version 7 saves intact.
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
   Mass with incense (default), Solemnity, Mass with the Bishop (mitre- and
   crozier-bearers in vimps; also a "Bishop presides" option) and Confirmation Mass

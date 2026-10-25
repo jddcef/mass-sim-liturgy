@@ -41,19 +41,32 @@ and no account. Other pages:
    the Triduum. Everything stays playable in any order. Celebrations marked
    *In preparation* are planned but not in the game yet.
 
-### Compare simpler start menus
+### A simpler start menu
 
-The setup's **Try a menu layout** selector offers three working design previews:
-**A. Card stacks** (expand a role family), **B. Dashboard** (role library beside
-the setup), and **C. Step by step** (one decision at a time). Each groups the
-roles and folds detailed celebration, church and game settings away until needed.
-Switch freely: the same controls and current choices are retained. **Original
-menu** stays the default while the designs are being reviewed; no layout choice
-is saved and no gameplay defaults change.
+**Card stacks** is the default: open a role family and pick a role. Involvement
+cards have icons and plain-language explanations, from watching without
+questions to finding places and book passages yourself. **Challenge &
+assistance** groups Decisions (key moments or every duty), extra reminder
+questions, Sacristan preparation tasks and answer symbols. Sound and camera
+preferences are separate.
 
-Open `mass-game.html?menu=stacks`, `?menu=dashboard` or `?menu=steps` for a
-particular preview, including from local files. The group names are browsing
-labels, not liturgical ranks.
+Browse celebrations through lightly tinted **liturgical-year groups**, with
+feasts, sacraments, funerals and Eucharistic worship alongside them. The native
+celebration selector is grouped too. Advent and Easter-specific celebrations
+are not yet available; general Mass presets do not supply seasonal propers.
+Ordinary Time returns after Pentecost. Colours are navigation cues, not
+automatic changes to vestments.
+
+Under **Fine-tune celebration & church**, special features appear only for
+the selected celebration or an existing custom setup that uses them. Christmas,
+Ash Wednesday and similar switches no longer appear under Ministers at an
+ordinary Sunday Mass. Pick a different celebration to change its type.
+
+The collapsed **Menu layout** control retains Dashboard, Step by step and the
+Original menu for comparison; switching keeps the same controls and choices.
+Direct links `mass-game.html?menu=stacks`, `?menu=dashboard`, `?menu=steps`
+and `?menu=classic` also work offline. Layout choice is not saved. Role families
+are browsing labels, not liturgical ranks.
 
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.

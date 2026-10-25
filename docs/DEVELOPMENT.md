@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R207.**
+**Next decision number: R211.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -102,6 +102,7 @@ server for liturgical or Catholic questions and clarifications.
 | 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
 | 28 | local, not published | Speaker-perspective look-around via drag and camera pad; continuous collection route joining the offertory presentation while keeping collection away from altar (R202–R203) |
 | 29 | (this PR) | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default, with shared controls and collapsed advanced settings (R204–R206) |
+| 30 | #23 | Card stacks selected as default; illustrated involvement, challenge/assistance grouping, contextual celebration switches and season-tinted celebration browsing (R207–R210) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -197,6 +198,27 @@ interactive preview was also inspected visually. At a 390 px iframe viewport,
 all three new layouts retain the form values and fit without horizontal form
 overflow, including expanded advanced settings. The original menu's existing
 phone-width overflow is not changed. No final design has been selected.
+
+Round 30 supersedes the round 29 default: the owner selected Card stacks.
+Menu layout is now collapsed; the other layouts remain available for comparison.
+Every involvement card has a distinct symbol and explanation. Challenge &
+assistance contains decision frequency, lapses, Sacristan opening tasks and
+symbols, separate from presentation preferences. Special celebration switches
+are shown under This celebration only when relevant to the chosen or customised
+celebration; they no longer clutter Ministers for a normal Sunday. The seasonal
+browser and native selector share tested metadata covering all 21 presets.
+Advent and Easter-specific rites are explicitly unavailable. Browsing colours
+and the year grouping were checked through Magisterium; they do not alter rites
+or appearance defaults. SETUP_VERSION is 8; the old default migration remains
+limited to saves older than version 7, preserving version 7 custom preferences.
+
+All four Node suites and edited-script syntax checks pass. An isolated Edge
+`file://` check at 1100 px and 390 px covered all 21 presets, 16 roles, five involvement
+icons, version 7 saved preferences, repeated layout switching, expanded settings
+without horizontal form overflow, customised Christmas context, seasonal
+shortcuts, Path preparation and starting/resuming a Watch game. There were no
+page errors or network requests. The involvement and seasonal cards were also
+inspected in the interactive preview.
 
 ### Open items and backlog
 

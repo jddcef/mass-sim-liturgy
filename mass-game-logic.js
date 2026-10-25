@@ -410,6 +410,27 @@ const GAME_PRESETS={
   funeralDeacon:{name:'Funeral Liturgy outside Mass (Deacon)',blurb:'The same liturgy led by a Deacon, as when no Priest is available (Order of Christian Funerals 14).',fields:{
     rite:'funeral',minister:'deacon',serverCount:'2'}}
 };
+// Browsing categories, not a calendar engine or additional seasonal rites.
+const SETUP_CELEBRATION_GROUPS=[
+  {id:'advent',name:'Advent',colour:'violet',presets:[],note:'No Advent-specific celebration is available yet.'},
+  {id:'christmas',name:'Christmas',colour:'white',presets:['nativity']},
+  {id:'ordinary',name:'Ordinary Time',colour:'green',presets:['weekday','sunday','sundayIncense'],note:'General Mass practice presets, not seasonal propers. Ordinary Time occurs before Lent and returns after Pentecost.'},
+  {id:'lent',name:'Lent',colour:'violet',presets:['ashWednesday']},
+  {id:'holyWeek',name:'Holy Week',colour:'red',presets:['palmSunday'],note:'Palm Sunday; the Paschal Triduum is shown separately.'},
+  {id:'triduum',name:'Paschal Triduum',colour:'neutral',presets:['holyThursday','goodFriday'],note:'Holy Thursday (white) and Good Friday (red). The Easter Vigil is not available yet.'},
+  {id:'easter',name:'Easter',colour:'white',presets:[],note:'No Easter-specific celebration is available yet.'},
+  {id:'feasts',name:'Feasts & solemnities',colour:'neutral',presets:['candlemas','solemnity'],note:'Not a season. Candlemas is the feast of 2 February.'},
+  {id:'bishop',name:'With the Bishop',colour:'neutral',presets:['pontifical']},
+  {id:'sacraments',name:'Baptism & Confirmation',colour:'neutral',presets:['baptismMass','baptism','baptismDeacon','confirmation']},
+  {id:'funerals',name:'Funerals',colour:'neutral',presets:['funeralMass','funeral','funeralDeacon']},
+  {id:'worship',name:'Eucharistic worship',colour:'neutral',presets:['adorationLay','benediction','benedictionDeacon']}
+];
+const SETUP_CELEBRATION_FLAGS=['confirmation','nativity','candlemas','ashWednesday','palmSunday','holyThursday','goodFriday','baptism','funeral'];
+function setupCelebrationFlags(values,contextPreset){
+  const preset=GAME_PRESETS[contextPreset]?.fields||{};
+  if((values.rite||preset.rite||'mass')!=='mass')return [];
+  return SETUP_CELEBRATION_FLAGS.filter(name=>values[name]===true||preset[name]===true);
+}
 // The form fields a preset controls; a preset is "current" only while all of them still match.
 function applyPreset(id,current={}){
   const preset=GAME_PRESETS[id];
@@ -1900,4 +1921,4 @@ function liturgicalBreviary(options={},date=new Date()){
   };
 }
 
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,SETUP_CELEBRATION_GROUPS,SETUP_CELEBRATION_FLAGS,setupCelebrationFlags,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
