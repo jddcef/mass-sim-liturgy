@@ -32,6 +32,7 @@ jobs:
           node --check mass-game-audio.js
           node --check mass-game-view.js
           node --check mass-game.js
+          node --check mass-menu-concepts.js
           node --check mass-game-ui.js
           node --check mass-game-path.js
           node --check feedback-config.js

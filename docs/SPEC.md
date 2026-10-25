@@ -58,6 +58,7 @@ Classic scripts load in this order and share globals:
 | `mass-game-ui.js` | Hover tips, search and index card, feedback dialog. |
 | `feedback-config.js` | `FEEDBACK_ENDPOINT` (empty means offline fallback). |
 | `mass-game.js` | Game controller: setup form, phases, questions, the Missal view, scene extras (sacristy, cupboard, doors). |
+| `mass-menu-concepts.js`, `mass-menu-concepts.css` | Optional start-menu design previews: grouped card stacks, dashboard and a three-step flow, reusing the real setup controls. Original layout remains the default. |
 
 Rule: game rules belong in `mass-game-logic.js` with tests. DOM and Three.js
 code belongs in the other files. Any markup that a script looks up at
@@ -67,6 +68,11 @@ startup must appear **before** the `<script>` tags in the HTML.
 
 ### 4.1 Setup
 
+- **Menu design previews**: a temporary layout selector compares card stacks,
+  a dashboard and a three-step flow with the original menu. Previews group all
+  roles and collapse advanced options, retaining the same controls, values,
+  preset behaviour and storage. These are browsing groups, not liturgical ranks.
+  No final redesign is selected; the original remains the default.
 - **Presets**: Weekday Mass, Sunday Mass (four servers, no incense), Sunday
   Mass with incense (default), Solemnity, Mass with the Bishop (mitre- and
   crozier-bearers in vimps; also a "Bishop presides" option) and Confirmation Mass

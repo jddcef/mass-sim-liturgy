@@ -83,7 +83,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R204.**
+**Next decision number: R207.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -101,6 +101,7 @@ server for liturgical or Catholic questions and clarifications.
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
 | 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
 | 28 | local, not published | Speaker-perspective look-around via drag and camera pad; continuous collection route joining the offertory presentation while keeping collection away from altar (R202–R203) |
+| 29 | (this PR) | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default, with shared controls and collapsed advanced settings (R204–R206) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -180,6 +181,22 @@ offertory presentation. The collection remains off the altar (GIRM 73, 140).
 All four Node test suites and edited-script syntax checks pass. A headless Edge
 load through `file://` initialized the scene, but interactive camera movement
 was not automated. Changes are local and uncommitted.
+
+Round 29 adds three working menu previews, not a final replacement. Use the
+setup's "Try a menu layout" selector or `mass-game.html?menu=stacks`,
+`?menu=dashboard` and `?menu=steps`. Original menu remains the default; existing
+setup values, storage keys and gameplay defaults are unchanged. All 16 roles
+remain available. The grouping terminology was checked through Magisterium;
+these are browsing families, not liturgical ranks.
+
+All four Node suites and script syntax checks pass. Isolated Edge checks through
+`file://` covered repeated layout switching, retained edited settings, role
+groups, advanced customisation, wizard Enter/Next behaviour, Path preparation,
+and starting/resuming a game, with no page errors or external requests. The
+interactive preview was also inspected visually. At a 390 px iframe viewport,
+all three new layouts retain the form values and fit without horizontal form
+overflow, including expanded advanced settings. The original menu's existing
+phone-width overflow is not changed. No final design has been selected.
 
 ### Open items and backlog
 

@@ -17,6 +17,12 @@ External pages may change; the project does not bundle a full copyrighted Missal
 - Bow orientation and longer priest vestments were user-directed corrections.
   The simplified figure geometry is illustrative, not a vestment specification.
 
+The start-menu browsing labels were checked through Magisterium on 26 October
+2026 against GIRM 91, 98, 100 and 105-107. They are UI groupings, not official
+liturgical ranks; the role functions remain distinct. Sources and the design
+judgement calls are linked in R205 of `GAME-DECISIONS.md`. No new third-party
+artwork, fonts or libraries are used by these previews.
+
 ## Graphics
 
 - [Three.js](https://github.com/mrdoob/three.js), version 0.128.0.

@@ -521,6 +521,7 @@ function prepareCelebration(celebration){
   $('gamePreset').value=celebration.preset;
   choosePreset(celebration.preset);
   syncPreset();
+  window.SetupMenus?.showCelebration();
   $('gamePreset').closest('fieldset').scrollIntoView({block:'start',behavior:'smooth'});
   toast(celebration.name+' is ready: choose your role and press Start.');
 }

@@ -41,6 +41,20 @@ and no account. Other pages:
    the Triduum. Everything stays playable in any order. Celebrations marked
    *In preparation* are planned but not in the game yet.
 
+### Compare simpler start menus
+
+The setup's **Try a menu layout** selector offers three working design previews:
+**A. Card stacks** (expand a role family), **B. Dashboard** (role library beside
+the setup), and **C. Step by step** (one decision at a time). Each groups the
+roles and folds detailed celebration, church and game settings away until needed.
+Switch freely: the same controls and current choices are retained. **Original
+menu** stays the default while the designs are being reviewed; no layout choice
+is saved and no gameplay defaults change.
+
+Open `mass-game.html?menu=stacks`, `?menu=dashboard` or `?menu=steps` for a
+particular preview, including from local files. The group names are browsing
+labels, not liturgical ranks.
+
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.
 
