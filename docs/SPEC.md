@@ -113,12 +113,13 @@ startup must appear **before** the `<script>` tags in the HTML.
   - A finished game is credited to the celebration whose preset matches the
     final options (`presetForOptions`), or else to the chosen preset. Custom
     games are not credited.
-  - Marks per role, best kept: Attended (Watch or Guided), Served (Choice or
-    harder, at least 70%), Served with distinction (Timed or Expert, at least
-    90%).
+  - Stars per role, best kept: 1 for completion, 2 at 70% or more, and 3 at
+    90% or more in Choice, Timed or Expert. Watch and Guided earn 1 star.
+    Existing stored marks retain their corresponding 1, 2 or 3 stars.
   - Seniority (`SENIORITY_RANKS`): Aspirant, Server, Senior Server, Head
     Server, Master of Ceremonies, Master of Ceremonies of the Triduum. A rank
-    needs each listed celebration served in any role.
+    needs each listed celebration completed in any role or involvement,
+    without a passing score. Recommendations also advance on completion.
   - Celebrations without a preset show "In preparation".
   - Progress is stored in localStorage key `massGameProgress` (versioned).
 - **Church and appearance**:

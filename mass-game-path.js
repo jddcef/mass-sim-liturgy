@@ -43,7 +43,7 @@ const PathView=(()=>{
     let text='Seniority: '+rank.name+'. '+rank.blurb;
     if(next){
       const names=next.missing.map(id=>celebrationById(id).name);
-      text+=' Next: '+next.rank.name+(names.length?' (serve '+names.join(', ')+')':'')+(next.ready?'.':', when those celebrations are ready.');
+      text+=' Next: '+next.rank.name+(names.length?' (complete '+names.join(', ')+')':'')+(next.ready?'.':', when those celebrations are ready.');
     }
     return text;
   }
@@ -82,8 +82,8 @@ const PathView=(()=>{
         node('circle',{cx:32,cy:-32,r:14,class:'pathStation'},g);
         const n=node('text',{x:32,y:-27,'text-anchor':'middle',class:'pathStationText'},g);n.textContent=String(c.station);
       }
-      if(status.mark==='served'||status.mark==='distinction'){
-        const tick=node('text',{x:-34,y:-24,'text-anchor':'middle',class:'pathTick'},g);tick.textContent=status.mark==='distinction'?'★':'✓';
+      if(status.stars){
+        const tick=node('text',{x:0,y:-52,'text-anchor':'middle',class:'pathTick','aria-hidden':'true'},g);tick.textContent='★'.repeat(status.stars);
       }
       const name=node('text',{y:66,'text-anchor':'middle',class:'pathName'},g);name.textContent=c.name;
       const sub=node('text',{y:88,'text-anchor':'middle',class:'pathSub'},g);sub.textContent=statusText(c,status);
@@ -123,7 +123,7 @@ const PathView=(()=>{
     const parts=[html('h3',{textContent:c.name}),html('p',{className:'small',textContent:c.precedence+' · '+PATH_BRANCHES[c.branch].name}),html('p',{textContent:c.blurb})];
     if(status.available){
       parts.push(html('p',{className:'small',textContent:'Your mark: '+MARK_NAMES[status.mark]+(status.best?' (best '+status.best+'%)':'')+'.'}));
-      if(status.triedRoles.length)parts.push(html('p',{className:'small',textContent:'Roles tried: '+status.triedRoles.map(r=>GAME_ROLES[r].name+(status.servedRoles.includes(r)?' ✓':'')).join(', ')+'.'}));
+      if(status.triedRoles.length)parts.push(html('p',{className:'small',textContent:'Roles tried: '+status.triedRoles.map(r=>GAME_ROLES[r].name+(status.completedRoles.includes(r)?' ✓':'')).join(', ')+'.'}));
       const button=html('button',{type:'button',className:'primary',textContent:'Prepare this celebration'});
       button.onclick=()=>{close();if(onPrepare)onPrepare(c);};
       parts.push(button);

@@ -84,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R205.**
+**Next decision number: R208.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -102,7 +102,8 @@ server for liturgical or Catholic questions and clarifications.
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
 | 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
 | 28 | local, not published | Speaker-perspective look-around via drag and camera pad; continuous collection route joining the offertory presentation while keeping collection away from altar (R202–R203) |
-| 29 | local, not published | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
+| 29 | #24 (merged) | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
+| 30 | local, not published | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -192,16 +193,25 @@ sources in `SOURCES.md`. All five Node suites, CI syntax checks and
 `git diff --check` pass. The `file://` browser check confirmed the Corpus
 preset, after-Mass setup, and 3D procession through the first outdoor station;
 the scene rendered without a visible initialization error. Route, incense and
-small-team behavior are covered by the Corpus regression tests. Changes are
-local and uncommitted.
+small-team behavior are covered by the Corpus regression tests. Merged in #24.
+
+Round 30 makes every completed named celebration count towards seniority and
+recommendations, regardless of score or involvement. Performance is shown as
+1-3 stars, with saved marks and best results preserved (R205). The owner
+confirmed the current centre-aisle layout and simplified calendar (R206-R207).
+All five Node suites, changed-script syntax checks and `git diff --check` pass.
+A `file://` browser check confirmed legacy completion credit, seniority,
+1/2/3-star map badges, accessible labels and mobile-list completion labels;
+the test restored the original saved progress afterwards.
 
 ### Open items and backlog
 
 - [ ] Issue #1: regenerate the congregation audio with the four-voice mix.
 - [ ] Owner: create a Formspree or Basin form and set `FEEDBACK_ENDPOINT` in
       `feedback-config.js`.
-- [ ] Owner review of judgement calls in `GAME-DECISIONS.md`, especially
-      R77 (reading of "nave without side aisles").
+- [ ] Optional owner review of other recorded choices in `GAME-DECISIONS.md`.
+      R77 (centre aisle without side aisles) and R17 (calendar) are confirmed
+      in R206-R207 and need no further decision.
 - [ ] Latin audio pack is partial.
 - [ ] Roadmap for the Path (R96, R97). The celebrations are already on the map
       as "In preparation"; adding a `preset` to a celebration in

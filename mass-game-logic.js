@@ -543,11 +543,11 @@ const SENIORITY_RANKS=[
   {id:'mc',name:'Master of Ceremonies',needs:['pontifical','nativity'],blurb:'You can direct a Mass with the Bishop and the Christmas liturgy.'},
   {id:'triduum',name:'Master of Ceremonies of the Triduum',needs:['holyThursday','goodFriday','easterVigil'],blurb:'You have served the summit of the liturgical year.'}
 ];
-// Marks for one celebration, from any role: attended (watched or guided), served (answered at
-// Choice or harder with at least SERVED_PERCENT), served with distinction (Timed or Expert, 90%+).
-const SERVED_PERCENT=70,DISTINCTION_PERCENT=90;
+// Keep stored mark IDs so existing progress survives; every finished celebration counts.
+const TWO_STAR_PERCENT=70,THREE_STAR_PERCENT=90;
 const MARKS=['none','attended','served','distinction'];
-const MARK_NAMES={none:'Not yet',attended:'Attended',served:'Served',distinction:'Served with distinction'};
+const MARK_STARS={none:0,attended:1,served:2,distinction:3};
+const MARK_NAMES={none:'Not yet',attended:'Completed (1 star)',served:'Completed (2 stars)',distinction:'Completed (3 stars)'};
 const PROGRESS_VERSION=1;
 const celebrationById=id=>CELEBRATIONS.find(c=>c.id===id)||null;
 const celebrationAvailable=c=>!!(c&&c.preset&&GAME_PRESETS[c.preset]);
@@ -572,8 +572,8 @@ function normaliseProgress(raw){
 function markFor(result){
   if(result.watched||isGuided(result.level)||!GAME_LEVELS[result.level])return 'attended';
   const percent=Number(result.percent)||0;
-  if(percent>=DISTINCTION_PERCENT&&(result.level==='timed'||result.level==='expert'))return 'distinction';
-  return percent>=SERVED_PERCENT?'served':'attended';
+  if(percent>=THREE_STAR_PERCENT)return 'distinction';
+  return percent>=TWO_STAR_PERCENT?'served':'attended';
 }
 const betterMark=(a,b)=>MARKS.indexOf(a)>=MARKS.indexOf(b)?a:b;
 // Records a finished celebration. Returns {progress, entry, celebration, rankBefore, rankAfter}, or
@@ -597,15 +597,15 @@ function celebrationStatus(progress,id){
   const roles=[];
   for(const [role,r] of Object.entries(entry?.roles||{})){
     mark=betterMark(mark,r.mark);best=Math.max(best,r.best||0);
-    if(MARKS.indexOf(r.mark)>=MARKS.indexOf('served'))roles.push(role);
+    if(MARK_STARS[r.mark]>0)roles.push(role);
   }
-  return {id,available:celebrationAvailable(celebration),mark,best,servedRoles:roles,triedRoles:Object.keys(entry?.roles||{})};
+  return {id,available:celebrationAvailable(celebration),mark,stars:MARK_STARS[mark],best,completedRoles:roles,triedRoles:Object.keys(entry?.roles||{})};
 }
-const isServed=(progress,id)=>MARKS.indexOf(celebrationStatus(progress,id).mark)>=MARKS.indexOf('served');
+const isCompleted=(progress,id)=>celebrationStatus(progress,id).stars>0;
 function seniorityFor(progress){
   let rank=SENIORITY_RANKS[0];
   for(const r of SENIORITY_RANKS){
-    if(r.needs.every(id=>isServed(progress,id)))rank=r;else break;
+    if(r.needs.every(id=>isCompleted(progress,id)))rank=r;else break;
   }
   return rank;
 }
@@ -614,11 +614,10 @@ function nextRank(progress){
   const current=SENIORITY_RANKS.indexOf(seniorityFor(progress));
   const rank=SENIORITY_RANKS[current+1];
   if(!rank)return null;
-  const missing=rank.needs.filter(id=>!isServed(progress,id));
+  const missing=rank.needs.filter(id=>!isCompleted(progress,id));
   return {rank,missing,ready:missing.every(id=>celebrationAvailable(celebrationById(id)))};
 }
-// The recommended next celebration: the first playable one on the main line not yet served,
-// then the side branches, then the Triduum (station 7); null when everything playable is served.
+// Recommend unfinished celebrations, main line first, then side branches and the Triduum.
 function nextRecommended(progress){
   const playable=CELEBRATIONS.filter(celebrationAvailable);
   const order=[
@@ -626,7 +625,7 @@ function nextRecommended(progress){
     ...playable.filter(c=>c.branch!=='main'&&c.branch!=='triduum'),
     ...playable.filter(c=>c.branch==='triduum')
   ];
-  return order.find(c=>!isServed(progress,c.id))||null;
+  return order.find(c=>!isCompleted(progress,c.id))||null;
 }
 
 // Roles that can be taken over during Mass: anyone present in this celebration, plus the
@@ -1983,4 +1982,4 @@ function liturgicalBreviary(options={},date=new Date()){
   };
 }
 
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,normaliseCorpusRite,CORPUS_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,normaliseCorpusRite,CORPUS_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,MARK_STARS,TWO_STAR_PERCENT,THREE_STAR_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};

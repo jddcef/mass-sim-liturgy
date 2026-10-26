@@ -34,8 +34,9 @@ and no account. Other pages:
 4. Use the **Questions** button to turn questions off and just watch, and the
    🔊 button for sound.
 5. Open **✠ The Path** for a suggested order of celebrations, from a weekday
-   Mass towards the Easter Triduum. Serving each one (Choice or harder, 70% or
-   more, in any role) raises your **seniority**: Aspirant, Server, Senior
+   Mass towards the Easter Triduum. Completing the milestone celebrations in
+   any role or involvement raises your **seniority**, with no passing score:
+   Aspirant, Server, Senior
    Server, Head Server, Master of Ceremonies and finally Master of Ceremonies of
    the Triduum. Everything stays playable in any order. Celebrations marked
    *In preparation* are planned but not in the game yet.
@@ -514,9 +515,11 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   Changing any option shows "Custom".
 - **The Path and seniority**: a map of celebrations in order of precedence
   (on phones, a list). Each finished game is credited to the celebration whose
-  preset matches the final options: watching or Guided earns *Attended*,
-  Choice or harder with 70% or more earns *Served*, and Timed or Expert with
-  90% or more earns *Served with distinction*. Custom games are not credited.
+  preset matches the final options. Completion in any involvement counts towards
+  seniority, regardless of score. Stars show performance separately: 1 for
+  completion, 2 at 70% or more, and 3 at 90% or more in Choice, Timed or Expert.
+  Watch and Guided earn 1 star. The best stars per celebration and role are kept;
+  existing saved completions still count. Custom games are not credited.
   Progress is kept in this browser only.
 - **Liturgical Breviary & Season Ribbon**: a bookmark ribbon tab in the header
   displays today's liturgical colour and feast title. Clicking it opens a
