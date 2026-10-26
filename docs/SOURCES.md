@@ -38,6 +38,26 @@ External pages may change; the project does not bundle a full copyrighted Missal
 - Bow orientation and longer priest vestments were user-directed corrections.
   The simplified figure geometry is illustrative, not a vestment specification.
 
+The start-menu browsing labels were checked through Magisterium on 26 October
+2026 against GIRM 91, 98, 100 and 105-107. They are UI groupings, not official
+liturgical ranks; the role functions remain distinct. Sources and the design
+judgement calls are linked in R218 of `GAME-DECISIONS.md`. No new third-party
+artwork, fonts or libraries are used by these previews.
+
+The seasonal celebration browser was checked through Magisterium on 26 October
+2026: [GIRM 346](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/346)
+for colour cues; Universal Norms on the Liturgical Year
+[33](https://www.magisterium.com/docs/5bc955ce-8abf-48f7-829c-f53f899190ad/ref/33)
+and [44](https://www.magisterium.com/docs/5bc955ce-8abf-48f7-829c-f53f899190ad/ref/44)
+for Christmas Time and the two stretches of Ordinary Time; the
+[Table of Liturgical Days I](https://www.magisterium.com/docs/5bc955ce-8abf-48f7-829c-f53f899190ad/ref/Table%20of%20Liturgical%20Days.%20I)
+for the distinct Triduum. The Directory on Popular Piety and the Liturgy
+[120](https://www.magisterium.com/docs/4fba701f-fda0-47a5-a2de-2e210d81f770/ref/120)
+identifies Candlemas on 2 February and its historical connection to Christmas;
+it is browsed under Feasts, not the present Christmas season. Neutral groups
+do not assign a single colour to sacramental, funeral or episcopal celebrations.
+The new involvement symbols are project-drawn SVGs, with no external assets.
+
 ## Graphics
 
 - [Three.js](https://github.com/mrdoob/three.js), version 0.128.0.

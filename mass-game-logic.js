@@ -441,6 +441,30 @@ const GAME_PRESETS={
   funeralDeacon:{name:'Funeral Liturgy outside Mass (Deacon)',blurb:'The same liturgy led by a Deacon, as when no Priest is available (Order of Christian Funerals 14).',fields:{
     rite:'funeral',minister:'deacon',serverCount:'2'}}
 };
+// Browsing categories, not a calendar engine or additional seasonal rites.
+const SETUP_CELEBRATION_GROUPS=[
+  {id:'advent',name:'Advent',colour:'violet',presets:[],note:'No Advent-specific celebration is available yet.'},
+  {id:'christmas',name:'Christmas',colour:'white',presets:['nativity']},
+  {id:'ordinary',name:'Ordinary Time',colour:'green',presets:['weekday','sunday','sundayIncense'],note:'General Mass practice presets, not seasonal propers. Ordinary Time occurs before Lent and returns after Pentecost.'},
+  {id:'lent',name:'Lent',colour:'violet',presets:['ashWednesday']},
+  {id:'holyWeek',name:'Holy Week',colour:'red',presets:['palmSunday'],note:'Palm Sunday; the Paschal Triduum is shown separately.'},
+  {id:'triduum',name:'Paschal Triduum',colour:'neutral',presets:['holyThursday','goodFriday'],note:'Holy Thursday (white) and Good Friday (red). The Easter Vigil is not available yet.'},
+  {id:'easter',name:'Easter',colour:'white',presets:[],note:'No Easter-specific celebration is available yet.'},
+  {id:'feasts',name:'Feasts & solemnities',colour:'neutral',presets:['candlemas','solemnity'],note:'Not a season. Candlemas is the feast of 2 February.'},
+  {id:'bishop',name:'With the Bishop',colour:'neutral',presets:['pontifical']},
+  {id:'sacraments',name:'Baptism & Confirmation',colour:'neutral',presets:['baptismMass','baptism','baptismDeacon','confirmation']},
+  {id:'funerals',name:'Funerals',colour:'neutral',presets:['funeralMass','funeral','funeralDeacon']},
+  {id:'worship',name:'Eucharistic worship',colour:'neutral',presets:['adorationLay','benediction','benedictionDeacon','corpusChristi']}
+];
+const SETUP_CELEBRATION_FLAGS=['confirmation','nativity','candlemas','ashWednesday','palmSunday','holyThursday','goodFriday','baptism','funeral'];
+const SETUP_CORPUS_FLAGS=['corpusCanopy','corpusTorches','corpusStations'];
+function setupCelebrationFlags(values,contextPreset){
+  const preset=GAME_PRESETS[contextPreset]?.fields||{};
+  const rite=values.rite||preset.rite||'mass';
+  if(rite==='corpus')return SETUP_CORPUS_FLAGS.slice();
+  if(rite!=='mass')return [];
+  return SETUP_CELEBRATION_FLAGS.filter(name=>values[name]===true||preset[name]===true);
+}
 // The form fields a preset controls; a preset is "current" only while all of them still match.
 function applyPreset(id,current={}){
   const preset=GAME_PRESETS[id];
@@ -2161,3 +2185,4 @@ if(typeof module!=='undefined')Object.assign(module.exports,{PRACTICE_STORAGE_KE
   PRACTICE_GAMES,practiceHandsOn,practiceHandsOnTick,practiceHandsOnAction,practiceHandsOnResult,
   practiceOptions,practiceChurchRound,practiceSacristyRound,practiceProcessionRound,
   practiceSacristyResult,practiceProcessionResult,practiceStars,normalisePracticeRecords,recordPractice});
+if(typeof module!=='undefined')Object.assign(module.exports,{SETUP_CELEBRATION_GROUPS,SETUP_CELEBRATION_FLAGS,SETUP_CORPUS_FLAGS,setupCelebrationFlags});

@@ -41,6 +41,35 @@ and no account. Other pages:
    the Triduum. Everything stays playable in any order. Celebrations marked
    *In preparation* are planned but not in the game yet.
 
+### A simpler start menu
+
+**Card stacks** is the default: open a role family and pick a role. Involvement
+cards have icons and plain-language explanations, from watching without
+questions to finding places and book passages yourself. **Challenge &
+assistance** groups Decisions (key moments or every duty), extra reminder
+questions, Sacristan preparation tasks and answer symbols. Sound and camera
+preferences are separate.
+
+Browse celebrations through lightly tinted **liturgical-year groups**, with
+feasts, sacraments, funerals and Eucharistic worship alongside them. The native
+celebration selector is grouped too. Advent and Easter-specific celebrations
+are not yet available; general Mass presets do not supply seasonal propers.
+Ordinary Time returns after Pentecost. Colours are navigation cues, not
+automatic changes to vestments.
+
+Under **Fine-tune celebration & church**, special features appear only for
+the selected celebration or an existing custom setup that uses them. Christmas,
+Ash Wednesday and similar switches no longer appear under Ministers at an
+ordinary Sunday Mass. Pick a different celebration to change its type.
+Corpus Christi is listed under Eucharistic worship; its canopy, lights and
+prayer-station choices appear only for that rite.
+
+The collapsed **Menu layout** control retains Dashboard, Step by step and the
+Original menu for comparison; switching keeps the same controls and choices.
+Direct links `mass-game.html?menu=stacks`, `?menu=dashboard`, `?menu=steps`
+and `?menu=classic` also work offline. Layout choice is not saved. Role families
+are browsing labels, not liturgical ranks.
+
 The Corpus Christi scene is illustrative. The route follows local direction;
 canopy, lights, incense on the route and prayer stations are not presented as
 universal requirements.

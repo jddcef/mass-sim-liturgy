@@ -460,6 +460,49 @@ the optional rite script; no rite scope is added.
 | R211 | How do practice completion and performance relate to milestones? | Every finished round records completion, even when answers need review. Best 1-3 stars use the existing 70%/90% thresholds, independently of completion. MG01 accuracy is targets divided by targets plus wrong selections/reveals and distinct picture hints; MG02 counts correct placements/omissions; MG03 counts ranks with both position and kit correct. No speed score or passing-score gate. A dedicated versioned `massGamePractice` key holds only MG01-MG03 completion counts and best stars; existing setup, scores, layout and Path keys remain untouched. Storage failures are stated visibly. | Pass-score gates; crediting celebration milestones for practice; mixing records with saved settings; scoring speed. | Confirmed user completion/stars direction (R205); judgement call on practice accuracy and isolated persistence. |
 | R212 | Does the new charcoal idea belong in this release? | Add stable MG12, "Light the charcoal for the thurible", as Idea only. It is an entirely virtual concept, with no real-world ignition procedure or actual flame/hot-equipment practice. Keep all twelve IDs and retain MG10-MG12 unimplemented. MG01-MG03 stay In progress until verified and merged, with truthful delivery references. | Implementing charcoal/fire gameplay now; renumbering the eleven existing ideas; marking an unmerged implementation Done. | User request and confirmed batch scope; judgement call on safety framing. |
 
+## Round 34 (start-menu design previews)
+
+User request, verbatim:
+
+> The main menu or start page has a whole lot of options etc... can you suggest some new layouts, maybe build out a few, either images or actual, then i can go through them and choose.
+>
+> It's too complicated and long etc... one thing we can try is to group with nice card stack styles or similar the roles into groups like ordained ministers, active ministers, support ministries etc
+
+| # | Question | Choice | Alternatives considered | Source |
+|---|---|---|---|---|
+| R217 | How can the owner compare simpler menus before choosing one? | Three working, switchable previews in the real setup: A. Card stacks, B. Dashboard and C. Step by step. Keep Original menu as the default; `?menu=stacks`, `dashboard` or `steps` opens a preview directly. Layout choice is not saved. This interprets the request as exploration, not approval of a replacement. | Static pictures only; pick and ship a single permanent redesign; independent mock forms with different state. | User request; UI judgement call |
+| R218 | How are roles grouped without implying others are inactive? | Five browsing families: Ordained ministers (Priest, Deacon); Altar & procession (Server and bearers); Word & Communion (readers, EMHC); Support & coordination (M.C., Sacristan, Usher, Screen operator); Congregation. State that these are browsing groups, not ranks. Avoid "active ministers"; the whole assembly participates. The labels do not change role eligibility or claim an official classification of insignia bearers or screen operators. | "Active ministers" versus congregation; treating the groups as liturgical grades; combining distinct reader and EMHC functions into one role. | Magisterium consultation: [GIRM 91](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/91), [98](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/98), [100](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/100), [105](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/105), [106](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/106), [107](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/107); grouping is a UI judgement call |
+| R219 | How is setup shortened without losing settings or breaking existing behaviour? | Move, rather than duplicate, the original form controls. In previews collapse detailed celebration/church controls and game/sound/camera options; show the selected role description below compact cards. The dashboard and stacks show the selected involvement explanation. The wizard has three directly accessible steps, Back/Next, and Start on its final step; Enter advances earlier steps. Path preparation reveals the celebration step. Existing saves, defaults and original-menu structure are retained, with no storage migration. | Remove uncommon options; clone controls and synchronise multiple forms; change saved defaults; a wizard that starts a game on Enter before review. | User request; engineering/UI judgement call |
+
+## Round 35 (Card stacks selected and clarified)
+
+User request, verbatim:
+
+> i like Card stacks.  But also add some iconography for the involvment, it's not clear what each one does.
+>
+> Also group settings by what makes it harder, e.g. Decisions .
+>
+> Also the Ministers under fine-tune, it's confusing to have Christmas, Ash Wednesday etc mentioned there, when I am probably not playing that liturgical celebration, those things should be linked to the celebration they apply to, not just a normal Sunday Mass for example, but shown when appropriate to be.
+>
+> Also, try and group the kind of celebration in a way that shows them in liturgical year layout, e.g. advent, lent, ordinary, christmas, Holy Week, Easter etc maybe with a bit of their colours lightly.
+
+| # | Question | Choice | Alternatives considered | Source |
+|---|---|---|---|---|
+| R220 | Which menu is now the default? | Card stacks, following the owner's choice. Collapse Menu layout but retain the alternate layouts and direct query links. Bump SETUP_VERSION to 8 for the new presentation default, without changing gameplay defaults; preserve version 7 preferences by keeping the historical bell/reserved-host migration restricted to pre-7 saves. | Keep Original as default; delete all comparison layouts; reset saved options on the version bump. | User request; engineering/UI judgement call |
+| R221 | How are involvement and challenge explained? | Each involvement card has its own eye, guide, answer-list, timer or target SVG, a short action phrase and a visible explanation. Group Decisions, minister lapses, Sacristan opening tasks and symbols under Challenge & assistance alongside involvement; keep sound/camera separate. Explain which controls add questions/tasks and which provide visual aids. Do not change the underlying involvement rules. | Icons without text; leaving Decisions with audio; presenting appearance preferences as difficulty. | User request; existing game behaviour; UI judgement call |
+| R222 | Where do special celebration switches belong? | Remove Christmas, Candlemas, Ash Wednesday, Palm Sunday, Holy Thursday, Good Friday, Confirmation, Baptism and Funeral switches from Ministers. Show them in This celebration only when enabled in the chosen celebration or existing custom setup. Retain the current celebration context while editing so a feature can be toggled back on. Use the celebration browser to change type. Do not clear hidden values or change rite rules. Bishop presides stays with Ministers. | Show every feast under Ministers; delete the switches; silently clear custom saved flags; leave hidden active features without an explanation. | User request; UI judgement call |
+| R223 | How is the celebration picker arranged? | Show the year's progression with light violet/white/green/red cues, Ordinary Time's return noted, and the Triduum separate from Palm Sunday. Keep other feasts (including Candlemas), Bishop, sacraments, funerals and Eucharistic worship as separate groups. Group the native selector too. Every existing preset appears exactly once. Advent/Easter-specific rites are marked unavailable, not invented; the Ordinary Time group identifies its general Mass presets as non-seasonal practice. Tints do not change vestments or imply that every feast in a season uses that colour. | A flat list; a generic Sunday preset labelled as Advent/Easter; Candlemas placed inside modern Christmas Time; one colour for the whole Triduum; restricting sacramental rites to one season. | User request; Magisterium: [GIRM 346](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/346), Universal Norms [33](https://www.magisterium.com/docs/5bc955ce-8abf-48f7-829c-f53f899190ad/ref/33), [44](https://www.magisterium.com/docs/5bc955ce-8abf-48f7-829c-f53f899190ad/ref/44), [Table I](https://www.magisterium.com/docs/5bc955ce-8abf-48f7-829c-f53f899190ad/ref/Table%20of%20Liturgical%20Days.%20I), Directory on Popular Piety [120](https://www.magisterium.com/docs/4fba701f-fda0-47a5-a2de-2e210d81f770/ref/120); browsing design is a judgement call |
+
+## Branch update (merge integration)
+
+User request: "Update branch". Merge the latest `origin/main` into
+`jddcef-start-menu-concepts`, resolve conflicts and validate without discarding
+either branch's features.
+
+| # | Question | Choice | Alternatives considered | Source |
+|---|---|---|---|---|
+| R224 | How do the menu changes coexist with the latest base? | Preserve Corpus Christi, completion-based milestones and Practice room. List Corpus Christi once under Eucharistic worship and move its optional canopy/lights/stations into This celebration, visible only for the Corpus rite, including customised variants with the options switched off. Keep both stylesheets and all script exports. Preserve main's published R204-R212 and renumber this branch's menu decisions R217-R223 with their references. | Dropping incoming features; exposing Corpus choices at a normal Mass; hiding custom Corpus controls after an edit; leaving duplicate decision IDs. | User-directed branch update; existing R204 and R222-R223; engineering integration, no new liturgical rule. |
+
 ## Round 33 (hands-on Practice room batch)
 
 User: "do more", following "Let's start implementing them. Do a few at a time,
@@ -476,3 +519,20 @@ thurible."
 | R214 | How are candle and charcoal games safe and playable? | MG11 moves a symbolic lighter flame (+) to three wick targets while countering tilt; symbolic hand-zone contact resets reach without injury. Easter Candle is final game progression, not a ritual order. MG12 matches abstract glow numbers and centre-band pulses for three symbols, with no physical units or real ignition sequence. Both explicitly prohibit copying the simulation with real flame/hot equipment. | Real-world ignition instruction; graphic injury; physics/fuel simulation; substituting quizzes for coordination. | User candle/charcoal ideas; judgement call on virtual-only safety abstraction and target layout. |
 | R215 | What are accessible completion and persistence rules? | All three have keyboard and 44px touch buttons, Slow and untimed Assisted controls; assistance does not reduce stars. Assisted removes ambient candle drift and manually steps timing. Reset/mode changes discard the current attempt; replay retains the mode. Skip/finish-now always permit completion. Score denominator is at least all possible round points and grows with failed attempts/contact; MG10 timing and direction each earn a point. Extend version-1 massGamePractice with MG10-MG12 while retaining MG01-MG03 records; never touch celebration settings, scores or Path progress. Use the existing Practice room frame/key hook only, with no new loop, audio, timer or persistent handler. | Precision dragging; reaction-only controls; passing-score gates; new celebration state; migrating unrelated saves. | User accessibility/isolation requirements and R205/R211; judgement call on scoring and lifecycle. |
 | R216 | When is delivery marked Done? | MG01-MG03 are Done with merged PR #27. MG10-MG12 remain In progress until their own delivery is merged; do not implement MG04-MG09. Shared setup redesign remains out of scope. | Marking unmerged work Done; extending into another batch. | Confirmed bounded batch scope and backlog status definitions. |
+
+## Branch update (hands-on Practice integration)
+
+User request, verbatim:
+
+> Help me merge the latest base branch into jddcef-start-menu-concepts.
+>
+> Current branch: jddcef-start-menu-concepts
+> Base branch: origin/main
+> The branch appears to be behind by 3 commits.
+> Sync with the remote branch if needed, merge origin/main, resolve conflicts carefully, and run relevant validation.
+>
+> Do not run destructive commands like git reset --hard unless I explicitly ask.
+
+| # | Question | Choice | Alternatives considered | Source |
+|---|---|---|---|---|
+| R225 | How is the hands-on Practice batch merged with the menu branch? | Merge main through #28 without rewriting either branch. Preserve all six Practice entries, hands-on rules, records and safety wording alongside every menu layout and contextual Corpus settings. Keep both adjacent regression blocks. Preserve published main R213-R216 and renumber branch-only R213-R220 to R217-R224 with related references; next is R226. | Drop one test block; lose the menu or incoming Practice features; leave duplicate decision IDs; destructive reset or history rewrite. | User-directed base-branch merge; engineering integration, no new liturgical interpretation. |

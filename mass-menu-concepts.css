@@ -1,0 +1,121 @@
+.menuConcepts { padding:10px 15px; margin-bottom:20px; background:#e8e3d9; border:1px solid #cec4b4; border-radius:10px; }
+.menuConcepts > summary { cursor:pointer; font-size:12px; color:#60594d; }
+.menuConcepts[open] > label { margin-top:12px; }
+.menuEyebrow { font:700 10px system-ui,sans-serif; letter-spacing:1.6px; color:#6c614e; }
+.menuConcepts label { display:flex; align-items:center; flex-wrap:wrap; gap:10px; font-size:13px; font-weight:600; }
+.menuConcepts select { max-width:100%; }
+.menuDescription { flex-basis:100%; margin:0; font-size:12px; color:#60594d; }
+.menuBody:empty { display:none; }
+.menuSteps[hidden], .menuFamilyNav[hidden], .menuRoleGroup[hidden], .menuSelection[hidden] { display:none; }
+#setupForm:not([data-menu="classic"]) { width:min(1080px,100%); background:#f7f4ed; padding:24px 30px; }
+#setupForm:not([data-menu="classic"]) > h2 { font-size:32px; color:#293e35; }
+#setupForm:not([data-menu="classic"]) .menuBody > fieldset { min-width:0; background:#fffdf8; padding:18px; border:1px solid #ded6c8; border-radius:14px; }
+#setupForm:not([data-menu="classic"]) legend { font:600 18px Georgia,serif; color:#293e35; }
+.menuRoleFamilies { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.menuRoleGroup { min-width:0; align-self:start; border:1px solid #d9d1c2; border-radius:12px; background:#f3efe6; box-shadow:0 4px 0 -1px #e5dfd3,0 8px 0 -2px #eee9df; }
+.menuRoleGroup.hasSelection { border-color:#789480; }
+.menuRoleGroup summary { display:flex; gap:10px; align-items:center; padding:14px 12px; cursor:pointer; list-style:none; }
+.menuRoleGroup summary::-webkit-details-marker { display:none; }
+.menuRoleGroup summary::after { content:'+'; margin-left:auto; font-size:22px; color:#6f786b; }
+.menuRoleGroup[open] summary::after { content:'-'; }
+.menuFamilyIcon { display:grid; place-items:center; flex:none; width:38px; height:42px; border-radius:9px; background:#e4e8db; color:#45614c; }
+.menuFamilyIcon svg { width:26px; height:26px; }
+.menuFamilyHeading { display:grid; gap:3px; }
+.menuFamilyHeading strong { font:600 16px Georgia,serif; }
+.menuFamilyHeading small, .menuFamilyCount { font-size:11px; color:#716a5c; }
+.menuFamilyCount { margin-left:auto; white-space:nowrap; }
+.menuRoleGroup.hasSelection .menuFamilyCount { color:#36614c; font-weight:700; }
+.menuGroupCards { padding:0 10px 10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.menuGroupCards label { font-size:0; border-width:1px; }
+.menuGroupCards .rolePortrait { width:66px; height:55px; }
+.menuGroupCards label strong { font-size:13px; }
+.menuFamilyNote { margin:18px 0 10px; font-size:11px; color:#716a5c; }
+.menuSelection { display:grid; gap:4px; padding:14px 16px; border-left:3px solid #64816b; background:#edf1e8; border-radius:0 8px 8px 0; }
+.menuSelection > strong { font:600 20px Georgia,serif; color:#293e35; }
+.menuSelection p { margin:0; font-size:12px; line-height:1.5; }
+.menuAdvanced { margin-top:12px; border-top:1px solid #ded6c8; padding-top:12px; }
+.menuAdvanced > summary { cursor:pointer; font-size:13px; font-weight:600; color:#45614c; }
+.menuAdvanced > .optionGrid { margin-top:12px; }
+#setupForm:not([data-menu="classic"]) .menuAdvanced fieldset { min-width:0; margin-inline:0; }
+#setupForm:not([data-menu="classic"]) .optionGrid { grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr)); }
+#setupForm:not([data-menu="classic"]) .presetPick { grid-column:1/-1; flex-wrap:wrap; font-weight:600; }
+#setupForm:not([data-menu="classic"]) #presetNote { grid-column:1/-1; line-height:1.5; }
+#setupForm:not([data-menu="classic"]) .levels { grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); }
+#setupForm .levels label { padding:14px 10px; }
+#setupForm .levels strong { margin:6px 0; font-size:15px; }
+.menuLevelIcon { display:grid; place-items:center; width:38px; height:38px; border-radius:10px; background:#e7e9de; color:#45614c; }
+.menuLevelIcon svg { width:26px; height:26px; }
+.menuLevelTag { display:block; font-size:12px; margin-bottom:4px; }
+.menuLevelHelp { display:block; font-size:12px; line-height:1.4; color:#60594d; }
+.menuDifficulty .optionGrid label { display:block; }
+.menuDifficulty label select { display:block; width:100%; margin-top:5px; }
+.menuSettingHelp { display:block; margin-top:5px; font-size:11px; font-weight:400; color:#60594d; }
+.menuSettingsSection, .menuContext { grid-column:1/-1; min-width:0; }
+.menuSettingsSection h3, .menuContext h3 { margin:12px 0 8px; font-size:15px; }
+.menuContext { padding:0 12px 12px; border:1px solid #d4cbbb; border-radius:8px; background:#f5f0e6; }
+.menuContext[hidden], .menuContext label[hidden] { display:none; }
+.menuSeasonGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+.menuCelebrations h3 { margin:18px 0 8px; font:600 16px Georgia,serif; }
+.menuCelebrations > p { font-size:11px; color:#716a5c; }
+.menuSeason { min-width:0; align-self:start; border:1px solid #d8d1c6; border-radius:9px; padding:10px; background:#f1eee8; }
+.menuSeason summary { cursor:pointer; font-size:13px; }
+.menuSeason summary strong { font-family:Georgia,serif; }
+.menuSeason summary small { display:block; margin:4px 0 0 16px; font-size:10px; color:#60594d; }
+.menuSeason p { font-size:11px; line-height:1.4; }
+.menuSeason.hasSelection { outline:2px solid #64816b; outline-offset:1px; }
+.menuCelebrationPick { display:block; width:100%; margin-top:8px; text-align:left; padding:9px; font-size:12px; border:1px solid #cec5b5; border-radius:6px; background:#fffdf8; }
+.menuCelebrationPick[aria-pressed="true"] { border-color:#45614c; box-shadow:inset 3px 0 #45614c; font-weight:700; }
+.menuTint-violet { background:#eee7f2; }
+.menuTint-white { background:#faf5df; }
+.menuTint-green { background:#e8eee4; }
+.menuTint-red { background:#f3e5e1; }
+#setupForm:not([data-menu="classic"]) .sheetActions { position:sticky; bottom:-24px; z-index:1; padding:14px 0; background:#f7f4edf5; border-top:1px solid #ded6c8; }
+#setupForm:not([data-menu="classic"]) button:focus-visible,
+.menuRoleGroup summary:focus-visible { outline:3px solid #4785a5; outline-offset:3px; }
+#setupForm[data-menu="dashboard"] .menuBody { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:0 20px; align-items:start; }
+#setupForm[data-menu="dashboard"] .menuBody > fieldset:first-child { grid-row:1/3; }
+#setupForm[data-menu="dashboard"] .menuRoleFamilies { grid-template-columns:150px minmax(0,1fr); gap:12px; }
+.menuFamilyNav { display:flex; flex-direction:column; gap:7px; }
+.menuFamilyNav button { text-align:left; padding:12px 9px; border:1px solid transparent; border-radius:8px; background:transparent; }
+.menuFamilyNav strong { display:block; font:600 13px Georgia,serif; }
+.menuFamilyNav small { display:block; margin-top:4px; font-size:10px; color:#716a5c; }
+.menuFamilyNav button[aria-pressed="true"] { background:#e4ebdf; border-color:#789480; }
+#setupForm[data-menu="dashboard"] .menuFamilyNav { padding:7px; background:#293e35; border-radius:10px; }
+#setupForm[data-menu="dashboard"] .menuFamilyNav button { color:#fffdf8; }
+#setupForm[data-menu="dashboard"] .menuFamilyNav small { color:#c9d3c5; }
+#setupForm[data-menu="dashboard"] .menuFamilyNav button[aria-pressed="true"] { color:#293e35; }
+#setupForm[data-menu="dashboard"] .menuFamilyNav button[aria-pressed="true"] small { color:#60594d; }
+#setupForm[data-menu="dashboard"] .menuRoleGroup { box-shadow:none; }
+#setupForm[data-menu="dashboard"] .menuRoleGroup summary { pointer-events:none; }
+#setupForm[data-menu="dashboard"] .menuRoleGroup summary::after,
+#setupForm[data-menu="dashboard"] .menuFamilyCount,
+#setupForm[data-menu="dashboard"] .menuFamilyIcon { display:none; }
+#setupForm[data-menu="dashboard"] .menuGroupCards { grid-template-columns:1fr; max-height:390px; overflow:auto; }
+#setupForm[data-menu="dashboard"] .menuGroupCards label { min-height:80px; }
+#setupForm[data-menu="dashboard"] .menuGroupCards .rolePortrait { float:left; margin:0 8px 2px 0; width:52px; height:46px; }
+.menuSteps { display:flex; gap:8px; margin:20px 0; }
+.menuSteps button { flex:1; padding:12px 6px; border:1px solid #d1c9bb; border-radius:8px; font-size:13px; }
+.menuSteps button[aria-current="step"] { background:#293e35; color:#fffdf8; border-color:#293e35; }
+#setupForm[data-menu="steps"] { width:min(850px,100%); }
+#setupForm[data-menu="steps"] .menuBody > fieldset[hidden] { display:none; }
+#setupForm[data-menu="steps"] .levels { grid-template-columns:1fr; }
+#setupForm[data-menu="steps"] .levels label { padding:15px 18px; }
+@media(max-width:760px) {
+  #setupForm:not([data-menu="classic"]) { padding:18px 14px; }
+  #setupForm:not([data-menu="classic"]) > h2 { font-size:26px; }
+  #setupForm:not([data-menu="classic"]) .menuBody > fieldset { padding:12px; }
+  .menuRoleFamilies { grid-template-columns:1fr; }
+  .menuConcepts { gap:8px; padding:10px; }
+  #setupForm[data-menu="dashboard"] .menuBody { display:block; }
+  #setupForm[data-menu="dashboard"] .menuRoleFamilies { grid-template-columns:1fr; }
+  .menuFamilyNav { flex-direction:row; overflow:auto; padding-bottom:6px; }
+  .menuFamilyNav button { flex:0 0 125px; }
+  #setupForm[data-menu="dashboard"] .menuGroupCards { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:none; }
+  #setupForm:not([data-menu="classic"]) .sheetActions { bottom:-18px; }
+  .menuSteps { gap:5px; }
+  .menuSteps button { font-size:12px; }
+  .menuSeasonGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(prefers-reduced-motion:reduce) {
+  #setupForm { scroll-behavior:auto; }
+}

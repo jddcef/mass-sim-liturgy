@@ -84,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R217.**
+**Next decision number: R226.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -106,7 +106,10 @@ server for liturgical or Catholic questions and clarifications.
 | 30 | #25 (merged) | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
 | 31 | #26 (merged) | Persistent mini-game ideas and status backlog, including thurible timing and candle-lighting games (R208) |
 | 32 | [#27](https://github.com/jddcef/mass-sim-liturgy/pull/27) (merged) | Practice room MG01-MG03: scene finding, selected cupboard preparation and procession arrangement; separate completion/stars records; standalone explorer compatibility fix (R209-R212) |
-| 33 | [#28](https://github.com/jddcef/mass-sim-liturgy/pull/28) (open, merge pending) | MG10 abstract thurible rhythm/direction; MG11 symbolic lighter balance/reach ending at Easter Candle; MG12 abstract charcoal glow/pulse puzzle. Standard, Slow and untimed Assisted controls, isolated practice records and completion without score gates. MG04-MG09 remain Idea (R213-R216). |
+| 33 | [#28](https://github.com/jddcef/mass-sim-liturgy/pull/28) (merged) | MG10 abstract thurible rhythm/direction; MG11 symbolic lighter balance/reach ending at Easter Candle; MG12 abstract charcoal glow/pulse puzzle. Standard, Slow and untimed Assisted controls, isolated practice records and completion without score gates. MG04-MG09 remain Idea (R213-R216). |
+| 34 | #23 | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default at this stage, with shared controls and collapsed advanced settings (R217-R219) |
+| 35 | #23 | Card stacks selected as default; illustrated involvement, challenge/assistance grouping, contextual celebration switches and season-tinted celebration browsing (R220-R223) |
+| merge | #23 | Merge latest main, preserving Corpus Christi, completion milestones and Practice room; integrate Corpus choices into the contextual menu (R224) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -225,7 +228,42 @@ Idea, not implemented. Includes the user's thurible rhythm/direction timing
 game and virtual lighter/match balance-and-reach game ending with the Easter
 Candle. Documentation only; no gameplay changes.
 
-### Open items and backlog
+Round 34 adds three working menu previews, not a final replacement. Use the
+setup's "Try a menu layout" selector or `mass-game.html?menu=stacks`,
+`?menu=dashboard` and `?menu=steps`. Original menu remains the default; existing
+setup values, storage keys and gameplay defaults are unchanged. All 16 roles
+remain available. The grouping terminology was checked through Magisterium;
+these are browsing families, not liturgical ranks.
+
+All four Node suites and script syntax checks pass. Isolated Edge checks through
+`file://` covered repeated layout switching, retained edited settings, role
+groups, advanced customisation, wizard Enter/Next behaviour, Path preparation,
+and starting/resuming a game, with no page errors or external requests. The
+interactive preview was also inspected visually. At a 390 px iframe viewport,
+all three new layouts retain the form values and fit without horizontal form
+overflow, including expanded advanced settings. The original menu's existing
+phone-width overflow is not changed. No final design has been selected.
+
+Round 35 supersedes the round 34 default: the owner selected Card stacks.
+Menu layout is now collapsed; the other layouts remain available for comparison.
+Every involvement card has a distinct symbol and explanation. Challenge &
+assistance contains decision frequency, lapses, Sacristan opening tasks and
+symbols, separate from presentation preferences. Special celebration switches
+are shown under This celebration only when relevant to the chosen or customised
+celebration; they no longer clutter Ministers for a normal Sunday. The seasonal
+browser and native selector share tested metadata covering all 21 presets.
+Advent and Easter-specific rites are explicitly unavailable. Browsing colours
+and the year grouping were checked through Magisterium; they do not alter rites
+or appearance defaults. SETUP_VERSION is 8; the old default migration remains
+limited to saves older than version 7, preserving version 7 custom preferences.
+
+All four Node suites and edited-script syntax checks pass. An isolated Edge
+`file://` check at 1100 px and 390 px covered all 21 presets, 16 roles, five involvement
+icons, version 7 saved preferences, repeated layout switching, expanded settings
+without horizontal form overflow, customised Christmas context, seasonal
+shortcuts, Path preparation and starting/resuming a Watch game. There were no
+page errors or network requests. The involvement and seasonal cards were also
+inspected in the interactive preview.
 
 Round 32 implements the first three practice games behind a surgical setup
 entry, leaving the setup redesign in #23 alone. Five Node suites, including
@@ -235,7 +273,7 @@ supported preparation/procession arrangements, five-target scene rounds,
 replay, independent record persistence, explicit storage denial, and resuming
 and restarting an existing celebration after practice. No unexpected console
 errors or external page requests occurred in the completed acceptance runs.
-MG01-MG03 remain **In progress**, not Done, until merged. MG12 is an entirely
+MG01-MG03 were verified and merged in #27. MG12 is an entirely
 virtual backlog idea; MG10-MG12 have no implemented gameplay in this batch.
 An additional standalone-page smoke check found an existing `mass-3d.html`
 startup failure when optional Corpus route data is absent. At the coordinating
@@ -243,6 +281,32 @@ session's request, this batch also guards the route-dependent petal generation
 when fewer than two points exist. Node regression cases cover absent, empty,
 single-point and two-point routes; file-protocol smoke checks cover both the
 standalone explorer without Corpus globals and the floor-plan page.
+
+The #23 branch update merges the latest `origin/main` into
+`jddcef-start-menu-concepts`. Corpus Christi is included in Eucharistic worship;
+its canopy, lights and stations appear only for that rite, including custom
+variants. Practice room, completion milestones and performance stars are
+retained. Main's published decision IDs R204-R212 remain unchanged; menu
+decisions are now R217-R223 and this integration is R224.
+All five Node suites, every CI script syntax check and `git diff --check`
+pass. Isolated headless Edge checks through `file://` at 1100 px and 390 px
+each passed 57 assertions: all 22 presets, custom Corpus controls, every
+layout, involvement icons, non-overflowing preview forms, Path, the three
+Practice exercises, and starting/resuming an existing Corpus celebration.
+No page errors or network requests were recorded.
+
+The next #23 branch update merges `origin/main` through #28 (`a2f8e75`),
+retaining MG10-MG12 alongside Card stacks and the contextual Corpus controls.
+Conflicts retained both menu and hands-on regression blocks. Main's published
+R213-R216 remain unchanged; branch-only menu/integration decisions are now
+R217-R224, and this update is R225. All five Node suites and every CI-listed
+syntax check pass. Isolated `file://` Edge checks at 1100 px and 390 px each
+passed 190 assertions covering all four layouts, all six Practice entries,
+three-star Assisted completion of MG10-MG12, independent records, retained
+setup/renderer, Path and unfinished-game resume. No page errors or network
+requests were recorded.
+
+### Open items and backlog
 
 - [ ] Mini-games: track ideas and implementation status in
       [`MINI-GAMES.md`](MINI-GAMES.md) (R208).

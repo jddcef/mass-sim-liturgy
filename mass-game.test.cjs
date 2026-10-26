@@ -60,6 +60,33 @@ const G=name=>run(name);
 }
 
 {
+  const groups=G('SETUP_CELEBRATION_GROUPS'),presets=G('GAME_PRESETS');
+  const ids=groups.flatMap(group=>Array.from(group.presets));
+  same(ids.slice().sort(),Object.keys(presets).sort(),'every celebration appears once in the seasonal browser');
+  assert.equal(new Set(ids).size,ids.length,'no duplicate celebration shortcuts');
+  same(Array.from(groups.slice(0,7),group=>group.id),['advent','christmas','ordinary','lent','holyWeek','triduum','easter']);
+  for(const id of ['advent','easter'])assert.equal(groups.find(group=>group.id===id).presets.length,0,'do not invent seasonal rites');
+  assert.ok(groups.find(group=>group.id==='feasts').presets.includes('candlemas'));
+  const visible=G('setupCelebrationFlags');
+  same(visible(presets.sunday.fields,'sunday'),[],'ordinary Sunday has no special celebration toggles');
+  for(const [id,preset] of Object.entries(presets)){
+    const expected=preset.fields.rite==='corpus'?Array.from(G('SETUP_CORPUS_FLAGS')):(preset.fields.rite||'mass')==='mass'
+      ?Array.from(G('SETUP_CELEBRATION_FLAGS')).filter(name=>preset.fields[name]===true):[];
+    same(visible(preset.fields,id),expected,id+' shows only its own celebration features');
+  }
+  same(visible({...presets.nativity.fields,nativity:false},'nativity'),['nativity'],'can re-enable an edited celebration feature');
+  same(visible({nativity:true},'custom'),['nativity'],'old custom saves keep active features visible');
+  same(visible({nativity:true,funeral:true,rite:'exposition'},'benediction'),[],'outside Mass ignores retained Mass flags');
+  same(visible({rite:'corpus',corpusCanopy:false,corpusTorches:false,corpusStations:false},'corpusChristi'),
+    ['corpusCanopy','corpusTorches','corpusStations'],'Corpus custom options stay available when switched off');
+  same(visible({rite:'mass',corpusCanopy:true,corpusTorches:true,corpusStations:true},'sunday'),[],
+    'retained Corpus choices do not clutter a Mass');
+  for(const name of ['eye','guide','choices','timer','target']){
+    assert.ok(G('GameIcons').PATHS[name],name+' involvement icon exists');
+  }
+}
+
+{
   const create=G('practiceHandsOn'),act=G('practiceHandsOnAction'),tick=G('practiceHandsOnTick'),result=G('practiceHandsOnResult');
   assert.throws(()=>create('MG04','standard',1),/Unsupported/);
   assert.throws(()=>create('MG10','invalid',1),/Unsupported/);
