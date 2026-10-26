@@ -524,8 +524,7 @@ function showPathResult(watched,percent){
   const after=outcome.progress,next=nextRecommended(after);
   let text='On the Path: '+outcome.celebration.name+' as '+gameRoleName(game.role,game.options)+': '+MARK_NAMES[outcome.mark]+'.';
   if(outcome.rankAfter.id!==outcome.rankBefore.id)text+=' Your seniority is now '+outcome.rankAfter.name+'. '+outcome.rankAfter.blurb;
-  if(outcome.mark==='attended'&&!watched&&!isGuided(game.level))text+=' Serve it with '+SERVED_PERCENT+'% or more to count towards seniority.';
-  else if(outcome.mark==='attended')text+=' Play at Choice or harder to count towards seniority.';
+  text+=' Completion counts towards seniority regardless of score or involvement.';
   if(next&&next.id!==outcome.celebration.id)text+=' Recommended next: '+next.name+'.';
   $('summaryPath').textContent=text;
   syncPathStrip();
