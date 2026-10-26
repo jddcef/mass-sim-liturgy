@@ -55,8 +55,99 @@ const G=name=>run(name);
   assert.equal(recorded.games.MG01.completed,3);assert.equal(recorded.games.MG01.stars,3);
   assert.equal(previous.games.MG01.completed,2);assert.equal(recorded.celebrations,undefined);
   same(G('normalisePracticeRecords')({_v:1,games:{MG01:{completed:-1,stars:8}}}),{_v:1,games:{}});
-  assert.throws(()=>G('recordPractice')(null,'MG12',1),/Invalid/);
+  assert.throws(()=>G('recordPractice')(null,'MG09',1),/Invalid/);
   assert.equal(G('PRACTICE_STORAGE_KEY'),'massGamePractice');
+}
+
+{
+  const create=G('practiceHandsOn'),act=G('practiceHandsOnAction'),tick=G('practiceHandsOnTick'),result=G('practiceHandsOnResult');
+  assert.throws(()=>create('MG04','standard',1),/Unsupported/);
+  assert.throws(()=>create('MG10','invalid',1),/Unsupported/);
+  for(const id of ['MG10','MG11','MG12']){
+    for(const mode of ['standard','slow','assisted']){
+      let s=create(id,mode,42),original=JSON.stringify(s);
+      assert.equal(result(s).correct,0);assert.equal(G('practiceStars')(result(s).correct,result(s).total),1);
+      const moved=tick(s,1);
+      assert.equal(JSON.stringify(s),original,'ticks do not mutate state');
+      assert.ok(Math.abs(moved.phase-(mode==='assisted'?0:mode==='slow'?.0225:.05))<1e-12);
+      if(mode==='assisted')same(tick(s,100),s,'assisted mode has no clock or drift');
+      for(let i=0;i<5;i++)s=act(s,'step');
+      if(mode==='assisted')assert.equal(s.phase,.5);
+      for(let i=0;i<3;i++)s=act(s,'skip');
+      assert.ok(result(s).total>0);
+      const record=G('recordPractice')({_v:1,games:{MG01:{completed:2,stars:3}}},id,1);
+      assert.equal(record.games[id].completed,1);assert.equal(record.games.MG01.stars,3);
+      assert.equal(record.games.MG01.completed,2);
+    }
+  }
+  same(create('MG10','assisted',42),create('MG10','assisted',42),'seeded replay');
+  assert.notEqual(JSON.stringify(create('MG10','assisted',42).pattern),JSON.stringify(create('MG10','assisted',43).pattern));
+  for(const [phase,points] of [[0,1],[.379,1],[.38,2],[.62,2],[.621,1],[.99,1]]){
+    let s=create('MG10','standard',42);s.phase=phase;
+    const next=act(s,s.pattern[0]);assert.equal(next.correct,points);
+    assert.equal(s.correct,0,'actions do not mutate state');
+  }
+  for(const [phase,points] of [[.319,1],[.32,2],[.68,2],[.681,1]]){
+    const s={...create('MG10','slow',42),phase};
+    assert.equal(act(s,s.pattern[0]).correct,points,'slow timing has wider boundaries');
+  }
+  for(const [id,correct,attempts,stars] of [
+    ['MG10',11,8,1],['MG10',12,8,2],['MG10',14,8,2],['MG10',15,8,3],
+    ['MG11',2,2,1],['MG11',3,4,2],['MG11',3,5,1],['MG12',3,3,3],['MG12',3,4,2]
+  ]){
+    const points=result({...create(id,'assisted',1),correct,attempts});
+    assert.equal(G('practiceStars')(points.correct,points.total),stars,'full round denominator and retry penalties');
+  }
+  let swing=create('MG10','assisted',42);
+  while(!swing.done){
+    for(let i=0;i<5;i++)swing=act(swing,'step');
+    swing=act(swing,swing.pattern[swing.index]);
+  }
+  same(result(swing),{correct:16,total:16,details:[]});
+  same(act(swing,'left'),swing,'completed state ignores input');
+  same(tick(swing,.1),swing,'completed state stops animating');
+  let wrong=create('MG10','standard',1);
+  while(!wrong.done)wrong=act(wrong,wrong.pattern[wrong.index]==='left'?'right':'left');
+  assert.equal(result(wrong).correct,0,'wrong direction and off-beat still completes');
+  let candle=create('MG11','assisted',1);
+  candle=act(candle,'light');assert.equal(candle.correct,0);assert.match(candle.message,/Not at/);
+  let unstable={...candle,x:60,y:60,tilt:21};
+  assert.match(act(unstable,'light').message,/unbalanced/);
+  assert.equal(act({...unstable,tilt:20},'light').correct,1);
+  const contact=act({...candle,tilt:74},'balanceRight');
+  assert.equal(contact.x,20);assert.equal(contact.tilt,0);assert.equal(contact.attempts,candle.attempts+1);
+  assert.equal(tick({...candle,mode:'standard',tilt:75,elapsed:.7},.1).tilt,0);
+  candle=create('MG11','assisted',1);
+  while(!candle.done){
+    const target=candle.candles[candle.index];
+    while(candle.x<target.x)candle=act(candle,'right');
+    while(candle.y>target.y)candle=act(candle,'up');
+    while(candle.tilt>20)candle=act(candle,'balanceLeft');
+    while(candle.tilt< -20)candle=act(candle,'balanceRight');
+    candle=act(candle,'light');
+  }
+  assert.equal(candle.candles[2].name,'Easter Candle');same(result(candle),{correct:3,total:3,details:[]});
+  assert.equal(act({...create('MG11','assisted',1),x:95},'right').x,95);
+  let coal=create('MG12','assisted',1);
+  assert.match(act(coal,'pulse').message,/Glow mismatch/);
+  assert.match(act({...coal,glow:30},'pulse').message,/early/);
+  for(const [phase,success] of [[.38,true],[.62,true],[.379,false],[.621,false]]){
+    assert.equal(act({...coal,phase,glow:20},'pulse').index,success?1:0);
+  }
+  assert.equal(act({...coal,phase:.5,glow:19},'pulse').index,0);
+  while(!coal.done){
+    while(coal.glow<coal.glows[coal.index])coal=act(coal,'more');
+    for(let i=0;i<5;i++)coal=act(coal,'step');
+    coal=act(coal,'pulse');
+  }
+  same(result(coal),{correct:3,total:3,details:[]});
+  same(coal.lit,[0,1,2]);
+  const skippedCoal=act(create('MG12','assisted',1),'skip');
+  same(skippedCoal.lit,[],'skipping must not light a charcoal symbol');
+  assert.equal(act({...create('MG12','assisted',1),glow:100},'more').glow,100);
+  assert.equal(act(create('MG12','assisted',1),'less').glow,0);
+  const saved=G('recordPractice')(G('recordPractice')(null,'MG12',3),'MG12',1);
+  assert.equal(saved.games.MG12.completed,2);assert.equal(saved.games.MG12.stars,3);
 }
 
 {
