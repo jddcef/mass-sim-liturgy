@@ -10,6 +10,55 @@ const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
 const run=code=>vm.runInContext(code,context);
 const G=name=>run(name);
 
+// Optional practice never writes celebration progress or setup records.
+{
+  const scenarios=G('PRACTICE_SCENARIOS');
+  for(const scenario of scenarios){
+    const options=G('practiceOptions')(scenario.id);
+    assert.equal(options.rite,'mass');assert.equal(options.bishop,false);
+    const items=G('practiceSacristyRound')(scenario.id,42);
+    assert.equal(items.length,14);
+    assert.ok(items.some(i=>i.needed)&&items.some(i=>!i.needed));
+    same(items,G('practiceSacristyRound')(scenario.id,42),'seeded cupboard replay');
+    const placements=Object.fromEntries(items.filter(i=>i.needed).map(i=>[i.id,i.places[0]]));
+    const perfect=G('practiceSacristyResult')(items,placements);
+    assert.equal(perfect.correct,perfect.total);
+    assert.ok(G('practiceSacristyResult')(items,{}).correct<perfect.total);
+    const distractor=items.find(i=>!i.needed);
+    placements[distractor.id]=distractor.places[0];
+    assert.equal(G('practiceSacristyResult')(items,placements).correct,perfect.total-1);
+    const procession=G('practiceProcessionRound')(scenario.id,42);
+    const ids=procession.ranks.map(r=>r.id),kits=Object.fromEntries(procession.ranks.map(r=>[r.id,r.kit]));
+    const result=G('practiceProcessionResult')(procession.ranks,ids,kits);
+    assert.equal(result.correct,result.total);
+    assert.ok(G('practiceProcessionResult')(procession.ranks,[...ids].reverse(),kits).correct<result.total);
+    assert.equal(procession.ranks.at(-1).name,'Priest');
+    if(options.incense)assert.equal(procession.ranks[0].name,'Thurifer');
+    if(options.serverCount===4||options.serverCount===5){
+      const cross=procession.ranks.find(r=>r.name==='Cross between candles');
+      assert.equal(cross.kit,'Processional cross and two candles');
+    }
+    if(options.deacon)assert.equal(procession.ranks.find(r=>r.name==='Deacon').kit,'Book of the Gospels');
+  }
+  assert.throws(()=>G('practiceOptions')('goodFriday'),/Unsupported/);
+  const entries=G('buildSearchIndex')([]);
+  const targets=G('practiceChurchRound')(entries,'one');
+  assert.equal(targets.length,5);assert.equal(new Set(targets.map(t=>t.id)).size,5);
+  assert.ok(targets.every(t=>t.clue&&t.ref));
+  same(targets,G('practiceChurchRound')(entries,'one'));
+  assert.notEqual(JSON.stringify(targets),JSON.stringify(G('practiceChurchRound')(entries,'two')));
+  assert.equal(G('practiceChurchRound')([],42).length,0);
+  for(const [correct,total,stars] of [[0,5,1],[69,100,1],[70,100,2],[89,100,2],[90,100,3],[5,5,3]])
+    assert.equal(G('practiceStars')(correct,total),stars);
+  const previous={_v:1,games:{MG01:{completed:2,stars:3}},celebrations:{keep:true}};
+  const recorded=G('recordPractice')(previous,'MG01',1);
+  assert.equal(recorded.games.MG01.completed,3);assert.equal(recorded.games.MG01.stars,3);
+  assert.equal(previous.games.MG01.completed,2);assert.equal(recorded.celebrations,undefined);
+  same(G('normalisePracticeRecords')({_v:1,games:{MG01:{completed:-1,stars:8}}}),{_v:1,games:{}});
+  assert.throws(()=>G('recordPractice')(null,'MG12',1),/Invalid/);
+  assert.equal(G('PRACTICE_STORAGE_KEY'),'massGamePractice');
+}
+
 {
   const profiles=G('ChurchProfiles');
   for(const style of ['aisles','full']){

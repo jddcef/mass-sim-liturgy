@@ -56,6 +56,7 @@ Classic scripts load in this order and share globals:
 | `mass-game-audio.js` | WebAudio bells, thurible, cues and backing tracks. |
 | `mass-game-view.js` | Camera pad, highlight mode, first person, speaker view. |
 | `mass-game-path.js` | The Path map, list and detail panel (`PathView`), progress storage. |
+| `mass-game-practice.js`, `mass-game-practice.css` | Optional Practice room controller and accessible scene markers; pure round/scoring/record rules remain in `mass-game-logic.js`. |
 | `mass-game-ui.js` | Hover tips, search and index card, feedback dialog. |
 | `feedback-config.js` | `FEEDBACK_ENDPOINT` (empty means offline fallback). |
 | `mass-game.js` | Game controller: setup form, phases, questions, the Missal view, scene extras (sacristy, cupboard, doors). |
@@ -147,6 +148,17 @@ startup must appear **before** the `<script>` tags in the HTML.
     submission are not implemented.
 
 ### 4.2 Phases
+
+Optional **Practice room** opens from setup without rebuilding the celebration.
+MG01 finds five visible targets in the current 3D church, with named/description
+clues and picture hints. MG02 sets out a bounded cupboard checklist; MG03 orders
+minister groups and assigns their carried objects. MG02/MG03 support only their
+four explicitly labelled ordinary Mass arrangements, not special rites or a
+Bishop. Cross and candles are one shared rank. All exercises are untimed and
+keyboard/touch accessible. Finishing always counts as completion; performance
+stars use 70%/90% thresholds independently. Best stars and completion counts
+are stored only in versioned `massGamePractice`, never in celebration progress,
+scores or setup. Closing practice returns to the same setup/resume state.
 
 1. `setup`
 2. `pre`: vest and line up, or, as Sacristan, open the church and set up from

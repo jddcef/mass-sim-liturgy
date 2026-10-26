@@ -6,6 +6,20 @@ External pages may change; the project does not bundle a full copyrighted Missal
 
 ## Liturgy
 
+- Practice room MG01-MG03 sources rechecked through Magisterium on 26 October
+  2026: [GIRM 118](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/118)
+  (preparation), [119](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/119),
+  [120](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/120),
+  [172](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/172),
+  [188](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/188)
+  and [194](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/194)
+  (procession and carried objects); [296](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/296),
+  [309](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/309),
+  [310](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/310)
+  and [314](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/314)
+  (church furnishings). The shared cross/candle rank reflects the rubric;
+  exact spacing, the unladen server arrangement and accepting the simulator's
+  alternate Missal preparation locations are explicitly schematic choices.
 - [General Instruction of the Roman Missal, Vatican English publication](https://www.vatican.va/roman_curia/congregations/ccdds/documents/rc_con_ccdds_doc_20030317_ordinamento-messale_en.html).
   The page explicitly includes adaptations for the dioceses of the United States.
   It is a source to check, not a substitute for the locally approved norms.

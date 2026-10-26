@@ -304,6 +304,7 @@ function endSpeakerView(){
   setCameraHint(gameView.firstPerson?'Drag to look around':'Drag to orbit / right-drag to pan / scroll to zoom');
 }
 function gameCameraOverride(){
+  if(typeof PracticeRoom!=='undefined'&&PracticeRoom.isOpen())return;
   if(typeof game==='undefined')return;
   if(gameView.tween&&!firstPersonActive()){updateCameraTween();updateDirectionArrow();return;}
   if(firstPersonActive()){
@@ -464,11 +465,15 @@ function initialiseGameView(){
   for(const button of document.querySelectorAll('#cameraPad [data-cam]')){
     button.onclick=()=>cameraNudge(button.dataset.cam);
   }
-  controls?.addEventListener('start',()=>{gameView.tween=null;});
+  controls?.addEventListener('start',()=>{if(!PracticeRoom.isOpen())gameView.tween=null;});
   $('firstPerson').onchange=()=>setFirstPerson($('firstPerson').checked);
   const canvas=renderer.domElement;
-  canvas.addEventListener('pointerdown',event=>{if(firstPersonActive()||gameView.speaker)gameView.drag={x:event.clientX,y:event.clientY};});
+  canvas.addEventListener('pointerdown',event=>{
+    if(PracticeRoom.isOpen())return;
+    if(firstPersonActive()||gameView.speaker)gameView.drag={x:event.clientX,y:event.clientY};
+  });
   window.addEventListener('pointermove',event=>{
+    if(PracticeRoom.isOpen())return;
     const drag=gameView.drag;
     if(!drag||(!firstPersonActive()&&!gameView.speaker))return;
     const yaw=gameView.speaker?gameView.speaker.yaw:gameView.yaw;

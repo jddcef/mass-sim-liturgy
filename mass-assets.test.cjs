@@ -31,6 +31,26 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
     }
   }
 }
+// The explorer omits optional Corpus globals; outdoor decoration must still build.
+{
+  const source=read('mass-3d.js');
+  const outdoor=source.slice(source.indexOf('const CORPUS_SCENE_ROUTE='),source.indexOf('function makeObjects()'));
+  for(const route of [undefined,[],[[500,1000]],[[500,1000],[500,1200]]]){
+    let petals=0,groups=0;
+    const context={
+      THREE:{Group:class{}},
+      world:point=>{assert.ok(Array.isArray(point),'outdoor geometry requires a defined point');return {x:point[0],y:0,z:point[1]};},
+      box:()=>({rotation:{}}),
+      sphere:()=>{petals++;return {scale:{set(){}}};},
+      scene:{add(){groups++;}},objects:{}
+    };
+    if(route!==undefined)context.CORPUS_ROUTE=route;
+    vm.runInNewContext(outdoor+'\nbuildCorpusOutdoor();',context);
+    assert.equal(petals,route?.length>1?48:0);
+    assert.equal(groups,3);
+    assert.equal(context.objects.corpusGround.visible,false);
+  }
+}
 const context=vm.createContext({});
 vm.runInContext(read('mass-rite.js'),context);
 const baseline=vm.runInContext('JSON.stringify(STEPS)',context);

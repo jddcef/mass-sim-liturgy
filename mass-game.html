@@ -6,6 +6,7 @@
 <title>Holy Mass simulator - play a role | Mass-Sim-Liturgy</title>
 <link rel="stylesheet" href="mass-3d.css">
 <link rel="stylesheet" href="mass-game.css">
+<link rel="stylesheet" href="mass-game-practice.css">
 <link rel="stylesheet" href="mass-parish-editor.css">
 </head>
 <body class="game">
@@ -204,7 +205,7 @@
     <fieldset><legend>1. Your role</legend><div id="roleCards" class="cards"></div></fieldset>
     <fieldset><legend>2. Involvement</legend><div id="levelCards" class="cards levels"></div></fieldset>
     <fieldset><legend>3. The celebration</legend>
-      <div id="pathStrip" class="pathStrip"><span id="pathStripRank"></span><button id="openPath" type="button" title="See the celebrations of the year in order, and your seniority">✠ The Path</button></div>
+      <div id="pathStrip" class="pathStrip"><span id="pathStripRank"></span><button id="openPath" type="button" title="See the celebrations of the year in order, and your seniority">✠ The Path</button><button id="openPractice" type="button">Practice room</button></div>
       <div class="optionGrid">
         <label class="presetPick" data-icon="calendar">Kind of celebration <select name="preset" id="gamePreset"><option value="weekday">Weekday Mass (Priest practice)</option><option value="sunday">Sunday Mass</option><option value="sundayIncense" selected>Sunday Mass with incense</option><option value="solemnity">Solemnity</option><option value="pontifical">Mass with the Bishop</option><option value="confirmation">Confirmation Mass</option><option value="nativity">Christmas Mass during the Night</option><option value="candlemas">Candlemas (Presentation of the Lord)</option><option value="ashWednesday">Ash Wednesday</option><option value="baptismMass">Sunday Mass with Baptism</option><option value="funeralMass">Funeral Mass</option><option value="palmSunday">Palm Sunday</option><option value="holyThursday">Holy Thursday (Mass of the Lord’s Supper)</option><option value="goodFriday">Good Friday (Celebration of the Passion of the Lord)</option><optgroup label="Outside Mass"><option value="adorationLay">Adoration (lay-led)</option><option value="benediction">Exposition and Benediction</option><option value="benedictionDeacon">Exposition and Benediction (Deacon)</option><option value="baptism">Baptism of Children</option><option value="baptismDeacon">Baptism of Children (Deacon)</option><option value="funeral">Funeral Liturgy outside Mass</option><option value="funeralDeacon">Funeral Liturgy outside Mass (Deacon)</option><option value="corpusChristi">Corpus Christi procession</option></optgroup><option value="custom">Custom</option></select></label>
         <input type="hidden" name="rite" value="mass"><input type="hidden" name="minister" value="priest">
@@ -382,6 +383,18 @@
   </form>
 </dialog>
 <noscript>This game requires JavaScript and a browser with WebGL support.</noscript>
+<section id="practiceRoom" role="dialog" aria-modal="true" aria-labelledby="practiceTitle" hidden>
+  <div id="practiceScene" aria-label="Practice church view"></div>
+  <svg id="practiceLeaders" aria-hidden="true"></svg>
+  <div id="practiceMarkers" aria-label="3D scene locations"></div>
+  <div id="practicePanel">
+    <button id="practiceClose" type="button">Return to setup</button>
+    <button id="practiceMenu" type="button">Practice menu</button>
+    <h2 id="practiceTitle">Practice room</h2>
+    <div id="practiceContent"></div>
+    <p id="practiceFeedback" role="status" aria-live="polite"></p>
+  </div>
+</section>
 <script src="vendor/three.min.js"></script>
 <script src="vendor/OrbitControls.js"></script>
 <script src="mass-rite.js"></script>
@@ -405,6 +418,7 @@
 <script src="feedback-config.js"></script>
 <script src="mass-game-ui.js"></script>
 <script src="mass-game-path.js"></script>
+<script src="mass-game-practice.js"></script>
 <script src="mass-game.js"></script>
 </body>
 </html>

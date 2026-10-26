@@ -1964,6 +1964,7 @@ function tweenTowards(key,target,dt,speed=190){
   return d>1;
 }
 function gameBeforeRender(dt,positions){
+  if(PracticeRoom.isOpen()){PracticeRoom.frame();return;}
   if(!game||game.phase==='setup')return;
   const now=performance.now()/1000;
   updateWalkers(dt);
@@ -2061,6 +2062,7 @@ function gameBeforeRender(dt,positions){
 
 // ---------- clicks in the 3D scene ----------
 function gamePick(raycaster){
+  if(PracticeRoom.isOpen())return true;
   const active=game.active;
   if(!active||active.finished)return false;
   const d=active.decision;
@@ -2117,6 +2119,7 @@ function initialiseGame(){
   buildSetupForm();
   initialiseGameView();
   initialiseGameUi();
+  PracticeRoom.initialise();
   $('liturgicalRibbon').onclick=()=>openBreviary();
   $('liturgicalRibbon').onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openBreviary();}};
   $('brevClose').onclick=closeBreviary;
