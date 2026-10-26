@@ -76,12 +76,30 @@ universal requirements.
 
 ### Practice room
 
-From setup, choose **Practice room** for three optional, untimed mini-games:
+From setup, choose **Practice room** for six optional mini-games:
 **Know your church** (find five targets using numbered markers in the 3D
 scene, with named or description clues and picture hints), **Sacristy scramble**
 (set out a selected cupboard checklist while leaving distractors behind), and
 **Line up the procession** (move minister groups and assign their carried objects).
 Use touch or keyboard controls; no dragging or fast reactions are required.
+
+**Swing the thurible** adds eight rhythm-and-direction beats. Press Left/Right
+or tap a swing button when the repeating marker reaches the centre band.
+**Light the candle** moves a symbolic lighter flame (+) towards each wick (O),
+countering tilt with A/D or balance buttons before pressing L / **Light wick**.
+Arrows or reach buttons move the flame; the Easter Candle is the final target.
+Symbolic hand-zone contact resets reach, without depicting injury.
+**Light the charcoal for the thurible** matches abstract glow numbers and
+timing pulses across three symbols (Left/Right adjusts glow, P sends a pulse).
+All three have **Slow** and **Assisted** options. Assisted freezes time and
+drift; T / **Advance marker +10** steps the timing marker to 50 before acting.
+Changing controls or **Reset round** starts afresh without recording a result.
+**Skip target** and **Finish round now** allow completion at any accuracy.
+
+These are virtual coordination games, not incensation rubrics, a ritual candle
+order, or instructions for actual fire or charcoal. Do not copy them with real
+flame, fuel or hot equipment. Charcoal numbers and pulses have no physical units
+or meaning.
 
 Preparation and procession currently support four labelled ordinary Mass
 arrangements: one server, four servers, five servers with incense and a Deacon,
@@ -92,6 +110,10 @@ complete preparation course or an approved ceremonial.
 
 Every finished round counts as completed. Separate 1-3 stars show accuracy
 (2 at 70%, 3 at 90%); church-finding retries, reveals and hints reduce accuracy.
+Hands-on stars count timing/direction points or successful targets against at
+least the full round's possible points; unsuccessful attempts and symbolic
+contact reduce accuracy. Assistance does not reduce stars. Skipping or finishing
+early never blocks completion, but unvisited targets earn no accuracy points.
 Practice records use their own local save, not celebration milestones, scores
 or settings. Replay freely, or return to setup with **Escape**; an existing
 celebration can still be resumed or restarted.

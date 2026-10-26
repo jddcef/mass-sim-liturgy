@@ -1629,6 +1629,93 @@ function nextQuestionStop(stops,current,requested){
 }
 // ---------- optional practice room ----------
 const PRACTICE_STORAGE_KEY='massGamePractice';
+const PRACTICE_GAMES=[
+  ['MG01','Know your church'],['MG02','Sacristy scramble'],['MG03','Line up the procession'],
+  ['MG10','Swing the thurible'],['MG11','Light the candle'],['MG12','Light the charcoal for the thurible']
+];
+function practiceHandsOn(id,mode,seed){
+  if(!['MG10','MG11','MG12'].includes(id)||!['standard','slow','assisted'].includes(mode))
+    throw new RangeError('Unsupported hands-on practice');
+  const random=seededRandom(seed);
+  return {id,mode,index:0,phase:0,elapsed:0,correct:0,attempts:0,x:20,y:80,tilt:0,glow:0,lit:[],
+    pattern:Array.from({length:8},()=>random()<.5?'left':'right'),
+    candles:[{name:'Small candle',x:60,y:60},{name:'Tall candle',x:75,y:40},{name:'Easter Candle',x:80,y:20}],
+    glows:[30,60,40],message:'Ready. Use the controls below.',done:false};
+}
+function practiceHandsOnTick(state,seconds){
+  if(state.done||state.mode==='assisted')return state;
+  const dt=Math.max(0,Math.min(.1,seconds)),speed=state.mode==='slow'?.45:1;
+  const next={...state,elapsed:state.elapsed+dt*speed,phase:(state.phase+dt*speed/2)%1};
+  if(state.id==='MG11'){
+    next.tilt=Math.max(-100,Math.min(100,state.tilt+Math.sin(next.elapsed*2+state.index)*dt*speed*24));
+    if(Math.abs(next.tilt)>=75)return {...next,x:20,y:80,tilt:0,attempts:next.attempts+1,
+      message:'Symbolic hand zone reached: the virtual flame is reset. Balance before reaching again.'};
+  }
+  return next;
+}
+function practiceHandsOnAction(state,action){
+  if(state.done)return state;
+  const next={...state};
+  if(action==='step'&&state.mode==='assisted'){
+    next.phase=Math.round(((state.phase+.1)%1)*10)/10;
+    next.message='Timing marker: '+Math.round(next.phase*100)+' of 100. Centre target is 50.';
+    return next;
+  }
+  if(action==='skip'){
+    next.index++;
+    next.message='Target skipped; completion remains available.';
+  }else if(state.id==='MG10'&&['left','right'].includes(action)){
+    const timing=Math.abs(state.phase-.5)<=(state.mode==='slow'?.18:.12)+1e-9;
+    const direction=action===state.pattern[state.index];
+    next.attempts++;next.correct+=Number(timing)+Number(direction);next.index++;
+    next.message='Timing: '+(timing?'on target':state.phase<.5?'early':'late')+
+      '. Direction: '+(direction?'matched':'use '+state.pattern[state.index])+'.';
+    next.phase=0;
+  }else if(state.id==='MG11'){
+    const moves={left:[-5,0],right:[5,0],up:[0,-5],down:[0,5]};
+    if(moves[action]){
+      const [dx,dy]=moves[action];
+      next.x=Math.max(5,Math.min(95,state.x+dx));next.y=Math.max(5,Math.min(95,state.y+dy));
+      next.tilt=Math.max(-100,Math.min(100,state.tilt+dx*.6+dy*.3));
+      next.message='Reach adjusted. Keep balance within -20 to +20 at the wick.';
+    }else if(action==='balanceLeft'||action==='balanceRight'){
+      next.tilt=Math.max(-100,Math.min(100,state.tilt+(action==='balanceLeft'?-10:10)));
+      next.message='Balance adjusted.';
+    }else if(action==='light'){
+      const target=state.candles[state.index];
+      const reached=Math.abs(state.x-target.x)<=5&&Math.abs(state.y-target.y)<=5;
+      const balanced=Math.abs(state.tilt)<=20;
+      next.attempts++;
+      if(reached&&balanced){next.correct++;next.index++;next.message=target.name+' lit in the simulation.';}
+      else next.message=!reached?'Not at the wick yet. Adjust reach.':'At the wick, but unbalanced. Adjust balance.';
+    }
+    if(Math.abs(next.tilt)>=75){
+      next.x=20;next.y=80;next.tilt=0;next.attempts++;
+      next.message='Symbolic hand zone reached: virtual flame reset. No injury is depicted.';
+    }
+    if(next.index!==state.index){next.x=20;next.y=80;next.tilt=0;}
+  }else if(state.id==='MG12'){
+    if(action==='less'||action==='more'){
+      next.glow=Math.max(0,Math.min(100,state.glow+(action==='less'?-10:10)));
+      next.message='Symbolic glow adjusted. Match the target number.';
+    }else if(action==='pulse'){
+      const glow=Math.abs(state.glow-state.glows[state.index])<=10;
+      const timing=Math.abs(state.phase-.5)<=(state.mode==='slow'?.18:.12)+1e-9;
+      next.attempts++;
+      if(glow&&timing){
+        next.lit=[...state.lit,state.index];next.correct++;next.index++;
+        next.message='Virtual charcoal symbol '+next.index+' glowing.';next.phase=0;next.glow=0;
+      }
+      else next.message=!glow?'Glow mismatch: adjust the symbolic level.':state.phase<.5?'Pulse early: aim for the centre band.':'Pulse late: wait for the next pass.';
+    }
+  }
+  next.done=next.index>=(state.id==='MG10'?8:3);
+  return next;
+}
+function practiceHandsOnResult(state){
+  const units=state.id==='MG10'?2:1,goals=state.id==='MG10'?8:3;
+  return {correct:state.correct,total:Math.max(goals,state.attempts)*units,details:[]};
+}
 const PRACTICE_SCENARIOS=[
   {id:'weekday',name:'Weekday Mass - one server',fields:{serverCount:1,deacon:false,incense:false,lectorProcession:false,giftsProcession:false}},
   {id:'sunday',name:'Sunday Mass - four servers',fields:{serverCount:4,deacon:false,incense:false,lectorProcession:false,giftsProcession:true}},
@@ -1697,7 +1784,7 @@ function practiceStars(correct,total){
 function normalisePracticeRecords(raw){
   const result={_v:1,games:{}};
   if(!raw||raw._v!==1||!raw.games)return result;
-  for(const id of ['MG01','MG02','MG03']){
+  for(const [id] of PRACTICE_GAMES){
     const entry=raw.games[id];
     if(!entry||!Number.isSafeInteger(entry.completed)||entry.completed<1||
       !Number.isInteger(entry.stars)||entry.stars<1||entry.stars>3)continue;
@@ -1706,7 +1793,7 @@ function normalisePracticeRecords(raw){
   return result;
 }
 function recordPractice(raw,id,stars){
-  if(!['MG01','MG02','MG03'].includes(id)||!Number.isInteger(stars)||stars<1||stars>3)
+  if(!PRACTICE_GAMES.some(game=>game[0]===id)||!Number.isInteger(stars)||stars<1||stars>3)
     throw new RangeError('Invalid practice result');
   const result=normalisePracticeRecords(raw),previous=result.games[id];
   result.games[id]={completed:Math.min(Number.MAX_SAFE_INTEGER,(previous?.completed||0)+1),
@@ -2095,6 +2182,7 @@ function liturgicalBreviary(options={},date=new Date()){
 
 if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,normaliseCorpusRite,CORPUS_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,MARK_STARS,TWO_STAR_PERCENT,THREE_STAR_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
 if(typeof module!=='undefined')Object.assign(module.exports,{PRACTICE_STORAGE_KEY,PRACTICE_SCENARIOS,
+  PRACTICE_GAMES,practiceHandsOn,practiceHandsOnTick,practiceHandsOnAction,practiceHandsOnResult,
   practiceOptions,practiceChurchRound,practiceSacristyRound,practiceProcessionRound,
   practiceSacristyResult,practiceProcessionResult,practiceStars,normalisePracticeRecords,recordPractice});
 if(typeof module!=='undefined')Object.assign(module.exports,{SETUP_CELEBRATION_GROUPS,SETUP_CELEBRATION_FLAGS,SETUP_CORPUS_FLAGS,setupCelebrationFlags});

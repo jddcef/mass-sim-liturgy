@@ -13,6 +13,32 @@
 #practiceFeedback { font-weight:bold; }
 .practiceMarker { position:fixed; transform:translate(-50%,-50%); min-width:44px; min-height:44px; background:#fff; color:#152b46; border:3px solid #165ab8; border-radius:50%; pointer-events:auto; font-weight:bold; }
 .practiceMarker.correct { background:#9ee1ac; }
+#practiceRoom.handsOn #practiceScene canvas { visibility:hidden; }
+#practiceBoard { position:absolute; inset:1rem; background:#f5efdf; border:2px solid #90733d; border-radius:12px; overflow:hidden; }
+.practicePendulum { height:75%; display:flex; justify-content:center; align-items:center; }
+#practiceSwing { width:80px; height:160px; position:relative; transform-origin:50% 0; }
+.practiceChain { position:absolute; left:39px; top:0; height:120px; width:2px; background:#253d59; }
+.practiceCenser { position:absolute; left:4px; bottom:0; width:66px; height:40px; border:4px solid #5f4c29; border-radius:12px 12px 35px 35px; background:#d9bd7b; }
+.practiceCenser::before { content:''; position:absolute; top:-12px; left:14px; width:32px; height:10px; border:3px solid #5f4c29; border-radius:10px 10px 0 0; background:#d9bd7b; }
+#practiceBoardCue { position:absolute; top:0; left:4%; right:4%; text-align:center; font-weight:bold; background:#f5efdf; }
+.practiceMeter { position:absolute; left:10%; right:10%; bottom:12%; height:40px; border:2px solid #253d59; background:#fff; }
+.practiceBand { position:absolute; height:100%; width:24%; left:50%; transform:translateX(-50%); background:#a2d9bd; border-left:2px dashed #253d59; border-right:2px dashed #253d59; }
+#practiceNeedle { position:absolute; top:-8px; height:56px; width:4px; background:#253d59; transform:translateX(-50%); }
+.practiceField { position:absolute; top:20%; left:12%; right:12%; bottom:25%; border:1px dashed #555; }
+#practiceWick, #practiceFlame { position:absolute; font:bold 28px monospace; margin:-14px; }
+#practiceWick { color:#253d59; }
+#practiceWick::after { content:''; display:block; width:20px; height:40px; border:2px solid #90733d; background:#fffaf0; margin-left:-3px; border-radius:3px; }
+#practiceFlame { color:#973500; background:#ffe2a0; border:2px solid #973500; border-radius:50% 50% 20% 20%; line-height:28px; }
+.practiceBalance { position:absolute; bottom:14%; left:12%; right:12%; height:20px; border:2px solid #253d59; background:#fff; }
+.practiceBalance .practiceBand { width:20%; }
+#practiceBalanceNeedle { position:absolute; height:30px; top:-5px; width:4px; background:#253d59; transform:translateX(-50%); }
+#practiceBalanceText { position:absolute; bottom:4%; width:100%; text-align:center; font-weight:bold; font-size:13px; }
+.practiceHand { position:absolute; left:0; bottom:0; max-width:90px; font-size:12px; border:2px dashed #973500; }
+.practiceCoals { height:75%; display:flex; align-items:center; justify-content:space-evenly; gap:4px; }
+.practiceCoals span { padding:12px; border:3px solid #253d59; border-radius:50%; background:#eee; color:#222; font-weight:bold; }
+.practiceCoals .active { outline:3px dashed #253d59; outline-offset:4px; }
+.practiceCoals .lit { background:#f6cb6a; }
+#practiceStats { font-weight:bold; }
 @media(max-width:700px) {
   #practiceScene { right:0; bottom:48vh; }
   #practicePanel { left:.5rem; right:.5rem; top:auto; bottom:.5rem; width:auto; max-height:43vh; padding:.5rem; }

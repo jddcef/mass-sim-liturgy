@@ -6,6 +6,13 @@ External pages may change; the project does not bundle a full copyrighted Missal
 
 ## Liturgy
 
+- MG10-MG12 scope checked through Magisterium on 26 October 2026:
+  [GIRM 277](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/277)
+  contains context-dependent incensation directions and counts, not the
+  abstract left/right rhythm used by MG10. The games explicitly do not teach
+  these rubrics. The Easter Candle endpoint is user-directed game progression,
+  not a ritual lighting order. MG12 numbers and pulses are abstract game
+  mechanics, with no real-world ignition procedure or physical units.
 - Practice room MG01-MG03 sources rechecked through Magisterium on 26 October
   2026: [GIRM 118](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/118)
   (preparation), [119](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/119),
@@ -34,7 +41,7 @@ External pages may change; the project does not bundle a full copyrighted Missal
 The start-menu browsing labels were checked through Magisterium on 26 October
 2026 against GIRM 91, 98, 100 and 105-107. They are UI groupings, not official
 liturgical ranks; the role functions remain distinct. Sources and the design
-judgement calls are linked in R214 of `GAME-DECISIONS.md`. No new third-party
+judgement calls are linked in R218 of `GAME-DECISIONS.md`. No new third-party
 artwork, fonts or libraries are used by these previews.
 
 The seasonal celebration browser was checked through Magisterium on 26 October
