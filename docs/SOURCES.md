@@ -76,6 +76,27 @@ machine-readable export of the baseline rite, movement and prop cues.
 
 ## Holy Mass simulator game
 
+The Corpus Christi procession was checked through Magisterium AI against
+[Holy Communion and Worship of the Eucharist outside Mass, §75](https://www.magisterium.com/docs/4870a66b-080c-40ca-a547-da43942dabd8/ref/Chap%202.%202.%2075),
+which leaves street decoration and procession order to local custom and allows
+stations with Eucharistic Benediction where customary and pastorally useful,
+and the
+[Directory on Popular Piety and the Liturgy, §162](https://www.magisterium.com/docs/4fba701f-fda0-47a5-a2de-2e210d81f770/ref/162),
+which says the Corpus Christi procession normally follows Mass and carries the
+Host consecrated at that Mass. The rite starts at the procession's departure;
+it does not depict the preceding Mass or a separate exposition. The ritual
+allows prolonged public adoration following Mass as an alternative context,
+but this is not made a required prelude here. The
+[General Introduction, §77](https://www.magisterium.com/docs/4870a66b-080c-40ca-a547-da43942dabd8/ref/Chap%202.%202.%2077)
+places lights, incense and the canopy under local custom; the
+[Directory, §163](https://www.magisterium.com/docs/4fba701f-fda0-47a5-a2de-2e210d81f770/ref/163)
+describes the concluding Eucharistic blessing as the end of the whole
+celebration. The route and visual details are illustrative/local-custom
+choices, not universal requirements. The procession order, local arrangements,
+optional stations and reposition are also cross-checked against the 1973
+ritual's
+[Eucharistic Procession provisions, nn. 101–108](https://www.magisterium.com/docs/f4a7ad29-94a7-4462-81ff-334856815169/ref/page42).
+
 Liturgical questions for `mass-game.html` were checked through the Magisterium
 AI service (magisterium.com search and chat) against the General Instruction of
 the Roman Missal. The paragraphs used include GIRM 40, 46-90 (structure and

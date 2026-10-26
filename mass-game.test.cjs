@@ -807,7 +807,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','goodFriday','adorationLay','benediction','confirmation','baptism','candlemas','ashWednesday','palmSunday','funeral'],'sixteen celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','goodFriday','adorationLay','benediction','corpusChristi','confirmation','baptism','candlemas','ashWednesday','palmSunday','funeral'],'seventeen celebrations are playable now');
   assert.equal(G('celebrationForPreset')('baptismMass').id,'baptism','Mass with Baptism credits Baptism');
   assert.equal(G('celebrationForPreset')('baptismDeacon').id,'baptism');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
@@ -863,6 +863,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
   r=record(p,{preset:'benedictionDeacon',role:'D',level:'choice',percent:90});
   assert.equal(r.celebration.id,'benediction');p=r.progress;
+  assert.equal(G('nextRecommended')(p).id,'corpusChristi','then the Corpus Christi procession');
+  p=record(p,{preset:'corpusChristi',role:'P',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'confirmation','then the Confirmation Mass');
   p=record(p,{preset:'confirmation',role:'CB',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'baptism','then Christian initiation');

@@ -83,7 +83,10 @@ const GAME_PLACES=[
   {id:'sacristyDoor',name:'the outside door of the sacristy',at:[1250,150],r:30},
   {id:'mainDoors',name:'the main doors, from the inside',at:[500,805],r:30},
   {id:'sanctuaryDoor',name:'inside the church by the sacristy door',at:[948,222],r:40},
-  {id:'coffinPlace',name:'the place for the coffin at the head of the aisle',at:[500,372],r:42}
+  {id:'coffinPlace',name:'the place for the coffin at the head of the aisle',at:[500,372],r:42},
+  {id:'corpusStation1',name:'the first outdoor station',at:[650,1080],r:48},
+  {id:'corpusStation2',name:'the second outdoor station',at:[500,1270],r:48},
+  {id:'corpusStation3',name:'the third outdoor station',at:[350,1080],r:48}
 ];
 
 function hashString(text){
@@ -119,6 +122,7 @@ function normaliseGameOptions(role,raw={}){
   if(o.rite==='exposition')return normaliseExposition(role,o,notes);
   if(o.rite==='baptism')return normaliseBaptismRite(role,o,notes);
   if(o.rite==='funeral')return normaliseFuneralRite(role,o,notes);
+  if(o.rite==='corpus')return normaliseCorpusRite(role,o,notes);
   o.rite='mass';
   o.serverCount=Math.max(0,Math.min(5,Number(o.serverCount)||0));
   if(role==='D'&&!o.deacon){o.deacon=true;notes.push('A Deacon was added because you are playing the Deacon.');}
@@ -324,8 +328,33 @@ function normaliseFuneralRite(role,o,notes){
   if(typeof CROSS_STANDS!=='undefined'&&!CROSS_STANDS[o.crossStand])o.crossStand='right';
   return {options:o,notes};
 }
+// Corpus Christi: a Priest carries the Sacrament; up to four servers form the procession,
+// with a fifth server as thurifer. Canopy, lights and stations follow local custom.
+const CORPUS_ROLES={priest:['P','S','X','C1','T','PEW']};
+function normaliseCorpusRite(role,o,notes){
+  o.minister='priest';
+  if(!CORPUS_ROLES.priest.includes(role)){
+    throw new RangeError('The '+GAME_ROLES[role].name+' has no part in this celebration. Choose one of: '+CORPUS_ROLES.priest.map(r=>GAME_ROLES[r].name).join(', ')+'.');
+  }
+  o.serverCount=Math.max(0,Math.min(5,Number(o.serverCount)||0));
+  const minimum={S:1,X:2,C1:3,T:5}[role];
+  if(minimum&&o.serverCount<minimum){o.serverCount=minimum;notes.push('Server count raised to '+minimum+' so that your role exists.');}
+  if(role==='T'&&!o.incense){o.incense=true;notes.push('Incense switched on because you are playing the thurifer.');}
+  if(o.serverCount<5&&o.incense){o.incense=false;notes.push('Incense needs a fifth server for the thurifer here, so it was switched off.');}
+  Object.assign(o,{rite:'corpus',deacon:false,incense:o.serverCount===5&&!!o.incense,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false,baptism:false,funeral:false,lector:false,bothKinds:false,collection:false,projector:false,emhc:false,readerCount:1,lectorProcession:false,
+    music:'sung',bells:{start:false,epiclesis:false,elevation:false},
+    corpusCanopy:o.corpusCanopy!==false,corpusTorches:o.corpusTorches!==false,corpusStations:o.corpusStations!==false});
+  if(role==='S'&&o.serverCount<1){o.serverCount=1;notes.push('A server was added because you are playing the server.');}
+  if(o.serverCount<4&&o.corpusCanopy){o.corpusCanopy=false;notes.push('Four servers are needed to carry the canopy, so it was switched off.');}
+  if(o.serverCount<4&&o.corpusTorches){o.corpusTorches=false;notes.push('Two candle-bearers are needed for the procession lights, so they were switched off.');}
+  if(!['key','all'].includes(o.detail))o.detail='key';
+  if(!GAME_LEVELS[o.level])o.level='choice';
+  if(typeof CRUCIFIX_PLACES!=='undefined'&&!CRUCIFIX_PLACES[o.crucifix])o.crucifix='wall';
+  if(typeof CROSS_STANDS!=='undefined'&&!CROSS_STANDS[o.crossStand])o.crossStand='right';
+  return {options:o,notes};
+}
 // The roles that exist in each rite outside Mass, by minister.
-const RITE_ROLES={exposition:EXPOSITION_ROLES,baptism:BAPTISM_ROLES,funeral:FUNERAL_ROLES};
+const RITE_ROLES={exposition:EXPOSITION_ROLES,baptism:BAPTISM_ROLES,funeral:FUNERAL_ROLES,corpus:CORPUS_ROLES};
 const isDevotionRite=options=>!!options&&options.rite!==undefined&&options.rite!=='mass';
 
 function scenarioRequest(options){
@@ -394,6 +423,8 @@ const GAME_PRESETS={
     deacon:true,serverCount:'5',lector:true,readerCount:'1',lectorProcession:false,collection:false,emhc:false,reservedCommunion:true,deaconCommunion:true,
     incense:true,bothKinds:false,gloria:false,creed:false,secondReading:true,giftsProcession:true,solemnBlessing:false,introductory:'A',music:'sung',eucharisticPrayer:'II',
     bellStart:true,bellEpiclesis:true,bellElevation:true,bishop:false,confirmation:false,nativity:false,candlemas:false,ashWednesday:false,palmSunday:false,holyThursday:false,goodFriday:false,baptism:false,funeral:true}},
+  corpusChristi:{name:'Corpus Christi procession',blurb:'After Mass, the Priest carries the Blessed Sacrament in procession. The Mass itself is not depicted; canopy, lights, route incense and stations are local customs.',fields:{
+    rite:'corpus',minister:'priest',serverCount:'5',incense:true,corpusCanopy:true,corpusTorches:true,corpusStations:true}},
   // Exposition presets: "rite" and "minister" are not form fields; the preset choice carries them.
   adorationLay:{name:'Adoration (lay-led)',blurb:'An authorised lay minister exposes the Blessed Sacrament for adoration and reposes it; no blessing.',fields:{
     rite:'exposition',minister:'lay',serverCount:'1',incense:false}},
@@ -442,6 +473,7 @@ function presetForOptions(options,chosen){
     goodFriday:isDevotionRite(options)?undefined:!!options.goodFriday,
     baptism:isDevotionRite(options)?undefined:!!options.baptism,
     funeral:isDevotionRite(options)?undefined:!!options.funeral,
+    corpusCanopy:options.corpusCanopy,corpusTorches:options.corpusTorches,corpusStations:options.corpusStations,
     rite:options.rite||'mass',minister:isDevotionRite(options)?options.minister:undefined};
   const id=matchingPreset(fields);
   if(id!=='custom')return id;
@@ -486,8 +518,8 @@ const CELEBRATIONS=[
     preset:'adorationLay',blurb:'An authorised lay minister exposes the Blessed Sacrament and later reposes it, without giving the blessing.'},
   {id:'benediction',name:'Exposition and Benediction',precedence:'Exposition, Adoration and Benediction',branch:'devotion',colour:'white',icon:'bless',at:[820,420],after:['adorationLay','dominicaIncense'],
     preset:'benediction',alsoPresets:['benedictionDeacon'],blurb:'The Priest or Deacon in cope and humeral veil, incense, hymns, and the blessing with the monstrance.'},
-  {id:'corpusChristi',name:'Corpus Christi procession',precedence:'Eucharistic procession',branch:'devotion',colour:'white',icon:'walk',at:[820,600],after:['benediction'],
-    blurb:'Outside the church: the canopy, torches, flower petals and bells, with Benediction at the altars on the way.'},
+  {id:'corpusChristi',name:'Corpus Christi procession',precedence:'Eucharistic procession',branch:'devotion',colour:'white',icon:'walk',at:[820,600],after:['benediction'],preset:'corpusChristi',
+    blurb:'After Mass, the Priest carries the Blessed Sacrament in procession. The route, canopy, lights, incense and any prayer stations follow local direction and custom; the procession ends with Benediction and reposition.'},
   {id:'confirmation',name:'Confirmation Mass',precedence:'Pontifical Mass with Confirmation',branch:'pontifical',colour:'red',icon:'chrism',at:[760,820],after:['pontifical'],
     preset:'confirmation',blurb:'The Bishop confirms: the candidates and sponsors, the laying on of hands and the anointing with chrism; the Creed is omitted.'},
   {id:'baptism',name:'Baptism of children',precedence:'Christian initiation',branch:'sacraments',colour:'white',icon:'font',at:[140,360],after:['dominica'],
@@ -1453,10 +1485,37 @@ function funeralPostTasks(role){
     options:shuffled([close,...wrong],seededRandom(role+'funclose')).map(label=>({label,correct:label===close}))});
   return tasks;
 }
+function corpusPreTasks(role,options,startPos){
+  if(role==='PEW')return preMassTasks('PEW',options);
+  const tasks=[];
+  const add=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
+    options:shuffled([correct,...wrong],seededRandom(role+id+'corpus')).map(label=>({label,correct:label===correct}))});
+  if(role==='P')add('vest','For the procession after Mass, what vesture does the Priest wear?','HCWEOM 101-108; local custom',
+    'White cope over alb and stole',['Chasuble only, as though this were a Mass','A Deacon’s dalmatic','No vestments']);
+  if(role==='T')add('thurible','What do you carry in the procession?','HCWEOM 77; local custom','The thurible and incense boat',
+    ['The monstrance','The processional cross','The canopy']);
+  if(['S','X','C1','C2'].includes(role))add('procession','What is your place in the procession?','HCWEOM 101-104; local custom',
+    role==='X'?'Lead with the processional cross':role==='C1'||role==='C2'?'Walk with the lights beside the Blessed Sacrament':'Walk in the procession and assist with the canopy when customary',
+    ['Carry the Blessed Sacrament instead of the Priest','Walk ahead of the procession alone','Remain in the sanctuary']);
+  const place=GAME_PLACES.find(p=>p.id==='sanctuaryDoor');
+  tasks.push({id:'line',kind:'place',prompt:'Where do you wait for the procession to begin?',ref:'HCWEOM 101-104; local route',
+    target:startPos||place.at,places:[place.id],correct:place.name,
+    options:shuffled([{label:place.name,correct:true},{label:'the ambo',correct:false},{label:'the sacristy door outside',correct:false},{label:"the celebrant's chair",correct:false}],seededRandom(role+'corpusline'))});
+  return tasks;
+}
+function corpusPostTasks(role){
+  if(role==='PEW')return [{id:'leave',kind:'task',prompt:'When do you leave?',ref:'HCWEOM 108; Directory on Popular Piety 163',
+    correct:'After the Blessed Sacrament has been reposed',
+    options:shuffled(['After the Blessed Sacrament has been reposed','During the procession','Before Benediction','As soon as the procession returns'],seededRandom('corpuspew')).map(label=>({label,correct:label==='After the Blessed Sacrament has been reposed'}))}];
+  const correct=role==='P'?'Return the cope and humeral veil to the sacristy':'Return procession items and vestments to the sacristy';
+  return [{id:'sacristy',kind:'task',prompt:'After the Sacrament has been reposed, what do you do?',ref:'Custom',correct,
+    options:shuffled([correct,'Leave the monstrance exposed and unattended','Put the Blessed Sacrament in the sacristy cupboard','Leave the church before reposition'],seededRandom(role+'corpuspost')).map(label=>({label,correct:label===correct}))}];
+}
 // Exposition: before and after (HCWEOM 91-92, 100).
 function devotionPreTasks(role,options,startPos){
   if(options.rite==='baptism')return baptismPreTasks(role,options,startPos);
   if(options.rite==='funeral')return funeralPreTasks(role,options,startPos);
+  if(options.rite==='corpus')return corpusPreTasks(role,options,startPos);
   if(role==='PEW')return preMassTasks('PEW',options);
   const tasks=[];
   const choose=(id,prompt,ref,correct,wrong)=>tasks.push({id,kind:'task',prompt,ref,correct,
@@ -1482,6 +1541,7 @@ function devotionPreTasks(role,options,startPos){
 function devotionPostTasks(role,options){
   if(options.rite==='baptism')return baptismPostTasks(role);
   if(options.rite==='funeral')return funeralPostTasks(role);
+  if(options.rite==='corpus')return corpusPostTasks(role);
   if(role==='PEW'){
     const correct='After the reposition, when the ministers have gone out';
     return [{id:'leave',kind:'task',prompt:'The Blessed Sacrament has been reposed. When do you leave?',ref:'HCWEOM 100 (judgement call on custom)',correct,
@@ -1664,6 +1724,29 @@ const LITURGICAL_LATIN_NAME={
 
 function liturgicalBreviary(options={},date=new Date()){
   const o=options||{};
+  if(o.rite==='corpus')return {
+    title:'Corpus Christi Eucharistic Procession',
+    season:'Eucharistic Worship',
+    rank:'Solemnity of the Most Holy Body and Blood of Christ',
+    colour:'white',
+    colourName:'White',
+    colourHex:LITURGICAL_COLOUR_HEX.white,
+    latinColour:'Albus',
+    colourRationale:'White is used for the Most Holy Eucharist (GIRM 346a).',
+    preface:'Not applicable (procession outside Mass)',
+    penitentialAct:'Not applicable',
+    gloria:'Not applicable',
+    creed:'Not applicable',
+    acclamation:'Not applicable',
+    eucharisticPrayer:'Not applicable (procession outside Mass)',
+    blessing:'Concluding Eucharistic blessing with the Blessed Sacrament (Directory on Popular Piety 163)',
+    readings:'The Mass is not depicted; the procession follows Mass (Directory on Popular Piety 162)',
+    specialRites:[
+      'The procession normally follows Mass and carries the Host consecrated during it (Directory on Popular Piety 162)',
+      'Canopy, lights and incense follow local custom; stations with blessing are optional when customary and pastorally useful (HCWEOM 75, 77)',
+      'The procession concludes with Eucharistic Benediction and reposition (HCWEOM 108; Directory on Popular Piety 163)'
+    ]
+  };
   if(o.rite==='exposition'||isDevotionRite(o)){
     const isLay=o.minister==='lay';
     const isD=o.minister==='deacon';
@@ -1900,4 +1983,4 @@ function liturgicalBreviary(options={},date=new Date()){
   };
 }
 
-if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
+if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,normaliseCorpusRite,CORPUS_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,SERVED_PERCENT,DISTINCTION_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
