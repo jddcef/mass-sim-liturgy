@@ -84,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R213.**
+**Next decision number: R217.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -105,7 +105,8 @@ server for liturgical or Catholic questions and clarifications.
 | 29 | #24 (merged) | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
 | 30 | #25 (merged) | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
 | 31 | #26 (merged) | Persistent mini-game ideas and status backlog, including thurible timing and candle-lighting games (R208) |
-| 32 | [#27](https://github.com/jddcef/mass-sim-liturgy/pull/27) (open, merge pending) | Practice room MG01-MG03: scene finding, selected cupboard preparation and procession arrangement; separate completion/stars records; virtual charcoal MG12 remains Idea; standalone explorer compatibility fix (R209-R212) |
+| 32 | [#27](https://github.com/jddcef/mass-sim-liturgy/pull/27) (merged) | Practice room MG01-MG03: scene finding, selected cupboard preparation and procession arrangement; separate completion/stars records; standalone explorer compatibility fix (R209-R212) |
+| 33 | [#28](https://github.com/jddcef/mass-sim-liturgy/pull/28) (open, merge pending) | MG10 abstract thurible rhythm/direction; MG11 symbolic lighter balance/reach ending at Easter Candle; MG12 abstract charcoal glow/pulse puzzle. Standard, Slow and untimed Assisted controls, isolated practice records and completion without score gates. MG04-MG09 remain Idea (R213-R216). |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -120,6 +121,18 @@ server for liturgical or Catholic questions and clarifications.
 | 14 | #10 | Rite registry; lay-led Adoration and Exposition and Benediction with the Priest (R104–R110) |
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
 | 15 | local, not published | Parish source intake: agent runbook, `parishes/` manifest and spec formats, Street View screening, draft profiles, offline bulk reviewer (R111–R114) |
+
+Round 33 was exercised in an isolated headless Edge instance through `file://`
+at 1280x900 (keyboard) and 390x844 (emulated touch). All three hands-on games
+were completed in Assisted mode on both viewports; Standard/Slow marker
+animation, manual timing freeze, reset/replay with retained assistance, skips,
+early completion, best-star retention, reload, the existing MG01 scene markers,
+explicit storage-write failure, all existing save-key isolation and an unfinished
+Priest game/camera resume were checked. The animation and standalone 3D pages
+also loaded without console errors or external page requests. All five Node
+suites and every CI-listed script syntax check pass locally (Node 26); PR CI
+uses Node 22. No physical low-spec device, screen-reader software, or real flame
+was used; symbolic games are not practical fire-handling instruction.
 
 Round 10 was exercised in Edge through `file://` on all three pages, including
 all sanctuary floors, repeated quality switches, layouts, appearance changes,

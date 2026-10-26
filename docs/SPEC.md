@@ -154,8 +154,18 @@ MG01 finds five visible targets in the current 3D church, with named/description
 clues and picture hints. MG02 sets out a bounded cupboard checklist; MG03 orders
 minister groups and assigns their carried objects. MG02/MG03 support only their
 four explicitly labelled ordinary Mass arrangements, not special rites or a
-Bishop. Cross and candles are one shared rank. All exercises are untimed and
-keyboard/touch accessible. Finishing always counts as completion; performance
+Bishop. Cross and candles are one shared rank. MG10 is abstract rhythm and
+direction timing, not a universal incensation pattern. MG11 balances and moves
+a symbolic lighter flame through three candle targets ending at the Easter
+Candle, not a ritual lighting order. MG12 matches symbolic glow numbers and
+timing pulses, not real ignition procedures or heat/fuel advice. No activity
+instructs real fire handling or depicts injury. These three games have Standard,
+Slow and untimed Assisted modes, button/keyboard controls, reset, replay,
+skip-target and finish-now actions. Assistance does not cap stars; early
+completion leaves unvisited targets unscored. They use the existing render
+hook, no additional animation loops, timers, audio or global input listeners.
+All exercises are keyboard/touch accessible, with untimed alternatives.
+Finishing always counts as completion; performance
 stars use 70%/90% thresholds independently. Best stars and completion counts
 are stored only in versioned `massGamePractice`, never in celebration progress,
 scores or setup. Closing practice returns to the same setup/resume state.
