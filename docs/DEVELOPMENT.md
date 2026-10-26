@@ -84,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R209.**
+**Next decision number: R213.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -105,6 +105,7 @@ server for liturgical or Catholic questions and clarifications.
 | 29 | #24 (merged) | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
 | 30 | #25 (merged) | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
 | 31 | local, not published | Persistent mini-game ideas and status backlog, including thurible timing and candle-lighting games (R208) |
+| 32 | branch `jddcef-practice-room-first-games`, PR pending | Practice room MG01-MG03: scene finding, selected cupboard preparation and procession arrangement; separate completion/stars records; virtual charcoal MG12 remains Idea (R209-R212) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -212,6 +213,23 @@ game and virtual lighter/match balance-and-reach game ending with the Easter
 Candle. Documentation only; no gameplay changes.
 
 ### Open items and backlog
+
+Round 32 implements the first three practice games behind a surgical setup
+entry, leaving the setup redesign in #23 alone. Five Node suites, including
+new practice rules/records regressions, pass. Repeated isolated headless Edge
+checks through `file://` exercised desktop and 390px touch layouts, all four
+supported preparation/procession arrangements, five-target scene rounds,
+replay, independent record persistence, explicit storage denial, and resuming
+and restarting an existing celebration after practice. No unexpected console
+errors or external page requests occurred in the completed acceptance runs.
+MG01-MG03 remain **In progress**, not Done, until merged. MG12 is an entirely
+virtual backlog idea; MG10-MG12 have no implemented gameplay in this batch.
+An additional standalone-page smoke check found an existing `mass-3d.html`
+startup failure when optional Corpus route data is absent. At the coordinating
+session's request, this batch also guards the route-dependent petal generation
+when fewer than two points exist. Node regression cases cover absent, empty,
+single-point and two-point routes; file-protocol smoke checks cover both the
+standalone explorer without Corpus globals and the floor-plan page.
 
 - [ ] Mini-games: track ideas and implementation status in
       [`MINI-GAMES.md`](MINI-GAMES.md) (R208).

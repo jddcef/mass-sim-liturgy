@@ -19,9 +19,9 @@ make a standalone mini-game Done.
 
 | ID | Mini-game | Status | Gameplay and replay variations | Delivery reference |
 |---|---|---|---|---|
-| MG01 | Know your church | Idea | Find a named vessel, book, furnishing or place in the 3D scene. Beginner hints show a picture; Expert clues describe the target. Vary targets and church layouts. | Not started |
-| MG02 | Sacristy scramble | Idea | Find and set out the items needed for a selected celebration, leaving unnecessary items in the cupboard. Vary celebrations, server teams and missing items. | Not started |
-| MG03 | Line up the procession | Idea | Arrange the available ministers and their carried objects for the selected scenario. Vary team sizes, roles and celebration options. | Not started |
+| MG01 | Know your church | In progress | Find a named vessel, book, furnishing or place in the 3D scene. Beginner hints show a picture; Expert clues describe the target. Vary targets and church layouts. First release: five visible targets per round, named or description clues, picture hints and accessible numbered scene markers. | Branch `jddcef-practice-room-first-games`; verification and merge pending |
+| MG02 | Sacristy scramble | In progress | Find and set out the items needed for a selected celebration, leaving unnecessary items in the cupboard. Vary celebrations, server teams and missing items. First release: selected cupboard checklist for four labelled ordinary Mass arrangements; other celebrations and missing-stock variations remain future work. | Branch `jddcef-practice-room-first-games`; verification and merge pending |
+| MG03 | Line up the procession | In progress | Arrange the available ministers and their carried objects for the selected scenario. Vary team sizes, roles and celebration options. First release: four labelled ordinary Mass arrangements, move ranks and assign carried objects; cross/candles form one shared rank. | Branch `jddcef-practice-room-first-games`; verification and merge pending |
 | MG04 | What comes next? | Idea | Order illustrated moments or choose the next action after a short scene. Vary celebrations and sequence length. | Not started |
 | MG05 | Book-marker challenge | Idea | Prepare relevant pages in the simulated books, then find the right section when prompted. Vary celebrations, roles and clue levels. | Not started |
 | MG06 | M.C. spot-check | Idea | Inspect a short scene for misplaced objects, missing preparation or missed cues. Randomise mistakes and include scenes that are already correct. | Not started |
@@ -30,6 +30,7 @@ make a standalone mini-game Done.
 | MG09 | Sound-desk rehearsal | Idea | Match cues to slides or audio tracks, then start or fade them appropriately. Vary cue sequences and simulated equipment problems. | Not started |
 | MG10 | Swing the thurible | Idea | A timing game: press at the right moment to get the swing rhythm and direction correct. Give separate feedback on timing and direction; vary practice patterns and offer slower or untimed assistance. | Not started |
 | MG11 | Light the candle | Idea | A virtual balance-and-reach game using a lighter or matches: keep control, avoid simulated contact with the hand, and reach the target wick. Progress through candle targets, with the Easter Candle as the final candle. | Not started |
+| MG12 | Light the charcoal for the thurible | Idea | Entirely virtual charcoal-lighting practice concept. No real-world ignition procedure, actual flame or hot-equipment practice instructions. Gameplay and accessible controls are not yet designed. | Not started; excluded from the MG01-MG03 batch |
 
 ## Proposed practice-room design
 

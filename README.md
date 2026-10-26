@@ -45,6 +45,28 @@ The Corpus Christi scene is illustrative. The route follows local direction;
 canopy, lights, incense on the route and prayer stations are not presented as
 universal requirements.
 
+### Practice room
+
+From setup, choose **Practice room** for three optional, untimed mini-games:
+**Know your church** (find five targets using numbered markers in the 3D
+scene, with named or description clues and picture hints), **Sacristy scramble**
+(set out a selected cupboard checklist while leaving distractors behind), and
+**Line up the procession** (move minister groups and assign their carried objects).
+Use touch or keyboard controls; no dragging or fast reactions are required.
+
+Preparation and procession currently support four labelled ordinary Mass
+arrangements: one server, four servers, five servers with incense and a Deacon,
+or two servers with a processing lector. They do not cover special rites or
+celebrations with a Bishop. Cross and candles share a rank; spacing and some
+preparation alternatives are schematic. These are illustrative exercises, not a
+complete preparation course or an approved ceremonial.
+
+Every finished round counts as completed. Separate 1-3 stars show accuracy
+(2 at 70%, 3 at 90%); church-finding retries, reveals and hints reduce accuracy.
+Practice records use their own local save, not celebration milestones, scores
+or settings. Replay freely, or return to setup with **Escape**; an existing
+celebration can still be resumed or restarted.
+
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.
 

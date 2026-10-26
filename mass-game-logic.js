@@ -1603,6 +1603,93 @@ function nextQuestionStop(stops,current,requested){
   // Seeking never skips an unanswered decision: snap to the first upcoming stop.
   return requested>current?next:null;
 }
+// ---------- optional practice room ----------
+const PRACTICE_STORAGE_KEY='massGamePractice';
+const PRACTICE_SCENARIOS=[
+  {id:'weekday',name:'Weekday Mass - one server',fields:{serverCount:1,deacon:false,incense:false,lectorProcession:false,giftsProcession:false}},
+  {id:'sunday',name:'Sunday Mass - four servers',fields:{serverCount:4,deacon:false,incense:false,lectorProcession:false,giftsProcession:true}},
+  {id:'incense',name:'Sunday Mass - five servers, incense and Deacon',fields:{serverCount:5,deacon:true,incense:true,lectorProcession:false,giftsProcession:true}},
+  {id:'lector',name:'Sunday Mass - cross-bearer and processing lector',fields:{serverCount:2,deacon:false,incense:false,lectorProcession:true,giftsProcession:true}}
+];
+function practiceOptions(id){
+  const scenario=PRACTICE_SCENARIOS.find(s=>s.id===id);
+  if(!scenario)throw new RangeError('Unsupported practice scenario');
+  return normaliseGameOptions('MC',{...scenario.fields,lector:true,collection:false}).options;
+}
+function practiceChurchRound(entries,seed){
+  const clues={
+    altar:['The table at the centre of the Eucharistic celebration.','GIRM 296'],
+    ambo:['The place from which the readings are proclaimed.','GIRM 309'],
+    chair:['The seat of the minister who presides.','GIRM 310'],
+    credence:['The table where vessels and the hand-washing set are prepared.','GIRM 118c'],
+    tabernacle:['The place where the Blessed Sacrament is reserved.','GIRM 314'],
+    missal:['The book containing the prayers of the Mass.','GIRM 118a'],
+    chalice:['The cup prepared for the Eucharistic celebration.','GIRM 118c'],
+    cross:['The cross carried at the entrance.','GIRM 120b']
+  };
+  return shuffled(entries.filter(e=>clues[e.key]&&
+    (e.kind==='object'?!['altar','ambo','chair','credence','tabernacle'].includes(e.key):e.kind==='place')),seededRandom(seed))
+    .slice(0,5).map(e=>({...e,clue:clues[e.key][0],ref:clues[e.key][1]}));
+}
+function practiceSacristyRound(id,seed){
+  const options=practiceOptions(id);
+  // A bounded cupboard exercise, not a claim to cover every preparation duty.
+  const pool=new Set(['lectionary','missal','chalice','water','wine','ciborium',
+    'procCross','procCandles','altarCross','gospels','gospelsAltar','thurible','chalice2','aspersory']);
+  return shuffled(sacristanSetup(options).filter(item=>pool.has(item.id)),seededRandom(seed));
+}
+function practiceProcessionRound(id,seed){
+  const options=practiceOptions(id),team=serverTeam(options.serverCount);
+  const ranks=procOrder(options,team).map((name,index)=>{
+    const role={'Thurifer':'T','Cross-bearer':'X','Candle-bearers':'C1',
+      'Cross between candles':'X','Server':'S','Lector':'L','Deacon':'D','Priest':'P'}[name];
+    const carry=preMassTasks(role,options,team).find(task=>task.id==='carry');
+    return {id:String(index),name,kit:name==='Cross between candles'?'Processional cross and two candles':
+      name==='Candle-bearers'?'Two processional candles':carry?carry.correct:'No carried object in this exercise',
+      ref:carry?carry.ref:'GIRM 120; simplified arrangement'};
+  });
+  return {ranks,available:shuffled(ranks,seededRandom(seed)),
+    kits:[...new Set(ranks.map(r=>r.kit).concat(['The Roman Missal','The chalice']))]};
+}
+function practiceSacristyResult(items,placements){
+  const details=items.map(item=>{
+    const chosen=placements[item.id]||'cupboard';
+    const correct=item.needed?item.places.includes(chosen):chosen==='cupboard';
+    return {id:item.id,correct,text:item.name+': '+(item.needed?item.places.join(' or '):'leave in the cupboard'),
+      ref:item.ref};
+  });
+  return {correct:details.filter(d=>d.correct).length,total:details.length,details};
+}
+function practiceProcessionResult(ranks,order,kits){
+  const details=ranks.map((rank,index)=>({id:rank.id,
+    correct:order[index]===rank.id&&kits[rank.id]===rank.kit,
+    text:(index+1)+'. '+rank.name+' - '+rank.kit,ref:rank.ref}));
+  return {correct:details.filter(d=>d.correct).length,total:details.length,details};
+}
+function practiceStars(correct,total){
+  const percent=total>0?correct/total*100:0;
+  return percent>=THREE_STAR_PERCENT?3:percent>=TWO_STAR_PERCENT?2:1;
+}
+function normalisePracticeRecords(raw){
+  const result={_v:1,games:{}};
+  if(!raw||raw._v!==1||!raw.games)return result;
+  for(const id of ['MG01','MG02','MG03']){
+    const entry=raw.games[id];
+    if(!entry||!Number.isSafeInteger(entry.completed)||entry.completed<1||
+      !Number.isInteger(entry.stars)||entry.stars<1||entry.stars>3)continue;
+    result.games[id]={completed:entry.completed,stars:entry.stars};
+  }
+  return result;
+}
+function recordPractice(raw,id,stars){
+  if(!['MG01','MG02','MG03'].includes(id)||!Number.isInteger(stars)||stars<1||stars>3)
+    throw new RangeError('Invalid practice result');
+  const result=normalisePracticeRecords(raw),previous=result.games[id];
+  result.games[id]={completed:Math.min(Number.MAX_SAFE_INTEGER,(previous?.completed||0)+1),
+    stars:Math.max(previous?.stars||0,stars)};
+  return result;
+}
+
 // ---------- search index (round 8) ----------
 const SEARCH_CATEGORIES=[
   {id:'roles',name:'Roles',icon:'person'},
@@ -1983,3 +2070,6 @@ function liturgicalBreviary(options={},date=new Date()){
 }
 
 if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,normaliseCorpusRite,CORPUS_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,MARK_STARS,TWO_STAR_PERCENT,THREE_STAR_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
+if(typeof module!=='undefined')Object.assign(module.exports,{PRACTICE_STORAGE_KEY,PRACTICE_SCENARIOS,
+  practiceOptions,practiceChurchRound,practiceSacristyRound,practiceProcessionRound,
+  practiceSacristyResult,practiceProcessionResult,practiceStars,normalisePracticeRecords,recordPractice});

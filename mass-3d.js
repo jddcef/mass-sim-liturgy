@@ -635,7 +635,7 @@ function buildCorpusOutdoor(){
     const paving=box(ground,(a.x+b.x)/2,-.015,(a.z+b.z)/2,length,.035,1.8,'#c9b99a',false,'stone');
     paving.rotation.y=Math.atan2(dz,dx);
   }
-  for(let i=0;i<48;i++){
+  for(let i=0;route.length>1&&i<48;i++){
     const a=world(route[(i*7)%(route.length-1)]),b=world(route[(i*7+1)%(route.length-1)]);
     const t=((i*37)%47)/47;
     const petal=sphere(ground,a.x+(b.x-a.x)*t+((i%5)-2)*.13,-.002,a.z+(b.z-a.z)*t+((i%7)-3)*.1,.045,i%3?'#f4e4bd':'#d9b3ad',false);

@@ -35,6 +35,7 @@ jobs:
           node --check mass-game.js
           node --check mass-game-ui.js
           node --check mass-game-path.js
+          node --check mass-game-practice.js
           node --check feedback-config.js
           node mass-scenarios.test.cjs
           node mass-features.test.cjs
