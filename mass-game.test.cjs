@@ -10,6 +10,55 @@ const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
 const run=code=>vm.runInContext(code,context);
 const G=name=>run(name);
 
+// Optional practice never writes celebration progress or setup records.
+{
+  const scenarios=G('PRACTICE_SCENARIOS');
+  for(const scenario of scenarios){
+    const options=G('practiceOptions')(scenario.id);
+    assert.equal(options.rite,'mass');assert.equal(options.bishop,false);
+    const items=G('practiceSacristyRound')(scenario.id,42);
+    assert.equal(items.length,14);
+    assert.ok(items.some(i=>i.needed)&&items.some(i=>!i.needed));
+    same(items,G('practiceSacristyRound')(scenario.id,42),'seeded cupboard replay');
+    const placements=Object.fromEntries(items.filter(i=>i.needed).map(i=>[i.id,i.places[0]]));
+    const perfect=G('practiceSacristyResult')(items,placements);
+    assert.equal(perfect.correct,perfect.total);
+    assert.ok(G('practiceSacristyResult')(items,{}).correct<perfect.total);
+    const distractor=items.find(i=>!i.needed);
+    placements[distractor.id]=distractor.places[0];
+    assert.equal(G('practiceSacristyResult')(items,placements).correct,perfect.total-1);
+    const procession=G('practiceProcessionRound')(scenario.id,42);
+    const ids=procession.ranks.map(r=>r.id),kits=Object.fromEntries(procession.ranks.map(r=>[r.id,r.kit]));
+    const result=G('practiceProcessionResult')(procession.ranks,ids,kits);
+    assert.equal(result.correct,result.total);
+    assert.ok(G('practiceProcessionResult')(procession.ranks,[...ids].reverse(),kits).correct<result.total);
+    assert.equal(procession.ranks.at(-1).name,'Priest');
+    if(options.incense)assert.equal(procession.ranks[0].name,'Thurifer');
+    if(options.serverCount===4||options.serverCount===5){
+      const cross=procession.ranks.find(r=>r.name==='Cross between candles');
+      assert.equal(cross.kit,'Processional cross and two candles');
+    }
+    if(options.deacon)assert.equal(procession.ranks.find(r=>r.name==='Deacon').kit,'Book of the Gospels');
+  }
+  assert.throws(()=>G('practiceOptions')('goodFriday'),/Unsupported/);
+  const entries=G('buildSearchIndex')([]);
+  const targets=G('practiceChurchRound')(entries,'one');
+  assert.equal(targets.length,5);assert.equal(new Set(targets.map(t=>t.id)).size,5);
+  assert.ok(targets.every(t=>t.clue&&t.ref));
+  same(targets,G('practiceChurchRound')(entries,'one'));
+  assert.notEqual(JSON.stringify(targets),JSON.stringify(G('practiceChurchRound')(entries,'two')));
+  assert.equal(G('practiceChurchRound')([],42).length,0);
+  for(const [correct,total,stars] of [[0,5,1],[69,100,1],[70,100,2],[89,100,2],[90,100,3],[5,5,3]])
+    assert.equal(G('practiceStars')(correct,total),stars);
+  const previous={_v:1,games:{MG01:{completed:2,stars:3}},celebrations:{keep:true}};
+  const recorded=G('recordPractice')(previous,'MG01',1);
+  assert.equal(recorded.games.MG01.completed,3);assert.equal(recorded.games.MG01.stars,3);
+  assert.equal(previous.games.MG01.completed,2);assert.equal(recorded.celebrations,undefined);
+  same(G('normalisePracticeRecords')({_v:1,games:{MG01:{completed:-1,stars:8}}}),{_v:1,games:{}});
+  assert.throws(()=>G('recordPractice')(null,'MG12',1),/Invalid/);
+  assert.equal(G('PRACTICE_STORAGE_KEY'),'massGamePractice');
+}
+
 {
   const groups=G('SETUP_CELEBRATION_GROUPS'),presets=G('GAME_PRESETS');
   const ids=groups.flatMap(group=>Array.from(group.presets));
@@ -21,13 +70,17 @@ const G=name=>run(name);
   const visible=G('setupCelebrationFlags');
   same(visible(presets.sunday.fields,'sunday'),[],'ordinary Sunday has no special celebration toggles');
   for(const [id,preset] of Object.entries(presets)){
-    const expected=(preset.fields.rite||'mass')==='mass'
+    const expected=preset.fields.rite==='corpus'?Array.from(G('SETUP_CORPUS_FLAGS')):(preset.fields.rite||'mass')==='mass'
       ?Array.from(G('SETUP_CELEBRATION_FLAGS')).filter(name=>preset.fields[name]===true):[];
     same(visible(preset.fields,id),expected,id+' shows only its own celebration features');
   }
   same(visible({...presets.nativity.fields,nativity:false},'nativity'),['nativity'],'can re-enable an edited celebration feature');
   same(visible({nativity:true},'custom'),['nativity'],'old custom saves keep active features visible');
   same(visible({nativity:true,funeral:true,rite:'exposition'},'benediction'),[],'outside Mass ignores retained Mass flags');
+  same(visible({rite:'corpus',corpusCanopy:false,corpusTorches:false,corpusStations:false},'corpusChristi'),
+    ['corpusCanopy','corpusTorches','corpusStations'],'Corpus custom options stay available when switched off');
+  same(visible({rite:'mass',corpusCanopy:true,corpusTorches:true,corpusStations:true},'sunday'),[],
+    'retained Corpus choices do not clutter a Mass');
   for(const name of ['eye','guide','choices','timer','target']){
     assert.ok(G('GameIcons').PATHS[name],name+' involvement icon exists');
   }
@@ -830,7 +883,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     assert.ok(G('GameIcons').PATHS[c.icon],c.id+' icon');
     if(c.preset)assert.ok(presets[c.preset],c.id+' preset exists');
   }
-  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','goodFriday','adorationLay','benediction','confirmation','baptism','candlemas','ashWednesday','palmSunday','funeral'],'sixteen celebrations are playable now');
+  same(C.filter(avail).map(c=>c.id),['feria','dominica','dominicaIncense','solemnity','pontifical','nativity','holyThursday','goodFriday','adorationLay','benediction','corpusChristi','confirmation','baptism','candlemas','ashWednesday','palmSunday','funeral'],'seventeen celebrations are playable now');
   assert.equal(G('celebrationForPreset')('baptismMass').id,'baptism','Mass with Baptism credits Baptism');
   assert.equal(G('celebrationForPreset')('baptismDeacon').id,'baptism');
   assert.equal(G('celebrationForPreset')('benedictionDeacon').id,'benediction','the Deacon form credits Benediction');
@@ -850,8 +903,14 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(mark({level:'guided',percent:100}),'attended');
   assert.equal(mark({level:'choice',percent:69}),'attended');
   assert.equal(mark({level:'choice',percent:70}),'served');
-  assert.equal(mark({level:'choice',percent:100}),'served','distinction needs Timed or Expert');
+  assert.equal(mark({level:'choice',percent:100}),'distinction','three stars do not require a harder involvement');
   assert.equal(mark({level:'expert',percent:95}),'distinction');
+  for(const level of ['choice','timed','expert']){
+    for(const [percent,stars] of [[0,1],[69,1],[70,2],[89,2],[90,3],[100,3]]){
+      assert.equal(G('MARK_STARS')[mark({level,percent})],stars,level+' at '+percent+'%');
+    }
+    assert.equal(mark({level,percent:100,watched:true}),'attended','watching overrides a score');
+  }
   // Recording progress and seniority.
   const record=G('recordCelebration'),rank=G('seniorityFor');
   let p=G('emptyProgress')();
@@ -859,9 +918,10 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(G('nextRecommended')(p).id,'feria');
   assert.equal(record(p,{preset:'custom',role:'P',level:'choice',percent:100}),null,'custom options are not on the path');
   let r=record(p,{preset:'weekday',role:'P',level:'watch',watched:true,percent:0});
-  p=r.progress;assert.equal(r.celebration.id,'feria');assert.equal(rank(p).id,'aspirant','watching does not raise seniority');
+  p=r.progress;assert.equal(r.celebration.id,'feria');assert.equal(rank(p).id,'server','watching to completion raises seniority');
+  assert.equal(G('nextRecommended')(p).id,'dominica','completion advances recommendations regardless of score');
   r=record(p,{preset:'weekday',role:'P',level:'choice',percent:80});
-  p=r.progress;assert.equal(r.rankBefore.id,'aspirant');assert.equal(r.rankAfter.id,'server');
+  p=r.progress;assert.equal(r.rankBefore.id,'server');assert.equal(r.rankAfter.id,'server');
   r=record(p,{preset:'weekday',role:'P',level:'choice',percent:50});
   p=r.progress;assert.equal(p.celebrations.feria.roles.P.mark,'served','a worse result keeps the best mark');
   assert.equal(p.celebrations.feria.roles.P.best,80);assert.equal(p.celebrations.feria.roles.P.plays,3);
@@ -886,6 +946,8 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   p=record(p,{preset:'adorationLay',role:'E',level:'choice',percent:90}).progress;
   r=record(p,{preset:'benedictionDeacon',role:'D',level:'choice',percent:90});
   assert.equal(r.celebration.id,'benediction');p=r.progress;
+  assert.equal(G('nextRecommended')(p).id,'corpusChristi','then the Corpus Christi procession');
+  p=record(p,{preset:'corpusChristi',role:'P',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'confirmation','then the Confirmation Mass');
   p=record(p,{preset:'confirmation',role:'CB',level:'choice',percent:90}).progress;
   assert.equal(G('nextRecommended')(p).id,'baptism','then Christian initiation');
@@ -909,6 +971,33 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   same(Object.keys(clean.celebrations),['feria']);same(Object.keys(clean.celebrations.feria.roles),['P']);
   assert.equal(clean.celebrations.feria.roles.P.best,100);
   assert.equal(G('normaliseProgress')('junk').celebrations&&Object.keys(G('normaliseProgress')(null).celebrations).length,0);
+  const migrated=G('normaliseProgress')({_v:1,celebrations:{
+    feria:{roles:{P:{mark:'attended',best:25,plays:1}}},
+    dominica:{roles:{S:{mark:'served',best:75,plays:2}}},
+    dominicaIncense:{roles:{T:{mark:'distinction',best:95,plays:3}}}
+  }});
+  assert.equal(rank(migrated).id,'senior','legacy completions count without losing progress');
+  assert.equal(G('celebrationStatus')(migrated,'feria').stars,1);
+  assert.equal(G('celebrationStatus')(migrated,'dominica').stars,2);
+  assert.equal(G('celebrationStatus')(migrated,'dominicaIncense').stars,3);
+  same(G('celebrationStatus')(migrated,'feria').completedRoles,['P']);
+  for(const level of ['watch','guided','choice','timed','expert']){
+    const completed=record(G('emptyProgress')(),{preset:'weekday',role:'P',level,percent:0}).progress;
+    assert.equal(rank(completed).id,'server',level+' with no score earns the milestone');
+    assert.equal(G('nextRank')(completed).rank.id,'senior');
+    assert.equal(G('nextRecommended')(completed).id,'dominica');
+  }
+  let zeroScore=G('emptyProgress')();
+  for(const preset of ['weekday','sunday','sundayIncense','solemnity','pontifical','nativity']){
+    zeroScore=record(zeroScore,{preset,role:'P',level:'choice',percent:0}).progress;
+  }
+  assert.equal(rank(zeroScore).id,'mc','all available milestones can be earned without a passing score');
+  let stars=record(G('emptyProgress')(),{preset:'weekday',role:'P',level:'choice',percent:95}).progress;
+  stars=record(stars,{preset:'weekday',role:'P',level:'guided',percent:100}).progress;
+  stars=record(stars,{preset:'weekday',role:'P',level:'choice',percent:0}).progress;
+  assert.equal(G('celebrationStatus')(stars,'feria').stars,3,'replaying never lowers earned stars');
+  assert.equal(stars.celebrations.feria.roles.P.best,95,'Guided does not inflate the best scored result');
+  assert.equal(stars.celebrations.feria.roles.P.plays,3);
   // The credited celebration follows the final options.
   const pfo=G('presetForOptions');
   const opts=(role,preset)=>G('normaliseGameOptions')(role,{...presets[preset].fields,serverCount:Number(presets[preset].fields.serverCount),readerCount:Number(presets[preset].fields.readerCount),

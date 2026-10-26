@@ -20,8 +20,7 @@ and no account. Other pages:
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
    incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, Ash Wednesday, Sunday Mass with Baptism, Funeral Mass, Palm Sunday, Holy Thursday (Evening Mass of the Lord's Supper), Good Friday (Celebration of the Passion of the Lord), or outside Mass: Baptism of
-   Children (Priest or Deacon), the Funeral Liturgy (Priest or Deacon), Adoration led by a lay minister, or
-   Exposition and Benediction with the Priest or the Deacon. You can also
+   Children (Priest or Deacon), the Funeral Liturgy (Priest or Deacon), Adoration led by a lay minister, Exposition and Benediction with the Priest or the Deacon, or the Corpus Christi procession. It follows Mass; the Mass itself is not depicted. The Priest carries the Blessed Sacrament along an outdoor route and concludes with Benediction and reposition. Canopy, lights, route incense and prayer stations are optional local customs. You can also
    change any option
    yourself.
 2. Pick a **role** and your **involvement**:
@@ -35,8 +34,9 @@ and no account. Other pages:
 4. Use the **Questions** button to turn questions off and just watch, and the
    🔊 button for sound.
 5. Open **✠ The Path** for a suggested order of celebrations, from a weekday
-   Mass towards the Easter Triduum. Serving each one (Choice or harder, 70% or
-   more, in any role) raises your **seniority**: Aspirant, Server, Senior
+   Mass towards the Easter Triduum. Completing the milestone celebrations in
+   any role or involvement raises your **seniority**, with no passing score:
+   Aspirant, Server, Senior
    Server, Head Server, Master of Ceremonies and finally Master of Ceremonies of
    the Triduum. Everything stays playable in any order. Celebrations marked
    *In preparation* are planned but not in the game yet.
@@ -61,12 +61,40 @@ Under **Fine-tune celebration & church**, special features appear only for
 the selected celebration or an existing custom setup that uses them. Christmas,
 Ash Wednesday and similar switches no longer appear under Ministers at an
 ordinary Sunday Mass. Pick a different celebration to change its type.
+Corpus Christi is listed under Eucharistic worship; its canopy, lights and
+prayer-station choices appear only for that rite.
 
 The collapsed **Menu layout** control retains Dashboard, Step by step and the
 Original menu for comparison; switching keeps the same controls and choices.
 Direct links `mass-game.html?menu=stacks`, `?menu=dashboard`, `?menu=steps`
 and `?menu=classic` also work offline. Layout choice is not saved. Role families
 are browsing labels, not liturgical ranks.
+
+The Corpus Christi scene is illustrative. The route follows local direction;
+canopy, lights, incense on the route and prayer stations are not presented as
+universal requirements.
+
+### Practice room
+
+From setup, choose **Practice room** for three optional, untimed mini-games:
+**Know your church** (find five targets using numbered markers in the 3D
+scene, with named or description clues and picture hints), **Sacristy scramble**
+(set out a selected cupboard checklist while leaving distractors behind), and
+**Line up the procession** (move minister groups and assign their carried objects).
+Use touch or keyboard controls; no dragging or fast reactions are required.
+
+Preparation and procession currently support four labelled ordinary Mass
+arrangements: one server, four servers, five servers with incense and a Deacon,
+or two servers with a processing lector. They do not cover special rites or
+celebrations with a Bishop. Cross and candles share a rank; spacing and some
+preparation alternatives are schematic. These are illustrative exercises, not a
+complete preparation course or an approved ceremonial.
+
+Every finished round counts as completed. Separate 1-3 stars show accuracy
+(2 at 70%, 3 at 90%); church-finding retries, reveals and hints reduce accuracy.
+Practice records use their own local save, not celebration milestones, scores
+or settings. Replay freely, or return to setup with **Escape**; an existing
+celebration can still be resumed or restarted.
 
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.
@@ -88,6 +116,8 @@ work on it offline, clone the repository and open `mass-game.html`.
 - [`docs/SPEC.md`](docs/SPEC.md): what the project does and must keep doing.
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md): the resume checklist, project
   status and workflow for new contributors and AI sessions.
+- [`docs/MINI-GAMES.md`](docs/MINI-GAMES.md): persistent mini-game ideas and
+  implementation statuses.
 - [`docs/GAME-DECISIONS.md`](docs/GAME-DECISIONS.md) and
   [`docs/DECISIONS.md`](docs/DECISIONS.md): the decision logs.
 - [`docs/SOURCES.md`](docs/SOURCES.md): sources and licences.
@@ -538,9 +568,11 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   Changing any option shows "Custom".
 - **The Path and seniority**: a map of celebrations in order of precedence
   (on phones, a list). Each finished game is credited to the celebration whose
-  preset matches the final options: watching or Guided earns *Attended*,
-  Choice or harder with 70% or more earns *Served*, and Timed or Expert with
-  90% or more earns *Served with distinction*. Custom games are not credited.
+  preset matches the final options. Completion in any involvement counts towards
+  seniority, regardless of score. Stars show performance separately: 1 for
+  completion, 2 at 70% or more, and 3 at 90% or more in Choice, Timed or Expert.
+  Watch and Guided earn 1 star. The best stars per celebration and role are kept;
+  existing saved completions still count. Custom games are not credited.
   Progress is kept in this browser only.
 - **Liturgical Breviary & Season Ribbon**: a bookmark ribbon tab in the header
   displays today's liturgical colour and feast title. Clicking it opens a

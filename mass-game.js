@@ -40,7 +40,16 @@ const FUNERAL_BLURBS={
   S:'Carry the holy water and the book; help place the white pall on the coffin, and hand the sprinkler at the commendation.',
   T:'Thurifer. Bring the thurible for the final commendation and lead the coffin out.'
 };
-const riteBlurb=role=>({baptism:BAPTISM_BLURBS,funeral:FUNERAL_BLURBS}[game.options.rite]||DEVOTION_BLURBS)[role];
+const CORPUS_BLURBS={
+  P:'Carry the Blessed Sacrament in the monstrance beneath the canopy where customary; give the concluding blessing and repose the Sacrament.',
+  S:'Assist the Priest and carry a canopy pole or ring the bell where customary.',
+  X:'Lead the procession with the processional cross.',
+  C1:'Carry a processional light beside the Blessed Sacrament where customary.',
+  C2:'Carry a processional light beside the Blessed Sacrament where customary.',
+  T:'Incense the Blessed Sacrament before the procession; incense during the route follows local custom.',
+  PEW:'Follow the procession in prayer and remain through the concluding blessing and reposition.'
+};
+const riteBlurb=role=>({baptism:BAPTISM_BLURBS,funeral:FUNERAL_BLURBS,corpus:CORPUS_BLURBS}[game.options.rite]||DEVOTION_BLURBS)[role];
 const EXTRA_FIGURES={MC:{name:'M.C.',color:'#2e2f36'},SAC:{name:'Sacristan',color:'#5a6470'},PEW:{name:'Parishioner',color:'#6a7fa0'},AV:{name:'Screen operator',color:'#3f6b5a'}};
 const PROP_FOR_ITEM={chalice:['chalice'],corporal:['corporal'],missal:['missal'],water:['ewer'],wine:['wine'],ciborium:['bread'],emhcVessel:['ciborium'],collectionBasket:['collection'],gospels:['gospels'],gospelsAltar:['gospels'],procCross:['cross'],altarCross:['cross'],procCandles:['cand1','cand2'],thurible:['thurible'],altarBell:['bell'],chrism:['chrism'],ashes:['ashes'],oilCat:['oilCat'],garment:['garment'],bcandle:['bcandle'],funeralWater:['holyWater'],funeralPall:['drape'],palms:['palms'],basin:['basin'],pitcherBasin:['basin']};
 const SACRISTY_SLOTS=[[1070,95],[1110,95],[1150,95],[1070,150],[1150,150],[1070,205],[1110,205],[1150,205],[1190,150],[1190,205]];
@@ -277,6 +286,11 @@ function buildSetupForm(){
       else if(field.type==='checkbox')field.checked=!!value;
       else field.value=value;
     }
+    if(saved&&!saved.rite){
+      const preset=GAME_PRESETS[saved.preset]?.fields||{};
+      form.elements.rite.value=preset.rite||'mass';
+      form.elements.minister.value=preset.minister||'priest';
+    }
   }catch{}
   if(typeof applyAppearance==='function'&&figures.P)applyAppearance(readAppearance());
   form.addEventListener('change',previewNotes);
@@ -313,6 +327,8 @@ function choosePreset(id){
   const preset=GAME_PRESETS[id];
   if(!preset){$('presetNote').textContent='Your own choice of options.';syncLiturgicalRibbon(formValues());return;}
   const form=$('setupForm').elements;
+  form.rite.value=preset.fields.rite||'mass';
+  form.minister.value=preset.fields.minister||'priest';
   for(const [name,value] of Object.entries(preset.fields)){
     const field=form[name];
     if(!field)continue;
@@ -324,9 +340,7 @@ function choosePreset(id){
   window.SetupMenus?.refresh(id);
 }
 function syncPreset(){
-  // Exposition presets carry the rite, which is not a form field: keep it while their fields still match.
-  const current=GAME_PRESETS[$('gamePreset').value]?.fields||{};
-  const values={...formValues(),rite:current.rite,minister:current.minister};
+  const values=formValues();
   const id=matchingPreset(values);
   $('gamePreset').value=id;
   $('presetNote').textContent=GAME_PRESETS[id]?.blurb||'Your own choice of options.';
@@ -466,9 +480,10 @@ function readForm(){
     lapses:saved.lapses,detail:saved.detail,symbols:saved.symbols,level:saved.level,seed:Math.floor(Math.random()*1e6)
   };
   const presetFields=GAME_PRESETS[saved.preset]?.fields||{};
-  raw.rite=presetFields.rite||'mass';
-  if(presetFields.minister)raw.minister=presetFields.minister;
-  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false,projector:saved.projector===true});
+  raw.rite=saved.rite||presetFields.rite||'mass';
+  raw.minister=saved.minister||presetFields.minister||'priest';
+  Object.assign(raw,{readerCount:Number(saved.readerCount),lectorProcession:saved.lectorProcession,collection:saved.collection,emhc:saved.emhc,reservedCommunion:saved.reservedCommunion,deaconCommunion:saved.deaconCommunion!==false,openChurch:saved.openChurch!==false,projector:saved.projector===true,
+    corpusCanopy:saved.corpusCanopy,corpusTorches:saved.corpusTorches,corpusStations:saved.corpusStations});
   return {role:saved.role||'P',level:saved.level||'choice',preset:saved.preset||'custom',firstPerson:saved.firstPerson===true,fpView:saved.fpView||'shoulder',sound:saved.sound!==false,recordedAudio:saved.recordedAudio!==false,raw};
 }
 const ROLE_ICONS={P:'vestment',D:'gospels',S:'bell',X:'cross',C1:'candle',T:'thurible',MB:'mitre',CB:'crozier',L:'lectionary',L2:'lectionary',U:'collection',E:'ciborium',MC:'check',SAC:'sacristy',PEW:'people',AV:'screen'};
@@ -511,8 +526,7 @@ function showPathResult(watched,percent){
   const after=outcome.progress,next=nextRecommended(after);
   let text='On the Path: '+outcome.celebration.name+' as '+gameRoleName(game.role,game.options)+': '+MARK_NAMES[outcome.mark]+'.';
   if(outcome.rankAfter.id!==outcome.rankBefore.id)text+=' Your seniority is now '+outcome.rankAfter.name+'. '+outcome.rankAfter.blurb;
-  if(outcome.mark==='attended'&&!watched&&!isGuided(game.level))text+=' Serve it with '+SERVED_PERCENT+'% or more to count towards seniority.';
-  else if(outcome.mark==='attended')text+=' Play at Choice or harder to count towards seniority.';
+  text+=' Completion counts towards seniority regardless of score or involvement.';
   if(next&&next.id!==outcome.celebration.id)text+=' Recommended next: '+next.name+'.';
   $('summaryPath').textContent=text;
   syncPathStrip();
@@ -686,10 +700,14 @@ function switchRole(role){
 // Mass, or a rite outside Mass such as Exposition (mass-rite-exposition.js).
 const isDevotion=()=>isDevotionRite(game.options);
 // Outside Mass the ministers read from the rite's book of prayers, not the Missal or Gospels.
-const bookName=()=>isDevotion()&&GAME_ROLES[game.role].book?({baptism:'Rite of Baptism',funeral:'Order of Christian Funerals'}[game.options.rite]||'book of prayers for Exposition'):GAME_ROLES[game.role].book;
-const riteWord=()=>isDevotion()?({baptism:'the Baptism',funeral:'the funeral'}[game.options.rite]||'Exposition'):'Mass';
+const bookName=()=>isDevotion()&&GAME_ROLES[game.role].book?({baptism:'Rite of Baptism',funeral:'Order of Christian Funerals',corpus:'Holy Communion and Worship of the Eucharist outside Mass'}[game.options.rite]||'book of prayers for Exposition'):GAME_ROLES[game.role].book;
+const riteWord=()=>isDevotion()?({baptism:'the Baptism',funeral:'the funeral',corpus:'the Corpus Christi procession'}[game.options.rite]||'Exposition'):'Mass';
 function describeCelebration(){
   const o=game.options,parts=[];
+  if(o.rite==='corpus'){
+    return 'Corpus Christi Eucharistic procession after Mass, with '+o.serverCount+' server'+(o.serverCount===1?'':'s')+
+      (o.incense?', including a thurifer':'')+'. Canopy, procession lights and stations follow local custom.';
+  }
   if(isDevotion()&&o.rite==='funeral'){
     parts.push('Funeral liturgy outside Mass, with the '+(o.minister==='deacon'?'Deacon':'Priest'));
     parts.push(o.serverCount+' server'+(o.serverCount===1?'':'s')+(o.incense?', with incense':''));
@@ -1949,6 +1967,7 @@ function tweenTowards(key,target,dt,speed=190){
   return d>1;
 }
 function gameBeforeRender(dt,positions){
+  if(PracticeRoom.isOpen()){PracticeRoom.frame();return;}
   if(!game||game.phase==='setup')return;
   const now=performance.now()/1000;
   updateWalkers(dt);
@@ -2046,6 +2065,7 @@ function gameBeforeRender(dt,positions){
 
 // ---------- clicks in the 3D scene ----------
 function gamePick(raycaster){
+  if(PracticeRoom.isOpen())return true;
   const active=game.active;
   if(!active||active.finished)return false;
   const d=active.decision;
@@ -2102,6 +2122,7 @@ function initialiseGame(){
   buildSetupForm();
   initialiseGameView();
   initialiseGameUi();
+  PracticeRoom.initialise();
   $('liturgicalRibbon').onclick=()=>openBreviary();
   $('liturgicalRibbon').onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openBreviary();}};
   $('brevClose').onclick=closeBreviary;

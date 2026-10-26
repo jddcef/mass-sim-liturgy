@@ -1,0 +1,60 @@
+# Mini-game ideas and implementation status
+
+Persistent backlog for optional practice games within the simulator. These are
+ideas, not implemented features or approved ceremonial instructions. Update
+this list as work progresses; keep stable IDs when renaming an idea.
+
+## Status key
+
+- **Idea**: recorded, not yet selected for implementation.
+- **Planned**: scope agreed, implementation not started.
+- **In progress**: being implemented; link the issue or pull request.
+- **Done**: playable, verified and merged; link the pull request.
+- **Deferred**: retained for later, with the reason recorded.
+
+Existing questions, routes, objects and animations can be reused, but do not
+make a standalone mini-game Done.
+
+## Ideas
+
+| ID | Mini-game | Status | Gameplay and replay variations | Delivery reference |
+|---|---|---|---|---|
+| MG01 | Know your church | In progress | Find a named vessel, book, furnishing or place in the 3D scene. Beginner hints show a picture; Expert clues describe the target. Vary targets and church layouts. First release: five visible targets per round, named or description clues, picture hints and accessible numbered scene markers. | [PR #27](https://github.com/jddcef/mass-sim-liturgy/pull/27); locally verified, merge pending |
+| MG02 | Sacristy scramble | In progress | Find and set out the items needed for a selected celebration, leaving unnecessary items in the cupboard. Vary celebrations, server teams and missing items. First release: selected cupboard checklist for four labelled ordinary Mass arrangements; other celebrations and missing-stock variations remain future work. | [PR #27](https://github.com/jddcef/mass-sim-liturgy/pull/27); locally verified, merge pending |
+| MG03 | Line up the procession | In progress | Arrange the available ministers and their carried objects for the selected scenario. Vary team sizes, roles and celebration options. First release: four labelled ordinary Mass arrangements, move ranks and assign carried objects; cross/candles form one shared rank. | [PR #27](https://github.com/jddcef/mass-sim-liturgy/pull/27); locally verified, merge pending |
+| MG04 | What comes next? | Idea | Order illustrated moments or choose the next action after a short scene. Vary celebrations and sequence length. | Not started |
+| MG05 | Book-marker challenge | Idea | Prepare relevant pages in the simulated books, then find the right section when prompted. Vary celebrations, roles and clue levels. | Not started |
+| MG06 | M.C. spot-check | Idea | Inspect a short scene for misplaced objects, missing preparation or missed cues. Randomise mistakes and include scenes that are already correct. | Not started |
+| MG07 | Route rehearsal | Idea | Guide a server or usher between assigned places without cutting through benches or using an unsuitable shortcut. Vary layouts, start points and destinations. | Not started |
+| MG08 | Pack away properly | Idea | Sort equipment into storage or choose its appropriate next action after the celebration. Vary equipment sets and plausible distractors. | Not started |
+| MG09 | Sound-desk rehearsal | Idea | Match cues to slides or audio tracks, then start or fade them appropriately. Vary cue sequences and simulated equipment problems. | Not started |
+| MG10 | Swing the thurible | Idea | A timing game: press at the right moment to get the swing rhythm and direction correct. Give separate feedback on timing and direction; vary practice patterns and offer slower or untimed assistance. | Not started |
+| MG11 | Light the candle | Idea | A virtual balance-and-reach game using a lighter or matches: keep control, avoid simulated contact with the hand, and reach the target wick. Progress through candle targets, with the Easter Candle as the final candle. | Not started |
+| MG12 | Light the charcoal for the thurible | Idea | Entirely virtual charcoal-lighting practice concept. No real-world ignition procedure, actual flame or hot-equipment practice instructions. Gameplay and accessible controls are not yet designed. | Not started; excluded from the MG01-MG03 batch |
+
+## Proposed practice-room design
+
+These are starting suggestions, not a committed implementation order:
+
+- Begin with MG01, MG02 and MG03, reusing the existing scene and game data.
+- Offer a Practice room from setup, with roughly 1-3-minute rounds, optional
+  hints, retries and short explanations after mistakes.
+- Keep mini-game completion and performance stars separate from celebration
+  milestones. Do not make a passing score a prerequisite for those milestones.
+- Use accuracy and control rather than speed as the general emphasis. MG10
+  explicitly uses timing as its practice mechanic; offer accessible alternatives.
+- Keep the lighter, matches, flame and thurible activities entirely virtual.
+  Avoid graphic injury, real-world fire-handling instructions or prompts to
+  practise with actual flame or hot equipment.
+- Consult Magisterium before implementing liturgical patterns, procession
+  orders or handling rules as correct answers. The Easter Candle endpoint is
+  the user's game-progression idea, not a claim about ritual candle-lighting
+  order.
+- Preserve offline `file://` support, classic scripts and low-spec graphics.
+
+## Maintaining this list
+
+When work starts, update the status and link the work. Mark an item Done only
+after its playable behavior has been verified and merged. Record any remaining
+scope in the same row or a linked issue. Add new ideas with new IDs rather than
+replacing existing entries.

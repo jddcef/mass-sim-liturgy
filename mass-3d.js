@@ -113,7 +113,7 @@ function makeFigure(color,skin,role){
     torso.add(arm);arms.push(arm);
   }
   let handCandle=null,handPalm=null;
-  if(!role){
+  if(!role||role==='C1'||role==='C2'){
     // Candlemas: a lighted candle in the right hand, kept upright while the arm is raised.
     handCandle=new THREE.Group();
     handCandle.position.set(0,-.5,.03);
@@ -122,7 +122,8 @@ function makeFigure(color,skin,role){
     sphere(handCandle,0,.3,0,.036,'#ffc84a',false).scale.set(1,1.6,1);
     handCandle.visible=false;
     arms[1].add(handCandle);
-
+  }
+  if(!role){
     // Palm Sunday: a green palm branch in the right hand.
     handPalm=new THREE.Group();
     handPalm.position.set(0,-.5,.03);
@@ -621,6 +622,51 @@ function buildChurch(){
   }
 }
 
+const CORPUS_SCENE_ROUTE=typeof CORPUS_ROUTE==='undefined'?[]:CORPUS_ROUTE;
+const CORPUS_SCENE_STATIONS=typeof CORPUS_STATIONS==='undefined'?[]:CORPUS_STATIONS.map(station=>station.at);
+function buildCorpusOutdoor(){
+  const ground=new THREE.Group();
+  const centre=world([500,1080]);
+  box(ground,0,-.14,centre.z+3,30,.22,27,'#80906a',false);
+  const route=CORPUS_SCENE_ROUTE;
+  for(let i=0;i<route.length-1;i++){
+    const a=world(route[i]),b=world(route[i+1]);
+    const dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz);
+    const paving=box(ground,(a.x+b.x)/2,-.015,(a.z+b.z)/2,length,.035,1.8,'#c9b99a',false,'stone');
+    paving.rotation.y=Math.atan2(dz,dx);
+  }
+  for(let i=0;route.length>1&&i<48;i++){
+    const a=world(route[(i*7)%(route.length-1)]),b=world(route[(i*7+1)%(route.length-1)]);
+    const t=((i*37)%47)/47;
+    const petal=sphere(ground,a.x+(b.x-a.x)*t+((i%5)-2)*.13,-.002,a.z+(b.z-a.z)*t+((i%7)-3)*.1,.045,i%3?'#f4e4bd':'#d9b3ad',false);
+    petal.scale.set(1,.22,.7);
+  }
+  ground.visible=false;
+  scene.add(ground);
+  objects.corpusGround=ground;
+
+  const stations=new THREE.Group();
+  for(const [i,point] of CORPUS_SCENE_STATIONS.entries()){
+    const p=world(point);
+    box(stations,p.x,p.y+.62,p.z,1.7,.12,.86,'#f2ead8',false,'wood');
+    for(const dx of [-.68,.68])box(stations,p.x+dx,p.y+.3,p.z,.08,.6,.76,'#7d6548',false,'wood');
+    box(stations,p.x,p.y+1.1,p.z-.1,.07,.65,.07,'#805d37',false,'wood');
+    box(stations,p.x,p.y+1.25,p.z-.1,.42,.07,.07,'#805d37',false,'wood');
+    for(let n=0;n<6;n++)sphere(stations,p.x+(n%3-.9)*.3,p.y+.78,p.z+(Math.floor(n/3)-.5)*.34,.08,['#bd5555','#e0bd65','#788d58'][(n+i)%3],false);
+  }
+  stations.visible=false;
+  scene.add(stations);
+  objects.corpusStations=stations;
+
+  const canopy=new THREE.Group();
+  box(canopy,0,2.75,0,2.7,.14,2.25,'#f8f3e6',false);
+  for(const x of [-1.2,1.2])for(const z of [-.95,.95])box(canopy,x,1.34,z,.065,2.65,.065,'#b89143',false,'gold');
+  box(canopy,0,2.66,0,2.82,.035,2.38,'#d2ad60',false,'gold');
+  canopy.visible=false;
+  scene.add(canopy);
+  objects.corpusCanopy=canopy;
+}
+
 function makeObjects(){
   for(const name of Object.keys(PROP_DEF)){
     const g=new THREE.Group();
@@ -975,6 +1021,7 @@ function objectHeight(name,state,p){
 
 function renderFrame(dt=1/60){
   const step=STEPS[cur3d];
+  const corpus=scenario.options.rite==='corpus';
   if(tabernacleDoor)tabernacleDoor.rotation.y=((step.tabernacle||[]).some(([a,b])=>progress3d>=a&&progress3d<=b)||step.key===34.5&&progress3d>=.43&&progress3d<=.57||step.key===36&&progress3d>=.24&&progress3d<=.33)?-1.2:0;
   const elapsed=stepStart[cur3d]+step.dur*progress3d;
   const positions={};
@@ -983,7 +1030,7 @@ function renderFrame(dt=1/60){
     const figure=figures[role];
     const p=actorAt(cur3d,role,progress3d);
     positions[role]=p;
-    figure.root.visible=scenario.visible.has(role)&&p[1]<842;
+    figure.root.visible=scenario.visible.has(role)&&(p[1]<842||corpus);
     if(!figure.root.visible)continue;
     figure.root.position.copy(world(p));
     const action=(step.acts?.[role]||[]).find(([,a,b])=>progress3d>=a&&progress3d<=b)?.[0]||'';
@@ -1015,15 +1062,28 @@ function renderFrame(dt=1/60){
     const kneelingServer=ALB_ROLES.includes(role)&&posture==='kneel'&&!walking;
     const kneeling=!walking&&(step.kneel?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     pose(figure,layInPew?posture:seated?'sit':kneelingServer||kneeling?'kneel':'stand',action,elapsed,walking,orans);
+    if(figure.handCandle){
+      const carryingLight=corpus&&scenario.options.corpusTorches&&(role==='C1'||role==='C2');
+      figure.handCandle.visible=carryingLight;
+      if(carryingLight)figure.arms[1].rotation.x=-1.15;
+    }
     if(figure.veil)figure.veil.visible=(step.veil?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     if(action)actionTexts.push(ROLE_NAMES[role]+': '+action);
+  }
+  if(objects.corpusCanopy){
+    const canopy=objects.corpusCanopy;
+    canopy.visible=corpus&&scenario.options.corpusCanopy&&figures.P.root.visible;
+    if(canopy.visible){
+      canopy.position.copy(figures.P.root.position);
+      canopy.rotation.y=figures.P.root.rotation.y;
+    }
   }
   updatePeople(step,elapsed);
   for(const name of Object.keys(PROP_DEF)){
     const state=propAt(cur3d,name,progress3d,positions);
     const p=resolveProp(state,positions,name);
     const object=objects[name];
-    object.visible=!state.h&&(!state.by||scenario.visible.has(state.by))&&p[1]<842;
+    object.visible=!state.h&&(!state.by||scenario.visible.has(state.by))&&(p[1]<842||corpus);
     object.position.copy(world(p));
     object.position.y=objectHeight(name,state,p);
     object.rotation.set(0,0,0);
@@ -1173,6 +1233,10 @@ function applySetup(){
   for(const id of ['crucifix','crossStand'])if($(id))requested[id]=$(id).value;
   if(typeof gameScenarioOptions==='function')Object.assign(requested,gameScenarioOptions());
   scenario=buildScenario(requested);
+  const corpus=scenario.options.rite==='corpus';
+  if(objects.corpusGround)objects.corpusGround.visible=corpus;
+  if(objects.corpusStations)objects.corpusStations.visible=corpus&&scenario.options.corpusStations;
+  if(objects.corpusCanopy)objects.corpusCanopy.visible=false;
   for(const id of ['incense','bothKinds'])$(id).checked=scenario.options[id];
   $('incense').disabled=!scenario.options.servers;
   $('bothKinds').disabled=!scenario.options.deacon;
@@ -1323,6 +1387,7 @@ function initialise(){
     }
   }
   makeObjects();
+  buildCorpusOutdoor();
   applyGraphics(gfx);
   if($('graphicsDetail')){
     $('graphicsDetail').value=GraphicsDetail.storedChoice();

@@ -121,7 +121,7 @@ window.SetupMenus=(()=>{
   const contextNote=make('p','small');
   const contextGrid=make('div','optionGrid');
   contextual.append(contextNote,contextGrid);
-  const specialNodes=SETUP_CELEBRATION_FLAGS.map(name=>form.elements[name].closest('label'));
+  const specialNodes=[...SETUP_CELEBRATION_FLAGS,...SETUP_CORPUS_FLAGS].map(name=>form.elements[name].closest('label'));
   const seasonalBrowser=make('div','menuCelebrations');
   seasonalBrowser.append(make('h3','','Through the liturgical year'),make('p','small','Colour tints are browsing cues, not automatic vestment choices. Only existing celebrations are playable.'));
   const seasonGrid=make('div','menuSeasonGrid');
@@ -163,7 +163,7 @@ window.SetupMenus=(()=>{
     if(id&&GAME_PRESETS[id])contextPreset=id;
     const current=presetSelect.value;
     const values=formValues();
-    const rite=GAME_PRESETS[current]?.fields.rite||'mass';
+    const rite=values.rite||GAME_PRESETS[current]?.fields.rite||'mass';
     const flags=setupCelebrationFlags({...values,rite},contextPreset);
     specialNodes.forEach(node=>{node.hidden=!flags.includes(node.querySelector('input').name);});
     contextual.hidden=flags.length===0;

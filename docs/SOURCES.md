@@ -6,6 +6,20 @@ External pages may change; the project does not bundle a full copyrighted Missal
 
 ## Liturgy
 
+- Practice room MG01-MG03 sources rechecked through Magisterium on 26 October
+  2026: [GIRM 118](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/118)
+  (preparation), [119](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/119),
+  [120](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/120),
+  [172](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/172),
+  [188](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/188)
+  and [194](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/194)
+  (procession and carried objects); [296](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/296),
+  [309](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/309),
+  [310](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/310)
+  and [314](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/314)
+  (church furnishings). The shared cross/candle rank reflects the rubric;
+  exact spacing, the unladen server arrangement and accepting the simulator's
+  alternate Missal preparation locations are explicitly schematic choices.
 - [General Instruction of the Roman Missal, Vatican English publication](https://www.vatican.va/roman_curia/congregations/ccdds/documents/rc_con_ccdds_doc_20030317_ordinamento-messale_en.html).
   The page explicitly includes adaptations for the dioceses of the United States.
   It is a source to check, not a substitute for the locally approved norms.
@@ -20,7 +34,7 @@ External pages may change; the project does not bundle a full copyrighted Missal
 The start-menu browsing labels were checked through Magisterium on 26 October
 2026 against GIRM 91, 98, 100 and 105-107. They are UI groupings, not official
 liturgical ranks; the role functions remain distinct. Sources and the design
-judgement calls are linked in R205 of `GAME-DECISIONS.md`. No new third-party
+judgement calls are linked in R214 of `GAME-DECISIONS.md`. No new third-party
 artwork, fonts or libraries are used by these previews.
 
 The seasonal celebration browser was checked through Magisterium on 26 October
@@ -95,6 +109,27 @@ relevance only, not trust or safety; neither was installed:
 machine-readable export of the baseline rite, movement and prop cues.
 
 ## Holy Mass simulator game
+
+The Corpus Christi procession was checked through Magisterium AI against
+[Holy Communion and Worship of the Eucharist outside Mass, §75](https://www.magisterium.com/docs/4870a66b-080c-40ca-a547-da43942dabd8/ref/Chap%202.%202.%2075),
+which leaves street decoration and procession order to local custom and allows
+stations with Eucharistic Benediction where customary and pastorally useful,
+and the
+[Directory on Popular Piety and the Liturgy, §162](https://www.magisterium.com/docs/4fba701f-fda0-47a5-a2de-2e210d81f770/ref/162),
+which says the Corpus Christi procession normally follows Mass and carries the
+Host consecrated at that Mass. The rite starts at the procession's departure;
+it does not depict the preceding Mass or a separate exposition. The ritual
+allows prolonged public adoration following Mass as an alternative context,
+but this is not made a required prelude here. The
+[General Introduction, §77](https://www.magisterium.com/docs/4870a66b-080c-40ca-a547-da43942dabd8/ref/Chap%202.%202.%2077)
+places lights, incense and the canopy under local custom; the
+[Directory, §163](https://www.magisterium.com/docs/4fba701f-fda0-47a5-a2de-2e210d81f770/ref/163)
+describes the concluding Eucharistic blessing as the end of the whole
+celebration. The route and visual details are illustrative/local-custom
+choices, not universal requirements. The procession order, local arrangements,
+optional stations and reposition are also cross-checked against the 1973
+ritual's
+[Eucharistic Procession provisions, nn. 101–108](https://www.magisterium.com/docs/f4a7ad29-94a7-4462-81ff-334856815169/ref/page42).
 
 Liturgical questions for `mass-game.html` were checked through the Magisterium
 AI service (magisterium.com search and chat) against the General Instruction of

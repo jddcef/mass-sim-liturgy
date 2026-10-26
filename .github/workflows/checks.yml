@@ -17,6 +17,7 @@ jobs:
           node --check mass-rite-exposition.js
           node --check mass-rite-baptism.js
           node --check mass-rite-funeral.js
+          node --check mass-rite-corpus.js
           node --check mass-features.js
           node --check mass-parishes.js
           node --check mass-parish-editor.js
@@ -35,8 +36,10 @@ jobs:
           node --check mass-menu-concepts.js
           node --check mass-game-ui.js
           node --check mass-game-path.js
+          node --check mass-game-practice.js
           node --check feedback-config.js
           node mass-scenarios.test.cjs
           node mass-features.test.cjs
           node mass-assets.test.cjs
           node mass-game.test.cjs
+          node mass-corpus.test.cjs

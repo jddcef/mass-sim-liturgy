@@ -11,7 +11,7 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
       [Status](#status).
 - [ ] Run `git fetch` and check open PRs (`gh pr list`) and issues
       (`gh issue list`). Merge `origin/main` into your branch if it moved.
-- [ ] Run the four tests (below) to confirm a green baseline before editing.
+- [ ] Run the five tests (below) to confirm a green baseline before editing.
 - [ ] Note the user's request verbatim. Record any interpretation of an
       ambiguous request as a decision.
 - [ ] For liturgical or Catholic questions, consult the Magisterium MCP server
@@ -33,6 +33,7 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
       node mass-features.test.cjs
       node mass-assets.test.cjs
       node mass-game.test.cjs
+      node mass-corpus.test.cjs
       ```
 - [ ] Play it through in a real browser via `file://`: no console errors, and
       the new behaviour seen working. Automated checks used puppeteer-core
@@ -83,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R211.**
+**Next decision number: R221.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -101,8 +102,13 @@ server for liturgical or Catholic questions and clarifications.
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
 | 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
 | 28 | local, not published | Speaker-perspective look-around via drag and camera pad; continuous collection route joining the offertory presentation while keeping collection away from altar (R202–R203) |
-| 29 | (this PR) | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default, with shared controls and collapsed advanced settings (R204–R206) |
-| 30 | #23 | Card stacks selected as default; illustrated involvement, challenge/assistance grouping, contextual celebration switches and season-tinted celebration browsing (R207–R210) |
+| 29 | #24 (merged) | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
+| 30 | #25 (merged) | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
+| 31 | #26 (merged) | Persistent mini-game ideas and status backlog, including thurible timing and candle-lighting games (R208) |
+| 32 | [#27](https://github.com/jddcef/mass-sim-liturgy/pull/27) (merged) | Practice room MG01-MG03: scene finding, selected cupboard preparation and procession arrangement; separate completion/stars records; virtual charcoal MG12 remains Idea; standalone explorer compatibility fix (R209-R212) |
+| 33 | (this PR) | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default, with shared controls and collapsed advanced settings (R213–R215) |
+| 34 | #23 | Card stacks selected as default; illustrated involvement, challenge/assistance grouping, contextual celebration switches and season-tinted celebration browsing (R216–R219) |
+| merge | #23 | Merge latest main, preserving Corpus Christi, completion milestones and Practice room; integrate Corpus choices into the contextual menu (R220) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -183,7 +189,33 @@ All four Node test suites and edited-script syntax checks pass. A headless Edge
 load through `file://` initialized the scene, but interactive camera movement
 was not automated. Changes are local and uncommitted.
 
-Round 29 adds three working menu previews, not a final replacement. Use the
+Round 29 adds Corpus Christi as a playable celebration on the Path. It depicts
+the procession after Mass (the Mass itself is not shown); the Priest carries
+the Blessed Sacrament, and the celebration concludes with Benediction and
+reposition. The route and optional canopy, lights, route incense and prayer
+stations are explicitly treated as local custom. See R204 and the Magisterium
+sources in `SOURCES.md`. All five Node suites, CI syntax checks and
+`git diff --check` pass. The `file://` browser check confirmed the Corpus
+preset, after-Mass setup, and 3D procession through the first outdoor station;
+the scene rendered without a visible initialization error. Route, incense and
+small-team behavior are covered by the Corpus regression tests. Merged in #24.
+
+Round 30 makes every completed named celebration count towards seniority and
+recommendations, regardless of score or involvement. Performance is shown as
+1-3 stars, with saved marks and best results preserved (R205). The owner
+confirmed the current centre-aisle layout and simplified calendar (R206-R207).
+All five Node suites, changed-script syntax checks and `git diff --check` pass.
+A `file://` browser check confirmed legacy completion credit, seniority,
+1/2/3-star map badges, accessible labels and mobile-list completion labels;
+the test restored the original saved progress afterwards.
+
+Round 31 records eleven mini-game ideas in [`MINI-GAMES.md`](MINI-GAMES.md),
+with stable IDs, status definitions and delivery-reference fields. All are
+Idea, not implemented. Includes the user's thurible rhythm/direction timing
+game and virtual lighter/match balance-and-reach game ending with the Easter
+Candle. Documentation only; no gameplay changes.
+
+Round 33 adds three working menu previews, not a final replacement. Use the
 setup's "Try a menu layout" selector or `mass-game.html?menu=stacks`,
 `?menu=dashboard` and `?menu=steps`. Original menu remains the default; existing
 setup values, storage keys and gameplay defaults are unchanged. All 16 roles
@@ -199,7 +231,7 @@ all three new layouts retain the form values and fit without horizontal form
 overflow, including expanded advanced settings. The original menu's existing
 phone-width overflow is not changed. No final design has been selected.
 
-Round 30 supersedes the round 29 default: the owner selected Card stacks.
+Round 34 supersedes the round 33 default: the owner selected Card stacks.
 Menu layout is now collapsed; the other layouts remain available for comparison.
 Every involvement card has a distinct symbol and explanation. Challenge &
 assistance contains decision frequency, lapses, Sacristan opening tasks and
@@ -220,13 +252,47 @@ shortcuts, Path preparation and starting/resuming a Watch game. There were no
 page errors or network requests. The involvement and seasonal cards were also
 inspected in the interactive preview.
 
+Round 32 implements the first three practice games behind a surgical setup
+entry, leaving the setup redesign in #23 alone. Five Node suites, including
+new practice rules/records regressions, pass. Repeated isolated headless Edge
+checks through `file://` exercised desktop and 390px touch layouts, all four
+supported preparation/procession arrangements, five-target scene rounds,
+replay, independent record persistence, explicit storage denial, and resuming
+and restarting an existing celebration after practice. No unexpected console
+errors or external page requests occurred in the completed acceptance runs.
+MG01-MG03 were verified and merged in #27. MG12 is an entirely
+virtual backlog idea; MG10-MG12 have no implemented gameplay in this batch.
+An additional standalone-page smoke check found an existing `mass-3d.html`
+startup failure when optional Corpus route data is absent. At the coordinating
+session's request, this batch also guards the route-dependent petal generation
+when fewer than two points exist. Node regression cases cover absent, empty,
+single-point and two-point routes; file-protocol smoke checks cover both the
+standalone explorer without Corpus globals and the floor-plan page.
+
+The #23 branch update merges the latest `origin/main` into
+`jddcef-start-menu-concepts`. Corpus Christi is included in Eucharistic worship;
+its canopy, lights and stations appear only for that rite, including custom
+variants. Practice room, completion milestones and performance stars are
+retained. Main's published decision IDs R204-R212 remain unchanged; menu
+decisions are now R213-R219 and this integration is R220.
+All five Node suites, every CI script syntax check and `git diff --check`
+pass. Isolated headless Edge checks through `file://` at 1100 px and 390 px
+each passed 57 assertions: all 22 presets, custom Corpus controls, every
+layout, involvement icons, non-overflowing preview forms, Path, the three
+Practice exercises, and starting/resuming an existing Corpus celebration.
+No page errors or network requests were recorded.
+
 ### Open items and backlog
+
+- [ ] Mini-games: track ideas and implementation status in
+      [`MINI-GAMES.md`](MINI-GAMES.md) (R208).
 
 - [ ] Issue #1: regenerate the congregation audio with the four-voice mix.
 - [ ] Owner: create a Formspree or Basin form and set `FEEDBACK_ENDPOINT` in
       `feedback-config.js`.
-- [ ] Owner review of judgement calls in `GAME-DECISIONS.md`, especially
-      R77 (reading of "nave without side aisles").
+- [ ] Optional owner review of other recorded choices in `GAME-DECISIONS.md`.
+      R77 (centre aisle without side aisles) and R17 (calendar) are confirmed
+      in R206-R207 and need no further decision.
 - [ ] Latin audio pack is partial.
 - [ ] Roadmap for the Path (R96, R97). The celebrations are already on the map
       as "In preparation"; adding a `preset` to a celebration in
@@ -242,8 +308,8 @@ inspected in the interactive preview.
          ~~Candlemas~~ in round 20 (R147–R153, indoor form only);
          ~~Ash Wednesday~~ in round 21 (R154–R160);
          ~~Palm Sunday~~ in round 24 (R175–R181).
-      5. Corpus Christi: an outdoor procession (canopy, torches, petals,
-         Benediction at altars), which needs an outdoor scene.
+      5. ~~Corpus Christi procession~~ done in round 29 (R204; outdoor route,
+         optional local-custom elements).
       6. The Triduum: ~~Holy Thursday~~ done in round 26 (R188–R194);
          ~~Good Friday~~ done in round 27 (R195–R201); the Easter Vigil.
       7. ~~Baptism of children~~ done in round 22 (within Mass and outside

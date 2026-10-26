@@ -126,8 +126,7 @@ button.primary:hover { background:#36614c; }
 .pathIcon { fill:none; stroke:#5b4a26; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
 .pathNode.future .pathDisc { fill:#ece8df; stroke-dasharray:8 6; }
 .pathNode.future .pathIcon { stroke:#9a9184; }
-.pathNode.mark-attended .pathDisc { fill:#f6eedb; }
-.pathNode.mark-served .pathDisc, .pathNode.mark-distinction .pathDisc { fill:#e6f1e4; }
+.pathNode.mark-attended .pathDisc, .pathNode.mark-served .pathDisc, .pathNode.mark-distinction .pathDisc { fill:#e6f1e4; }
 .pathNode:hover .pathDisc, .pathNode:focus-visible .pathDisc { filter:drop-shadow(0 0 6px #4785a5); }
 .pathNode.selected .pathDisc { stroke-width:11; }
 .pathHalo { fill:none; stroke:#4785a5; stroke-width:4; stroke-dasharray:10 8; animation:pathTurn 12s linear infinite; transform-box:fill-box; transform-origin:center; }
@@ -144,7 +143,7 @@ button.primary:hover { background:#36614c; }
 .pathListItem { display:flex; align-items:center; gap:8px; width:100%; text-align:left; margin:2px 0; background:#fffaf1; }
 .pathListItem.future { opacity:.65; }
 .pathListItem.recommended { border-color:#4785a5; }
-.pathListItem.mark-served, .pathListItem.mark-distinction { background:#e6f1e4; }
+.pathListItem.mark-attended, .pathListItem.mark-served, .pathListItem.mark-distinction { background:#e6f1e4; }
 .pathSwatch { width:14px; height:14px; border-radius:50%; border:4px solid; flex:none; }
 @media(max-width:900px) {
   .pathBody { display:block; }
@@ -340,4 +339,3 @@ body.compactUi #caption { bottom:56px; width:calc(100% - 112px); font-size:13px;
   40% { opacity:.6; }
   100% { transform:scale(2.5); opacity:0; }
 }
-

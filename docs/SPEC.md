@@ -39,6 +39,7 @@ Classic scripts load in this order and share globals:
 | `mass-rite-exposition.js` | Exposition of the Blessed Sacrament: steps for the lay-led and Priest forms, registered in `RITES`. |
 | `mass-rite-baptism.js` | Baptism of children outside Mass (Priest or Deacon): steps registered in `RITES`. |
 | `mass-rite-funeral.js` | Funeral liturgy outside Mass (Priest, or Deacon when no Priest is available; up to two servers): steps registered in `RITES`. |
+| `mass-rite-corpus.js` | Corpus Christi procession after Mass (the Mass itself is not depicted), with optional local-custom stations and concluding Benediction/reposition; registered in `RITES`. |
 | `mass-scenarios.js` | Rite registry `RITES`; `buildScenario(options)` dispatches on `options.rite` (default Mass) and for Mass reassigns duties for deacon, lector, 0–5 servers, incense and both kinds. Steps keep their original index as `key`. |
 | `mass-parishes.js` | Versioned prepared-shell profiles, validation, reversible nave mapping and pure aisle routing. |
 | `mass-features.js` | Church-layout editor and presets; server training cues. |
@@ -55,6 +56,7 @@ Classic scripts load in this order and share globals:
 | `mass-game-audio.js` | WebAudio bells, thurible, cues and backing tracks. |
 | `mass-game-view.js` | Camera pad, highlight mode, first person, speaker view. |
 | `mass-game-path.js` | The Path map, list and detail panel (`PathView`), progress storage. |
+| `mass-game-practice.js`, `mass-game-practice.css` | Optional Practice room controller and accessible scene markers; pure round/scoring/record rules remain in `mass-game-logic.js`. |
 | `mass-game-ui.js` | Hover tips, search and index card, feedback dialog. |
 | `feedback-config.js` | `FEEDBACK_ENDPOINT` (empty means offline fallback). |
 | `mass-game.js` | Game controller: setup form, phases, questions, the Missal view, scene extras (sacristy, cupboard, doors). |
@@ -84,8 +86,10 @@ startup must appear **before** the `<script>` tags in the HTML.
   Mass with incense (default), Solemnity, Mass with the Bishop (mitre- and
   crozier-bearers in vimps; also a "Bishop presides" option) and Confirmation Mass
   (the Bishop confirms after the Gospel; no Creed; a candidate and sponsor stand for all) and Christmas Mass during the Night (the Christmas Proclamation before Mass, all genuflect at the Incarnation, the crib in the nave blessed at the universal prayer) and Candlemas (candles blessed at the back of the church, a procession with lighted candles, no Penitential Act) and Ash Wednesday (the ashes blessed and given after the Homily, no Penitential Act, Gloria or Alleluia) and Sunday Mass with Baptism (the children received at the door, baptized at the font after the Homily, no Penitential Act or Creed) and the Funeral Mass (the body received at the door with holy water and the white pall, violet, no Penitential Act, Gloria or Creed, the final commendation with incense and the Song of Farewell instead of the blessing; not on the days when GIRM 380 forbids it). Outside Mass: Baptism of Children (Priest or Deacon, one server), the Funeral Liturgy outside Mass (Priest or Deacon, up to two servers; incense with two), Adoration
-  (lay-led, no blessing) and Exposition and Benediction (Priest or Deacon, in
-  white cope, with the humeral veil for the blessing). Editing any
+  (lay-led, no blessing), Exposition and Benediction (Priest or Deacon, in
+  white cope, with the humeral veil for the blessing), and the Corpus Christi
+  procession after Mass (Priest carrying the Blessed Sacrament; optional
+  canopy, lights and prayer stations labelled as local custom). Editing any
   option shows "Custom". Roles a rite does not have are refused with a message.
 - **Roles**:
   - Priest, Deacon and Server (book, bell and vessels)
@@ -112,6 +116,9 @@ startup must appear **before** the `<script>` tags in the HTML.
     distributes.
   - Bells: start, epiclesis and elevations, sacristy bell.
   - Other: minister lapses, open-church training, projector.
+  - Corpus Christi: canopy, processional lights and prayer stations are
+    independently optional local customs; insufficient server teams disable
+    options that need more ministers.
 - **The Path** (`mass-game-path.js`, rules in `mass-game-logic.js`): a map
   of celebrations (`CELEBRATIONS`) in order of precedence, with branches for
   Eucharistic worship outside Mass, the seasons and the Bishop, converging on
@@ -120,12 +127,13 @@ startup must appear **before** the `<script>` tags in the HTML.
   - A finished game is credited to the celebration whose preset matches the
     final options (`presetForOptions`), or else to the chosen preset. Custom
     games are not credited.
-  - Marks per role, best kept: Attended (Watch or Guided), Served (Choice or
-    harder, at least 70%), Served with distinction (Timed or Expert, at least
-    90%).
+  - Stars per role, best kept: 1 for completion, 2 at 70% or more, and 3 at
+    90% or more in Choice, Timed or Expert. Watch and Guided earn 1 star.
+    Existing stored marks retain their corresponding 1, 2 or 3 stars.
   - Seniority (`SENIORITY_RANKS`): Aspirant, Server, Senior Server, Head
     Server, Master of Ceremonies, Master of Ceremonies of the Triduum. A rank
-    needs each listed celebration served in any role.
+    needs each listed celebration completed in any role or involvement,
+    without a passing score. Recommendations also advance on completion.
   - Celebrations without a preset show "In preparation".
   - Progress is stored in localStorage key `massGameProgress` (versioned).
 - **Church and appearance**:
@@ -153,6 +161,17 @@ startup must appear **before** the `<script>` tags in the HTML.
     submission are not implemented.
 
 ### 4.2 Phases
+
+Optional **Practice room** opens from setup without rebuilding the celebration.
+MG01 finds five visible targets in the current 3D church, with named/description
+clues and picture hints. MG02 sets out a bounded cupboard checklist; MG03 orders
+minister groups and assigns their carried objects. MG02/MG03 support only their
+four explicitly labelled ordinary Mass arrangements, not special rites or a
+Bishop. Cross and candles are one shared rank. All exercises are untimed and
+keyboard/touch accessible. Finishing always counts as completion; performance
+stars use 70%/90% thresholds independently. Best stars and completion counts
+are stored only in versioned `massGamePractice`, never in celebration progress,
+scores or setup. Closing practice returns to the same setup/resume state.
 
 1. `setup`
 2. `pre`: vest and line up, or, as Sacristan, open the church and set up from
@@ -188,7 +207,8 @@ startup must appear **before** the `<script>` tags in the HTML.
 ## 5. Acceptance checks for any change
 
 1. `node mass-scenarios.test.cjs`, `node mass-features.test.cjs`,
-   `node mass-assets.test.cjs` and `node mass-game.test.cjs` all pass.
+   `node mass-assets.test.cjs`, `node mass-game.test.cjs` and
+   `node mass-corpus.test.cjs` all pass.
 2. Any new script has a `node --check` line in `checks.yml`, and any new test
    file has a run line.
 3. The change has been played through in a real browser via `file://`: no
