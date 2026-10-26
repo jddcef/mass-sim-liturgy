@@ -84,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R208.**
+**Next decision number: R209.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -103,7 +103,8 @@ server for liturgical or Catholic questions and clarifications.
 | 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
 | 28 | local, not published | Speaker-perspective look-around via drag and camera pad; continuous collection route joining the offertory presentation while keeping collection away from altar (R202–R203) |
 | 29 | #24 (merged) | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
-| 30 | local, not published | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
+| 30 | #25 (merged) | Completion-based milestones and 1-3 performance stars; owner confirms R77 aisle layout and R17 calendar (R205-R207) |
+| 31 | local, not published | Persistent mini-game ideas and status backlog, including thurible timing and candle-lighting games (R208) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -204,7 +205,16 @@ A `file://` browser check confirmed legacy completion credit, seniority,
 1/2/3-star map badges, accessible labels and mobile-list completion labels;
 the test restored the original saved progress afterwards.
 
+Round 31 records eleven mini-game ideas in [`MINI-GAMES.md`](MINI-GAMES.md),
+with stable IDs, status definitions and delivery-reference fields. All are
+Idea, not implemented. Includes the user's thurible rhythm/direction timing
+game and virtual lighter/match balance-and-reach game ending with the Easter
+Candle. Documentation only; no gameplay changes.
+
 ### Open items and backlog
+
+- [ ] Mini-games: track ideas and implementation status in
+      [`MINI-GAMES.md`](MINI-GAMES.md) (R208).
 
 - [ ] Issue #1: regenerate the congregation audio with the four-voice mix.
 - [ ] Owner: create a Formspree or Basin form and set `FEEDBACK_ENDPOINT` in
