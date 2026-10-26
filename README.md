@@ -20,8 +20,7 @@ and no account. Other pages:
 
 1. Pick a **kind of celebration**: Weekday Mass, Sunday Mass, Sunday Mass with
    incense, Solemnity, Mass with the Bishop, Confirmation Mass, Christmas Mass during the Night, Candlemas, Ash Wednesday, Sunday Mass with Baptism, Funeral Mass, Palm Sunday, Holy Thursday (Evening Mass of the Lord's Supper), Good Friday (Celebration of the Passion of the Lord), or outside Mass: Baptism of
-   Children (Priest or Deacon), the Funeral Liturgy (Priest or Deacon), Adoration led by a lay minister, or
-   Exposition and Benediction with the Priest or the Deacon. You can also
+   Children (Priest or Deacon), the Funeral Liturgy (Priest or Deacon), Adoration led by a lay minister, Exposition and Benediction with the Priest or the Deacon, or the Corpus Christi procession. It follows Mass; the Mass itself is not depicted. The Priest carries the Blessed Sacrament along an outdoor route and concludes with Benediction and reposition. Canopy, lights, route incense and prayer stations are optional local customs. You can also
    change any option
    yourself.
 2. Pick a **role** and your **involvement**:
@@ -40,6 +39,10 @@ and no account. Other pages:
    Server, Head Server, Master of Ceremonies and finally Master of Ceremonies of
    the Triduum. Everything stays playable in any order. Celebrations marked
    *In preparation* are planned but not in the game yet.
+
+The Corpus Christi scene is illustrative. The route follows local direction;
+canopy, lights, incense on the route and prayer stations are not presented as
+universal requirements.
 
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.

@@ -11,7 +11,7 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
       [Status](#status).
 - [ ] Run `git fetch` and check open PRs (`gh pr list`) and issues
       (`gh issue list`). Merge `origin/main` into your branch if it moved.
-- [ ] Run the four tests (below) to confirm a green baseline before editing.
+- [ ] Run the five tests (below) to confirm a green baseline before editing.
 - [ ] Note the user's request verbatim. Record any interpretation of an
       ambiguous request as a decision.
 - [ ] For liturgical or Catholic questions, consult the Magisterium MCP server
@@ -33,6 +33,7 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
       node mass-features.test.cjs
       node mass-assets.test.cjs
       node mass-game.test.cjs
+      node mass-corpus.test.cjs
       ```
 - [ ] Play it through in a real browser via `file://`: no console errors, and
       the new behaviour seen working. Automated checks used puppeteer-core
@@ -83,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R204.**
+**Next decision number: R205.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -101,6 +102,7 @@ server for liturgical or Catholic questions and clarifications.
 | 12 | local, not published | The Path and seniority: Involvement rename, Sunday split into with and without incense, a liturgical-year map of celebrations with marks and ranks, roadmap of rites "in preparation" |
 | 27 | #21 | Good Friday (Celebration of the Passion of the Lord): silent entrance and prostration before bare altar; Collect without *Oremus*; Passion of St John in parts; ten Solemn Intercessions; Showing and Adoration of the Holy Cross (*Ecce lignum Crucis*); Communion from reserved Sacrament; Prayer over the People; silent departure; no Gloria, Creed, bells, or Eucharistic Prayer (R195–R201) |
 | 28 | local, not published | Speaker-perspective look-around via drag and camera pad; continuous collection route joining the offertory presentation while keeping collection away from altar (R202–R203) |
+| 29 | local, not published | Corpus Christi outside-Mass procession with outdoor route, optional local-custom canopy/lights/stations, Benediction and reposition (R204) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
 | 24 | #21 | Palm Sunday: blessing of palms at the back of the church, procession with palm branches, no Penitential Act or Gloria; the Passion read in parts at the ambo without candles or incense; all genuflect at the death of the Lord; Creed is said (R175–R181) |
@@ -181,6 +183,18 @@ All four Node test suites and edited-script syntax checks pass. A headless Edge
 load through `file://` initialized the scene, but interactive camera movement
 was not automated. Changes are local and uncommitted.
 
+Round 29 adds Corpus Christi as a playable celebration on the Path. It depicts
+the procession after Mass (the Mass itself is not shown); the Priest carries
+the Blessed Sacrament, and the celebration concludes with Benediction and
+reposition. The route and optional canopy, lights, route incense and prayer
+stations are explicitly treated as local custom. See R204 and the Magisterium
+sources in `SOURCES.md`. All five Node suites, CI syntax checks and
+`git diff --check` pass. The `file://` browser check confirmed the Corpus
+preset, after-Mass setup, and 3D procession through the first outdoor station;
+the scene rendered without a visible initialization error. Route, incense and
+small-team behavior are covered by the Corpus regression tests. Changes are
+local and uncommitted.
+
 ### Open items and backlog
 
 - [ ] Issue #1: regenerate the congregation audio with the four-voice mix.
@@ -203,8 +217,8 @@ was not automated. Changes are local and uncommitted.
          ~~Candlemas~~ in round 20 (R147–R153, indoor form only);
          ~~Ash Wednesday~~ in round 21 (R154–R160);
          ~~Palm Sunday~~ in round 24 (R175–R181).
-      5. Corpus Christi: an outdoor procession (canopy, torches, petals,
-         Benediction at altars), which needs an outdoor scene.
+      5. ~~Corpus Christi procession~~ done in round 29 (R204; outdoor route,
+         optional local-custom elements).
       6. The Triduum: ~~Holy Thursday~~ done in round 26 (R188–R194);
          ~~Good Friday~~ done in round 27 (R195–R201); the Easter Vigil.
       7. ~~Baptism of children~~ done in round 22 (within Mass and outside
