@@ -65,6 +65,8 @@ work on it offline, clone the repository and open `mass-game.html`.
 - [`docs/SPEC.md`](docs/SPEC.md): what the project does and must keep doing.
 - [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md): the resume checklist, project
   status and workflow for new contributors and AI sessions.
+- [`docs/MINI-GAMES.md`](docs/MINI-GAMES.md): persistent mini-game ideas and
+  implementation statuses.
 - [`docs/GAME-DECISIONS.md`](docs/GAME-DECISIONS.md) and
   [`docs/DECISIONS.md`](docs/DECISIONS.md): the decision logs.
 - [`docs/SOURCES.md`](docs/SOURCES.md): sources and licences.
