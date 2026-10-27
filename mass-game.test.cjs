@@ -60,6 +60,41 @@ const G=name=>run(name);
 }
 
 {
+  const create=G('practiceInspectionRound'),answer=G('practiceInspectionAnswer');
+  same(create('scene-seed'),create('scene-seed'),'inspection replay is deterministic');
+  assert.notEqual(JSON.stringify(create('one')),JSON.stringify(create('two')));
+  const seen=new Set();
+  for(let seed=0;seed<100;seed++){
+    const scenes=create(seed);
+    assert.equal(scenes.length,6);
+    assert.equal(scenes.filter(s=>s.fault==='ready').length,2,'include genuinely correct scenes in every round');
+    assert.equal(new Set(scenes.filter(s=>s.fault!=='ready').map(s=>s.fault)).size,4);
+    for(const scene of scenes){
+      seen.add(scene.fault);
+      const expected=answer(scene,'nothing');
+      assert.equal(answer(scene,expected.target).correct,true);
+      assert.equal(answer(scene,'not-a-target').correct,false);
+      assert.ok(expected.text&&expected.ref.startsWith('GIRM'));
+      const wrongBooks=Object.entries(scene.props).filter(([id,place])=>({chalice:'credence',lectionary:'ambo',missal:'chair'})[id]!==place);
+      if(scene.fault==='ready'){
+        assert.equal(wrongBooks.length,0);assert.equal(scene.cloth,true);
+        assert.equal(expected.correct,true);
+      }else assert.equal(expected.correct,false);
+      if(scene.fault==='missingBook')assert.equal(scene.props.lectionary,undefined);
+      else assert.ok(scene.props.lectionary);
+      if(['chalice','lectionary','missal'].includes(scene.fault))assert.equal(wrongBooks.length,1);
+      else assert.equal(wrongBooks.length,0);
+    }
+  }
+  assert.equal(seen.size,6,'all supported situations occur');
+  const previous={_v:1,games:{MG02:{completed:2,stars:3},MG12:{completed:1,stars:2}}};
+  const updated=G('recordPractice')(previous,'MG06',3);
+  assert.equal(updated.games.MG06.stars,3);
+  same(updated.games.MG02,previous.games.MG02);same(updated.games.MG12,previous.games.MG12);
+  assert.throws(()=>answer({fault:'unknown'},'nothing'),/Unsupported/);
+}
+
+{
   const groups=G('SETUP_CELEBRATION_GROUPS'),presets=G('GAME_PRESETS');
   const ids=groups.flatMap(group=>Array.from(group.presets));
   same(ids.slice().sort(),Object.keys(presets).sort(),'every celebration appears once in the seasonal browser');
@@ -901,6 +936,32 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
     skipSideQuest(quest);
     assert.equal(skipped.skipped,true,'only once');
   `,ui);
+}
+// Practice pauses pending decision callbacks and pre/post choreography delays.
+{
+  let now=0,id=0;
+  const callbacks=new Map();
+  const ui=vm.createContext({console,scene:null,performance:{now:()=>now},
+    setTimeout:(action,delay)=>{callbacks.set(++id,{action,delay});return id;},
+    clearTimeout:key=>callbacks.delete(key)});
+  for(const file of ['mass-rite.js','mass-scenarios.js','mass-game-logic.js','mass-game.js'])
+    vm.runInContext(fs.readFileSync(file,'utf8'),ui,{filename:file});
+  vm.runInContext(`let called=0;const pending=gameTimeout(()=>called++,1000);`,ui);
+  assert.equal(callbacks.values().next().value.delay,1000);
+  now=400;vm.runInContext('pauseGameTasks()',ui);
+  assert.equal(callbacks.size,0,'pending callbacks suspended');
+  now=5400;vm.runInContext('resumeGameTasks()',ui);
+  assert.equal(callbacks.values().next().value.delay,600,'practice time is not consumed');
+  vm.runInContext('clearGameTimeout(pending)',ui);
+  assert.equal(callbacks.size,0,'cancel remains effective after resume');
+  vm.runInContext('pauseGameTasks();gameTimeout(()=>called++,50)',ui);
+  assert.equal(callbacks.size,0,'new tasks also wait while paused');
+  now=9400;vm.runInContext('resumeGameTasks()',ui);
+  const callback=callbacks.values().next().value;
+  assert.equal(callback.delay,50);
+  callback.action();
+  assert.equal(vm.runInContext('called',ui),1);
+  assert.equal(vm.runInContext('gameTasks.size',ui),0);
 }
 // ---- round 8: nave seating, search index, next use, speech held for answers ----
 {

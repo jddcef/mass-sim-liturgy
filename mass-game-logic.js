@@ -1630,7 +1630,7 @@ function nextQuestionStop(stops,current,requested){
 // ---------- optional practice room ----------
 const PRACTICE_STORAGE_KEY='massGamePractice';
 const PRACTICE_GAMES=[
-  ['MG01','Know your church'],['MG02','Sacristy scramble'],['MG03','Line up the procession'],
+  ['MG01','Know your church'],['MG02','Sacristy scramble'],['MG03','Line up the procession'],['MG06','M.C. spot-check'],
   ['MG10','Swing the thurible'],['MG11','Light the candle'],['MG12','Light the charcoal for the thurible']
 ];
 function practiceHandsOn(id,mode,seed){
@@ -1748,6 +1748,34 @@ function practiceSacristyRound(id,seed){
   const pool=new Set(['lectionary','missal','chalice','water','wine','ciborium',
     'procCross','procCandles','altarCross','gospels','gospelsAltar','thurible','chalice2','aspersory']);
   return shuffled(sacristanSetup(options).filter(item=>pool.has(item.id)),seededRandom(seed));
+}
+function practiceInspectionRound(seed){
+  const random=seededRandom(seed);
+  const faults=shuffled(['chalice','lectionary','missal','missingBook','cloth'],random).slice(0,4);
+  return shuffled([...faults,'ready','ready'],random).map((fault,index)=>{
+    const props={chalice:'credence',lectionary:'ambo',missal:'chair'};
+    if(fault==='chalice')props.chalice='altar';
+    if(fault==='lectionary')props.lectionary='chair';
+    if(fault==='missal')props.missal='ambo';
+    if(fault==='missingBook')delete props.lectionary;
+    return {id:index,fault,props,cloth:fault!=='cloth',gospels:random()<.5,
+      hint:fault==='ready'?'Check the books, vessels and altar cloth. A permitted arrangement is not an error.':
+        fault==='cloth'?'Look at the altar surface.':
+        fault==='missingBook'?'Look at the reading place.':'Check where each book and vessel has been prepared.'};
+  });
+}
+function practiceInspectionAnswer(scene,target){
+  const cases={
+    ready:{target:'nothing',text:'Nothing wrong in this supported preparation set: Lectionary at the ambo, Missal near the chair, chalice at the credence and white altar cloth in place.',ref:'GIRM 117-118'},
+    chalice:{target:'chalice',text:'Before Mass, prepare the chalice at the credence, not on the altar. It is brought to the altar at the preparation of the gifts.',ref:'GIRM 118c, 306'},
+    lectionary:{target:'lectionary',text:'The Lectionary belongs at the ambo, not on the chair.',ref:'GIRM 118b'},
+    missal:{target:'missal',text:'Prepare the Missal near the chair, not on the ambo.',ref:'GIRM 118a'},
+    missingBook:{target:'ambo',text:'The reading place is missing its Lectionary. Prepare it at the ambo.',ref:'GIRM 118b'},
+    cloth:{target:'altar',text:'The altar needs at least one white cloth before this ordinary Mass.',ref:'GIRM 117'}
+  };
+  const answer=cases[scene.fault];
+  if(!answer)throw new RangeError('Unsupported inspection scene');
+  return {...answer,correct:target===answer.target};
 }
 function practiceProcessionRound(id,seed){
   const options=practiceOptions(id),team=serverTeam(options.serverCount);
@@ -2183,6 +2211,6 @@ function liturgicalBreviary(options={},date=new Date()){
 if(typeof module!=='undefined')module.exports={GAME_LEVELS,normaliseExposition,EXPOSITION_ROLES,normaliseBaptismRite,BAPTISM_ROLES,normaliseFuneralRite,FUNERAL_ROLES,normaliseCorpusRite,CORPUS_ROLES,RITE_ROLES,isDevotionRite,devotionPreTasks,devotionPostTasks,isGuided,setCrossPlaces,autoAnswer,GAME_ROLES,GAME_PLACES,normaliseGameOptions,deriveDuties,buildDecision,checkAnswer,scoreDecision,planLapses,deriveCues,sacristanSetup,sacristanPackAway,sacristanOpening,cupboardOrder,hintDelay,SACRISTAN_ARRIVAL,CUPBOARD,deriveSoundCues,preProcessionBell,rewindCues,buildBook,preMassTasks,postMassTasks,setPewLayout,inPews,routeBetween,buildSearchIndex,searchEntries,nextUseFor,SEARCH_CATEGORIES,SEARCH_OBJECTS,GAME_PRESETS,applyPreset,matchingPreset,presetForOptions,PATH_BRANCHES,CELEBRATIONS,SENIORITY_RANKS,MARK_NAMES,MARK_STARS,TWO_STAR_PERCENT,THREE_STAR_PERCENT,celebrationById,celebrationAvailable,celebrationForPreset,emptyProgress,normaliseProgress,markFor,recordCelebration,celebrationStatus,seniorityFor,nextRank,nextRecommended,liturgicalBreviary,LITURGICAL_COLOUR_HEX,LITURGICAL_LATIN_NAME,GIRM_COLOUR_RATIONALE};
 if(typeof module!=='undefined')Object.assign(module.exports,{PRACTICE_STORAGE_KEY,PRACTICE_SCENARIOS,
   PRACTICE_GAMES,practiceHandsOn,practiceHandsOnTick,practiceHandsOnAction,practiceHandsOnResult,
-  practiceOptions,practiceChurchRound,practiceSacristyRound,practiceProcessionRound,
+  practiceOptions,practiceChurchRound,practiceSacristyRound,practiceInspectionRound,practiceInspectionAnswer,practiceProcessionRound,
   practiceSacristyResult,practiceProcessionResult,practiceStars,normalisePracticeRecords,recordPractice});
 if(typeof module!=='undefined')Object.assign(module.exports,{SETUP_CELEBRATION_GROUPS,SETUP_CELEBRATION_FLAGS,SETUP_CORPUS_FLAGS,setupCelebrationFlags});

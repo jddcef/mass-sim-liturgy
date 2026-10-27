@@ -262,7 +262,34 @@ function placeFigure(key,p,time){
 function walk(key,from,to,speed){
   return new Promise(resolve=>walkTo(key,from,to,speed,resolve));
 }
-function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+const gameTasks=new Set();
+let gameTasksPaused=false;
+function gameTimeout(action,ms){
+  const task={action,left:ms,started:performance.now(),timer:null};
+  gameTasks.add(task);
+  if(!gameTasksPaused)armGameTask(task);
+  return task;
+}
+function armGameTask(task){
+  task.started=performance.now();
+  task.timer=setTimeout(()=>{gameTasks.delete(task);task.action();},task.left);
+}
+function clearGameTimeout(task){
+  if(!task)return;
+  clearTimeout(task.timer);gameTasks.delete(task);
+}
+function pauseGameTasks(){
+  gameTasksPaused=true;
+  for(const task of gameTasks){
+    clearTimeout(task.timer);
+    task.left=Math.max(0,task.left-(performance.now()-task.started));
+  }
+}
+function resumeGameTasks(){
+  gameTasksPaused=false;
+  for(const task of gameTasks)armGameTask(task);
+}
+function wait(ms){return new Promise(resolve=>gameTimeout(resolve,ms));}
 
 // ---------- setup form ----------
 const SETUP_KEY='massGameSetup',SCORES_KEY='massGameScores',SETUP_VERSION=8;
@@ -438,8 +465,8 @@ function triggerVisualChime(cue){
     spawnSanctuaryRipple(pos,cue.type==='thurible'?0xe8dfc8:0xffd54f);
   }
 
-  clearTimeout(chimeTimeout);
-  chimeTimeout=setTimeout(()=>{
+  clearGameTimeout(chimeTimeout);
+  chimeTimeout=gameTimeout(()=>{
     overlay.hidden=true;
     overlay.classList.remove('animPulse');
   },2200);
@@ -810,7 +837,7 @@ function ask(decision){
     const active={decision,resolve,attempt:1,started:performance.now(),finished:false,gen:game.gen,lastTick:99};
     if(!game.questions){
       // Questions off: the duty is done for the player after a short pause, without scoring.
-      active.timer=setTimeout(()=>autoResolve(active),350);
+      active.timer=gameTimeout(()=>autoResolve(active),350);
       return;
     }
     game.active=active;
@@ -902,7 +929,7 @@ function scheduleHint(active){
     $('decision').classList.add('hinted');
   };
   if(d.hintAfter<=0)show();
-  else active.hintTimer=setTimeout(show,d.hintAfter*1000);
+  else active.hintTimer=gameTimeout(show,d.hintAfter*1000);
 }
 function answer(value,button){
   const active=game.active;
@@ -959,12 +986,12 @@ function finish(active,result){
     closeDecision();
     active.resolve(outcome);
   }
-  if(result.correct)active.timer=setTimeout(done,isGuided(game.level)?450:900);
+  if(result.correct)active.timer=gameTimeout(done,isGuided(game.level)?450:900);
   else{
     $('decisionContinue').hidden=false;
     $('decisionContinue').onclick=done;
     $('decisionContinue').focus({preventScroll:true});
-    if(game.level==='timed')active.timer=setTimeout(done,4000);
+    if(game.level==='timed')active.timer=gameTimeout(done,4000);
   }
 }
 function skipSideQuest(active){
@@ -976,7 +1003,7 @@ function skipSideQuest(active){
 }
 function closeDecision(){
   const active=game.active;
-  if(active){clearTimeout(active.timer);clearTimeout(active.hintTimer);}
+  if(active){clearGameTimeout(active.timer);clearGameTimeout(active.hintTimer);}
   game.active=null;
   game.hintTarget=null;
   $('decision').hidden=true;
@@ -987,7 +1014,7 @@ function closeDecision(){
 function autoResolve(active){
   if(active.finished||active.gen!==game.gen)return;
   active.finished=true;
-  clearTimeout(active.timer);
+  clearGameTimeout(active.timer);
   const d=active.decision;
   const value=autoAnswer(d);
   game.autoCount++;

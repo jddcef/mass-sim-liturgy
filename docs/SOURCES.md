@@ -6,6 +6,18 @@ External pages may change; the project does not bundle a full copyrighted Missal
 
 ## Liturgy
 
+- MG06 before-Mass inspection set checked through Magisterium on 27 October
+  2026: [GIRM 117](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/117),
+  [118](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/118)
+  and [306](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/306).
+  Prepare the Lectionary at the ambo, Missal near the chair, chalice at the
+  credence and at least one white altar cloth. The Book of the Gospels on the
+  altar is permitted. Cross/candles may arrive in procession, so their absence
+  is not an assessed fault; this scene explicitly has them already in place.
+  No wine/water-procession interpretation is assessed by MG06. MG02 retains
+  the existing shared preparation rules, including its labelled schematic
+  Missal-location alternatives. Original inline SVG illustrations are project
+  artwork, not photographs or new third-party assets.
 - MG10-MG12 scope checked through Magisterium on 26 October 2026:
   [GIRM 277](https://www.magisterium.com/docs/db52efa7-5906-412d-b27c-ca92e0ce6c86/ref/277)
   contains context-dependent incensation directions and counts, not the

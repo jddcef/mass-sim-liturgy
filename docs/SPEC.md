@@ -162,12 +162,26 @@ startup must appear **before** the `<script>` tags in the HTML.
 
 ### 4.2 Phases
 
-Optional **Practice room** opens from setup without rebuilding the celebration.
+Optional **Practice room** opens through a **Mini-games** button at the top
+of every setup layout and in the simulator header, without submitting setup
+or rebuilding the celebration. Playback, answer time and pending game delays
+pause; closing restores the prior setup visibility, camera and playback state.
 MG01 finds five visible targets in the current 3D church, with named/description
-clues and picture hints. MG02 sets out a bounded cupboard checklist; MG03 orders
+clues and picture hints. MG02 moves illustrated objects from a cupboard onto a
+visual preparation board, with optional mouse dragging, pick/tap destinations,
+keyboard controls, visible placements, reset and feedback from the shared
+preparation rules. MG03 orders
 minister groups and assigns their carried objects. MG02/MG03 support only their
 four explicitly labelled ordinary Mass arrangements, not special rites or a
-Bishop. Cross and candles are one shared rank. MG10 is abstract rhythm and
+Bishop. Cross and candles are one shared rank. MG06 inspects six illustrated
+ordinary-Mass before-entrance scenes, including two correct scenes. Its supported
+set is Lectionary/ambo, Missal/chair, chalice/credence and white altar cloth;
+cross and two candles are already in place, other preparation assumed ready.
+Correct Book of the Gospels placement on the altar is permitted. Click an
+object or a furnishing missing preparation, or choose Nothing wrong. Hints
+are optional; explanations cite GIRM 117-118 and 306. This is a fixed training
+illustration, not a saved parish inspection or an assessment of missed cues.
+MG10 is abstract rhythm and
 direction timing, not a universal incensation pattern. MG11 balances and moves
 a symbolic lighter flame through three candle targets ending at the Easter
 Candle, not a ritual lighting order. MG12 matches symbolic glow numbers and
