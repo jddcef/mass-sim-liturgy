@@ -76,12 +76,27 @@ universal requirements.
 
 ### Practice room
 
-From setup, choose **Practice room** for six optional mini-games:
+Choose **Mini-games** at the top of setup (in every menu layout), or directly
+in the simulator header, for seven optional games in the Practice room:
 **Know your church** (find five targets using numbered markers in the 3D
 scene, with named or description clues and picture hints), **Sacristy scramble**
-(set out a selected cupboard checklist while leaving distractors behind), and
+(pick up illustrated objects from a cupboard and place them on a preparation
+board, leaving distractors behind), and
 **Line up the procession** (move minister groups and assign their carried objects).
 Use touch or keyboard controls; no dragging or fast reactions are required.
+Sacristy objects visibly move between the cupboard and illustrated destinations.
+Pick an object, then tap a destination; Tab and Enter/Space work too. Mouse
+drag-and-drop is optional. Placement feedback uses the existing preparation
+rules; objects can be moved again, or the whole board reset.
+
+**M.C. spot-check** presents six illustrated before-Mass scenes: click a
+misplaced book or chalice, or a furnishing missing its preparation. Each round
+includes two correct scenes with a **Nothing wrong** choice. The supported set
+is deliberately limited to the Lectionary at the ambo, Missal near the chair,
+chalice at the credence and white altar cloth. Cross and two candles are
+already in place; other preparation is assumed ready. The Book of the Gospels
+may correctly be on the altar. Optional hints and sourced explanations accompany
+each inspection. It is not a general inspection tool or a missed-cue game.
 
 **Swing the thurible** adds eight rhythm-and-direction beats. Press Left/Right
 or tap a swing button when the repeating marker reaches the centre band.
@@ -115,8 +130,11 @@ least the full round's possible points; unsuccessful attempts and symbolic
 contact reduce accuracy. Assistance does not reduce stars. Skipping or finishing
 early never blocks completion, but unvisited targets earn no accuracy points.
 Practice records use their own local save, not celebration milestones, scores
-or settings. Replay freely, or return to setup with **Escape**; an existing
-celebration can still be resumed or restarted.
+or settings. Inspection stars count correct first choices across the six scenes;
+hints do not penalise them. Replay freely, or return with **Escape**.
+Practice pauses playback, answer timers and pending choreography callbacks.
+Closing restores the actual prior context: setup stays open if it was open,
+and direct simulator entry returns to the game, retaining camera and settings.
 
 Found a mistake or have an idea? Use the **💬 Feedback** button in the game.
 It is anonymous.

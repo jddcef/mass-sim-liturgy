@@ -39,8 +39,57 @@
 .practiceCoals .active { outline:3px dashed #253d59; outline-offset:4px; }
 .practiceCoals .lit { background:#f6cb6a; }
 #practiceStats { font-weight:bold; }
+#openMiniGames { min-height:44px; flex-shrink:0; }
+#openPractice { font-weight:bold; }
+#practiceRoom.visualPractice #practiceScene { right:calc(min(360px,34vw) + 3.25rem); }
+#practiceRoom.visualPractice #practicePanel { width:min(360px,34vw); }
+#practiceRoom.visualPractice #practiceBoard { overflow:auto; background:#e9dfcc; }
+#practiceBoard h3 { margin:.6rem; text-align:center; font-size:17px; }
+.practicePrepGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:10px; }
+.practiceZone { min-width:0; padding:5px; background:#faf5e8; border:2px solid #ac9068; border-radius:8px; }
+.practiceZone[data-place="cupboard"] { grid-column:1/-1; background:#c6a37f; }
+.practiceDestination { display:flex; align-items:center; gap:5px; width:100%; min-height:64px; background:#f6eddb; color:#33281b; border:1px solid #947750; border-radius:5px; font-size:13px; font-weight:bold; text-align:left; }
+.practiceDestination svg { width:75px; height:55px; flex-shrink:0; }
+.practiceShelf { display:flex; flex-wrap:wrap; gap:5px; min-height:55px; padding:5px 0; align-content:start; }
+.practiceObject { display:flex; flex-direction:column; align-items:center; justify-content:center; width:76px; min-height:105px; padding:3px; border:2px solid #9a7a48; border-radius:6px; color:#302619; background:#fffaf0; font-size:11px; cursor:grab; }
+.practiceObject svg { width:62px; height:57px; flex-shrink:0; }
+.practiceObject[aria-pressed="true"] { outline:4px solid #165ab8; background:#d9ebff; }
+.practiceObject.placedRight { border-color:#28733e; }
+.practiceObject.placedWrong { border-color:#b14a2a; }
+.practiceObject small { font-weight:bold; }
+#practiceBoard button:focus-visible { outline:4px solid #165ab8; outline-offset:2px; }
+.practiceChurch { position:relative; min-height:460px; height:calc(100% - 50px); }
+.practiceChurchBack { position:absolute; inset:0; }
+.practiceChurchBack > svg { width:100%; height:100%; }
+.practiceScenePlace { position:absolute; width:35%; height:145px; }
+.scene-altar { top:20%; left:33%; }
+.scene-ambo { bottom:7%; left:3%; }
+.scene-chair { top:2%; right:1%; width:26%; }
+.scene-credence { bottom:4%; right:2%; }
+.practiceFurnishing { position:absolute; bottom:0; left:0; width:100%; height:110px; background:transparent; color:#2d2418; border:1px dashed #806c4b; border-radius:8px; padding:0; }
+.practiceFurnishing svg { width:100%; height:80px; display:block; }
+.practiceFurnishing span { display:block; background:#fff9e9; border-radius:3px; font-weight:bold; font-size:13px; }
+.practiceSceneObjects { position:absolute; top:-5px; left:0; right:0; display:flex; justify-content:center; gap:4px; pointer-events:none; }
+.practiceInspectObject { pointer-events:auto; background:#fff9e9ee; color:#302619; border:1px solid #957b56; border-radius:5px; width:70px; min-height:84px; padding:2px; font-size:11px; }
+.practiceInspectObject svg { width:60px; height:57px; display:block; margin:auto; }
+#practiceBoard .inspectionAnswer { outline:4px solid #28733e; opacity:1; background:#e3f3d9; }
+#practiceBoard button:disabled { color:#302619; opacity:.85; }
 @media(max-width:700px) {
   #practiceScene { right:0; bottom:48vh; }
   #practicePanel { left:.5rem; right:.5rem; top:auto; bottom:.5rem; width:auto; max-height:43vh; padding:.5rem; }
   .practiceMarker { min-width:44px; min-height:44px; }
+  #practiceRoom.visualPractice #practiceScene { right:0; bottom:43vh; }
+  #practiceRoom.visualPractice #practicePanel { width:auto; max-height:38vh; }
+  #practiceRoom.visualPractice #practiceBoard { inset:.4rem; }
+  .practicePrepGrid { grid-template-columns:repeat(2,minmax(0,1fr)); padding:6px; gap:6px; }
+  .practiceDestination { font-size:12px; }
+  .practiceDestination svg { width:52px; }
+  .practiceObject { width:67px; min-height:97px; }
+  .practiceObject svg { width:54px; height:50px; }
+  .practiceChurch { min-height:390px; }
+  .practiceScenePlace { height:130px; }
+  .scene-altar { left:24%; width:43%; top:21%; }
+  .scene-chair { width:29%; }
+  .practiceInspectObject { width:57px; min-height:76px; font-size:10px; }
+  .practiceInspectObject svg { width:49px; height:51px; }
 }

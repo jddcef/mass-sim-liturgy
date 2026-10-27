@@ -17,6 +17,7 @@
     <span class="ribbonCross">✠</span>
     <span id="ribbonText" class="ribbonText">Ordinary Time</span>
   </button>
+  <button id="openMiniGames" type="button">Mini-games</button>
   <div id="headerTools">
     <div id="searchBox">
       <input id="gameSearch" type="search" placeholder="Find a person, object or place" aria-label="Find a person, object or place" aria-controls="searchPanel" aria-expanded="false" autocomplete="off">
@@ -203,10 +204,11 @@
   <form id="setupForm" class="sheet">
     <h2 id="setupTitle">Holy Mass simulator</h2>
     <p class="small">Choose who you are, how involved you want to be, and what kind of celebration it is. You can start again at any time.</p>
+    <button id="openPractice" type="button">Mini-games</button>
     <fieldset><legend>1. Your role</legend><div id="roleCards" class="cards"></div></fieldset>
     <fieldset><legend>2. Involvement</legend><div id="levelCards" class="cards levels"></div></fieldset>
     <fieldset><legend>3. The celebration</legend>
-      <div id="pathStrip" class="pathStrip"><span id="pathStripRank"></span><button id="openPath" type="button" title="See the celebrations of the year in order, and your seniority">✠ The Path</button><button id="openPractice" type="button">Practice room</button></div>
+      <div id="pathStrip" class="pathStrip"><span id="pathStripRank"></span><button id="openPath" type="button" title="See the celebrations of the year in order, and your seniority">✠ The Path</button></div>
       <div class="optionGrid">
         <label class="presetPick" data-icon="calendar">Kind of celebration <select name="preset" id="gamePreset"><option value="weekday">Weekday Mass (Priest practice)</option><option value="sunday">Sunday Mass</option><option value="sundayIncense" selected>Sunday Mass with incense</option><option value="solemnity">Solemnity</option><option value="pontifical">Mass with the Bishop</option><option value="confirmation">Confirmation Mass</option><option value="nativity">Christmas Mass during the Night</option><option value="candlemas">Candlemas (Presentation of the Lord)</option><option value="ashWednesday">Ash Wednesday</option><option value="baptismMass">Sunday Mass with Baptism</option><option value="funeralMass">Funeral Mass</option><option value="palmSunday">Palm Sunday</option><option value="holyThursday">Holy Thursday (Mass of the Lord’s Supper)</option><option value="goodFriday">Good Friday (Celebration of the Passion of the Lord)</option><optgroup label="Outside Mass"><option value="adorationLay">Adoration (lay-led)</option><option value="benediction">Exposition and Benediction</option><option value="benedictionDeacon">Exposition and Benediction (Deacon)</option><option value="baptism">Baptism of Children</option><option value="baptismDeacon">Baptism of Children (Deacon)</option><option value="funeral">Funeral Liturgy outside Mass</option><option value="funeralDeacon">Funeral Liturgy outside Mass (Deacon)</option><option value="corpusChristi">Corpus Christi procession</option></optgroup><option value="custom">Custom</option></select></label>
         <input type="hidden" name="rite" value="mass"><input type="hidden" name="minister" value="priest">

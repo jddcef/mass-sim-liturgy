@@ -84,7 +84,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R226.**
+**Next decision number: R229.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -109,6 +109,7 @@ server for liturgical or Catholic questions and clarifications.
 | 33 | [#28](https://github.com/jddcef/mass-sim-liturgy/pull/28) (merged) | MG10 abstract thurible rhythm/direction; MG11 symbolic lighter balance/reach ending at Easter Candle; MG12 abstract charcoal glow/pulse puzzle. Standard, Slow and untimed Assisted controls, isolated practice records and completion without score gates. MG04-MG09 remain Idea (R213-R216). |
 | 34 | #23 | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default at this stage, with shared controls and collapsed advanced settings (R217-R219) |
 | 35 | #23 | Card stacks selected as default; illustrated involvement, challenge/assistance grouping, contextual celebration switches and season-tinted celebration browsing (R220-R223) |
+| 36 | `jddcef-visual-mini-games-and-mc` (not yet merged) | Visual MG02 cupboard/furnishing preparation board; MG06 illustrated bounded pre-Mass inspection with correct scenes; directly visible Mini-games entry and exact prior-context return (R226-R228). |
 | merge | #23 | Merge latest main, preserving Corpus Christi, completion milestones and Practice room; integrate Corpus choices into the contextual menu (R224) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
@@ -124,6 +125,25 @@ server for liturgical or Catholic questions and clarifications.
 | 14 | #10 | Rite registry; lay-led Adoration and Exposition and Benediction with the Priest (R104–R110) |
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
 | 15 | local, not published | Parish source intake: agent runbook, `parishes/` manifest and spec formats, Street View screening, draft profiles, offline bulk reviewer (R111–R114) |
+
+Round 36 was exercised in a self-closing isolated Edge instance through
+`file://` at 1280x900 and 390x844, with 138 browser assertions and no page
+errors or external page requests. The checks covered all four setup layouts,
+native mouse dragging, keyboard placement/recovery, emulated-touch placement,
+all four MG02 arrangements at three stars, board reset/replay, six-scene MG06
+completion including correct scenes and incorrect keyboard inspection,
+optional hints, low-score completion, best-star retention, reload and explicit
+storage-write denial. Existing MG01/MG03 and MG10-MG12 controls/completion,
+exact first-person camera restoration, answer-time exclusion, resumable setup,
+and pausing/resuming an actually playing Watch Mass were also checked.
+Both shared pages loaded without errors. All five Node suites, every
+CI-listed syntax check and `git diff --check` pass locally (Node 26); CI uses
+Node 22. Screenshots of actual boards, placed objects, correct inspection
+scenes and direct-return UI were inspected and retained as session artifacts.
+No physical phone, screen reader or low-spec hardware was tested. MG06 does
+not assess missed cues or special rites; mobile boards scroll within their
+scene area. The existing MG10-MG12 abstractions were not visually overhauled.
+MG06 and the MG02 visual upgrade remain unmerged.
 
 Round 33 was exercised in an isolated headless Edge instance through `file://`
 at 1280x900 (keyboard) and 390x844 (emulated touch). All three hands-on games
