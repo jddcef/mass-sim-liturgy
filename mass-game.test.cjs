@@ -684,11 +684,29 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
 }
 // ---- offline materials and reversible detail ----
 {
-  const {SURFACE_FINISHES,surfaceTextureSize,surfaceSample}=require('./mass-materials.js');
+  const {SURFACE_FINISHES,surfaceTextureSize,surfaceSample,surfaceRoughness,surfaceNormal}=require('./mass-materials.js');
   const {GRAPHICS_PROFILES,GraphicsDetail}=require('./mass-graphics.js');
   assert.equal(surfaceTextureSize(GRAPHICS_PROFILES.low),0);
   assert.equal(surfaceTextureSize(GRAPHICS_PROFILES.standard),256);
   assert.equal(surfaceTextureSize(GRAPHICS_PROFILES.high),512);
+  for(const id of ['ultra','realistic','cinematic'])assert.equal(surfaceTextureSize(GRAPHICS_PROFILES[id]),1024,id+' textures');
+  assert.equal(surfaceTextureSize({id:'high',textures:true}),512,'older saved profiles keep their size');
+  for(let i=0;i<40;i++){
+    const sample=surfaceSample('marble',(i+.3)/40,(i*11+.7)/40),r=surfaceRoughness('marble',sample);
+    assert.ok(r>=.05&&r<=1,'roughness in range');
+  }
+  assert.ok(surfaceRoughness('marble',{value:.72,height:.18})>surfaceRoughness('marble',{value:.96,height:.5})+.2,'joints are duller than polished marble');
+  {
+    const n=4,flat=new Float32Array(n*n).fill(.5);
+    assert.deepEqual(surfaceNormal(flat,n,1,2,1),[0,0,1],'flat relief faces outward');
+    const ramp=new Float32Array(n*n).map((_,i)=>(i%n)*.01);
+    const tilt=surfaceNormal(ramp,n,1,1,1);
+    assert.ok(tilt[0]<0&&Math.abs(tilt[1])<1e-9,'normal leans away from rising relief');
+    assert.ok(Math.abs(Math.hypot(...tilt)-1)<1e-9,'unit normal');
+    const rows=new Float32Array(n*n).map((_,i)=>Math.floor(i/n)*.01);
+    assert.ok(surfaceNormal(rows,n,1,1,1)[1]>0,'relief rising down the canvas tilts up (texture v runs upwards)');
+    assert.deepEqual(surfaceNormal(ramp,n,0,1,1),surfaceNormal(ramp,n,0,1,1),'deterministic');
+  }
   assert.ok(SURFACE_FINISHES.gold.metalness>.5);
   assert.ok(SURFACE_FINISHES.marble.roughness<SURFACE_FINISHES.sandstone.roughness);
   for(const kind of Object.keys(SURFACE_FINISHES)){
@@ -731,7 +749,7 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   }}});
   vm.runInContext(fs.readFileSync('mass-materials.js','utf8'),ctx);
   const surfaces=vm.runInContext('ChurchMaterials',ctx);
-  surfaces.reflection=()=>null;
+  surfaces.reflection=function(sceneReflection){return sceneReflection&&this.sceneProbe?this.sceneProbe:null;};
   const scene=new THREE.Scene(),renderer={capabilities:{getMaxAnisotropy:()=>2}};
   const base=new THREE.MeshStandardMaterial({color:'#e5d7bc',roughness:.78});
   const floor=new THREE.Mesh(new THREE.BoxGeometry(22,.34,7.5),base);
@@ -754,7 +772,6 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.ok(new Set(canvases[0].image.data).size>16,'texture contains actual pixel detail');
   surfaces.configure(scene,renderer,GRAPHICS_PROFILES.high);
   assert.equal(floor.material.map.image.width,512);
-  const count=surfaces.materials.size;
   floor.userData.fadeMaterial=floor.material.clone();
   floor.material=floor.userData.fadeMaterial;
   surfaces.configure(scene,renderer,GRAPHICS_PROFILES.low);
@@ -766,9 +783,45 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(floor.userData.solidMaterial,standard);
   assert.equal(floor.material.map,standard.map);
   floor.material=floor.userData.solidMaterial;
+  for(const profile of Object.values(GRAPHICS_PROFILES))surfaces.configure(scene,renderer,profile);
+  const count=surfaces.materials.size;
   for(let i=0;i<5;i++)for(const profile of Object.values(GRAPHICS_PROFILES))surfaces.configure(scene,renderer,profile);
   assert.equal(surfaces.materials.size,count,'switching reuses cached materials');
-  assert.equal(surfaces.textures.size,2,'one texture pair per recipe and resolution');
+  assert.equal(surfaces.textures.size,3,'one texture set per recipe and resolution');
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.ultra);
+  const ultra=floor.material;
+  assert.equal(ultra.type,'MeshPhysicalMaterial','Ultra clear-coats polished marble');
+  assert.equal(ultra.clearcoat,SURFACE_FINISHES.marble.coat);
+  assert.equal(ultra.map.image.width,1024);
+  assert.equal(ultra.normalMap.image.width,1024);
+  assert.equal(ultra.roughnessMap.image.width,1024);
+  assert.equal(ultra.bumpMap,null,'normal map replaces the bump map');
+  assert.equal(ultra.roughness,1,'roughness comes from the map');
+  assert.equal(ultra.normalMap.encoding,THREE.LinearEncoding);
+  assert.equal(ultra.map.anisotropy,2,'anisotropy still bounded by GPU support');
+  assert.ok(ultra.color.equals(standard.color),'same colour in every textured level');
+  assert.equal(GRAPHICS_PROFILES.realistic.textureSize,GRAPHICS_PROFILES.ultra.textureSize);
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.cinematic);
+  assert.equal(floor.material,ultra,'levels above Ultra share its materials');
+  const probe=new THREE.Texture();
+  surfaces.setEnvironment(probe);
+  assert.equal(ultra.envMap,probe,'captured church reflection reaches Ultra materials');
+  assert.equal(standard.envMap,null,'lower levels keep the painted reflection');
+  surfaces.setEnvironment(null);
+  assert.equal(ultra.envMap,null);
+  floor.userData.fadeMaterial=floor.material.clone();
+  floor.material=floor.userData.fadeMaterial;
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.standard);
+  assert.equal(floor.material,floor.userData.fadeMaterial,'fade survives a change of material type');
+  assert.equal(floor.material.type,'MeshStandardMaterial');
+  assert.equal(floor.material.map,standard.map);
+  assert.equal(floor.material.opacity,.22);
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.ultra);
+  assert.equal(floor.material.type,'MeshPhysicalMaterial');
+  assert.equal(floor.material.transparent,true);
+  assert.equal(floor.userData.solidMaterial,ultra);
+  floor.material=floor.userData.solidMaterial;
+  surfaces.configure(scene,renderer,GRAPHICS_PROFILES.standard);
   const late=new THREE.Mesh(new THREE.BoxGeometry(2,.1,.5),base);
   scene.add(late);surfaces.assign(late,'wood');
   assert.ok(late.material.map,'new scene extras inherit the current profile');
@@ -780,6 +833,173 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(floor.userData.surfaceType,'slate');
   surfaces.configure(scene,renderer,GRAPHICS_PROFILES.low);
   assert.equal(floor.material,base,'appearance changes retain an untextured fallback');
+}
+// ---- realistic rendering (mass-realism.js): helpers, glow, smoother curves, candlelight and light shafts ----
+{
+  const THREE=require('./vendor/three.min.js');
+  const R=require('./mass-realism.js');
+  const {GRAPHICS_PROFILES:P}=require('./mass-graphics.js');
+  const kernel=R.aoKernel(12);
+  assert.equal(kernel.length,12);
+  assert.deepEqual(R.aoKernel(12),kernel,'deterministic occlusion kernel');
+  for(const [x,y,z] of R.aoKernel(24)){
+    const length=Math.hypot(x,y,z);
+    assert.ok(z>0&&length>=.1-1e-9&&length<=1+1e-9,'samples stay inside the hemisphere');
+  }
+  const lengths=kernel.map(k=>Math.hypot(...k));
+  assert.ok(Math.min(...lengths)<.2&&Math.max(...lengths)>.8,'kernel reaches near and far');
+  let low=Infinity,high=-Infinity;
+  for(let t=0;t<30;t+=.013)for(let i=0;i<10;i++){const f=R.candleFlicker(t,i);low=Math.min(low,f);high=Math.max(high,f);}
+  assert.ok(low>=.86&&high<=1.14&&high-low>.15,'candles flicker gently');
+  assert.notEqual(R.candleFlicker(1,0),R.candleFlicker(1,1),'flames flicker out of step');
+  const points=[{x:3,y:0,z:0},{x:1,y:0,z:0},{x:-1,y:0,z:0},{x:0,y:2,z:0}],origin={x:0,y:0,z:0};
+  assert.deepEqual(R.nearestIndices(points,origin,3),[1,2,3],'ties keep the lower index');
+  assert.deepEqual(R.nearestIndices(points,origin,9),[1,2,3,0]);
+  assert.deepEqual(R.nearestIndices(points,origin,0),[]);
+  const size=(...args)=>{const s=R.postTargetSize(...args);return [s.width,s.height];};
+  assert.deepEqual(size(1920,1080,1),[1920,1080]);
+  assert.deepEqual(size(1920,1080,2,R.REALISM_MAX_PIXELS),[3840,2160],'Cinematic renders four times the pixels');
+  assert.deepEqual(size(2560,1440,2,R.REALISM_MAX_PIXELS),[3840,2160],'supersampling capped at 4K pixels');
+  assert.deepEqual(size(5120,2880,2,R.REALISM_MAX_PIXELS),[5120,2880],'never below the screen itself');
+  assert.deepEqual(size(5120,2880,2,Infinity,4096),[4096,2304],'within the largest texture allowed');
+  assert.deepEqual(size(0,0,2),[2,2]);
+  for(const x of [0,.002,.04,.18,.5,1])assert.ok(Math.abs(R.linearToSRGB(R.srgbToLinear(x))-x)<1e-9);
+  assert.deepEqual(R.acesFilmic([0,0,0]),[0,0,0]);
+  assert.ok(R.acesFilmic([1e4,1e4,1e4]).every(c=>c>.999),'highlights roll off to white');
+  let previous=-1;
+  for(let v=0;v<=8;v+=.25){
+    const [r,g,b]=R.acesFilmic([v,v,v],.95);
+    assert.ok(Math.abs(r-g)<1e-3&&Math.abs(g-b)<1e-3,'grey stays grey');
+    assert.ok(r>=previous,'brighter in, brighter out');previous=r;
+  }
+  for(const colour of [[0xcc/255,0xd9/255,0xde/255],[.1,.2,.3],[.95,.9,.8]]){
+    const back=R.acesFilmic(R.displayToLinear(colour,.95),.95).map(R.linearToSRGB);
+    back.forEach((c,i)=>assert.ok(Math.abs(c-colour[i])<.002,'background colour survives tone mapping'));
+  }
+  assert.ok(R.acesFilmic(R.displayToLinear([0,0,0])).every(c=>c<.001),'black stays black');
+  const shape=geometry=>[geometry.type,geometry.parameters];
+  assert.deepEqual(R.smoothParameters(...shape(new THREE.SphereGeometry(.04,10,8))),[.04,24,16,0,Math.PI*2,0,Math.PI]);
+  assert.deepEqual(R.smoothParameters(...shape(new THREE.CylinderGeometry(.045,.045,.28,12))),[.045,.045,.28,24,1,false,0,Math.PI*2]);
+  assert.deepEqual(R.smoothParameters(...shape(new THREE.TorusGeometry(.3,.024,6,18))),[.3,.024,12,48,Math.PI*2]);
+  for(const kept of [new THREE.SphereGeometry(1,24,16),new THREE.SphereGeometry(1,6,4),new THREE.CylinderGeometry(1,1,1,4),
+    new THREE.CylinderGeometry(1,1,1,32),new THREE.TorusGeometry(1,.1,4,6),new THREE.BoxGeometry(1,1,1)])
+    assert.equal(R.smoothParameters(...shape(kept)),null,kept.type+' keeps its intended shape');
+  assert.equal(R.smoothParameters('SphereGeometry',undefined),null);
+  for(const kind of Object.keys(R.REALISM_GLOW))assert.ok(R.glowIntensity(kind,true)>R.glowIntensity(kind,false)&&R.glowIntensity(kind,false)>0,kind);
+  assert.equal(R.glowIntensity('table',true),0);
+  assert.equal(R.shaftAlpha(0,.5),0);assert.equal(R.shaftAlpha(1,.5),0);assert.equal(R.shaftAlpha(.5,1),0);
+  assert.equal(R.shaftAlpha(.5,0),0,'beams fade in from the glass');
+  let peak=0;
+  for(let u=0;u<=1;u+=.05)for(let a=0;a<=1;a+=.05){const s=R.shaftAlpha(u,a);assert.ok(s>=0&&s<=1);peak=Math.max(peak,s);}
+  assert.ok(peak>.8);
+  assert.ok(R.shaftAlpha(.5,.05)<.1,'the glass keeps its colours under the beam');
+  assert.ok(R.shaftAlpha(.5,.35)>R.shaftAlpha(.5,.1)&&R.shaftAlpha(.5,.35)>R.shaftAlpha(.5,.8),'beams fade in, then towards the floor');
+
+  const clock={t:0},logs=[];
+  const sandbox=vm.createContext({THREE,performance:{now:()=>clock.t*1000},console:{info:m=>logs.push(m),warn:m=>logs.push(m)}});
+  vm.runInContext(fs.readFileSync('mass-realism.js','utf8'),sandbox);
+  const realism=vm.runInContext('SceneRealism',sandbox);
+  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();
+  const renderer={capabilities:{isWebGL2:false},extensions:{has:()=>false},toneMapping:THREE.ACESFilmicToneMapping,compile(){}};
+  const base=new THREE.MeshStandardMaterial({color:'#ffbf50'});
+  const flame=(x,parent=scene)=>{
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.04,10,8),base);
+    m.position.set(x,1,0);m.userData.glow='flame';parent.add(m);return m;
+  };
+  const near=flame(1),far=flame(30),candle=new THREE.Group();
+  candle.visible=false;scene.add(candle);flame(.5,candle);
+  const faded=flame(2);
+  faded.userData.solidMaterial=base;faded.userData.fadeMaterial=base.clone();faded.material=faded.userData.fadeMaterial;
+  const moved=new THREE.Mesh(new THREE.SphereGeometry(.1,10,8).translate(0,1,0),base),block=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),base);
+  scene.add(moved,block);
+  const windows=new THREE.Group();
+  for(const x of [-4,4]){
+    const win=new THREE.Group(),glass=new THREE.Mesh(new THREE.BoxGeometry(1.1,2.3,.06),new THREE.MeshStandardMaterial({color:'#9fc3c8'}));
+    win.position.set(x,3.1,-10.5);glass.userData.glow='window';win.add(glass);windows.add(win);
+  }
+  scene.add(windows);
+  const coarse=near.geometry,children=scene.children.length;
+  const context={scene,renderer,camera,THREE,overlay:[],windows:()=>windows,walls:()=>[],dynamic:()=>[]};
+  assert.equal(realism.active(),false);
+  realism.configure(context,P.high);
+  assert.equal(realism.active(),false,'High keeps the plain renderer');
+  assert.equal(near.material,base);
+  realism.configure(context,P.ultra);
+  assert.equal(realism.active(),true);
+  assert.notEqual(near.material,base);
+  const linear=base.color.clone().convertSRGBToLinear();
+  assert.ok(near.material.emissive.equals(linear),'flames glow in their own (linearised) colour');
+  assert.equal(near.material.emissiveIntensity,R.glowIntensity('flame',false));
+  assert.equal(far.material,near.material,'one glow material per colour and strength');
+  assert.ok(near.material.color.equals(linear),'flames keep their full colour');
+  assert.notEqual(base.color.getHexString(),near.material.color.getHexString(),'the shared colour stays in sRGB');
+  const glass=windows.children[0].children[0];
+  assert.ok(glass.material.emissive.equals(new THREE.Color('#9fc3c8').convertSRGBToLinear())&&glass.material.color.r<.2*glass.material.emissive.r,
+    'stained glass shines by its own light rather than the room lamps');
+  assert.equal(base.emissive.getHex(),0,'shared colour material is never mutated');
+  assert.equal(faded.material,faded.userData.fadeMaterial,'a faded figure stays see-through');
+  assert.equal(faded.userData.solidMaterial,near.material,'and glows again when it returns');
+  assert.equal(near.geometry.parameters.widthSegments,24,'coarse spheres are smoothed');
+  assert.equal(moved.geometry.parameters.widthSegments,10,'reshaped geometry is left alone');
+  assert.equal(block.geometry.type,'BoxGeometry');
+  assert.equal(scene.children.length,children,'Ultra adds no lights or beams');
+  assert.equal(renderer.toneMapping,THREE.ACESFilmicToneMapping);
+
+  const realistic={...P.realistic,reflections:false};
+  realism.configure(context,realistic);
+  realism.configure(context,realistic);
+  assert.equal(logs.filter(m=>/WebGL 2/.test(m)).length,1,'without WebGL 2 it falls back once, quietly');
+  assert.equal(renderer.toneMapping,THREE.ACESFilmicToneMapping);
+  const lights=[];
+  scene.traverse(o=>{if(o.isPointLight)lights.push(o);});
+  assert.equal(lights.length,P.realistic.lights,'fixed pool of candle lights');
+  let draws=0;
+  clock.t=5;
+  realism.render(()=>{draws++;});
+  assert.equal(draws,1);
+  assert.equal(lights.filter(l=>l.intensity>0).length,3,'one light per visible flame; put-away hand candles stay dark');
+  assert.ok(lights.some(l=>l.intensity>0&&Math.abs(l.position.x-1)<1e-9&&Math.abs(l.position.y-1.06)<1e-9),'light sits just above its flame');
+  candle.visible=true;clock.t=7;
+  realism.render(()=>{});
+  assert.equal(lights.filter(l=>l.intensity>0).length,4,'a lit hand candle lends its own light');
+  const beams=scene.children.find(o=>o.name==='Window light');
+  assert.equal(beams.children.length,2,'one beam per window');
+  assert.equal(beams.visible,true);
+  const beam=beams.children[0];
+  beam.geometry.computeBoundingBox();
+  assert.ok(beam.geometry.boundingBox.max.z>-8&&beam.geometry.boundingBox.min.y<1,'beams slant down into the church');
+  const hits=[];
+  beam.raycast(new THREE.Raycaster(),hits);
+  assert.equal(hits.length,0,'beams never block clicks');
+  windows.visible=false;
+  realism.render(()=>{});
+  assert.equal(beams.visible,false,'no beams without windows');
+  windows.visible=true;
+
+  renderer.capabilities.isWebGL2=true;renderer.extensions.has=name=>name==='EXT_color_buffer_float';
+  realism.configure(context,realistic);
+  assert.equal(renderer.toneMapping,THREE.NoToneMapping,'tone mapping moves into the post-processing pass');
+  assert.equal(near.material.emissiveIntensity,R.glowIntensity('flame',true),'brighter glow feeds the bloom');
+  realism.configure(context,{...P.cinematic,reflections:false});
+  const twin=near.geometry;
+  let released=0;
+  twin.addEventListener('dispose',()=>released++);
+  realism.configure(context,P.standard);
+  assert.equal(realism.active(),false);
+  assert.equal(near.material,base,'switching down restores every material');
+  assert.equal(faded.userData.solidMaterial,base);
+  assert.equal(near.geometry,coarse,'and the original geometry');
+  assert.equal(released,1,'smoothed copies are freed');
+  assert.equal(scene.children.length,children,'lights and beams removed');
+  assert.equal(renderer.toneMapping,THREE.ACESFilmicToneMapping);
+  realism.configure(context,P.ultra);
+  let freed=0;
+  coarse.addEventListener('dispose',()=>freed++);
+  near.geometry.dispose();
+  assert.equal(freed,1,'disposing a smoothed mesh also frees its original');
+  for(let n=0;n<3;n++)for(const id of ['low','ultra','realistic','cinematic','high'])realism.configure(context,P[id]);
+  assert.equal(scene.children.length,children,'switching levels leaves nothing behind');
+  assert.equal(near.material,base);
 }
 // ---- controller regressions: revealed answer and score rollback ----
 // ---- round 7: presets, reserved hosts, role switching, screen operator, graphics ----
@@ -858,6 +1078,14 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(gfx.chooseGraphicsProfile('auto',{deviceMemory:2,cores:2,width:800}).id,'low');
   assert.equal(gfx.chooseGraphicsProfile('auto',{deviceMemory:8,cores:8,width:1600,height:900}).id,'standard');
   assert.equal(gfx.chooseGraphicsProfile('high').id,'high');
+  for(const id of ['ultra','realistic','cinematic'])assert.equal(gfx.chooseGraphicsProfile(id).id,id);
+  assert.equal(gfx.chooseGraphicsProfile('auto',{deviceMemory:32,cores:32,width:3840,height:2160}).id,'standard','Auto never picks the costly levels');
+  const ranks=Object.values(gfx.GRAPHICS_PROFILES).map(p=>p.rank);
+  assert.deepEqual(ranks,[0,1,2,3,4,5],'levels ordered by cost');
+  const P=gfx.GRAPHICS_PROFILES;
+  assert.ok(P.ultra.shadowSize>P.high.shadowSize&&P.ultra.normalMaps&&P.ultra.physical&&!P.ultra.post);
+  assert.ok(P.realistic.post&&P.realistic.lights>0&&P.realistic.shafts&&P.realistic.post.renderScale===1);
+  assert.ok(P.cinematic.post.renderScale>1&&P.cinematic.post.ao.samples>P.realistic.post.ao.samples&&P.cinematic.lights>P.realistic.lights);
   assert.equal(gfx.crowdVisible(5,1),true);
   const shown=Array.from({length:100},(_,i)=>gfx.crowdVisible(i,.5)).filter(Boolean).length;
   assert.ok(shown>35&&shown<65,'about half the crowd at 50%');

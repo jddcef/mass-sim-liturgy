@@ -16,6 +16,8 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
       const names=scripts.map(match=>match[2]);
       assert.ok(names.indexOf('mass-materials.js')>names.indexOf('mass-graphics.js'));
       assert.ok(names.indexOf('mass-materials.js')<names.indexOf('mass-3d.js'));
+      assert.ok(names.indexOf('mass-realism.js')>names.indexOf('mass-materials.js'));
+      assert.ok(names.indexOf('mass-realism.js')<names.indexOf('mass-3d.js'));
       assert.ok(names.indexOf('mass-parishes.js')<names.indexOf('mass-features.js'));
       assert.ok(names.indexOf('mass-parish-editor.js')>names.indexOf('mass-materials.js'));
       assert.ok(names.indexOf('mass-parish-editor.js')<names.indexOf('mass-3d.js'));
@@ -25,7 +27,9 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
       }
     }
     assert.ok(!/\bfetch\s*\(|TextureLoader|https?:\/\//.test(read('mass-materials.js')),'materials need no network or local file fetch');
+    assert.ok(!/\bfetch\s*\(|Loader\b|https?:\/\/|XMLHttpRequest/.test(read('mass-realism.js')),'realistic rendering needs no network or local file fetch');
     assert.ok(read('.github/workflows/checks.yml').includes('node --check mass-materials.js'));
+    assert.ok(read('.github/workflows/checks.yml').includes('node --check mass-realism.js'));
     for(const file of ['mass-parishes.js','mass-parish-editor.js']){
       assert.ok(read('.github/workflows/checks.yml').includes('node --check '+file));
     }

@@ -64,7 +64,13 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
   Pass the optional surface kind to `box`/`cylinder`, or use `finishSurface`.
   Supply a new base material to `finishSurface` when changing a surface colour.
   Do not mutate cached textures or infer a finish from a colour. Texture
-  providers are High-only and should return a cleanup function.
+  providers run at High and above and should return a cleanup function.
+- `mass-realism.js` (Ultra and above) finds light sources by the
+  `userData.glow` tag set by `markGlow` in `mass-3d.js`. Call
+  `SceneRealism.refresh({probe:true})` after changing the church so lights and
+  reflections follow. The render callback returns the share of the church left
+  visible (`gameRender` returns 0.38 in highlight mode); labels are drawn after
+  post-processing and fade by it.
 - Plan coordinates convert to world coordinates with `world([x,y])`
   (SCALE .025; plan x 500 is world 0).
 - `mass-3d.css` styles `header span`. Panels placed inside the header must
@@ -84,7 +90,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R229.**
+**Next decision number: R235.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -110,6 +116,7 @@ server for liturgical or Catholic questions and clarifications.
 | 34 | #23 | Three optional start-menu previews: grouped card stacks, dashboard and step-by-step setup; original remains the default at this stage, with shared controls and collapsed advanced settings (R217-R219) |
 | 35 | #23 | Card stacks selected as default; illustrated involvement, challenge/assistance grouping, contextual celebration switches and season-tinted celebration browsing (R220-R223) |
 | 36 | [#29](https://github.com/jddcef/mass-sim-liturgy/pull/29) (not yet merged) | Visual MG02 cupboard/furnishing preparation board; MG06 illustrated bounded pre-Mass inspection with correct scenes; directly visible Mini-games entry and exact prior-context return (R226-R228). |
+| 37 | (this PR) | Ultra, Realistic and Cinematic detail levels: detailed materials, church reflections and glow; candlelight, light shafts and hand-written HDR post-processing; supersampling. Offline, with WebGL 1 and shader fallbacks; Auto unchanged (R229-R234). |
 | merge | #23 | Merge latest main, preserving Corpus Christi, completion milestones and Practice room; integrate Corpus choices into the contextual menu (R224) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |

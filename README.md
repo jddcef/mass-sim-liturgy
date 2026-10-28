@@ -144,6 +144,12 @@ choose **Sanctuary floor: Pale marble** for veined stone slabs, or sandstone,
 terracotta or slate. Wooden furnishings show grain and metal vessels have a
 soft sheen. All textures are generated locally, so they work offline.
 **Low** keeps flat finishes for slower devices; **Auto** chooses Low or Standard.
+With a strong graphics card, three more levels look progressively more
+realistic, each one noticeably heavier: **Ultra** (detailed stone and wood,
+reflections of the church, glowing candles and stained glass), **Realistic**
+(adds flickering candlelight, light shafts from the windows, soft shadowing in
+corners and a filmic glow) and **Cinematic** (renders at double resolution for
+the smoothest image). Step down if the picture stutters.
 
 This is an illustrative teaching aid, not a substitute for the approved Missal,
 ceremonial training or local custom. Prayer texts are short paraphrases.
@@ -626,9 +632,12 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
 - **Switch role**: use the menu on the role card between questions to carry
   on as a different minister.
 - **New game** can be cancelled (button or **Esc**) to return to the game.
-  The 🔊 button mutes all sound. **Detail** (Auto, Low, Standard, High) suits
+  The 🔊 button mutes all sound. **Detail** (Auto, Low, Standard, High,
+  Ultra, Realistic, Cinematic) suits
   low-spec devices: Standard has local surface textures, High has sharper
-  textures and shadows, and Low disables textures and shadows. Switching
+  textures and shadows, and Low disables textures and shadows. Ultra,
+  Realistic and Cinematic add realistic lighting for strong graphics cards.
+  Switching
   detail updates finishes immediately; antialiasing still needs a reload.
   The start bell (on by default) rings once the procession
   has gathered at the entrance. Reserved hosts are used and reposed by

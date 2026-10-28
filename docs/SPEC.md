@@ -26,7 +26,7 @@ It is illustrative. It is not an approved ceremonial, and it must say so.
 | C6 | All three pages keep working: `mass-animation.html`, `mass-3d.html` and `mass-game.html`. Shared scripts must not break the pages that do not use the newer features. |
 | C7 | All tests pass in Node 22 with no dependencies. CI (`.github/workflows/checks.yml`) syntax-checks every script and runs every test file. |
 | C8 | Sounds are synthesised with WebAudio or are small local files. No streaming. |
-| C9 | The game runs on low-spec devices by default ("Detail: Auto"), with headroom for higher detail. |
+| C9 | The game runs on low-spec devices by default ("Detail: Auto"), with headroom for higher detail. Ultra, Realistic and Cinematic are opt-in levels for strong graphics cards; each adds one large step in graphics cost, and Auto never picks them. |
 | C10 | Saved settings survive upgrades. The localStorage keys `massGameSetup`, `massGameScores` and `mass-church-layout-v1` are kept (and `massGameProgress` for the Path), and `SETUP_VERSION` is bumped when defaults change. |
 
 ## 3. Architecture
@@ -46,6 +46,7 @@ Classic scripts load in this order and share globals:
 | `mass-speech.js`, `audio/` | Browser voices or pre-generated MP3s (`audio/audio-manifest.js`, `audio/index.csv`). |
 | `mass-graphics.js` | Detail levels and quality settings. |
 | `mass-materials.js` | Deterministic offline surface textures, physical texture sizing, cached stone/wood/metal finishes and reversible detail changes. |
+| `mass-realism.js` | Ultra, Realistic and Cinematic rendering: glow, smoother curves, candlelight, light shafts, the church reflection probe and hand-written post-processing (ambient occlusion, bloom, filmic tone mapping), with fallbacks. |
 | `mass-parish-editor.js`, `mass-parish-editor.css` | Maintainer preparation mode, plan/3D route preview, local profile library, draft and full-profile JSON export/import. |
 | `parish-intake.js`, `parish-intake.cjs` | Parish source intake: manifest, parish spec, review queue and decision formats; bearing rule; spec-to-profile draft; offline CLI (see `docs/PARISH-INTAKE.md`). |
 | `parish-review.html`, `parish-review.js`, `parish-review.css` | Offline bulk reviewer for `parishes/review-index.js`; exports decisions JSON. |

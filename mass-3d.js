@@ -40,6 +40,11 @@ function sphere(parent,x,y,z,r,color,shadow=true){
 function cylinder(parent,x,y,z,top,bottom,height,color,surface=null){
   return mesh(new THREE.CylinderGeometry(top,bottom,height,12),color,parent,x,y,z,true,surface);
 }
+// Tags a light source (flame, lamp, star or window glass) so Ultra and above can make it glow.
+function markGlow(object,kind){
+  object.userData.glow=kind;
+  return object;
+}
 function label(text,position){
   const canvas=document.createElement('canvas');
   const ctx=canvas.getContext('2d');
@@ -119,7 +124,7 @@ function makeFigure(color,skin,role){
     handCandle.position.set(0,-.5,.03);
     handCandle.rotation.x=1.15;
     mesh(new THREE.CylinderGeometry(.026,.026,.26,8),'#f7f1df',handCandle,0,.13,0,false);
-    sphere(handCandle,0,.3,0,.036,'#ffc84a',false).scale.set(1,1.6,1);
+    markGlow(sphere(handCandle,0,.3,0,.036,'#ffc84a',false),'flame').scale.set(1,1.6,1);
     handCandle.visible=false;
     arms[1].add(handCandle);
   }
@@ -304,16 +309,16 @@ function setWindowStyle(style){
   [-8,-4,4,8].forEach((x,n)=>{
     const win=new THREE.Group();
     win.position.set(x,3.1,-10.5);
-    if(style==='plain')box(win,0,0,0,W,H,.06,'#9fc3c8',false);
+    if(style==='plain')markGlow(box(win,0,0,0,W,H,.06,'#9fc3c8',false),'window');
     else if(style==='stained'){
       const cols=3,rows=7,pw=W/cols,ph=H/rows;
       for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
         const colour=r===3&&c===1?'#f4e6a8':WINDOW_GLASS[(r*2+c*3+n)%WINDOW_GLASS.length];
-        box(win,(c-1)*pw,(r-3)*ph,0,pw-.025,ph-.025,.06,colour,false);
+        markGlow(box(win,(c-1)*pw,(r-3)*ph,0,pw-.025,ph-.025,.06,colour,false),'window');
       }
     }else{
       const cols=4,rows=9;
-      box(win,0,0,0,W,H,.06,'#8fb4bb',false);
+      markGlow(box(win,0,0,0,W,H,.06,'#8fb4bb',false),'window');
       for(let c=1;c<cols;c++)box(win,(c/cols-.5)*W,0,.04,.022,H,.03,'#4f4b40',false);
       for(let r=1;r<rows;r++)box(win,0,(r/rows-.5)*H,.04,W,.022,.03,'#4f4b40',false);
     }
@@ -323,6 +328,7 @@ function setWindowStyle(style){
     windowsGroup.add(win);
   });
   scene.add(windowsGroup);
+  if(typeof SceneRealism!=='undefined')SceneRealism.refresh({probe:true});
 }
 function setSanctuaryFloor(name){
   if(!sanctuaryFloor)return;
@@ -388,6 +394,7 @@ function applyAppearance(a){
     figure.pectoral.visible=role==='S'&&a.seniorCross!=='no';
   }
   if(typeof refreshParishScene==='function')refreshParishScene();
+  if(typeof SceneRealism!=='undefined')SceneRealism.refresh({probe:true});
 }
 // Moves the fixed crucifix (and its recess, if any) to the chosen place; 'none' hides it.
 function placeCrucifix(id){
@@ -414,7 +421,7 @@ function buildCrib(){
     roof.rotation.z=-side*.42;
   }
   box(cribGroup,0,1.2,-.36,.9,.04,.02,'#d9c48f',false);
-  sphere(cribGroup,0,1.68,-.1,.07,'#ffe17a',false);
+  markGlow(sphere(cribGroup,0,1.68,-.1,.07,'#ffe17a',false),'star');
   box(cribGroup,0,.24,.08,.36,.16,.22,'#b58d4f',true,'wood');
   box(cribGroup,0,.33,.08,.3,.03,.18,'#e0c56a',false);
   sphere(cribGroup,0,.38,.08,.07,'#f1d3b5',false);
@@ -449,7 +456,7 @@ function buildFont(){
   cylinder(fontGroup,cx,1.42,cz,.05,.05,.6,'#fff6df');
   box(fontGroup,cx,1.48,cz+.051,.012,.16,.004,'#c0392b',false);
   box(fontGroup,cx,1.5,cz+.051,.1,.012,.004,'#c0392b',false);
-  sphere(fontGroup,cx,1.77,cz,.04,'#ffbf50',false);
+  markGlow(sphere(fontGroup,cx,1.77,cz,.04,'#ffbf50',false),'flame');
   const [tx,tz]=local(BAPTISM_PLACES.table);
   box(fontGroup,tx,.92,tz,.6,.05,.4,'#ab8b60',true,'wood');
   box(fontGroup,tx,.45,tz,.08,.9,.3,'#80623e',true,'wood');
@@ -472,7 +479,7 @@ function buildFuneralStands(){
   cylinder(funeralGroup,cx,1.42,cz,.05,.05,.6,'#fff6df');
   box(funeralGroup,cx,1.48,cz+.051,.012,.16,.004,'#c0392b',false);
   box(funeralGroup,cx,1.5,cz+.051,.1,.012,.004,'#c0392b',false);
-  sphere(funeralGroup,cx,1.77,cz,.04,'#ffbf50',false);
+  markGlow(sphere(funeralGroup,cx,1.77,cz,.04,'#ffbf50',false),'flame');
   const [sx,sz]=local(FUNERAL_PLACES.stand);
   cylinder(funeralGroup,sx,.04,sz,.14,.16,.08,'#9a9a9a','silver');
   cylinder(funeralGroup,sx,.45,sz,.025,.025,.8,'#9a9a9a','silver');
@@ -605,7 +612,7 @@ function buildChurch(){
   tabernacleBody=scene.children.slice(body);
   tabernacleBody.forEach(o=>{o.userData.z=o.position.z;});
   tabernacleMount=mount;
-  sphere(scene,tab.x+.76,tab.y+1.95,tab.z+.15,.09,'#df4735');
+  markGlow(sphere(scene,tab.x+.76,tab.y+1.95,tab.z+.15,.09,'#df4735'),'lamp');
   cylinder(scene,tab.x+.76,tab.y+1.75,tab.z+.15,.025,.025,.3,'#c59a3f');
   collectFurniture('tabernacle',fixtureStart);
   const gifts=world([621,770]);
@@ -696,7 +703,7 @@ function makeObjects(){
     }else if(name.startsWith('cand')){
       cylinder(g,0,.17,0,.025,.05,.34,'#c6a15c','gold');
       cylinder(g,0,.46,0,.045,.045,.28,'#fff5dc');
-      sphere(g,0,.63,0,.04,'#ffbf50');
+      markGlow(sphere(g,0,.63,0,.04,'#ffbf50'),'flame');
     }else if(name==='chalice'){
       cylinder(g,0,.01,0,.12,.12,.025,'#caa347','gold');
       cylinder(g,0,.12,0,.025,.025,.22,'#caa347','gold');
@@ -748,7 +755,7 @@ function makeObjects(){
     }else if(name==='bcandle'){
       cylinder(g,0,.18,0,.022,.022,.36,'#fffdf4');
       box(g,0,.04,0,.08,.01,.08,'#e8d9a8',false);
-      g.userData.flame=sphere(g,0,.39,0,.03,'#ffbf50',false);
+      g.userData.flame=markGlow(sphere(g,0,.39,0,.03,'#ffbf50',false),'flame');
     }else if(name==='coffin'){
       // The coffin on its wheeled bier, lying along the aisle; origin on the floor.
       box(g,0,.5,0,.62,.04,1.9,'#55524d',true,'slate');
@@ -1166,7 +1173,14 @@ function renderFrame(dt=1/60){
   updateWallFade();
   updateSanctuaryRipples(performance.now());
   if(typeof updateParishPreview==='function')updateParishPreview(dt);
-  if(typeof gameRender!=='function'||!gameRender())renderer.render(scene,camera3d);
+  // Returns how much of the church the frame left visible (1 unless highlight mode faded it).
+  const draw=()=>{
+    const shown=typeof gameRender==='function'&&gameRender();
+    if(!shown){renderer.render(scene,camera3d);return 1;}
+    return shown;
+  };
+  if(typeof SceneRealism!=='undefined'&&SceneRealism.active())SceneRealism.render(draw,dt);
+  else draw();
 }
 
 const sanctuaryRipples=[];
@@ -1291,7 +1305,8 @@ function applySetup(){
 }
 
 let sunLight=null, skyLight=null, graphicsProfile=null;
-// Detail level: pixel ratio, shadows and crowd size. Antialiasing is fixed when the page loads.
+// Detail level: pixel ratio, shadows, crowd size, materials and (Ultra and above) mass-realism.js.
+// Antialiasing is fixed when the page loads.
 function applyGraphics(profile){
   graphicsProfile=profile;
   if(skyLight)skyLight.intensity=profile.textures?.72:.85;
@@ -1314,7 +1329,10 @@ function applyGraphics(profile){
     if(hidden)person.figure.root.visible=false;
   });
   ChurchMaterials.configure(scene,renderer,profile);
-  if(typeof GraphicsDetail!=='undefined')GraphicsDetail.applyTextureProviders({scene,renderer,THREE},profile.id==='high');
+  if(typeof SceneRealism!=='undefined')SceneRealism.configure({scene,renderer,camera:camera3d,THREE,overlay:sceneLabels,
+    windows:()=>windowsGroup,walls:()=>fadingWalls.map(w=>w.mesh),
+    dynamic:()=>[...Object.values(figures).map(f=>f.root),...congregation.map(p=>p.figure.root)]},profile);
+  if(typeof GraphicsDetail!=='undefined')GraphicsDetail.applyTextureProviders({scene,renderer,THREE},(profile.rank||0)>=2);
   if(renderer.domElement.parentNode){
     const {width,height}=$('viewport').getBoundingClientRect();
     renderer.setSize(width,height);
