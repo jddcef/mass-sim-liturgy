@@ -1,17 +1,33 @@
 'use strict';
 // Project-generated, periodic surface recipes. No image loads, including on file://.
+// coat: clear-coat strength at Ultra and above (polished marble, varnished wood).
 const SURFACE_FINISHES={
-  marble:{roughness:.34,metalness:0,bump:.012,period:1.5},
+  marble:{roughness:.34,metalness:0,bump:.012,period:1.5,coat:.55,coatRoughness:.12},
   sandstone:{roughness:.88,metalness:0,bump:.018,period:1.5},
   terracotta:{roughness:.8,metalness:0,bump:.014,period:1.5},
-  slate:{roughness:.72,metalness:0,bump:.012,period:1.5},
+  slate:{roughness:.72,metalness:0,bump:.012,period:1.5,coat:.12,coatRoughness:.35},
   stone:{roughness:.86,metalness:0,bump:.01,period:1.5},
-  wood:{roughness:.57,metalness:0,bump:.0015,period:1},
+  wood:{roughness:.57,metalness:0,bump:.0015,period:1,coat:.35,coatRoughness:.3},
   gold:{roughness:.28,metalness:.72,bump:0,period:1},
   silver:{roughness:.32,metalness:.8,bump:0,period:1}
 };
 function surfaceTextureSize(profile){
-  return profile.textures?(profile.id==='high'?512:256):0;
+  if(!profile.textures)return 0;
+  return profile.textureSize||(profile.id==='high'?512:256);
+}
+// Roughness map value for a sample: joints and veins are duller than the polished face.
+function surfaceRoughness(kind,sample){
+  const finish=SURFACE_FINISHES[kind];
+  const value=finish.roughness+(.96-sample.value)*1.1+(.5-sample.height)*.08;
+  return Math.max(.05,Math.min(1,value));
+}
+// Tangent-space normal from a periodic height field (row 0 is the top of the canvas, so +v is up).
+// strength converts height change per texture repeat into slope, matching the bump scale per metre.
+function surfaceNormal(heights,size,x,y,strength){
+  const at=(i,j)=>heights[((j+size)%size)*size+(i+size)%size];
+  const du=(at(x+1,y)-at(x-1,y))*size/2,dv=(at(x,y-1)-at(x,y+1))*size/2;
+  const nx=0-du*strength,ny=0-dv*strength,length=Math.hypot(nx,ny,1);
+  return [nx/length,ny/length,1/length];
 }
 function surfaceNoise(u,v,cells,seed,rows=cells){
   const x=u*cells,y=v*rows,ix=Math.floor(x),iy=Math.floor(y);
@@ -89,31 +105,67 @@ const ChurchMaterials={
     }
     geometry.userData.surfaceUV=true;
   },
-  texture(kind,size){
-    const key=kind+':'+size;
+  // detailed adds normal and roughness maps (Ultra and above) in place of the bump map.
+  texture(kind,size,detailed=false){
+    const key=kind+':'+size+(detailed?':detailed':'');
     if(this.textures.has(key))return this.textures.get(key);
-    const colour=document.createElement('canvas'),height=document.createElement('canvas');
-    colour.width=colour.height=height.width=height.height=size;
+    const canvas=()=>{const c=document.createElement('canvas');c.width=c.height=size;return c;};
+    const colour=canvas(),height=canvas();
     const ctx=colour.getContext('2d'),hctx=height.getContext('2d');
     const image=ctx.createImageData(size,size),relief=hctx.createImageData(size,size);
+    const heights=detailed?new Float32Array(size*size):null;
+    const finish=SURFACE_FINISHES[kind];
+    let rough=null,rctx=null,roughness=null;
+    if(detailed){rough=canvas();rctx=rough.getContext('2d');roughness=rctx.createImageData(size,size);}
     for(let y=0;y<size;y++)for(let x=0;x<size;x++){
       const sample=surfaceSample(kind,(x+.5)/size,(y+.5)/size),i=(y*size+x)*4;
       image.data[i]=image.data[i+1]=image.data[i+2]=Math.round(sample.value*255);
       relief.data[i]=relief.data[i+1]=relief.data[i+2]=Math.round(sample.height*255);
       image.data[i+3]=relief.data[i+3]=255;
+      if(detailed){
+        heights[y*size+x]=sample.height;
+        roughness.data[i]=roughness.data[i+1]=roughness.data[i+2]=Math.round(surfaceRoughness(kind,sample)*255);
+        roughness.data[i+3]=255;
+      }
     }
-    ctx.putImageData(image,0,0);hctx.putImageData(relief,0,0);
-    const map=new THREE.CanvasTexture(colour),bump=new THREE.CanvasTexture(height);
+    ctx.putImageData(image,0,0);
+    const map=new THREE.CanvasTexture(colour);
     map.encoding=THREE.sRGBEncoding;
-    for(const texture of [map,bump]){
-      texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
-      texture.anisotropy=Math.min(4,this.renderer.capabilities.getMaxAnisotropy());
+    const result={map};
+    if(detailed){
+      // The relief canvas is reused for the normal map; the height texture is not needed here.
+      const strength=finish.bump/finish.period;
+      for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+        const n=surfaceNormal(heights,size,x,y,strength),i=(y*size+x)*4;
+        relief.data[i]=Math.round((n[0]*.5+.5)*255);
+        relief.data[i+1]=Math.round((n[1]*.5+.5)*255);
+        relief.data[i+2]=Math.round((n[2]*.5+.5)*255);
+      }
+      hctx.putImageData(relief,0,0);rctx.putImageData(roughness,0,0);
+      result.normal=new THREE.CanvasTexture(height);
+      result.roughness=new THREE.CanvasTexture(rough);
+    }else{
+      hctx.putImageData(relief,0,0);
+      result.bump=new THREE.CanvasTexture(height);
     }
-    const result={map,bump};
+    const anisotropy=Math.min(this.profile.anisotropy||4,this.renderer.capabilities.getMaxAnisotropy());
+    for(const texture of Object.values(result)){
+      texture.wrapS=texture.wrapT=THREE.RepeatWrapping;
+      texture.anisotropy=anisotropy;
+    }
     this.textures.set(key,result);
     return result;
   },
-  reflection(){
+  // A probe captured inside the church (mass-realism.js) replaces the painted reflection at Ultra and above.
+  sceneProbe:null,
+  setEnvironment(texture){
+    this.sceneProbe=texture||null;
+    for(const m of this.materials.values())if(m.userData.sceneReflections){
+      m.envMap=this.reflection(true);m.needsUpdate=true;
+    }
+  },
+  reflection(scene=false){
+    if(scene&&this.sceneProbe)return this.sceneProbe;
     if(this.environment)return this.environment.texture;
     const faces=[];
     for(let i=0;i<6;i++){
@@ -138,15 +190,29 @@ const ChurchMaterials={
     const base=this.bases.get(object),size=surfaceTextureSize(this.profile);
     let target=base;
     if(size){
-      const key=kind+':'+base.uuid+':'+size;
+      const detailed=!!this.profile.normalMaps;
+      const key=kind+':'+base.uuid+':'+size+(detailed?':detailed':'');
       if(!this.materials.has(key)){
-        const finish=SURFACE_FINISHES[kind],m=base.clone();
+        const finish=SURFACE_FINISHES[kind];
+        let m;
+        if(this.profile.physical&&finish.coat){
+          // Clear coat: a second, sharper reflection over polished marble and varnished wood.
+          m=new THREE.MeshPhysicalMaterial();
+          THREE.MeshStandardMaterial.prototype.copy.call(m,base);
+          m.defines={STANDARD:'',PHYSICAL:''};
+          m.clearcoat=finish.coat;m.clearcoatRoughness=finish.coatRoughness;
+        }else m=base.clone();
         m.color.convertSRGBToLinear();
         m.roughness=finish.roughness;m.metalness=finish.metalness;
-        m.envMap=this.reflection();m.envMapIntensity=finish.metalness?.8:.25;
+        const scene=this.profile.reflections==='scene';
+        m.userData.sceneReflections=scene;
+        m.envMap=this.reflection(scene);
+        m.envMapIntensity=finish.metalness?(scene?1:.8):(scene?.35:.25);
         if(finish.bump){
-          const textures=this.texture(kind,size);
-          m.map=textures.map;m.bumpMap=textures.bump;m.bumpScale=finish.bump;
+          const textures=this.texture(kind,size,detailed);
+          m.map=textures.map;
+          if(detailed){m.normalMap=textures.normal;m.roughnessMap=textures.roughness;m.roughness=1;}
+          else{m.bumpMap=textures.bump;m.bumpScale=finish.bump;}
         }
         this.materials.set(key,m);
       }
@@ -154,10 +220,17 @@ const ChurchMaterials={
     }
     const fade=object.userData.fadeMaterial;
     if(fade){
-      fade.copy(target);fade.transparent=true;fade.opacity=.22;fade.depthWrite=false;fade.needsUpdate=true;
+      // A fade clone of a clear-coated material cannot copy a standard one (and vice versa), so replace it.
+      const active=object.material===fade;
+      let next=fade;
+      if(fade.type!==target.type){next=target.clone();fade.dispose();object.userData.fadeMaterial=next;}
+      else next.copy(target);
+      next.transparent=true;next.opacity=.22;next.depthWrite=false;next.needsUpdate=true;
       object.userData.solidMaterial=target;
+      object.material=active?next:target;
+      return;
     }
-    if(object.material!==fade)object.material=target;
+    object.material=target;
   },
   configure(scene,renderer,profile){
     this.renderer=renderer;this.profile=profile;
@@ -165,4 +238,4 @@ const ChurchMaterials={
   }
 };
 function finishSurface(object,kind,base){return ChurchMaterials.assign(object,kind,base);}
-if(typeof module!=='undefined')module.exports={SURFACE_FINISHES,surfaceTextureSize,surfaceSample,ChurchMaterials};
+if(typeof module!=='undefined')module.exports={SURFACE_FINISHES,surfaceTextureSize,surfaceSample,surfaceRoughness,surfaceNormal,ChurchMaterials};

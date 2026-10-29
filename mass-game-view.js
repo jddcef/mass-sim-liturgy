@@ -115,7 +115,8 @@ function firstPersonActive(){
 }
 function eyeOf(root){
   root.updateMatrixWorld();
-  return root.localToWorld(new THREE.Vector3(0,1.6,.2));
+  const eye=typeof PeopleModels!=='undefined'?PeopleModels.EYE:[0,1.6,.2];
+  return root.localToWorld(new THREE.Vector3(...eye));
 }
 function lookTowards(point){
   const root=figures.player.root,eye=eyeOf(root);
@@ -379,11 +380,13 @@ function activeThings(){
 function setLit(object,on){
   object.traverse(child=>{if(on)child.layers.enable(1);else child.layers.disable(1);});
 }
+// Highlight mode: the rest of the church shows through the grey veil at this share.
+const HIGHLIGHT_SHOWN=.38;
 function ensureHighlightScene(){
   if(gameView.dim)return;
   const dimCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const dimScene=new THREE.Scene();
-  const veil=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({color:'#77736d',transparent:true,opacity:.62,depthTest:false,depthWrite:false}));
+  const veil=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({color:'#77736d',transparent:true,opacity:1-HIGHLIGHT_SHOWN,depthTest:false,depthWrite:false}));
   dimScene.add(veil);
   gameView.dim={scene:dimScene,camera:dimCamera};
   // Lights also need layer 1 to light the highlighted pass; the extra light brightens only that pass.
@@ -393,6 +396,8 @@ function ensureHighlightScene(){
   scene.add(boost);
   gameView.boost=boost;
 }
+// Draws the highlighted frame. Returns false when it drew nothing, otherwise the share of the faded
+// church still visible (the realistic post-processing fades the labels drawn after it by the same share).
 function gameRender(){
   if(!gameView.highlightOn||typeof game==='undefined'||game.phase==='setup')return false;
   ensureHighlightScene();
@@ -418,7 +423,7 @@ function gameRender(){
   camera3d.layers.set(0);
   scene.background=background;
   renderer.autoClear=true;
-  return true;
+  return HIGHLIGHT_SHOWN;
 }
 function setHighlightMode(on){
   gameView.highlightOn=!!on;

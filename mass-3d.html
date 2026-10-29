@@ -28,8 +28,19 @@
           <option value="D">Follow deacon</option>
         </select></label>
         <label><input id="labels" type="checkbox" checked> Labels</label>
-        <label title="Lower detail runs faster on small or older devices">Detail <select id="graphicsDetail"><option value="auto">Auto</option><option value="low">Low</option><option value="standard">Standard</option><option value="high">High</option></select></label>
+        <label title="Detail also controls congregation size: Low 20%, Standard 50%, High 75%, Ultra and above 100%. Ministers and the active player are kept.">Detail <select id="graphicsDetail"><option value="auto">Auto</option><option value="low">Low</option><option value="standard">Standard</option><option value="high">High</option><option value="ultra">Ultra</option><option value="realistic">Realistic</option><option value="cinematic">Cinematic</option></select></label>
+        <label title="People detail follows Detail by default; Blocks uses plain cuboids for fastest drawing.">People <select id="peopleDetail"><option value="auto">Auto</option><option value="blocks">Blocks (fastest)</option><option value="simple">Simple</option><option value="natural">Natural</option><option value="detailed">Detailed</option><option value="lifelike">Lifelike</option></select></label>
         <button id="resetCamera" type="button">Reset view</button>
+        <details class="performance-options">
+          <summary>Performance</summary>
+          <div class="performance-panel">
+            <p>Auto uses device hints, not a speed test. This check pauses playback and tries progressively more demanding Detail/People pairs in a populated whole-church view, aiming for 40 fps with steady frames. It stops at the first slow pair, then restores your view and settings. Keep this tab visible. Results use current antialiasing; recheck after reloading if it changes.</p>
+            <button id="checkPerformance" type="button">Check performance</button>
+            <button id="cancelPerformance" type="button" hidden>Cancel check</button>
+            <button id="applyPerformance" type="button" hidden>Use recommendation</button>
+            <p id="performanceStatus" role="status" aria-live="polite"></p>
+          </div>
+        </details>
       </div>
       <div id="sceneStatus">Loading 3D scene...</div>
       <div id="caption" aria-live="off"></div>
@@ -159,7 +170,9 @@
 <script src="audio/audio-manifest.js"></script>
 <script src="mass-speech.js"></script>
 <script src="mass-graphics.js"></script>
+<script src="mass-people.js"></script>
 <script src="mass-materials.js"></script>
+<script src="mass-realism.js"></script>
 <script src="mass-parish-editor.js"></script>
 <script src="mass-3d.js"></script>
 </body>

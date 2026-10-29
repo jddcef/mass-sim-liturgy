@@ -80,7 +80,12 @@ The new involvement symbols are project-drawn SVGs, with no external assets.
   The small reflection environment is also drawn locally. No photographs,
   downloaded texture packs, HDR images or additional third-party assets are
   bundled or requested. Standard uses 256-pixel textures and High uses
-  512-pixel textures; Low uses the original untextured materials.
+  512-pixel textures; Low uses the original untextured materials. Ultra and
+  above use 1024-pixel textures with generated normal and roughness maps.
+- The Ultra, Realistic and Cinematic effects in `mass-realism.js` (shaders for
+  ambient occlusion, bloom and tone mapping, light shafts and the church
+  reflection probe) are project-written and generated at run time. The
+  filmic curve follows the ACES fit already in three.js r128 (MIT).
 - The generic parish profile, SVG plan, route marker and simplified exterior
   shell are project-generated. No supplied parish photos, scans, measured plans
   or new third-party assets are included. Permission and attribution must be

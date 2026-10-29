@@ -289,6 +289,18 @@ function resumeGameTasks(){
   gameTasksPaused=false;
   for(const task of gameTasks)armGameTask(task);
 }
+function pauseGameForPerformance(){
+  const started=performance.now(),wasPaused=gameTasksPaused,active=game.active;
+  if(!wasPaused)pauseGameTasks();
+  return()=>{
+    const elapsed=performance.now()-started;
+    if(game.active===active&&active)active.started+=elapsed;
+    if(gameView.tween)gameView.tween.started+=elapsed;
+    if(gameView.speaker)gameView.speaker.started+=elapsed;
+    for(const key of Object.keys(game.kneel||{}))game.kneel[key]+=elapsed/1000;
+    if(!wasPaused)resumeGameTasks();
+  };
+}
 function wait(ms){return new Promise(resolve=>gameTimeout(resolve,ms));}
 
 // ---------- setup form ----------
@@ -1498,7 +1510,7 @@ function buildVestments(){
 // 'rail' (before setup and after pack-away), 'stand' (laid out), or 'worn' (hidden: the ministers are vested).
 function hangVestments(where,kinds=['P','D','S']){
   if(!game.vestments)return;
-  const colours={P:figures.P?.body.material.color,D:figures.D?.body.material.color};
+  const colours={P:figures.P?.colour,D:figures.D?.colour};
   for(const kind of kinds){
     const v=game.vestments[kind];
     if(game.carrying===v.mesh){figures.SAC.root.remove(v.mesh);game.carrying=null;}
@@ -1507,7 +1519,7 @@ function hangVestments(where,kinds=['P','D','S']){
     v.mesh.scale.set(1,1,1);
     v.mesh.rotation.set(0,where==='stand'?Math.PI:0,0);
     if(where!=='worn')v.mesh.position.copy(v[where]);
-    v.mesh.traverse(o=>{if(o.isMesh&&o.userData.part==='outer'&&colours[kind])o.material=material('#'+colours[kind].getHexString());});
+    v.mesh.traverse(o=>{if(o.isMesh&&o.userData.part==='outer'&&colours[kind])o.material=material(colours[kind]);});
     v.where=where;
   }
 }
@@ -1994,6 +2006,7 @@ function tweenTowards(key,target,dt,speed=190){
   return d>1;
 }
 function gameBeforeRender(dt,positions){
+  if(typeof performanceCheck!=='undefined'&&performanceCheck)return;
   if(PracticeRoom.isOpen()){PracticeRoom.frame();return;}
   if(!game||game.phase==='setup')return;
   const now=performance.now()/1000;
