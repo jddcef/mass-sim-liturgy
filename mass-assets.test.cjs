@@ -28,6 +28,10 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
         assert.ok(!/^https?:/.test(script[2]),'scripts stay local');
       }
       assert.match(read(html),/id="peopleDetail"/,'people quality selector is present');
+      assert.match(read(html),/value="blocks"/,'fast block people are selectable');
+      for(const id of ['checkPerformance','cancelPerformance','applyPerformance','performanceStatus']){
+        assert.match(read(html),new RegExp('id="'+id+'"'),'performance controls exist before startup');
+      }
     }
     assert.ok(!/\bfetch\s*\(|TextureLoader|https?:\/\//.test(read('mass-materials.js')),'materials need no network or local file fetch');
     assert.ok(!/\bfetch\s*\(|Loader\b|https?:\/\/|XMLHttpRequest/.test(read('mass-realism.js')),'realistic rendering needs no network or local file fetch');

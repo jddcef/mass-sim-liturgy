@@ -11,7 +11,7 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
       [Status](#status).
 - [ ] Run `git fetch` and check open PRs (`gh pr list`) and issues
       (`gh issue list`). Merge `origin/main` into your branch if it moved.
-- [ ] Run the five tests (below) to confirm a green baseline before editing.
+- [ ] Run the six tests (below) to confirm a green baseline before editing.
 - [ ] Note the user's request verbatim. Record any interpretation of an
       ambiguous request as a decision.
 - [ ] For liturgical or Catholic questions, consult the Magisterium MCP server
@@ -34,6 +34,7 @@ What the product must do is specified in [`SPEC.md`](SPEC.md).
       node mass-assets.test.cjs
       node mass-game.test.cjs
       node mass-corpus.test.cjs
+      node mass-people.test.cjs
       ```
 - [ ] Play it through in a real browser via `file://`: no console errors, and
       the new behaviour seen working. Automated checks used puppeteer-core
@@ -90,7 +91,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R239.**
+**Next decision number: R242.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -118,6 +119,7 @@ server for liturgical or Catholic questions and clarifications.
 | 36 | [#29](https://github.com/jddcef/mass-sim-liturgy/pull/29) (not yet merged) | Visual MG02 cupboard/furnishing preparation board; MG06 illustrated bounded pre-Mass inspection with correct scenes; directly visible Mini-games entry and exact prior-context return (R226-R228). |
 | 37 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (not yet merged) | Ultra, Realistic and Cinematic detail levels: detailed materials, church reflections and glow; candlelight, light shafts and hand-written HDR post-processing; supersampling. Offline, with WebGL 1 and shader fallbacks; Auto unchanged (R229-R234). |
 | 38 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (not yet merged) | Add Simple, Natural, Detailed and Lifelike people tiers with deterministic variation, procedural vestments and hair, skinned figures, hand props and two-bone arm IK; Auto follows graphics Detail while an optional override remains independent. Offline and progressively more expensive (R235-R238). |
+| 39 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (not yet merged) | Detail-based 20/50/75/100% congregation budgets, no hidden-member animation or scene traversal, Blocks as the cheapest People tier and Low's Auto choice, and a one-click measured recommendation for both settings with exact game-clock/view restoration and explicit apply (R239-R241). |
 | merge | #23 | Merge latest main, preserving Corpus Christi, completion milestones and Practice room; integrate Corpus choices into the contextual menu (R224) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
@@ -134,13 +136,27 @@ server for liturgical or Catholic questions and clarifications.
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
 | 15 | local, not published | Parish source intake: agent runbook, `parishes/` manifest and spec formats, Street View screening, draft profiles, offline bulk reviewer (R111–R114) |
 
+Round 39 was exercised in isolated Edge through `file://` at 1280x900 and
+390x844 on both 3D pages. Checks cover exact density budgets, detached omitted
+roots, zero hidden-member pose calls, retained player, Blocks rendering,
+real whole-church measurements even before Mass, unchanged stored choices
+until explicit apply, cancellation, hidden-tab/resize cancellation, playback
+resume, camera mode/first-person preservation and exclusion of check time from
+answers. Screenshots of Blocks and mobile performance controls were inspected.
+All six Node suites and the 28 CI-listed syntax checks pass locally on Node
+26.7.0; CI executes the same checks on Node 22. No console errors or external
+page requests were observed. No physical low-spec device was tested. The check
+is a conservative sequence of combinations, not an exhaustive optimizer or a
+hardware score; viewport, display frame-rate caps and fixed-until-reload
+antialiasing affect results.
+
 Round 38 was exercised in Edge through `file://`: the Natural-tier render shows
 varied figures, hair and clothing. Both `mass-3d.html` and `mass-game.html`
 load the People API and selectors without console errors or external requests.
 Pose tests cover blessings, the Sign of the Cross, raised arms and altar
 extensions, checking joint transforms for finite values. All six Node suites,
 the 28 CI-listed `node --check` commands and `git diff --check` pass locally on
-Node 26.7.0; PR CI uses Node 22 and remains to be confirmed. No physical
+Node 26.7.0; PR CI also passed on Node 22. No physical
 low-spec device was tested.
 
 Round 36 was exercised in a self-closing isolated Edge instance through

@@ -227,10 +227,10 @@ function poseLegacy(figure,posture,action,phase,walking=false,orans=false){
 }
 
 let peopleLevel=null,peopleBuildLevel=null,peopleSerial=0;
-function makeFigure(color,skin,role){
+function makeFigure(color,skin,role,level=peopleBuildLevel||peopleLevel||PeopleDetail.level()){
   const vest=role==='P'?'chasuble':role==='D'?'dalmatic':ALB_ROLES.includes(role)?'alb':'lay';
   const app=PeopleModels.appearance({seed:'scene-'+(peopleSerial++),role:role||'L',vest,colour:color});
-  const figure=PeopleModels.createFigure({app,level:peopleBuildLevel||peopleLevel||PeopleDetail.level(),crowd:!role,castShadow:true});
+  const figure=PeopleModels.createFigure({app,level,crowd:!role,castShadow:true});
   const name=role?label(ROLE_NAMES[role],new THREE.Vector3(0,2,0)):null;
   if(name)figure.root.add(name);
   figure.label=name;
@@ -986,6 +986,7 @@ function updatePeople(step,phase){
   const special=step.special?.type==='communion'||step.special?.type==='ashes'?step.special:null;
   congregation.forEach((person,i)=>{
     person.figure.root.visible=!reservedPew(person.home)&&!person.figure.root.userData.gfxHidden&&(!person.outer||naveStyle==='full');
+    if(!person.figure.root.visible)return;
     let p=person.home;
     let walking=false, receiving=false;
     if(special&&i%3===0){
@@ -1172,14 +1173,19 @@ function renderFrame(dt=1/60){
   objects.bell.position.copy(world([660,245]));
   if(typeof gameBeforeRender==='function')gameBeforeRender(dt,positions);
   updateTraining();
-  updateFollow(dt);
+  if(!performanceCheck)updateFollow(dt);
   controls.update();
-  if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
+  if(performanceCheck){
+    camera3d.position.set(18,17,23);controls.target.set(0,1,-1);camera3d.fov=45;
+    camera3d.updateProjectionMatrix();camera3d.lookAt(controls.target);
+    for(const figure of Object.values(figures)){figure.head.visible=true;figure.body.visible=true;}
+  }else if(typeof gameCameraOverride==='function')gameCameraOverride(dt);
   updateWallFade();
   updateSanctuaryRipples(performance.now());
   if(typeof updateParishPreview==='function')updateParishPreview(dt);
   // Returns how much of the church the frame left visible (1 unless highlight mode faded it).
   const draw=()=>{
+    if(performanceCheck){renderer.render(scene,camera3d);return 1;}
     const shown=typeof gameRender==='function'&&gameRender();
     if(!shown){renderer.render(scene,camera3d);return 1;}
     return shown;
@@ -1310,6 +1316,86 @@ function applySetup(){
 }
 
 let sunLight=null, skyLight=null, graphicsProfile=null;
+let performanceCheck=null,performanceRecommendation=null;
+function performanceStatus(text){
+  $('performanceStatus').textContent=text;
+}
+function performanceBusy(busy){
+  $('graphicsDetail').disabled=busy;$('peopleDetail').disabled=busy;
+  $('checkPerformance').disabled=busy;$('cancelPerformance').hidden=!busy;
+}
+function finishPerformanceCheck(text,recommendation=null){
+  const saved=performanceCheck.saved;
+  performanceCheck=null;
+  applyGraphics(saved.profile,saved.people);
+  camera3d.position.copy(saved.position);controls.target.copy(saved.target);
+  camera3d.fov=saved.fov;camera3d.updateProjectionMatrix();
+  controls.enabled=saved.enabled;controls.enableDamping=saved.damping;controls.update();
+  for(const [element,inert] of saved.inert)element.inert=inert;
+  if(saved.resumeGame)saved.resumeGame();
+  if(saved.playing)setPlaying(true);
+  performanceRecommendation=recommendation;
+  performanceBusy(false);
+  $('applyPerformance').hidden=!recommendation;
+  performanceStatus(text);
+}
+function cancelPerformanceCheck(message='Check cancelled. Your original settings are restored.'){
+  if(performanceCheck)finishPerformanceCheck(message);
+}
+function startPerformanceCheck(){
+  if(performanceCheck||document.hidden)return;
+  const post=renderer.capabilities.isWebGL2&&renderer.extensions.has('EXT_color_buffer_float');
+  const candidates=GRAPHICS_CHECK_CANDIDATES.filter(candidate=>post||!GRAPHICS_PROFILES[candidate.detail].post);
+  const saved={profile:graphicsProfile,people:peopleLevel.id,playing:playing3d,
+    position:camera3d.position.clone(),target:controls.target.clone(),fov:camera3d.fov,
+    enabled:controls.enabled,damping:controls.enableDamping,inert:[]};
+  if(typeof pauseGameForPerformance==='function')saved.resumeGame=pauseGameForPerformance();
+  setPlaying(false);controls.enabled=false;controls.enableDamping=false;
+  let branch=$('checkPerformance').closest('.performance-options');
+  while(branch.parentElement){
+    for(const sibling of branch.parentElement.children){
+      if(sibling===branch||['SCRIPT','STYLE','LINK'].includes(sibling.tagName))continue;
+      saved.inert.push([sibling,sibling.inert]);sibling.inert=true;
+    }
+    branch=branch.parentElement;
+    if(branch===document.body)break;
+  }
+  performanceCheck={run:new GraphicsPerformanceCheck(candidates),saved};
+  performanceRecommendation=null;$('applyPerformance').hidden=true;
+  performanceBusy(true);
+  performanceStatus('Preparing a populated whole-church view. Playback and timers are paused. Keep this tab visible.');
+}
+function samplePerformanceCheck(now){
+  if(!performanceCheck)return;
+  if(document.hidden){cancelPerformanceCheck('Check cancelled because the tab was hidden. Your original settings are restored.');return;}
+  const run=performanceCheck.run;
+  const unsupported=run.stage!=='next'&&graphicsProfile.post&&!SceneRealism.postActive();
+  const event=unsupported?run.finish('unsupported'):run.update(now,PeopleModels.pending()===0);
+  if(!event)return;
+  if(event.type==='candidate'){
+    const candidate=event.candidate;
+    performanceStatus(`Checking ${run.index+1}/${run.candidates.length}: Detail ${candidate.detail}, People ${candidate.people}...`);
+    applyGraphics(GRAPHICS_PROFILES[candidate.detail],candidate.people);
+  }else if(event.type==='error'){
+    finishPerformanceCheck(event.message+' Your original settings are restored.');
+  }else{
+    const result=event.recommendation;
+    if(!result){finishPerformanceCheck('The check could not measure a supported combination. Your original settings are restored.');return;}
+    const detail=GRAPHICS_PROFILES[result.detail].name.split(' (')[0],people=PEOPLE_LEVELS[result.people].name.split(' (')[0];
+    const timing=`about ${Math.round(result.fps)} fps here; 90% of frames within ${result.p90.toFixed(1)} ms`;
+    const warning=result.smooth?'Other views may be slower.':'The minimum did not reach 40 fps; display frame-rate caps can affect this result.';
+    finishPerformanceCheck(`Recommend Detail ${detail}, People ${people} (${timing}). ${warning} Original settings and view restored; use the recommendation to keep it.`,result);
+  }
+}
+function usePerformanceRecommendation(){
+  if(!performanceRecommendation||performanceCheck)return;
+  const {detail,people}=performanceRecommendation;
+  GraphicsDetail.store(detail);PeopleDetail.store(people);
+  $('graphicsDetail').value=detail;$('peopleDetail').value=people;
+  applyGraphics(GRAPHICS_PROFILES[detail],people);
+  $('applyPerformance').hidden=true;
+  performanceStatus('Recommendation applied and saved. Antialiasing changes take effect after a reload.');
+}
 function applyPeopleLevel(choice){
   if(typeof PeopleModels==='undefined')return;
   peopleLevel=PeopleDetail.level(choice,graphicsProfile);
@@ -1317,9 +1403,8 @@ function applyPeopleLevel(choice){
 }
 // Detail level: pixel ratio, shadows, crowd size, materials and (Ultra and above) mass-realism.js.
 // Antialiasing is fixed when the page loads.
-function applyGraphics(profile){
+function applyGraphics(profile,peopleChoice=PeopleDetail.storedChoice()){
   graphicsProfile=profile;
-  applyPeopleLevel(PeopleDetail.storedChoice());
   if(skyLight)skyLight.intensity=profile.textures?.72:.85;
   if(sunLight)sunLight.intensity=profile.textures?1.02:.9;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,profile.pixelRatio));
@@ -1335,10 +1420,12 @@ function applyGraphics(profile){
     if(sunLight.shadow.map){sunLight.shadow.map.dispose();sunLight.shadow.map=null;}
   }
   congregation.forEach((person,i)=>{
-    const hidden=typeof crowdVisible==='function'?!crowdVisible(i,profile.crowd):false;
+    const hidden=person.figure!==figures.player&&typeof crowdVisible==='function'?!crowdVisible(i,profile.crowd):false;
     person.figure.root.userData.gfxHidden=hidden;
-    if(hidden)person.figure.root.visible=false;
+    if(hidden){person.figure.root.visible=false;scene.remove(person.figure.root);}
+    else if(!person.figure.root.parent)scene.add(person.figure.root);
   });
+  applyPeopleLevel(peopleChoice);
   ChurchMaterials.configure(scene,renderer,profile);
   if(typeof SceneRealism!=='undefined')SceneRealism.configure({scene,renderer,camera:camera3d,THREE,overlay:sceneLabels,
     windows:()=>windowsGroup,walls:()=>fadingWalls.map(w=>w.mesh),
@@ -1356,7 +1443,7 @@ function initialise(){
   scene.background=new THREE.Color('#ccd9de');
   const gfx=typeof GraphicsDetail!=='undefined'?GraphicsDetail.profile():{pixelRatio:2,shadows:true,shadowSize:1024,crowd:1,antialias:true};
   peopleLevel=PeopleDetail.level(PeopleDetail.storedChoice(),gfx);
-  peopleBuildLevel=peopleLevel.rank>=2?PEOPLE_LEVELS.simple:peopleLevel;
+  peopleBuildLevel=peopleLevel.rank>=2?PEOPLE_LEVELS.blocks:peopleLevel;
   renderer=new THREE.WebGLRenderer({antialias:gfx.antialias,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,gfx.pixelRatio));
   renderer.outputEncoding=THREE.sRGBEncoding;
@@ -1368,7 +1455,7 @@ function initialise(){
   renderer.domElement.setAttribute('aria-label','Interactive 3D church scene');
   renderer.domElement.setAttribute('role','img');
   renderer.domElement.addEventListener('webglcontextlost',event=>{
-    event.preventDefault();setPlaying(false);
+    event.preventDefault();cancelPerformanceCheck();setPlaying(false);
     $('sceneStatus').hidden=false;
     $('sceneStatus').textContent='The browser lost its 3D graphics context. Reload this page to restore the scene.';
   });
@@ -1397,7 +1484,7 @@ function initialise(){
     for(const x of [185,255,325,395,605,675,745,815]){
       const i=congregation.length;
       const colors=['#6d899a','#997656','#767e59','#785961','#c6ac86'];
-      const figure=makeFigure(colors[i%colors.length],['#c99970','#8a5538','#deb28c'][i%3],null);
+      const figure=makeFigure(colors[i%colors.length],['#c99970','#8a5538','#deb28c'][i%3],null,crowdVisible(i,gfx.crowd)?peopleBuildLevel:PEOPLE_LEVELS.blocks);
       // Deterministic mix of adults and children so every load looks the same.
       const child=i%6===3;
       const height=child?.5+(i*7%9)/100:.72+(i*13%15)/100;
@@ -1410,7 +1497,7 @@ function initialise(){
   for(let y=356;y<=700;y+=68){
     for(const x of [110,890]){
       const i=congregation.length;
-      const figure=makeFigure(['#7b6d8f','#5f7d6a','#a0805f'][i%3],['#c99970','#8a5538','#deb28c'][i%3],null);
+      const figure=makeFigure(['#7b6d8f','#5f7d6a','#a0805f'][i%3],['#c99970','#8a5538','#deb28c'][i%3],null,crowdVisible(i,gfx.crowd)?peopleBuildLevel:PEOPLE_LEVELS.blocks);
       const height=i%4===1?.55:.74+(i*11%13)/100;
       figure.root.scale.set(height,height,height);
       figure.root.userData.baseScale=height;
@@ -1428,7 +1515,18 @@ function initialise(){
     $('peopleDetail').value=PeopleDetail.storedChoice();
     $('peopleDetail').onchange=event=>{PeopleDetail.store(event.target.value);applyPeopleLevel(event.target.value);};
   }
+  $('checkPerformance').onclick=startPerformanceCheck;
+  $('cancelPerformance').onclick=()=>cancelPerformanceCheck();
+  $('applyPerformance').onclick=usePerformanceRecommendation;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)cancelPerformanceCheck('Check cancelled because the tab was hidden. Your original settings are restored.');
+  });
   const resize=()=>{
+    if(performanceCheck)cancelPerformanceCheck('Check cancelled because the viewport changed size. Your original settings are restored.');
+    else if(performanceRecommendation){
+      performanceRecommendation=null;$('applyPerformance').hidden=true;
+      performanceStatus('The viewport changed size. Run the check again for this size.');
+    }
     const {width,height}=$('viewport').getBoundingClientRect();
     camera3d.aspect=width/height;
     camera3d.updateProjectionMatrix();
@@ -1501,6 +1599,7 @@ function initialise(){
       if(elapsed>=TOTAL&&!speechBusy)setPlaying(false);
     }
     renderFrame(dt);
+    samplePerformanceCheck(now);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

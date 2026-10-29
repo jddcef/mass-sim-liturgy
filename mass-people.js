@@ -3,6 +3,7 @@
 // knees really bend, with varied faces, hair and clothes, all generated from a seed at run time.
 // No model files, no images and no network, so file:// keeps working. Each People level adds real
 // CPU/GPU work (more triangles, more materials or more shadows):
+//   Blocks   - flat cuboids, plain vertex lighting, no surface details or figure shadows.
 //   Simple   - smooth low-poly bodies with bending joints and plain colours.
 //   Natural  - faces, ears, thumbs, hair styles, collars, belts, cuffs and painted details.
 //   Detailed - separate fingers, eyelids, locks of hair, beards, cloth folds and metallic gold trims.
@@ -11,13 +12,14 @@
 
 const PEOPLE_KEY='massPeople';
 const PEOPLE_LEVELS={
-  simple:{id:'simple',rank:0,name:'Simple (fastest)',around:8,torso:10,head:[10,8],along:1,hand:'mitten',features:0,buckets:'one',idle:false,crowdShadows:false},
+  blocks:{id:'blocks',rank:-1,name:'Blocks (fastest, plain cuboids)',blocks:true,buckets:'one',idle:false,crowdShadows:false},
+  simple:{id:'simple',rank:0,name:'Simple (low-poly)',around:8,torso:10,head:[10,8],along:1,hand:'mitten',features:0,buckets:'one',idle:false,crowdShadows:false},
   natural:{id:'natural',rank:1,name:'Natural (faces, hands, hair styles and clothes)',around:12,torso:16,head:[20,16],along:2,hand:'thumb',features:1,buckets:'one',idle:false,crowdShadows:false},
   detailed:{id:'detailed',rank:2,name:'Detailed (fingers, locks of hair, folds; more graphics work)',around:18,torso:24,head:[32,24],along:3,hand:'fingers',features:2,buckets:'gold',idle:false,crowdShadows:false},
   lifelike:{id:'lifelike',rank:3,name:'Lifelike (skin, cloth and hair materials, shadows, gentle movement; strong graphics card)',around:24,torso:32,head:[48,36],along:4,hand:'fingers',features:3,buckets:'all',idle:true,crowdShadows:true}
 };
 // People level used when the People menu is on Auto, keyed by the Detail level (mass-graphics.js).
-const PEOPLE_FOR_DETAIL={low:'simple',standard:'natural',high:'natural',ultra:'detailed',realistic:'lifelike',cinematic:'lifelike'};
+const PEOPLE_FOR_DETAIL={low:'blocks',standard:'natural',high:'natural',ultra:'detailed',realistic:'lifelike',cinematic:'lifelike'};
 
 function choosePeopleLevel(choice='auto',graphicsProfile){
   if(PEOPLE_LEVELS[choice])return PEOPLE_LEVELS[choice];
@@ -227,7 +229,15 @@ const PeopleModels=(()=>{
     SW[o]+=255-total;
   }
 
-  // Collects triangles per mesh key 'region|layer|bucket'. Every part is a grid of rings.
+  const BLOCK_FACES=[
+    [[1,0,0],[[1,-1,-1],[1,1,-1],[1,1,1],[1,-1,1]]],
+    [[-1,0,0],[[-1,-1,1],[-1,1,1],[-1,1,-1],[-1,-1,-1]]],
+    [[0,1,0],[[-1,1,-1],[-1,1,1],[1,1,1],[1,1,-1]]],
+    [[0,-1,0],[[-1,-1,1],[-1,-1,-1],[1,-1,-1],[1,-1,1]]],
+    [[0,0,1],[[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]],
+    [[0,0,-1],[[1,-1,-1],[-1,-1,-1],[-1,1,-1],[1,1,-1]]]
+  ];
+  // Collects triangles per mesh key 'region|layer|bucket'.
   class Build{
     constructor(level){
       this.level=level;this.uv=level.buckets==='all';this.names=BUCKET_NAMES[level.buckets]||BUCKET_NAMES.one;
@@ -237,6 +247,22 @@ const PeopleModels=(()=>{
       const key=this.key+'|'+this.names[kind];let o=this.out.get(key);
       if(!o){o={key,pos:[],nrm:[],col:[],si:[],sw:[],gl:[],uv:[],idx:[],main:[],shade:[],count:0};this.out.set(key,o);}
       return o;
+    }
+    block(centre,size,paint,bone){
+      const o=this.target(paint.kind);
+      for(const [normal,corners] of BLOCK_FACES){
+        const start=o.count;
+        for(const corner of corners){
+          const index=o.count++;
+          o.pos.push(...centre.map((v,k)=>v+corner[k]*size[k]/2));
+          o.nrm.push(...normal.map(v=>v*127));
+          o.col.push(...paint.c.map(v=>Math.round(clamp(v,0,1)*65535)));
+          o.si.push(bone,0,0,0);o.sw.push(255,0,0,0);o.gl.push(0);
+          if(paint.main){o.main.push(index);o.shade.push(1);}
+        }
+        o.idx.push(start,start+1,start+2,start,start+2,start+3);
+      }
+      this.triangles+=12;
     }
     // rows x cols quads; fn(V, s, t, i, j) with s=i/rows, t=j/cols. Closed grids repeat column 0 at t=1.
     // Normals: area-weighted, averaged across the seam, poles and zero-height colour borders; facing
@@ -1528,7 +1554,7 @@ const PeopleModels=(()=>{
     const T=three(),key=level.rank+':'+bucket;
     if(materialCache.has(key))return materialCache.get(key);
     const gold=bucket==='gold',kind=bucket==='skin'?'skin':bucket==='hair'?'hair':'cloth';
-    const m=new T.MeshStandardMaterial({vertexColors:true,skinning:true,side:T.DoubleSide,
+    const m=level.blocks?new T.MeshLambertMaterial({vertexColors:true,skinning:true}):new T.MeshStandardMaterial({vertexColors:true,skinning:true,side:T.DoubleSide,
       roughness:gold?.35:bucket==='skin'?.55:bucket==='hair'?.45:.85,
       metalness:gold?.35:0});
     m.userData.peopleRank=level.rank;m.userData.peopleBucket=bucket;
@@ -1554,7 +1580,47 @@ const PeopleModels=(()=>{
       if(changed)m.needsUpdate=true;
     }
   }
+  function buildBlocks(app,level){
+    const b=new Build(level),ctx={b,app,rig:rig(app),S:slots(app),level},S=ctx.S;
+    const robed=app.vest!=='lay',vested=app.vest==='chasuble'||app.vest==='dalmatic';
+    const robe=robed?S.robe:S.main,leg=robed?S.robe:app.outfit.skirt||app.outfit.kind==='dress'?S.main:S.second;
+    const block=(region,layer,centre,size,paint,bone)=>{
+      into(ctx,region,layer);b.block(centre,size,paint,bone);
+    };
+    block('body','base',[0,1.27,0],[.33,.46,.22],robe,B.chest);
+    block('body','base',[0,.98,0],[.31,.16,.22],leg,B.hips);
+    block('head','base',[0,1.56,0],[.075,.1,.075],S.skin,B.neck);
+    block('head','base',[0,1.735,.015],[.18,.24,.17],S.skin,B.head);
+    block('head','base',[0,1.845,.01],[.19,.045,.18],S.hair,B.head);
+    for(const m of [1,-1]){
+      const s=SIDE[m],sleeve=vested?S.robe:S.main;
+      block('limbs','base',[m*ctx.rig.sx,1.315,0],[.095,.3,.11],sleeve,s.arm);
+      block('limbs','base',[m*ctx.rig.sx,1.04,0],[.08,.25,.09],sleeve,s.fore);
+      block('limbs','base',[m*ctx.rig.sx,.86,.01],[.07,.11,.06],S.skin,s.hand);
+      block('limbs','base',[m*ctx.rig.hx,.72,0],[robed?.17:.12,.42,.15],leg,s.thigh);
+      block('limbs','base',[m*ctx.rig.hx,.295,0],[robed?.17:.1,.43,.14],leg,s.shin);
+      block('limbs','base',[m*ctx.rig.hx,.045,.045],[.11,.08,.23],S.shoe,s.foot);
+      if(VIMP_ROLES.includes(app.role)||vested){
+        block('limbs',vested?'veil':'vimp',[m*ctx.rig.sx,1.315,.065],[.11,.3,.035],S.veil,s.arm);
+        block('limbs',vested?'veil':'vimp',[m*ctx.rig.sx,1.04,.065],[.1,.25,.035],S.veil,s.fore);
+      }
+    }
+    if(robed){
+      block('body','cincture',[0,1.02,0],[.35,.025,.24],slot('#f4f2ea',CLOTH,{main:true}),B.spine);
+      block('body','pectoral',[0,1.33,.125],[.012,.11,.012],S.gold,B.chest);
+      block('body','pectoral',[0,1.35,.125],[.065,.012,.012],S.gold,B.chest);
+    }
+    if(vested){
+      block('body','mass',[0,1.275,0],[.42,.48,.27],S.main,B.chest);
+      block('body','mass',[0,.84,0],[.43,.39,.29],S.main,B.hips);
+      block('body','cope',[0,1.27,-.11],[.44,.5,.13],S.main,B.chest);
+      block('body','cope',[0,.66,-.1],[.46,.75,.13],S.main,B.hips);
+      block('head','bishop',[0,1.97,.01],[.2,.23,.18],S.veil,B.head);
+    }
+    return {parts:finish(b),ctx,triangles:b.triangles};
+  }
   function buildParts(app,level){
+    if(level.blocks)return buildBlocks(app,level);
     const b=new Build(level),ctx={b,app,rig:rig(app),S:slots(app),shape:bodyShape(app),headAt:headShape(app,level),
       level,style:HAIR_STYLES[app.hair?.style]||HAIR_STYLES.short};
     clothe(ctx);into(ctx,'limbs');hands(ctx);
@@ -1745,7 +1811,7 @@ const PeopleModels=(()=>{
       const mesh=new T.SkinnedMesh(part.geometry,material(level,part.bucket));
       mesh.geometry.boundingSphere=new T.Sphere(new T.Vector3(0,1,0),1.3);
       mesh.bind(figure.skeleton,new T.Matrix4());
-      mesh.raycast=noop;mesh.castShadow=figure.castShadow&&(!figure.crowd||level.crowdShadows);mesh.receiveShadow=true;
+      mesh.raycast=noop;mesh.castShadow=!level.blocks&&figure.castShadow&&(!figure.crowd||level.crowdShadows);mesh.receiveShadow=!level.blocks;
       mesh.userData.peopleLayer=part.layer;mesh.userData.peoplePart=part;
       region[part.region].add(mesh);figure.meshes.push(mesh);
     }
@@ -1782,13 +1848,14 @@ const PeopleModels=(()=>{
   function schedule(figure,value){
     if(!figure||figure.disposed)return;
     figure.target=levelOf(value);
+    if(figure.root.userData.gfxHidden)return;
     if(!queue.includes(figure))queue.push(figure);
     queue.sort((a,b)=>(a.crowd?1:0)-(b.crowd?1:0));
   }
   function pump(budget=8){
     let used=0;
     while(queue.length&&(used===0||used<budget)){
-      const figure=queue.shift();if(!figure||figure.disposed||figure.level===figure.target)continue;
+      const figure=queue.shift();if(!figure||figure.disposed||figure.root.userData.gfxHidden||figure.level===figure.target)continue;
       rebuild(figure,figure.target);used++;
     }
     return used;

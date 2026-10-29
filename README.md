@@ -151,13 +151,39 @@ reflections of the church, glowing candles and stained glass), **Realistic**
 corners and a filmic glow) and **Cinematic** (renders at double resolution for
 the smoothest image). Step down if the picture stutters.
 
+Detail also controls how much of the background congregation is present:
+
+| Detail | Congregation budget |
+|---|---|
+| Low | 20% |
+| Standard | 50% |
+| High | 75% |
+| Ultra, Realistic, Cinematic | 100% |
+
+Ministers and the active player are kept. Omitted background members are not
+drawn or animated, so lower levels reduce CPU work as well as graphics work.
+
 The **People** menu controls the figures separately: **Auto** follows Detail
-(Simple at Low, Natural at Standard/High, Detailed at Ultra, and Lifelike at
+(Blocks at Low, Natural at Standard/High, Detailed at Ultra, and Lifelike at
 Realistic/Cinematic). You can override that mapping. Higher People levels add
 more natural joints and hands, varied faces and hair, finer vestment details,
 and—at Lifelike—generated skin, cloth and hair relief, subtle movement and
 crowd shadows. Those levels use progressively more CPU, memory and graphics
 work; rebuilds are spread across frames when switching levels.
+**Blocks** is the fastest choice: plain cuboid people with basic lighting,
+no textures or figure shadows. **Simple** keeps the rounded low-poly figures.
+
+Auto uses memory, CPU-core count and screen-size hints; it does not measure
+processor or rendering speed. Open **Performance** in the view options and
+choose **Check performance** to measure real frame times for both settings.
+The check pauses playback and game timers, briefly tries progressively more
+demanding combinations in a populated whole-church view, then restores your
+view and settings. It recommends the last combination that kept at least 90%
+of measured frames within 25 ms (a 40 fps target). Choose **Use recommendation**
+to apply and save it; nothing is changed permanently by the check alone.
+Results depend on the viewport, display frame-rate limits and current
+antialiasing. Recheck after a reload if antialiasing changes, and lower detail
+if a different view is slower. Hiding the tab or resizing cancels the check.
 
 This is an illustrative teaching aid, not a substitute for the approved Missal,
 ceremonial training or local custom. Prayer texts are short paraphrases.
@@ -647,9 +673,13 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   Realistic and Cinematic add realistic lighting for strong graphics cards.
   Switching
   detail updates finishes immediately; antialiasing still needs a reload.
-  **People** (Auto, Simple, Natural, Detailed, Lifelike) follows Detail by
+  Congregation budgets are 20% at Low, 50% at Standard, 75% at High and 100%
+  at Ultra and above, retaining ministers and the active player.
+  **People** (Auto, Blocks, Simple, Natural, Detailed, Lifelike) follows Detail by
   default, with an optional independent override; the highest level adds
   generated surface relief, subtle breathing and crowd shadows.
+  **Performance > Check performance** measures both settings in a populated
+  whole-church view and offers an explicitly applied recommendation.
   The start bell (on by default) rings once the procession
   has gathered at the entrance. Reserved hosts are used and reposed by
   default. The cupboard also holds a monstrance for a future Exposition scenario.

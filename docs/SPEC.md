@@ -26,7 +26,7 @@ It is illustrative. It is not an approved ceremonial, and it must say so.
 | C6 | All three pages keep working: `mass-animation.html`, `mass-3d.html` and `mass-game.html`. Shared scripts must not break the pages that do not use the newer features. |
 | C7 | All tests pass in Node 22 with no dependencies. CI (`.github/workflows/checks.yml`) syntax-checks every script and runs every test file. |
 | C8 | Sounds are synthesised with WebAudio or are small local files. No streaming. |
-| C9 | The game runs on low-spec devices by default ("Detail: Auto"), with headroom for higher detail. Ultra, Realistic and Cinematic are opt-in levels for strong graphics cards; each adds one large step in graphics cost, and Auto never picks them. People detail follows graphics Detail by default and has a separate optional override; Auto does not pick Lifelike on low-cost profiles. |
+| C9 | The game runs on low-spec devices by default ("Detail: Auto"), with headroom for higher detail. Auto uses device hints and selects only Low or Standard, not a measured benchmark. Background congregation budgets are Low 20%, Standard 50%, High 75%, Ultra and above 100%; ministers and the active player are retained. Omitted members cost no drawing or pose updates. People detail follows Detail by default, using Blocks at Low, with a separate optional override. Ultra, Realistic, Cinematic and Lifelike remain opt-in high-cost modes. An optional measured performance check recommends both settings without saving them until explicitly applied; it restores playback, timers and view. |
 | C10 | Saved settings survive upgrades. The localStorage keys `massGameSetup`, `massGameScores` and `mass-church-layout-v1` are kept (and `massGameProgress` for the Path), and `SETUP_VERSION` is bumped when defaults change. |
 
 ## 3. Architecture
@@ -44,8 +44,8 @@ Classic scripts load in this order and share globals:
 | `mass-parishes.js` | Versioned prepared-shell profiles, validation, reversible nave mapping and pure aisle routing. |
 | `mass-features.js` | Church-layout editor and presets; server training cues. |
 | `mass-speech.js`, `audio/` | Browser voices or pre-generated MP3s (`audio/audio-manifest.js`, `audio/index.csv`). |
-| `mass-graphics.js` | Detail levels and quality settings. |
-| `mass-people.js` | Deterministic, offline skinned figures, appearance variation, vestments, hand props and four people-quality tiers. |
+| `mass-graphics.js` | Detail levels, congregation budgets, device-hint Auto and the pure frame-time performance-check state machine. |
+| `mass-people.js` | Deterministic, offline skinned figures, appearance variation, vestments, hand props and five people-quality tiers, including flat cuboids. |
 | `mass-materials.js` | Deterministic offline surface textures, physical texture sizing, cached stone/wood/metal finishes and reversible detail changes. |
 | `mass-realism.js` | Ultra, Realistic and Cinematic rendering: glow, smoother curves, candlelight, light shafts, the church reflection probe and hand-written post-processing (ambient occlusion, bloom, filmic tone mapping), with fallbacks. |
 | `mass-parish-editor.js`, `mass-parish-editor.css` | Maintainer preparation mode, plan/3D route preview, local profile library, draft and full-profile JSON export/import. |
@@ -233,8 +233,8 @@ scores or setup. Closing practice returns to the same setup/resume state.
 ## 5. Acceptance checks for any change
 
 1. `node mass-scenarios.test.cjs`, `node mass-features.test.cjs`,
-   `node mass-assets.test.cjs`, `node mass-game.test.cjs` and
-   `node mass-corpus.test.cjs`, `node mass-people.test.cjs` all pass.
+   `node mass-assets.test.cjs`, `node mass-game.test.cjs`,
+   `node mass-corpus.test.cjs` and `node mass-people.test.cjs` all pass.
 2. Any new script has a `node --check` line in `checks.yml`, and any new test
    file has a run line.
 3. The change has been played through in a real browser via `file://`: no

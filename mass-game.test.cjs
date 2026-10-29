@@ -1089,8 +1089,82 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
   assert.equal(gfx.crowdVisible(5,1),true);
   const shown=Array.from({length:100},(_,i)=>gfx.crowdVisible(i,.5)).filter(Boolean).length;
   assert.ok(shown>35&&shown<65,'about half the crowd at 50%');
+  for(const [id,count] of [['low',20],['standard',50],['high',75],['ultra',100],['realistic',100],['cinematic',100]]){
+    assert.equal(Array.from({length:100},(_,i)=>gfx.crowdVisible(i,P[id].crowd)).filter(Boolean).length,count,id+' congregation share');
+  }
+  assert.equal(gfx.frameTimeSummary(Array(20).fill(25)).smooth,true,'40 fps meets the frame budget');
+  assert.equal(gfx.frameTimeSummary(Array(20).fill(25.01)).smooth,false,'slower than 40 fps fails the frame budget');
+  assert.equal(gfx.frameTimeSummary([10,10,10,10,10,10,10,10,40,50]).p90,40,'slow tail is measured, not just average fps');
+  for(const samples of [[],[0],[NaN],[Infinity],[-1]])assert.throws(()=>gfx.frameTimeSummary(samples),/positive finite/);
+  const candidates=gfx.GRAPHICS_CHECK_CANDIDATES;
+  assert.deepEqual(candidates[0],{detail:'low',people:'blocks'});
+  const check=new gfx.GraphicsPerformanceCheck(candidates.slice(0,2));
+  assert.equal(check.update(0).type,'candidate');
+  check.update(1200,false);
+  check.update(1599,true);
+  assert.equal(check.stage,'warm','figure preparation must not count as measurement or warmup');
+  check.update(1600,true);
+  assert.equal(check.stage,'sample');
+  let time=1600,completion=null,sawSecond=false;
+  for(let i=0;i<200&&!completion;i++){
+    time+=check.index?50:16;
+    const event=check.update(time);
+    if(event?.type==='candidate')sawSecond=true;
+    if(event?.type==='complete')completion=event;
+  }
+  assert.ok(sawSecond);
+  assert.equal(completion.recommendation.people,'blocks','first slow pair keeps the last smooth pair');
+  assert.equal(check.results.length,2);
+  assert.equal(check.update(time+16),null,'completed checks stop sampling');
+  const fast=new gfx.GraphicsPerformanceCheck(candidates.slice(0,2));
+  let fastDone=null;
+  for(let i=0;i<300&&!fastDone;i++){
+    const event=fast.update(i*16);
+    if(event?.type==='complete')fastDone=event;
+  }
+  assert.equal(fastDone.recommendation.people,'simple','recommends the highest measured smooth pair');
+  const slow=new gfx.GraphicsPerformanceCheck(candidates);
+  let slowDone=null;
+  for(let i=0;i<50&&!slowDone;i++){
+    const event=slow.update(i*100);
+    if(event?.type==='complete')slowDone=event;
+  }
+  assert.equal(slow.results.length,1,'stop before trying heavier modes on a slow device');
+  assert.equal(slowDone.recommendation.smooth,false,'report when even the minimum is slow');
+  const waiting=new gfx.GraphicsPerformanceCheck(candidates);
+  waiting.update(0);
+  assert.equal(waiting.update(20001,false).type,'error','bounded preparation has an explicit failure');
+  const interrupted=new gfx.GraphicsPerformanceCheck(candidates);
+  interrupted.update(0);interrupted.update(400);interrupted.update(416);
+  interrupted.update(500,false);
+  assert.equal(interrupted.stage,'warm','new geometry work restarts warmup');
+  assert.equal(interrupted.samples.length,0,'samples from before a rebuild are discarded');
+  assert.throws(()=>new gfx.GraphicsPerformanceCheck([]),/at least one/);
 }
 // ---- controller regressions: revealed answer and score rollback ----
+{
+  let now=100,pauses=0,resumes=0;
+  const active={started:10},clock={
+    performance:{now:()=>now},gameTasksPaused:false,
+    game:{active,kneel:{P:2}},gameView:{tween:{started:20},speaker:{started:30}}
+  };
+  clock.pauseGameTasks=()=>{pauses++;clock.gameTasksPaused=true;};
+  clock.resumeGameTasks=()=>{resumes++;clock.gameTasksPaused=false;};
+  const source=fs.readFileSync('mass-game.js','utf8').match(/function pauseGameForPerformance\(\)\{[\s\S]*?\n\}/)[0];
+  const resume=vm.runInNewContext(source+';pauseGameForPerformance()',clock);
+  assert.equal(pauses,1);
+  now=600;resume();
+  assert.equal(resumes,1);
+  assert.equal(active.started,510,'performance-check time is excluded from the active answer');
+  assert.equal(clock.gameView.tween.started,520);
+  assert.equal(clock.gameView.speaker.started,530);
+  assert.equal(clock.game.kneel.P,2.5);
+  clock.gameTasksPaused=true;
+  const alreadyPaused=vm.runInNewContext(source+';pauseGameForPerformance()',clock);
+  now=900;alreadyPaused();
+  assert.equal(pauses,1);
+  assert.equal(resumes,1,'an already-paused game stays paused');
+}
 {
   const ui=vm.createContext({
     assert,console,scene:null,clearTimeout:()=>{},performance:{now:()=>100},

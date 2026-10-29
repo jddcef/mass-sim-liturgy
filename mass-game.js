@@ -289,6 +289,18 @@ function resumeGameTasks(){
   gameTasksPaused=false;
   for(const task of gameTasks)armGameTask(task);
 }
+function pauseGameForPerformance(){
+  const started=performance.now(),wasPaused=gameTasksPaused,active=game.active;
+  if(!wasPaused)pauseGameTasks();
+  return()=>{
+    const elapsed=performance.now()-started;
+    if(game.active===active&&active)active.started+=elapsed;
+    if(gameView.tween)gameView.tween.started+=elapsed;
+    if(gameView.speaker)gameView.speaker.started+=elapsed;
+    for(const key of Object.keys(game.kneel||{}))game.kneel[key]+=elapsed/1000;
+    if(!wasPaused)resumeGameTasks();
+  };
+}
 function wait(ms){return new Promise(resolve=>gameTimeout(resolve,ms));}
 
 // ---------- setup form ----------
@@ -1994,6 +2006,7 @@ function tweenTowards(key,target,dt,speed=190){
   return d>1;
 }
 function gameBeforeRender(dt,positions){
+  if(typeof performanceCheck!=='undefined'&&performanceCheck)return;
   if(PracticeRoom.isOpen()){PracticeRoom.frame();return;}
   if(!game||game.phase==='setup')return;
   const now=performance.now()/1000;

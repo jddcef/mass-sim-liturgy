@@ -665,6 +665,7 @@ const SceneRealism=(()=>{
       if(profile.reflections==='scene')ensureProbe().dirtyAt=now()-1;
     },
     active(){return !!ctx&&(profile.rank||0)>=3;},
+    postActive(){return hdr;},
     // Call after the church changes: rescans for new light sources and, with probe, re-captures reflections.
     refresh(options={}){
       if(!this.active())return;
