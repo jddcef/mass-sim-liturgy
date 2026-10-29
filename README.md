@@ -582,7 +582,9 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
 - **Your role** is shown on a fixed card in the sidebar and in the question
   header, with its portrait.
 - **Camera pad** (bottom right): zoom, pan and rotate. **Highlight** greys the
-  church except the people and objects currently moving. **Speaker view** briefly
+  church except the people and objects currently moving. Moving the camera or
+  touching the scene clears it at once; it returns after 5 seconds of leaving
+  the camera alone. **Speaker view** briefly
   switches to your character's eyes while your role speaks; drag the scene or use
   the camera pad to look around.
 - **First person** (game option): walk through your own eyes. If you head the
@@ -610,7 +612,11 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   procession lines up.
 - New options: Deacon distributes Communion (on when there is a Deacon), homily
   at the ambo (default) or chair, altar size, and tabernacle mounting (against
-  the wall by default; recessed, on a ledge or on a pillar). Short fixed texts
+  the wall by default; recessed, on a ledge or on a pillar). Sanctuary shape
+  (open, or a chancel arch with side walls) and the sanctuary lamp: hanging,
+  on a wall bracket, on a floor stand or on the tabernacle mounting, in four
+  styles (Auto picks one each game). Drag the lamp anywhere in the sanctuary
+  with the layout editor. Short fixed texts
   are fully voiced; quiet prayers sound softer; a soft tone marks the silences
   after the homily and after Communion.
 - **Presets**: "Weekday Mass" (no Gloria or Creed, no servers, said),

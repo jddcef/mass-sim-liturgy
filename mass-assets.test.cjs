@@ -32,6 +32,10 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
       for(const id of ['checkPerformance','cancelPerformance','applyPerformance','performanceStatus']){
         assert.match(read(html),new RegExp('id="'+id+'"'),'performance controls exist before startup');
       }
+      for(const id of ['app_sanctuary','app_lampMount','app_lampStyle','app_lampPlace']){
+        assert.match(read(html),new RegExp('id="'+id+'"'),'sanctuary lamp and chancel options exist');
+      }
+      assert.match(read(html),/id="app_lampStyle"[^>]*><option value="auto" selected>/,'lamp style defaults to a per-game choice');
     }
     assert.ok(!/\bfetch\s*\(|TextureLoader|https?:\/\//.test(read('mass-materials.js')),'materials need no network or local file fetch');
     assert.ok(!/\bfetch\s*\(|Loader\b|https?:\/\/|XMLHttpRequest/.test(read('mass-realism.js')),'realistic rendering needs no network or local file fetch');

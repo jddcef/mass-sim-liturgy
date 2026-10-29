@@ -9,7 +9,7 @@ const LAYOUT_ZONES={
   chair:[425,580,25,95],credence:[810,930,100,185],
   ministers:[615,805,25,90],tabernacle:[110,165,60,115]
 };
-const LAYOUT_NAMES={altar:'Altar',ambo:'Ambo',chair:'Celebrant and deacon chairs',credence:'Credence table',ministers:'Servers\' bench',tabernacle:'Tabernacle'};
+const LAYOUT_NAMES={altar:'Altar',ambo:'Ambo',chair:'Celebrant and deacon chairs',credence:'Credence table',ministers:'Servers\' bench',tabernacle:'Tabernacle',lamp:'Sanctuary lamp'};
 const LAYOUT_PRESETS={
   standard:{name:'Central altar / left ambo',positions:LAYOUT_DEFAULTS},
   mirrored:{name:'Central altar / right ambo',positions:{
@@ -34,14 +34,90 @@ const furnitureGroups={};
 let trainingRole=null;
 let featuresReady=false;
 
+// Optional chancel: side walls at X 120 and 880 behind an arch at depth 300, with doorways to the
+// sacristy passage (right) and a side chapel (left). Fixtures stay inside it, so they are kept
+// between X 165 and 835 without changing the saved layout. Openings follow the measured routes.
+const CHANCEL={walls:[120,880],face:300,furniture:[165,835],
+  doors:{left:[225,300],right:[170,300]},archDoors:{left:[50,124],right:[876,950]}};
+let sanctuaryShape='open';
+// The sanctuary lamp may stand anywhere in the sanctuary; without a saved position it follows the tabernacle.
+const LAMP_LIMITS=[100,900,12,300];
+function layoutAt(name){
+  const p=churchLayout[name];
+  if(sanctuaryShape!=='chancel'||!p||name==='lamp')return p;
+  return [Math.min(CHANCEL.furniture[1],Math.max(CHANCEL.furniture[0],p[0])),p[1]];
+}
+// True when a straight walk between two plan points passes through a chancel wall outside its openings.
+function chancelBlocks(a,b){
+  const crossesX=(x,span)=>{
+    if((a[0]-x)*(b[0]-x)>=0)return false;
+    const y=a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);
+    return y>=12&&y<CHANCEL.face&&!(y>=span[0]&&y<=span[1]);
+  };
+  const crossesFace=()=>{
+    if((a[1]-CHANCEL.face)*(b[1]-CHANCEL.face)>=0)return false;
+    const x=a[0]+(b[0]-a[0])*(CHANCEL.face-a[1])/(b[1]-a[1]);
+    const [left,right]=CHANCEL.walls;
+    if(x<36||x>964)return false;
+    if(x<left)return !(x>=CHANCEL.archDoors.left[0]&&x<=CHANCEL.archDoors.left[1]);
+    if(x>right)return !(x>=CHANCEL.archDoors.right[0]&&x<=CHANCEL.archDoors.right[1]);
+    return false;
+  };
+  return crossesX(CHANCEL.walls[0],CHANCEL.doors.left)||crossesX(CHANCEL.walls[1],CHANCEL.doors.right)||crossesFace();
+}
+const LAMP_STYLES=['brass','ornate','modern','lantern'],LAMP_MOUNTS=['hanging','wall','stand','tabernacle'];
+// Auto chooses one style per game from its seed, so each celebration may show a different lamp.
+function lampStyleFor(style,seed){
+  if(LAMP_STYLES.includes(style))return style;
+  // Game seeds share low bits, so mix them and take the high bits.
+  const mixed=Math.imul(Math.abs(Math.floor(seed))||0,2654435761)>>>0;
+  return LAMP_STYLES[Math.floor(mixed/2**32*LAMP_STYLES.length)];
+}
+// Plan point for the lamp: the saved custom spot, otherwise near the tabernacle for the chosen mounting.
+function lampPlan(a){
+  if(a.lampPlace==='custom'&&churchLayout.lamp)return churchLayout.lamp.slice();
+  const t=layoutAt('tabernacle'),side=t[0]>500?-1:1;
+  const offset={hanging:[side*20,45],wall:[side*45,0],stand:[side*42,14],tabernacle:[30,6]}[a.lampMount]||[side*20,45];
+  return [t[0]+offset[0],t[1]+offset[1]];
+}
+// Snaps a wall lamp to the nearest wall: the back wall, the chancel side walls (clear of their doorways),
+// or, in an open sanctuary, the nearest side pillar. Returns the plan point on the wall face and its normal.
+function lampWall(p){
+  const chancel=sanctuaryShape==='chancel';
+  const sides=chancel?[CHANCEL.walls[0]+5,CHANCEL.walls[1]-5]:[47,953];
+  const options=[
+    {d:p[1]-12,at:[Math.min(sides[1]-25,Math.max(sides[0]+25,p[0])),18],normal:[0,1]},
+    {d:Math.abs(p[0]-sides[0]),at:[sides[0],p[1]],normal:[1,0]},
+    {d:Math.abs(sides[1]-p[0]),at:[sides[1],p[1]],normal:[-1,0]}
+  ].sort((a,b)=>a.d-b.d);
+  const wall=options[0];
+  if(wall.normal[1]===0){
+    let y=Math.min(290,Math.max(35,wall.at[1]));
+    if(chancel){
+      const [a,b]=wall.normal[0]>0?CHANCEL.doors.left:CHANCEL.doors.right;
+      if(y>a-18&&y<b+18)y=(y-a<b-y||b+18>290)?a-18:b+18;
+    }else y=Math.abs(y-120)<Math.abs(y-300)?120:300;
+    wall.at[1]=y;
+  }
+  return wall;
+}
+
 function validateLayout(value){
   if(!value||typeof value!=='object')throw new Error('A layout must contain furniture positions.');
   const result={};
   for(const name of Object.keys(LAYOUT_DEFAULTS)){
     const p=value[name];
     if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite))throw new Error('Invalid position for '+name+'.');
-    if(p[0]<100||p[0]>900||p[1]<35||p[1]>260)throw new Error('Keep '+name+' within the sanctuary (X 100-900, depth 35-260).');
+    // The tabernacle may stand against the back wall, as the Tabernacle option places it.
+    const top=name==='tabernacle'?30:35;
+    if(p[0]<100||p[0]>900||p[1]<top||p[1]>260)throw new Error('Keep '+name+' within the sanctuary (X 100-900, depth '+top+'-260).');
     result[name]=p.slice();
+  }
+  if(value.lamp!==undefined){
+    const p=value.lamp,[left,right,top,bottom]=LAMP_LIMITS;
+    if(!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite))throw new Error('Invalid position for the sanctuary lamp.');
+    if(p[0]<left||p[0]>right||p[1]<top||p[1]>bottom)throw new Error('Keep the sanctuary lamp within the sanctuary (X 100-900, depth 12-300).');
+    result.lamp=p.slice();
   }
   for(const name of ['ambo','chair','credence','ministers','tabernacle']){
     if(Math.hypot(result[name][0]-result.altar[0],result[name][1]-result.altar[1])<100){
@@ -60,13 +136,13 @@ function furniturePoint(point){
     if(weight===1)full.push(name);
     if(weight>0){
       weightSum+=weight;
-      dx+=weight*(churchLayout[name][0]-LAYOUT_DEFAULTS[name][0]);
-      dy+=weight*(churchLayout[name][1]-LAYOUT_DEFAULTS[name][1]);
+      dx+=weight*(layoutAt(name)[0]-LAYOUT_DEFAULTS[name][0]);
+      dy+=weight*(layoutAt(name)[1]-LAYOUT_DEFAULTS[name][1]);
     }
   }
   if(full.length){
-    const name=full[0];
-    return [point[0]+churchLayout[name][0]-LAYOUT_DEFAULTS[name][0],point[1]+churchLayout[name][1]-LAYOUT_DEFAULTS[name][1]];
+    const name=full[0],at=layoutAt(name);
+    return [point[0]+at[0]-LAYOUT_DEFAULTS[name][0],point[1]+at[1]-LAYOUT_DEFAULTS[name][1]];
   }
   const divisor=Math.max(1,weightSum);
   return [point[0]+dx/divisor,point[1]+dy/divisor];
@@ -82,12 +158,12 @@ function furnitureUnpoint(mapped){
   // Prefer its translated source zone before attempting the blended inverse.
   const matches=[];
   for(const [name,[left,right,top,bottom]] of Object.entries(LAYOUT_ZONES)){
-    const delta=churchLayout[name].map((n,i)=>n-LAYOUT_DEFAULTS[name][i]);
+    const delta=layoutAt(name).map((n,i)=>n-LAYOUT_DEFAULTS[name][i]);
     const p=mapped.map((n,i)=>n-delta[i]);
     if(p[0]>=left&&p[0]<=right&&p[1]>=top&&p[1]<=bottom){
       const result=furniturePoint(p);
       if(Math.hypot(result[0]-mapped[0],result[1]-mapped[1])<.01){
-        matches.push({p,d:Math.hypot(mapped[0]-churchLayout[name][0],mapped[1]-churchLayout[name][1])});
+        matches.push({p,d:Math.hypot(mapped[0]-layoutAt(name)[0],mapped[1]-layoutAt(name)[1])});
       }
     }
   }
@@ -110,9 +186,10 @@ function collectFurniture(name,firstIndex){
 
 function refreshFurniture(){
   for(const [name,group] of Object.entries(furnitureGroups)){
-    const p=churchLayout[name],base=LAYOUT_DEFAULTS[name];
+    const p=layoutAt(name),base=LAYOUT_DEFAULTS[name];
     group.position.set((p[0]-base[0])*SCALE,0,(p[1]-base[1])*SCALE);
   }
+  if(typeof updateSanctuaryLamp==='function')updateSanctuaryLamp();
   for(const sprite of sceneLabels){
     if(sprite.userData.fixture){
       sprite.position.copy(world(sprite.userData.canonical,1.95));
@@ -138,16 +215,23 @@ function downloadJSON(filename,data){
 }
 
 function refreshLayoutFields(){
-  const p=churchLayout[$('layoutItem').value];
+  const item=$('layoutItem').value;
+  let p=churchLayout[item];
+  if(!p&&item==='lamp')p=typeof lampPlan==='function'?lampPlan(readAppearance()).map(Math.round):[170,90];
   $('layoutX').value=p[0];$('layoutY').value=p[1];
+  const depth=item==='lamp'?LAMP_LIMITS.slice(2):[item==='tabernacle'?30:35,260];
+  if('min' in $('layoutY')){$('layoutY').min=depth[0];$('layoutY').max=depth[1];}
 }
 
 function commitLayout(candidate){
   if(typeof ChurchProfiles!=='undefined'&&ChurchProfiles.active)throw new Error('Use the parish preparation editor to change this profile, or select Legacy layout first.');
   const validated=validateLayout(candidate);
+  const lampMoved=!!validated.lamp&&JSON.stringify(validated.lamp)!==JSON.stringify(churchLayout.lamp);
+  const lampOnly=Object.keys(LAYOUT_DEFAULTS).every(key=>validated[key].every((n,i)=>n===churchLayout[key][i]));
   setPlaying(false);
   churchLayout=validated;
-  if($('app_tabernacle'))$('app_tabernacle').value='custom';
+  if(lampMoved&&$('app_lampPlace'))$('app_lampPlace').value='custom';
+  if(!(lampOnly&&lampMoved)&&$('app_tabernacle'))$('app_tabernacle').value='custom';
   refreshFurniture();
   refreshLayoutFields();
   renderFrame();
@@ -254,7 +338,7 @@ function initialiseFeatures(){
   $('applyPreset').onclick=()=>{
     const preset=LAYOUT_PRESETS[$('layoutPreset').value];
     if(!preset)return;
-    try{commitLayout(structuredClone(preset.positions));}catch(error){reportFeature('layoutStatus',error);}
+    try{commitLayout({...structuredClone(preset.positions),...(churchLayout.lamp?{lamp:churchLayout.lamp.slice()}:{})});}catch(error){reportFeature('layoutStatus',error);}
   };
   try{
     const saved=localStorage.getItem('mass-church-layout-v1');

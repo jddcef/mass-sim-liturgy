@@ -197,6 +197,37 @@ vm.runInContext(`
   assert.equal(skipSpeech(),true);
   assert.equal(speechBusy,false);
   assert.equal(skipSpeech(),false,'nothing left to skip');
+  // Chancel arch and sanctuary lamp.
+  churchLayout=structuredClone(LAYOUT_DEFAULTS);
+  assert.deepEqual(validateLayout({...LAYOUT_DEFAULTS,lamp:[400,40]}),{...LAYOUT_DEFAULTS,lamp:[400,40]});
+  assert.throws(()=>validateLayout({...LAYOUT_DEFAULTS,lamp:[400,999]}),/sanctuary lamp/,'lamp outside the sanctuary is refused');
+  assert.deepEqual(validateLayout({...LAYOUT_DEFAULTS,tabernacle:[137,32]}).tabernacle,[137,32],'wall tabernacle positions can be saved');
+  churchLayout.tabernacle=[137,32];
+  sanctuaryShape='open';
+  assert.deepEqual(layoutAt('tabernacle'),[137,32]);
+  sanctuaryShape='chancel';
+  assert.deepEqual(layoutAt('tabernacle'),[165,32],'chancel walls pull side fixtures inward');
+  assert.deepEqual(churchLayout.tabernacle,[137,32],'saved layout untouched');
+  assert.ok(chancelBlocks([100,200],[150,150]),'walking through the left wall is blocked');
+  assert.ok(!chancelBlocks([860,230],[900,230]),'right doorway is open');
+  assert.ok(!chancelBlocks([945,250],[945,320]),'right arch-face door is open');
+  assert.ok(!chancelBlocks([500,350],[500,100]),'central arch is open');
+  for(const style of LAMP_STYLES)assert.equal(lampStyleFor(style,3),style);
+  assert.ok(LAMP_STYLES.includes(lampStyleFor('auto',7)));
+  assert.equal(new Set([528533,240081,268669,311917,1,5,9,13].map(seed=>lampStyleFor('auto',seed))).size>2,true,'auto varies by game');
+  for(const mount of LAMP_MOUNTS){
+    const p=lampPlan({lampMount:mount,lampPlace:'tabernacle'});
+    assert.ok(p[0]>=LAMP_LIMITS[0]&&p[0]<=LAMP_LIMITS[1]&&p[1]>=LAMP_LIMITS[2]&&p[1]<=LAMP_LIMITS[3],mount+' lamp in the sanctuary');
+    assert.ok(Math.hypot(p[0]-165,p[1]-32)<60,mount+' lamp near the tabernacle');
+  }
+  churchLayout.lamp=[700,150];
+  assert.deepEqual(lampPlan({lampMount:'hanging',lampPlace:'custom'}),[700,150]);
+  const onWall=lampWall([860,225]);
+  assert.ok(onWall.at[0]===875&&(onWall.at[1]<170-17||onWall.at[1]>290+17),'wall lamp avoids the doorway');
+  sanctuaryShape='open';
+  assert.equal(lampWall([500,30]).at[1],18,'back wall');
+  delete churchLayout.lamp;
+  churchLayout=structuredClone(LAYOUT_DEFAULTS);
   console.log('Passed layout transforms, 0-5 server training cues, language validation and speech synchronization.');
 `,context);
 assert.ok(canceled>0);
