@@ -487,7 +487,7 @@ function triggerVisualChime(cue){
 const OPTION_ICONS={deacon:'gospels',serverCount:'bell',lector:'lectionary',readerCount:'lectionary',lectorProcession:'walk',collection:'collection',emhc:'ciborium',
   reservedCommunion:'tabernacle',deaconCommunion:'host',incense:'thurible',bothKinds:'chalice',gloria:'sing',creed:'speak',secondReading:'book',giftsProcession:'cruets',
   solemnBlessing:'bless',introductory:'sprinkler',music:'sing',eucharisticPrayer:'raise',bellStart:'bell',bellEpiclesis:'bell',bellElevation:'bell',
-  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',ashWednesday:'ashes',palmSunday:'palm',baptism:'font',funeral:'coffin',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',
+  crucifix:'crucifix',crossStand:'cross',bishop:'mitre',confirmation:'chrism',nativity:'candle',candlemas:'candle',ashWednesday:'ashes',palmSunday:'palm',baptism:'font',funeral:'coffin',app_corpus:'crucifix',app_windows:'church',app_tabernacle:'tabernacle',app_tabernacleStyle:'tabernacle',app_altarSize:'altar',app_nave:'church',app_sanctuary:'church',app_lampMount:'candle',app_lampStyle:'candle',app_lampPlace:'candle',
   app_floor:'altar',app_vestment:'vestment',app_serverRobe:'vestment',app_cincture:'vestment',app_seniorCross:'cross',lapses:'person',detail:'check',sound:'bell',
   recordedAudio:'speak',symbols:'host',openChurch:'door',firstPerson:'person',fpView:'walk',projector:'screen'};
 function decorateOptions(form){
@@ -633,6 +633,7 @@ function startGame(config){
   resetGameState();
   const {options,notes}=normaliseGameOptions(config.role,{...config.raw,level:config.level});
   Object.assign(game,{role:config.role,level:config.level,options,notes,seed:options.seed,questions:!GAME_LEVELS[config.level].watch});
+  if(typeof lampSeed!=='undefined')lampSeed=options.seed;
   game.preset=presetForOptions(options,config.preset);
   game.cross=setCrossPlaces(options);
   setProjection(!!options.projector);

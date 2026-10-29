@@ -141,6 +141,13 @@ startup must appear **before** the `<script>` tags in the HTML.
 - **Church and appearance**:
   - Layout preset, nave seating, crucifix and processional-cross position,
     tabernacle position and mounting, altar size.
+  - Sanctuary shape: open to the full width, or a chancel arch with side walls
+    whose front corners open to the nave and sacristy route.
+  - Sanctuary lamp: hanging, wall bracket (nearest wall, clear of doorways),
+    floor stand or on the tabernacle mounting; brass, ornate, modern glass or
+    lantern style, with Auto choosing one per game. It follows the tabernacle
+    unless placed with the layout editor. It is unlit when the tabernacle is
+    empty (the Evening Mass of the Lord's Supper and Good Friday).
   - Windows, floor, vestment colour (defaults to the season of the coming
     Sunday) and server robes.
   - Parish preparation: a named profile separates church layout from the
@@ -226,7 +233,9 @@ scores or setup. Closing practice returns to the same setup/resume state.
 - Hover-to-highlight answers, and hover tooltips after 650 ms.
 - Search with categories and an index card.
 - Camera pad, highlight mode on by default, and fading of walls that block
-  the view.
+  the view. Moving the camera or touching the scene clears the highlight
+  fade at once; it returns gradually after 5 seconds without camera or scene
+  input. Answering and menus do not clear it.
 - Skip button and the S key.
 - Anonymous feedback button.
 

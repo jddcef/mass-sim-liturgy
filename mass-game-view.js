@@ -13,6 +13,7 @@ function setCameraHint(text){
 // ---------- camera pad ----------
 function cameraNudge(action){
   if(!camera3d||!controls)return;
+  noteSceneInteraction();
   if(action==='view'){
     if(firstPersonActive()){cycleFirstPersonView();return;}
     // Outside first person, step through the fixed cameras of the camera menu.
@@ -382,13 +383,20 @@ function setLit(object,on){
 }
 // Highlight mode: the rest of the church shows through the grey veil at this share.
 const HIGHLIGHT_SHOWN=.38;
+// Moving the camera or touching the scene clears the fade; it returns gently after this long idle.
+const HIGHLIGHT_IDLE=5,HIGHLIGHT_RETURN=1.5;
+function highlightFade(idleSeconds){
+  if(!(idleSeconds>=0))return 1;
+  return Math.max(0,Math.min(1,(idleSeconds-HIGHLIGHT_IDLE)/HIGHLIGHT_RETURN));
+}
+function noteSceneInteraction(){gameView.touchedAt=performance.now();}
 function ensureHighlightScene(){
   if(gameView.dim)return;
   const dimCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
   const dimScene=new THREE.Scene();
   const veil=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({color:'#77736d',transparent:true,opacity:1-HIGHLIGHT_SHOWN,depthTest:false,depthWrite:false}));
   dimScene.add(veil);
-  gameView.dim={scene:dimScene,camera:dimCamera};
+  gameView.dim={scene:dimScene,camera:dimCamera,veil};
   // Lights also need layer 1 to light the highlighted pass; the extra light brightens only that pass.
   scene.traverse(child=>{if(child.isLight)child.layers.enable(1);});
   const boost=new THREE.AmbientLight('#fff4d8',.45);
@@ -400,7 +408,10 @@ function ensureHighlightScene(){
 // church still visible (the realistic post-processing fades the labels drawn after it by the same share).
 function gameRender(){
   if(!gameView.highlightOn||typeof game==='undefined'||game.phase==='setup')return false;
+  const fade=highlightFade(gameView.touchedAt==null?NaN:(performance.now()-gameView.touchedAt)/1000);
+  if(fade<=0)return false;
   ensureHighlightScene();
+  gameView.dim.veil.material.opacity=(1-HIGHLIGHT_SHOWN)*fade;
   const {roles,props}=activeThings();
   const lit=new Set();
   for(const role of roles)lit.add(figures[role].root);
@@ -423,7 +434,7 @@ function gameRender(){
   camera3d.layers.set(0);
   scene.background=background;
   renderer.autoClear=true;
-  return HIGHLIGHT_SHOWN;
+  return 1-(1-HIGHLIGHT_SHOWN)*fade;
 }
 function setHighlightMode(on){
   gameView.highlightOn=!!on;
@@ -470,13 +481,16 @@ function initialiseGameView(){
   for(const button of document.querySelectorAll('#cameraPad [data-cam]')){
     button.onclick=()=>cameraNudge(button.dataset.cam);
   }
-  controls?.addEventListener('start',()=>{if(!PracticeRoom.isOpen())gameView.tween=null;});
+  controls?.addEventListener('start',()=>{noteSceneInteraction();if(!PracticeRoom.isOpen())gameView.tween=null;});
   $('firstPerson').onchange=()=>setFirstPerson($('firstPerson').checked);
   const canvas=renderer.domElement;
   canvas.addEventListener('pointerdown',event=>{
+    noteSceneInteraction();
     if(PracticeRoom.isOpen())return;
     if(firstPersonActive()||gameView.speaker)gameView.drag={x:event.clientX,y:event.clientY};
   });
+  canvas.addEventListener('wheel',noteSceneInteraction,{passive:true});
+  canvas.addEventListener('pointermove',event=>{if(event.buttons)noteSceneInteraction();});
   window.addEventListener('pointermove',event=>{
     if(PracticeRoom.isOpen())return;
     const drag=gameView.drag;
@@ -490,7 +504,7 @@ function initialiseGameView(){
     drag.x=event.clientX;drag.y=event.clientY;
   });
   window.addEventListener('pointerup',()=>{gameView.drag=null;});
-  $('highlightMode').onchange=()=>setHighlightMode($('highlightMode').checked);
+  $('highlightMode').onchange=()=>{gameView.touchedAt=null;setHighlightMode($('highlightMode').checked);};
   $('gameSkip').onclick=()=>skipCurrent();
   $('camera').addEventListener('change',()=>{if(gameView.speaker){gameView.speaker.mode=$('camera').value;endSpeakerView();setCamera($('camera').value);}});
 }

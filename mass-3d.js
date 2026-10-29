@@ -285,6 +285,140 @@ function setTabernacleStyle(style){
   const back=mounting==='recess'?.75:0;
   tabernacleBody.forEach(o=>{o.position.z=o.userData.z-back;});
 }
+// A rod between two points (lamp chains, brackets and stand shafts).
+function rod(parent,from,to,radius,color){
+  const a=new THREE.Vector3(...from),b=new THREE.Vector3(...to),dir=b.clone().sub(a);
+  const m=mesh(new THREE.CylinderGeometry(radius,radius,dir.length(),6),color,parent,0,0,0,false);
+  m.position.copy(a).add(b).multiplyScalar(.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  return m;
+}
+// The lamp itself, centred on its glass; returns the heights of its top and bottom attachment points.
+function lampHead(parent,style,lit,y){
+  const g=new THREE.Group();g.position.y=y;parent.add(g);
+  const glass=lit?'#df4735':'#5a2a26',glow=o=>lit?markGlow(o,'lamp'):o;
+  if(style==='ornate'){
+    const bowl=sphere(g,0,-.05,0,.2,'#c59a3f');bowl.scale.set(1,.55,1);
+    glow(sphere(g,0,.05,0,.1,glass));
+    cylinder(g,0,.06,0,.21,.21,.03,'#c59a3f','gold');
+    for(let i=0;i<10;i++){const t=i/10*Math.PI*2;box(g,Math.cos(t)*.175,-.05,Math.sin(t)*.175,.025,.13,.025,'#e3bc62',false);}
+    cylinder(g,0,-.19,0,.02,.06,.08,'#c59a3f','gold');
+    sphere(g,0,-.25,0,.03,'#c59a3f',false);
+    return {group:g,top:.08,bottom:-.28,spread:.19};
+  }
+  if(style==='modern'){
+    glow(cylinder(g,0,0,0,.065,.065,.3,glass));
+    cylinder(g,0,-.165,0,.085,.085,.03,'#8f9496','silver');
+    cylinder(g,0,.158,0,.07,.07,.015,'#8f9496','silver');
+    return {group:g,top:.17,bottom:-.18,spread:0};
+  }
+  if(style==='lantern'){
+    glow(box(g,0,0,0,.14,.22,.14,glass,false));
+    for(const dx of [-.085,.085])for(const dz of [-.085,.085])box(g,dx,0,dz,.022,.26,.022,'#2b2a28');
+    box(g,0,-.14,0,.22,.03,.22,'#2b2a28');
+    const roof=mesh(new THREE.ConeGeometry(.17,.12,4),'#2b2a28',g,0,.19,0);roof.rotation.y=Math.PI/4;
+    sphere(g,0,.26,0,.025,'#2b2a28',false);
+    return {group:g,top:.28,bottom:-.16,spread:0};
+  }
+  cylinder(g,0,-.1,0,.1,.05,.07,'#c59a3f','gold');
+  glow(cylinder(g,0,0,0,.075,.07,.15,glass));
+  cylinder(g,0,.085,0,.095,.095,.025,'#c59a3f','gold');
+  sphere(g,0,-.155,0,.025,'#c59a3f',false);
+  return {group:g,top:.09,bottom:-.17,spread:.095};
+}
+// Sanctuary lamp (GIRM 316; can. 940): hanging, on a wall bracket, on a floor stand or on the
+// tabernacle's own mounting. It is unlit on Holy Thursday and Good Friday, when the tabernacle is empty.
+let lampGroup=null,lampSeed=Math.floor(Math.random()*1e6);
+function updateSanctuaryLamp(a=readAppearance()){
+  if(typeof scene==='undefined'||!scene||!tabernacleMount)return;
+  if(lampGroup){scene.remove(lampGroup);lampGroup.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+  const style=lampStyleFor(a.lampStyle,lampSeed),mount=LAMP_MOUNTS.includes(a.lampMount)?a.lampMount:'hanging';
+  const lit=!(scenario?.options?.holyThursday||scenario?.options?.goodFriday);
+  const floor=y=>y<295?.32:y<310?.32*(310-y)/15:0;
+  lampGroup=new THREE.Group();lampGroup.name='Sanctuary lamp';
+  let p=lampPlan(a);
+  if(mount==='wall'){
+    const wall=lampWall(p);p=wall.at;
+    lampGroup.rotation.y=Math.atan2(wall.normal[0],wall.normal[1]);
+  }
+  lampGroup.position.set((p[0]-500)*SCALE,floor(p[1]),(p[1]-440)*SCALE);
+  const metal=lampMetal(style),head=lampHead(lampGroup,style,lit,0);
+  if(mount==='tabernacle'){
+    const back=tabernacleBody[0]?tabernacleBody[0].userData.z-tabernacleBody[0].position.z:0;
+    lampGroup.position.z-=back;
+    head.group.position.y=1.64-head.bottom;
+    rod(lampGroup,[0,1.28,0],[0,1.66,0],.025,'#c59a3f');
+  }else if(mount==='stand'){
+    cylinder(lampGroup,0,.03,0,.18,.24,.06,metal);
+    rod(lampGroup,[0,.06,0],[0,1.32,0],.025,metal);
+    cylinder(lampGroup,0,1.33,0,.13,.06,.05,metal);
+    head.group.position.y=1.36-head.bottom;
+  }else if(mount==='wall'){
+    box(lampGroup,0,2.35,.02,.16,.34,.04,metal);
+    rod(lampGroup,[0,2.45,.02],[0,2.45,.6],.018,metal);
+    rod(lampGroup,[0,2.2,.02],[0,2.45,.4],.014,metal);
+    sphere(lampGroup,0,2.45,.6,.025,metal,false);
+    head.group.position.set(0,2.2-head.top,.6);
+    rod(lampGroup,[0,2.45,.6],[0,2.2,.6],.007,metal);
+  }else{
+    // Hanging well above head height, so it never troubles ministers or processional crosses.
+    head.group.position.y=2.75;
+    const top=2.75+head.top;
+    if(head.spread){
+      const apex=top+.45;
+      for(let i=0;i<3;i++){const t=i/3*Math.PI*2;rod(lampGroup,[Math.cos(t)*head.spread,top,Math.sin(t)*head.spread],[0,apex,0],.006,metal);}
+      rod(lampGroup,[0,apex,0],[0,6.2,0],.008,metal);
+    }else rod(lampGroup,[0,top,0],[0,6.2,0],.008,metal);
+    cylinder(lampGroup,0,6.2,0,.12,.06,.06,metal);
+  }
+  scene.add(lampGroup);
+  if(typeof SceneRealism!=='undefined')SceneRealism.refresh();
+}
+function lampMetal(style){
+  return {lantern:'#2b2a28',modern:'#8f9496'}[style]||'#b8913c';
+}
+// Optional chancel: an arch across the sanctuary front and side walls with doorways (see CHANCEL).
+let chancelGroup=null;
+function buildChancel(){
+  chancelGroup=new THREE.Group();
+  const wallColour='#c4b69d',trim='#a39172',z=y=>(y-440)*SCALE,x=px=>(px-500)*SCALE;
+  const [left,right]=CHANCEL.walls.map(x),height=5.2,top=6.2,face=z(CHANCEL.face);
+  const sideWall=(wx,span)=>{
+    const parts=[[12,span[0],0,height],[span[1],CHANCEL.face,0,height],[span[0],span[1],2.5,height]];
+    for(const [a,b,low,high] of parts.filter(([a,b])=>b>a)){
+      markWall(box(chancelGroup,wx,(low+high)/2,(z(a)+z(b))/2,.24,high-low,(b-a)*SCALE,wallColour));
+    }
+    for(const y of span)box(chancelGroup,wx,1.25,z(y),.3,2.5,.08,trim,false);
+    box(chancelGroup,wx,2.52,(z(span[0])+z(span[1]))/2,.3,.08,(span[1]-span[0])*SCALE,trim,false);
+  };
+  sideWall(left,CHANCEL.doors.left);
+  sideWall(right,CHANCEL.doors.right);
+  // Both front corners open to the nave: readers pass on the left, and the right side leads to the sacristy.
+  const extrude=(points,colour)=>{
+    const shape=new THREE.Shape(points.map(([u,v])=>new THREE.Vector2(u,v)));
+    const geometry=new THREE.ExtrudeGeometry(shape,{depth:.3,bevelEnabled:false,curveSegments:1});
+    return markWall(mesh(geometry,colour,chancelGroup,0,0,face-.15,true));
+  };
+  const outer=11.75;
+  for(const side of [-1,1]){
+    const door=(side<0?CHANCEL.archDoors.left:CHANCEL.archDoors.right).map(x).sort((a,b)=>Math.abs(b)-Math.abs(a));
+    const inner=Math.abs(side<0?left:right)-.12;
+    const near=Math.abs(door[1])>inner+.05?Math.abs(door[1]):inner;
+    const points=[[outer,0],[Math.abs(door[0]),0],[Math.abs(door[0]),2.5],[near,2.5],...(near>inner?[[near,0],[inner,0]]:[]),[inner,top],[outer,top]];
+    extrude(side<0?points.map(([u,v])=>[-u,v]).reverse():points,wallColour);
+  }
+  // Segmental arch header between the side walls.
+  const span=Math.abs(left)-.12,spring=3.6,rise=1.6,arch=[];
+  for(let i=0;i<=24;i++){const u=-span+2*span*i/24;arch.push([u,spring+rise*Math.sqrt(Math.max(0,1-(u/span)**2))]);}
+  extrude([[-span,top],...arch,[span,top]].reverse(),wallColour);
+  for(const side of [-1,1])box(chancelGroup,side*span,spring,face,.5,.18,.42,trim,false);
+  chancelGroup.visible=false;
+  scene.add(chancelGroup);
+}
+function setSanctuaryShape(shape){
+  sanctuaryShape=shape==='chancel'?'chancel':'open';
+  if(chancelGroup)chancelGroup.visible=sanctuaryShape==='chancel';
+}
 function buildCrucifix(){
   crucifixGroup=new THREE.Group();
   box(crucifixGroup,0,0,0,.16,1.8,.12,'#5e432d',true,'wood');
@@ -351,7 +485,7 @@ function setSanctuaryFloor(name){
   const kind=Object.hasOwn(FLOOR_COLOURS,name)?name:'sandstone';
   finishSurface(sanctuaryFloor,kind,material(FLOOR_COLOURS[kind]));
 }
-const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind',tabernacleStyle:'projecting',altarSize:'standard',nave:'aisles'};
+const APPEARANCE_DEFAULTS={corpus:'yes',windows:'stained',floor:'sandstone',vestment:'season',serverRobe:'#fbfbf6',cincture:'#ffffff',seniorCross:'yes',tabernacle:'behind',tabernacleStyle:'projecting',altarSize:'standard',nave:'aisles',sanctuary:'open',lampMount:'hanging',lampStyle:'auto',lampPlace:'tabernacle'};
 function readAppearance(){
   const a={...APPEARANCE_DEFAULTS};
   for(const key of Object.keys(a))if($('app_'+key))a[key]=$('app_'+key).value;
@@ -380,6 +514,7 @@ function applyAppearance(a){
   setSanctuaryFloor(a.floor);
   setAltarSize(a.altarSize);
   setNaveStyle(a.nave);
+  setSanctuaryShape(a.sanctuary);
   setTabernacleStyle(a.tabernacleStyle);
   if(a.tabernacle!=='custom'){
     churchLayout.tabernacle=({behind:[500,32],left:[137,32],right:[863,32]})[a.tabernacle]?.slice()||[500,32];
@@ -408,6 +543,7 @@ function applyAppearance(a){
     if(a.cincture!=='none')figure.cincture.setColour(a.cincture);
     figure.pectoral.visible=role==='S'&&a.seniorCross!=='no';
   }
+  updateSanctuaryLamp(a);
   if(typeof refreshParishScene==='function')refreshParishScene();
   if(typeof SceneRealism!=='undefined')SceneRealism.refresh({probe:true});
 }
@@ -540,6 +676,7 @@ function buildChurch(){
       box(scene,side*11.6,.08,z,.7,.16,.7,'#a39172');
     }
   }
+  buildChancel();
   let fixtureStart=scene.children.length;
   const altar=world([500,170]);
   altarParts=[
@@ -627,8 +764,6 @@ function buildChurch(){
   tabernacleBody=scene.children.slice(body);
   tabernacleBody.forEach(o=>{o.userData.z=o.position.z;});
   tabernacleMount=mount;
-  markGlow(sphere(scene,tab.x+.76,tab.y+1.95,tab.z+.15,.09,'#df4735'),'lamp');
-  cylinder(scene,tab.x+.76,tab.y+1.75,tab.z+.15,.025,.025,.3,'#c59a3f');
   collectFurniture('tabernacle',fixtureStart);
   const gifts=world([621,770]);
   anchorParishObject(box(scene,gifts.x,.9,gifts.z,1.25,.1,.7,'#ab8b60',true,'wood'),[621,770]);

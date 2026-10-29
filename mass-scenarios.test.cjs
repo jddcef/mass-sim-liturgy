@@ -852,3 +852,30 @@ vm.runInContext(fs.readFileSync('mass-rite-exposition.js','utf8')+'\n'+fs.readFi
   buildScenario({});
   console.log('Passed '+funCount+' Funeral Mass scenarios and '+funFrames+' sampled frames.');
 `,context);
+
+// Chancel arch (mass-features.js): no sampled minister walk passes through a chancel wall outside its openings.
+{
+  const features=fs.readFileSync('mass-features.js','utf8');
+  vm.runInContext(features.match(/const CHANCEL=[\s\S]*?\};/)[0]+'\n'+features.match(/function chancelBlocks\(a,b\)\{[\s\S]*?\n\}/)[0]+`
+  {
+    const requests=[],bad=[];
+    let walks=0;
+    for(let mask=0;mask<32;mask++)requests.push({deacon:!!(mask&1),servers:!!(mask&2),lector:!!(mask&4),incense:!!(mask&8),bothKinds:!!(mask&16)});
+    for(const serverCount of [0,2,5])requests.push({serverCount,deacon:true,lector:true,incense:serverCount>0},{bishop:true,serverCount,incense:true},{confirmation:true,serverCount,incense:serverCount>0},{rite:'baptism',minister:'priest',serverCount},{rite:'exposition',minister:'priest',serverCount,incense:serverCount>0},{rite:'funeral',minister:'priest',serverCount});
+    for(const request of requests){
+      buildScenario(request);
+      for(let i=0;i<STEPS.length;i++)for(const role in ACTORS){
+        let prev=actorAt(i,role,0);
+        for(let k=1;k<=40;k++){
+          const p=actorAt(i,role,k/40);
+          walks++;
+          if(chancelBlocks(prev,p))bad.push(role+' in '+STEPS[i].title+' '+JSON.stringify(request));
+          prev=p;
+        }
+      }
+    }
+    assert.deepEqual(bad.slice(0,5),[],'walks through a chancel wall');
+    buildScenario({});
+    console.log('Passed chancel walls against '+walks+' sampled walks.');
+  }`,context);
+}

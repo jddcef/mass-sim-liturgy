@@ -1143,6 +1143,19 @@ for(const role of ['P','D','S','X','C1','T','L','PEW','SAC']){
 }
 // ---- controller regressions: revealed answer and score rollback ----
 {
+  // Highlight action: camera or scene interaction clears the fade; it returns after 5 s idle.
+  const view=fs.readFileSync('mass-game-view.js','utf8');
+  const fade=vm.runInNewContext(view.match(/const HIGHLIGHT_IDLE=[^\n]*/)[0]+';'+view.match(/function highlightFade\(idleSeconds\)\{[\s\S]*?\n\}/)[0]+';highlightFade');
+  assert.equal(fade(NaN),1,'untouched: full highlight');
+  assert.equal(fade(0),0,'just touched: no fade');
+  assert.equal(fade(4.9),0);
+  assert.ok(fade(5.75)>0&&fade(5.75)<1,'fade returns gradually');
+  assert.equal(fade(7),1);
+  assert.match(view,/function cameraNudge\(action\)\{\n  if\(!camera3d\|\|!controls\)return;\n  noteSceneInteraction\(\);/,'camera pad and V key count as interaction');
+  assert.match(view,/canvas\.addEventListener\('wheel',noteSceneInteraction/);
+  assert.ok(!/decisionOptions[^\n]*noteSceneInteraction/.test(fs.readFileSync('mass-game.js','utf8')),'answering does not clear the fade');
+}
+{
   let now=100,pauses=0,resumes=0;
   const active={started:10},clock={
     performance:{now:()=>now},gameTasksPaused:false,

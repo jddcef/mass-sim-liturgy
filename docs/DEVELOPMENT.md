@@ -91,7 +91,7 @@ The repository is `jddcef/mass-sim-liturgy`, renamed from
 and pull requests; do not commit directly to `main`. Consult the Magisterium MCP
 server for liturgical or Catholic questions and clarifications.
 
-**Next decision number: R242.**
+**Next decision number: R246.**
 
 | Round | PR | Content |
 |---|---|---|
@@ -119,7 +119,8 @@ server for liturgical or Catholic questions and clarifications.
 | 36 | [#29](https://github.com/jddcef/mass-sim-liturgy/pull/29) (not yet merged) | Visual MG02 cupboard/furnishing preparation board; MG06 illustrated bounded pre-Mass inspection with correct scenes; directly visible Mini-games entry and exact prior-context return (R226-R228). |
 | 37 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (not yet merged) | Ultra, Realistic and Cinematic detail levels: detailed materials, church reflections and glow; candlelight, light shafts and hand-written HDR post-processing; supersampling. Offline, with WebGL 1 and shader fallbacks; Auto unchanged (R229-R234). |
 | 38 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (not yet merged) | Add Simple, Natural, Detailed and Lifelike people tiers with deterministic variation, procedural vestments and hair, skinned figures, hand props and two-bone arm IK; Auto follows graphics Detail while an optional override remains independent. Offline and progressively more expensive (R235-R238). |
-| 39 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (not yet merged) | Detail-based 20/50/75/100% congregation budgets, no hidden-member animation or scene traversal, Blocks as the cheapest People tier and Low's Auto choice, and a one-click measured recommendation for both settings with exact game-clock/view restoration and explicit apply (R239-R241). |
+| 40 | (this PR) | Highlight fade cleared by camera/scene input and restored after 5 s idle; sanctuary lamp mountings (hanging, wall bracket, stand, tabernacle), four styles with per-game Auto, placement by the layout editor; optional chancel arch with side walls and open front corners (R242-R245). |
+| 39 | [#30](https://github.com/jddcef/mass-sim-liturgy/pull/30) (merged) | Detail-based 20/50/75/100% congregation budgets, no hidden-member animation or scene traversal, Blocks as the cheapest People tier and Low's Auto choice, and a one-click measured recommendation for both settings with exact game-clock/view restoration and explicit apply (R239-R241). |
 | merge | #23 | Merge latest main, preserving Corpus Christi, completion milestones and Practice room; integrate Corpus choices into the contextual menu (R224) |
 | 26 | #21 | Holy Thursday (Evening Mass of the Lord's Supper): Gloria with bells followed by liturgical silence; Mandatum (washing of the feet); Creed strictly omitted; EP I Roman Canon with proper Communicantes, Hanc igitur, and Qui pridie; no consecration bells; transfer of the Blessed Sacrament to Altar of Repose with humeral veil and Pange Lingua; stripping of the altar (Denudatio altaris) in silence without final blessing or dismissal (R188–R194) |
 | 25 | local, not published | Liturgical Season Ribbon & Mini-Breviary sheet (feast rank, Latin vestment colours with GIRM 346 rationales, Ordo Missae and rubrics), and Visual Chime & Thurible Ripples on HUD and 3D floor (R182–R187) |
@@ -135,6 +136,17 @@ server for liturgical or Catholic questions and clarifications.
 | 14 | #10 | Rite registry; lay-led Adoration and Exposition and Benediction with the Priest (R104–R110) |
 | 13 | local, not published | Generic prepared-shell parish profiles and maintainer editor: local library/draft, plan and 3D route preview, full-profile JSON export/import, seating/target integration and simple exterior; future user patch workflow reserved |
 | 15 | local, not published | Parish source intake: agent runbook, `parishes/` manifest and spec formats, Street View screening, draft profiles, offline bulk reviewer (R111–R114) |
+
+Round 40 was exercised in Edge through `file://`. All four lamp mountings and
+styles were rendered on both open and chancel sanctuaries, and screenshots were
+inspected. Auto gave different styles for consecutive games. On the game page,
+the Highlight fade was cleared by wheel input and the camera pad, returned
+gradually after 5 s, and stayed when a question was answered. No console
+errors were observed. A scenario test samples about 1.5 million minister walks
+against the chancel walls. Moving the lamp in the layout editor changed Lamp
+position to Custom and saved it. The editor now accepts a wall-mounted tabernacle
+at depth 30–34. Before this fix, a tabernacle placed by the Tabernacle option
+blocked every layout save.
 
 Round 39 was exercised in isolated Edge through `file://` at 1280x900 and
 390x844 on both 3D pages. Checks cover exact density budgets, detached omitted
