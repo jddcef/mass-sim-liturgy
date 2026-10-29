@@ -115,7 +115,8 @@ function firstPersonActive(){
 }
 function eyeOf(root){
   root.updateMatrixWorld();
-  return root.localToWorld(new THREE.Vector3(0,1.6,.2));
+  const eye=typeof PeopleModels!=='undefined'?PeopleModels.EYE:[0,1.6,.2];
+  return root.localToWorld(new THREE.Vector3(...eye));
 }
 function lookTowards(point){
   const root=figures.player.root,eye=eyeOf(root);

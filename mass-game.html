@@ -51,6 +51,7 @@
         </select></label>
         <label><input id="labels" type="checkbox" checked> Labels</label>
         <label title="Lower detail runs faster on small or older devices. Ultra, Realistic and Cinematic each need a stronger graphics card.">Detail <select id="graphicsDetail"><option value="auto">Auto</option><option value="low">Low</option><option value="standard">Standard</option><option value="high">High</option><option value="ultra">Ultra</option><option value="realistic">Realistic</option><option value="cinematic">Cinematic</option></select></label>
+        <label title="People detail follows Detail by default; choose a separate people quality level if you prefer.">People <select id="peopleDetail"><option value="auto">Auto</option><option value="simple">Simple</option><option value="natural">Natural</option><option value="detailed">Detailed</option><option value="lifelike">Lifelike</option></select></label>
         <label title="Fade the rest of the church and light up who and what is moving now"><input id="highlightMode" type="checkbox" checked> Highlight action</label>
         <label title="See through your own eyes; drag to look around"><input id="firstPerson" type="checkbox"> First person</label>
         <label title="Briefly see through your own eyes while you speak; drag or use the camera pad to look around"><input id="speakerView" type="checkbox" checked> My view when I speak</label>
@@ -414,6 +415,7 @@
 <script src="mass-game-logic.js"></script>
 <script src="mass-game-audio.js"></script>
 <script src="mass-graphics.js"></script>
+<script src="mass-people.js"></script>
 <script src="mass-materials.js"></script>
 <script src="mass-realism.js"></script>
 <script src="mass-parish-editor.js"></script>

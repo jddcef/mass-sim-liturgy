@@ -15,6 +15,8 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
       const scripts=[...read(html).matchAll(/<script\b([^>]*)src="([^"]+)"([^>]*)>/g)];
       const names=scripts.map(match=>match[2]);
       assert.ok(names.indexOf('mass-materials.js')>names.indexOf('mass-graphics.js'));
+      assert.ok(names.indexOf('mass-people.js')>names.indexOf('mass-graphics.js'));
+      assert.ok(names.indexOf('mass-people.js')<names.indexOf('mass-materials.js'));
       assert.ok(names.indexOf('mass-materials.js')<names.indexOf('mass-3d.js'));
       assert.ok(names.indexOf('mass-realism.js')>names.indexOf('mass-materials.js'));
       assert.ok(names.indexOf('mass-realism.js')<names.indexOf('mass-3d.js'));
@@ -25,9 +27,11 @@ for(const html of ['mass-animation.html','mass-3d.html','mass-game.html']){
         assert.ok(!/type\s*=\s*["']module/.test(script[1]+script[3]),'classic scripts only');
         assert.ok(!/^https?:/.test(script[2]),'scripts stay local');
       }
+      assert.match(read(html),/id="peopleDetail"/,'people quality selector is present');
     }
     assert.ok(!/\bfetch\s*\(|TextureLoader|https?:\/\//.test(read('mass-materials.js')),'materials need no network or local file fetch');
     assert.ok(!/\bfetch\s*\(|Loader\b|https?:\/\/|XMLHttpRequest/.test(read('mass-realism.js')),'realistic rendering needs no network or local file fetch');
+    assert.ok(!/\bfetch\s*\(|Loader\b|https?:\/\//.test(read('mass-people.js')),'people models need no network or local file fetch');
     assert.ok(read('.github/workflows/checks.yml').includes('node --check mass-materials.js'));
     assert.ok(read('.github/workflows/checks.yml').includes('node --check mass-realism.js'));
     for(const file of ['mass-parishes.js','mass-parish-editor.js']){

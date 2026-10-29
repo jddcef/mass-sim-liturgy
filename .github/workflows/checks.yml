@@ -26,6 +26,7 @@ jobs:
           node --check parish-review.js
           node --check mass-speech.js
           node --check mass-graphics.js
+          node --check mass-people.js
           node --check mass-materials.js
           node --check mass-realism.js
           node --check mass-3d.js
@@ -44,3 +45,4 @@ jobs:
           node mass-assets.test.cjs
           node mass-game.test.cjs
           node mass-corpus.test.cjs
+          node mass-people.test.cjs

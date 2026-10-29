@@ -1498,7 +1498,7 @@ function buildVestments(){
 // 'rail' (before setup and after pack-away), 'stand' (laid out), or 'worn' (hidden: the ministers are vested).
 function hangVestments(where,kinds=['P','D','S']){
   if(!game.vestments)return;
-  const colours={P:figures.P?.body.material.color,D:figures.D?.body.material.color};
+  const colours={P:figures.P?.colour,D:figures.D?.colour};
   for(const kind of kinds){
     const v=game.vestments[kind];
     if(game.carrying===v.mesh){figures.SAC.root.remove(v.mesh);game.carrying=null;}
@@ -1507,7 +1507,7 @@ function hangVestments(where,kinds=['P','D','S']){
     v.mesh.scale.set(1,1,1);
     v.mesh.rotation.set(0,where==='stand'?Math.PI:0,0);
     if(where!=='worn')v.mesh.position.copy(v[where]);
-    v.mesh.traverse(o=>{if(o.isMesh&&o.userData.part==='outer'&&colours[kind])o.material=material('#'+colours[kind].getHexString());});
+    v.mesh.traverse(o=>{if(o.isMesh&&o.userData.part==='outer'&&colours[kind])o.material=material(colours[kind]);});
     v.where=where;
   }
 }

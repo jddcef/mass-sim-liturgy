@@ -151,6 +151,14 @@ reflections of the church, glowing candles and stained glass), **Realistic**
 corners and a filmic glow) and **Cinematic** (renders at double resolution for
 the smoothest image). Step down if the picture stutters.
 
+The **People** menu controls the figures separately: **Auto** follows Detail
+(Simple at Low, Natural at Standard/High, Detailed at Ultra, and Lifelike at
+Realistic/Cinematic). You can override that mapping. Higher People levels add
+more natural joints and hands, varied faces and hair, finer vestment details,
+and—at Lifelike—generated skin, cloth and hair relief, subtle movement and
+crowd shadows. Those levels use progressively more CPU, memory and graphics
+work; rebuilds are spread across frames when switching levels.
+
 This is an illustrative teaching aid, not a substitute for the approved Missal,
 ceremonial training or local custom. Prayer texts are short paraphrases.
 
@@ -639,6 +647,9 @@ On a phone, the top menu folds into a ☰ button, and the camera controls fold i
   Realistic and Cinematic add realistic lighting for strong graphics cards.
   Switching
   detail updates finishes immediately; antialiasing still needs a reload.
+  **People** (Auto, Simple, Natural, Detailed, Lifelike) follows Detail by
+  default, with an optional independent override; the highest level adds
+  generated surface relief, subtle breathing and crowd shadows.
   The start bell (on by default) rings once the procession
   has gathered at the entrance. Reserved hosts are used and reposed by
   default. The cupboard also holds a monstrance for a future Exposition scenario.

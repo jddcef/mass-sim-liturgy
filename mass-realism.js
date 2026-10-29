@@ -449,6 +449,7 @@ const SceneRealism=(()=>{
   function disposeProbe(){
     if(!probe)return;
     if(typeof ChurchMaterials!=='undefined'&&ChurchMaterials.sceneProbe)ChurchMaterials.setEnvironment(null);
+    if(typeof PeopleModels!=='undefined')PeopleModels.setEnvironment(null);
     if(probe.env)probe.env.dispose();
     probe.target.dispose();probe.generator.dispose();
     probe=null;
@@ -479,6 +480,7 @@ const SceneRealism=(()=>{
     }
     const env=p.generator.fromCubemap(p.target.texture);
     if(typeof ChurchMaterials!=='undefined')ChurchMaterials.setEnvironment(env.texture);
+    if(typeof PeopleModels!=='undefined')PeopleModels.setEnvironment(env.texture);
     if(p.env)p.env.dispose();
     p.env=env;p.dirtyAt=-1;
   }

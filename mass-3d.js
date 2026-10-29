@@ -64,7 +64,7 @@ function label(text,position){
   return sprite;
 }
 
-function makeFigure(color,skin,role){
+function makeFigureLegacy(color,skin,role){
   const root=new THREE.Group();
   const torso=new THREE.Group();
   torso.position.y=.68;
@@ -184,7 +184,7 @@ function makeFigure(color,skin,role){
   return {root,torso,body,head,arms,legs,label:name,cincture,pectoral,cope,veil,vimp,bishop,handCandle,handPalm};
 }
 
-function pose(figure,posture,action,phase,walking=false,orans=false){
+function poseLegacy(figure,posture,action,phase,walking=false,orans=false){
   const {root,torso,arms,legs}=figure;
   const baseScale=root.userData.baseScale||1;
   root.scale.y=baseScale;
@@ -224,6 +224,22 @@ function pose(figure,posture,action,phase,walking=false,orans=false){
     arms[0].rotation.z=-.18;arms[1].rotation.z=.18;
     arms.forEach(arm=>arm.rotation.x=-.4);
   }
+}
+
+let peopleLevel=null,peopleBuildLevel=null,peopleSerial=0;
+function makeFigure(color,skin,role){
+  const vest=role==='P'?'chasuble':role==='D'?'dalmatic':ALB_ROLES.includes(role)?'alb':'lay';
+  const app=PeopleModels.appearance({seed:'scene-'+(peopleSerial++),role:role||'L',vest,colour:color});
+  const figure=PeopleModels.createFigure({app,level:peopleBuildLevel||peopleLevel||PeopleDetail.level(),crowd:!role,castShadow:true});
+  const name=role?label(ROLE_NAMES[role],new THREE.Vector3(0,2,0)):null;
+  if(name)figure.root.add(name);
+  figure.label=name;
+  figure.root.userData.role=role;
+  scene.add(figure.root);
+  return figure;
+}
+function pose(figure,posture,action,phase,walking=false,orans=false,extra={}){
+  PeopleModels.pose(figure,posture,action,phase,walking,orans,extra);
 }
 
 // Walls fade to see-through while they stand between the camera and what it looks at.
@@ -342,8 +358,7 @@ function readAppearance(){
   return a;
 }
 function recolour(figure,colour){
-  figure.body.material=material(colour);
-  for(const arm of figure.arms)arm.children[0].material=material(colour);
+  if(figure)PeopleModels.recolour(figure,colour);
 }
 // Vesture for rites outside Mass: the minister in a white cope instead of the Mass vestments, or
 // (recolour) simply in white, as for the alb and white stole of a baptism outside Mass. vesture.roles lets
@@ -390,7 +405,7 @@ function applyAppearance(a){
     const figure=figures[role];
     recolour(figure,a.serverRobe);
     figure.cincture.visible=a.cincture!=='none';
-    if(a.cincture!=='none')figure.cincture.children.forEach(part=>{part.material=material(a.cincture);});
+    if(a.cincture!=='none')figure.cincture.setColour(a.cincture);
     figure.pectoral.visible=role==='S'&&a.seniorCross!=='no';
   }
   if(typeof refreshParishScene==='function')refreshParishScene();
@@ -992,19 +1007,11 @@ function updatePeople(step,phase){
     }
     person.figure.root.position.copy(world(p));
     person.figure.root.rotation.y=Math.PI;
-    pose(person.figure,walking||receiving?'stand':posture,receiving||bow?'bows':genuflect&&!walking?'genuflects':'',phase+i,walking);
-    if(person.figure.handCandle){
-      person.figure.handCandle.visible=candles;
-      if(candles)person.figure.arms[1].rotation.set(-1.15,0,0);
-    }
-    if(person.figure.handPalm){
-      person.figure.handPalm.visible=palms;
-      if(palms)person.figure.arms[1].rotation.set(-1.15,0,0);
-    }
-    if(step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b){
+    const peace=step.special?.type==='peace'&&progress3d>=step.special.a&&progress3d<=step.special.b;
+    pose(person.figure,walking||receiving?'stand':posture,receiving||bow?'bows':genuflect&&!walking?'genuflects':'',phase+i,walking,false,
+      {pew:true,handCandle:candles,handPalm:palms,peace:peace?(i%2?1:-1):0});
+    if(peace){
       person.figure.root.rotation.y=Math.PI+(i%2?-.7:.7);
-      person.figure.arms[1].rotation.x=-1;
-      person.figure.arms[1].rotation.z=(i%2?1:-1)*.35*Math.sin(phase*3);
     }
   });
 }
@@ -1027,6 +1034,7 @@ function objectHeight(name,state,p){
 }
 
 function renderFrame(dt=1/60){
+  PeopleModels.pump(8);
   const step=STEPS[cur3d];
   const corpus=scenario.options.rite==='corpus';
   if(tabernacleDoor)tabernacleDoor.rotation.y=((step.tabernacle||[]).some(([a,b])=>progress3d>=a&&progress3d<=b)||step.key===34.5&&progress3d>=.43&&progress3d<=.57||step.key===36&&progress3d>=.24&&progress3d<=.33)?-1.2:0;
@@ -1068,12 +1076,9 @@ function renderFrame(dt=1/60){
     const seated=posture==='sit'&&atSeat&&!walking&&!(role==='P'&&step.key===14&&!scenario.options.bishop);
     const kneelingServer=ALB_ROLES.includes(role)&&posture==='kneel'&&!walking;
     const kneeling=!walking&&(step.kneel?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
-    pose(figure,layInPew?posture:seated?'sit':kneelingServer||kneeling?'kneel':'stand',action,elapsed,walking,orans);
-    if(figure.handCandle){
-      const carryingLight=corpus&&scenario.options.corpusTorches&&(role==='C1'||role==='C2');
-      figure.handCandle.visible=carryingLight;
-      if(carryingLight)figure.arms[1].rotation.x=-1.15;
-    }
+    const carryingLight=corpus&&scenario.options.corpusTorches&&(role==='C1'||role==='C2');
+    pose(figure,layInPew?posture:seated?'sit':kneelingServer||kneeling?'kneel':'stand',action,elapsed,walking,orans,
+      {pew:layInPew,handCandle:carryingLight});
     if(figure.veil)figure.veil.visible=(step.veil?.[role]||[]).some(([a,b])=>progress3d>=a&&progress3d<=b);
     if(action)actionTexts.push(ROLE_NAMES[role]+': '+action);
   }
@@ -1305,10 +1310,16 @@ function applySetup(){
 }
 
 let sunLight=null, skyLight=null, graphicsProfile=null;
+function applyPeopleLevel(choice){
+  if(typeof PeopleModels==='undefined')return;
+  peopleLevel=PeopleDetail.level(choice,graphicsProfile);
+  for(const figure of [...Object.values(figures),...congregation.map(person=>person.figure)])PeopleModels.schedule(figure,peopleLevel);
+}
 // Detail level: pixel ratio, shadows, crowd size, materials and (Ultra and above) mass-realism.js.
 // Antialiasing is fixed when the page loads.
 function applyGraphics(profile){
   graphicsProfile=profile;
+  applyPeopleLevel(PeopleDetail.storedChoice());
   if(skyLight)skyLight.intensity=profile.textures?.72:.85;
   if(sunLight)sunLight.intensity=profile.textures?1.02:.9;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,profile.pixelRatio));
@@ -1344,6 +1355,8 @@ function initialise(){
   scene=new THREE.Scene();
   scene.background=new THREE.Color('#ccd9de');
   const gfx=typeof GraphicsDetail!=='undefined'?GraphicsDetail.profile():{pixelRatio:2,shadows:true,shadowSize:1024,crowd:1,antialias:true};
+  peopleLevel=PeopleDetail.level(PeopleDetail.storedChoice(),gfx);
+  peopleBuildLevel=peopleLevel.rank>=2?PEOPLE_LEVELS.simple:peopleLevel;
   renderer=new THREE.WebGLRenderer({antialias:gfx.antialias,alpha:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,gfx.pixelRatio));
   renderer.outputEncoding=THREE.sRGBEncoding;
@@ -1410,6 +1423,10 @@ function initialise(){
   if($('graphicsDetail')){
     $('graphicsDetail').value=GraphicsDetail.storedChoice();
     $('graphicsDetail').onchange=event=>{GraphicsDetail.store(event.target.value);applyGraphics(GraphicsDetail.profile(event.target.value));};
+  }
+  if($('peopleDetail')){
+    $('peopleDetail').value=PeopleDetail.storedChoice();
+    $('peopleDetail').onchange=event=>{PeopleDetail.store(event.target.value);applyPeopleLevel(event.target.value);};
   }
   const resize=()=>{
     const {width,height}=$('viewport').getBoundingClientRect();
